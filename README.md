@@ -3,7 +3,7 @@ OpenStax Simulations
 
 This repository holds all simulations that will be embedded into OpenStax textbooks.
 
-[Demo here](http://connexions.github.io/simulations/)
+[Demo here](http://veillette.github.io/simulations/)
 
 ## <a name="deploying-and-building"></a>Building and Deploying
 
