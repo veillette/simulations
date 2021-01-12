@@ -5,3 +5,4 @@ dist/
 .build_timestamp
 
 *.log
+/.idea/jsLibraryMappings.xml
