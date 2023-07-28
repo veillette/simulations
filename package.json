@@ -28,7 +28,7 @@
     "grunt-gh-pages": "^4.0.0",
     "grunt-targethtml": "^0.2.6",
     "matchdep": "^2.0.0",
-    "touch": "^1.0.0",
+    "touch": "^3.1.0",
     "underscore": "^1.8.3",
     "wrench": "^1.5.8"
   }
