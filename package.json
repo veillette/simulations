@@ -20,7 +20,7 @@
   "homepage": "https://github.com/veillette/simulations",
   "dependencies": {},
   "devDependencies": {
-    "grunt": "^0.4.5",
+    "grunt": "^1.6.1",
     "grunt-cli": "^1.4.3",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-connect": "^4.0.0",
