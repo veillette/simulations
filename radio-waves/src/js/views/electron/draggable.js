@@ -44,13 +44,15 @@ define(function(require) {
             this.displayObject.buttonMode = true;
         },
 
-        dragStart: function(data) {
+        dragStart: function(event) {
+            var data = event.data;
             this.dragOffset = data.getLocalPosition(this.displayObject, this._dragOffset);
             this.dragging = true;
         },
 
-        drag: function(data) {
+        drag: function(event) {
             if (this.dragging) {
+                var data = event.data;
                 this._viewPosition.x = data.global.x - this.dragOffset.x;
                 this._viewPosition.y = data.global.y - this.dragOffset.y;
 
@@ -60,7 +62,7 @@ define(function(require) {
             }
         },
 
-        dragEnd: function(data) {
+        dragEnd: function(event) {
             this.dragging = false;
         },
 

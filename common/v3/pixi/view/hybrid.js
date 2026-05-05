@@ -25,6 +25,9 @@ define(function(require) {
             PixiView.apply(this, arguments);
         },
 
+        _createElement: Backbone.View.prototype._createElement,
+        _setElement:    Backbone.View.prototype._setElement,
+        _setAttributes: Backbone.View.prototype._setAttributes,
         _ensureElement: Backbone.View.prototype._ensureElement,
 
         delegateHtmlEvents: function() {
@@ -33,7 +36,14 @@ define(function(require) {
 
         undelegateEvents: Backbone.View.prototype.undelegateEvents,
 
-        setElement: Backbone.View.prototype.setElement
+        // Backbone >= 1.2 setElement calls delegateEvents(), which fires PixiView's
+        // Pixi event binding before initialize() has created the display objects.
+        // We strip that call out here; Pixi events are delegated by PixiView's
+        // constructor after initialize(), and HTML events by delegateHtmlEvents().
+        setElement: function(element) {
+            this._setElement(element);
+            return this;
+        }
 
     });
 

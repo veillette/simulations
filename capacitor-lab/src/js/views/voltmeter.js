@@ -131,8 +131,8 @@ define(function(require) {
             this.displayObject.addChild(this.redProbe);
             this.displayObject.addChild(this.blackProbe);
 
-            this.redProbePolygon   = new SAT.Polygon(new SAT.Vector(), [ new SAT.Vector(), new SAT.Vector(), new SAT.Vector(), new SAT.Vector() ]);
-            this.blackProbePolygon = new SAT.Polygon(new SAT.Vector(), [ new SAT.Vector(), new SAT.Vector(), new SAT.Vector(), new SAT.Vector() ]);
+            this.redProbePolygon   = new SAT.Polygon(new SAT.Vector(), []);
+            this.blackProbePolygon = new SAT.Polygon(new SAT.Vector(), []);
         },
 
         drawWires: function() {
@@ -218,16 +218,12 @@ define(function(require) {
             var x1 = x0 - Math.cos(probe.rotation) * length;
             var y1 = y0 + Math.sin(probe.rotation) * length;
 
-            polygon.points[0].x = x0 - xOffset;
-            polygon.points[0].y = y0 - yOffset;
-            polygon.points[1].x = x0 + xOffset;
-            polygon.points[1].y = y0 + yOffset;
-            polygon.points[2].x = x1 + xOffset;
-            polygon.points[2].y = y1 + yOffset;
-            polygon.points[3].x = x1 - xOffset;
-            polygon.points[3].y = y1 - yOffset;
-
-            polygon.setPoints(polygon.points);
+            polygon.setPoints([
+                new SAT.Vector(x0 - xOffset, y0 - yOffset),
+                new SAT.Vector(x0 + xOffset, y0 + yOffset),
+                new SAT.Vector(x1 + xOffset, y1 + yOffset),
+                new SAT.Vector(x1 - xOffset, y1 - yOffset)
+            ]);
         },
 
         update: function(time, deltaTime) {

@@ -1,0 +1,94 @@
+// Bootstrap 3 vendor-prefix mixin stubs — modern browsers no longer need most of these
+.transition(@transition) {
+  -webkit-transition: @transition;
+          transition: @transition;
+}
+.transition-property(@transition-property) {
+  -webkit-transition-property: @transition-property;
+          transition-property: @transition-property;
+}
+.transition-delay(@transition-delay) {
+  -webkit-transition-delay: @transition-delay;
+          transition-delay: @transition-delay;
+}
+.transition-duration(@transition-duration) {
+  -webkit-transition-duration: @transition-duration;
+          transition-duration: @transition-duration;
+}
+.transition-timing-function(@timing-function) {
+  -webkit-transition-timing-function: @timing-function;
+          transition-timing-function: @timing-function;
+}
+.transition-transform(@transition) {
+  -webkit-transition: -webkit-transform @transition;
+          transition: transform @transition;
+}
+.animation(@animation) {
+  -webkit-animation: @animation;
+          animation: @animation;
+}
+.animation-name(@name) {
+  -webkit-animation-name: @name;
+          animation-name: @name;
+}
+.animation-duration(@duration) {
+  -webkit-animation-duration: @duration;
+          animation-duration: @duration;
+}
+.animation-timing-function(@timing-function) {
+  -webkit-animation-timing-function: @timing-function;
+          animation-timing-function: @timing-function;
+}
+.animation-delay(@delay) {
+  -webkit-animation-delay: @delay;
+          animation-delay: @delay;
+}
+.animation-iteration-count(@iteration-count) {
+  -webkit-animation-iteration-count: @iteration-count;
+          animation-iteration-count: @iteration-count;
+}
+.animation-direction(@direction) {
+  -webkit-animation-direction: @direction;
+          animation-direction: @direction;
+}
+.animation-fill-mode(@fill-mode) {
+  -webkit-animation-fill-mode: @fill-mode;
+          animation-fill-mode: @fill-mode;
+}
+.backface-visibility(@visibility) {
+  -webkit-backface-visibility: @visibility;
+          backface-visibility: @visibility;
+}
+.box-shadow(@shadow) {
+  -webkit-box-shadow: @shadow;
+          box-shadow: @shadow;
+}
+.transform(@transform) {
+  -webkit-transform: @transform;
+      -ms-transform: @transform;
+          transform: @transform;
+}
+.transform-origin(@origin) {
+  -webkit-transform-origin: @origin;
+      -ms-transform-origin: @origin;
+          transform-origin: @origin;
+}
+.perspective(@perspective) {
+  -webkit-perspective: @perspective;
+          perspective: @perspective;
+}
+.perspective-origin(@perspective) {
+  -webkit-perspective-origin: @perspective;
+          perspective-origin: @perspective;
+}
+.user-select(@select) {
+  -webkit-user-select: @select;
+     -moz-user-select: @select;
+      -ms-user-select: @select;
+          user-select: @select;
+}
+.placeholder(@color: @input-color-placeholder) {
+  &::-moz-placeholder           { color: @color; opacity: 1; }
+  &:-ms-input-placeholder        { color: @color; }
+  &::-webkit-input-placeholder   { color: @color; }
+}
