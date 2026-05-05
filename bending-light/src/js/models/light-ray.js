@@ -51,7 +51,9 @@ define(function (require) {
         };
 
         // SAT variables
-        this._linePolygon = new SAT.Polygon(new SAT.Vector(), [ new SAT.Vector(), new SAT.Vector() ]);
+        // SAT 0.9+ splices duplicate points from the array in-place during setPoints,
+        // so initialize with distinct coordinates to prevent the second point being removed.
+        this._linePolygon = new SAT.Polygon(new SAT.Vector(), [ new SAT.Vector(0, 0), new SAT.Vector(1, 0) ]);
         this._circle = new SAT.Circle(new SAT.Vector(), 1);
         this._satResponse = new SAT.Response();
 
