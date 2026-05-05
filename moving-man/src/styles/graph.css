@@ -1,0 +1,365 @@
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus {
+  outline: none !important;
+}
+@-webkit-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-moz-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-o-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-webkit-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-moz-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-o-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-webkit-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.btn-zoom-in,
+.btn-zoom-out {
+  background: transparent;
+  padding: 0;
+  font-weight: normal;
+}
+.btn-zoom-in:focus,
+.btn-zoom-out:focus {
+  outline: none;
+  color: inherit;
+}
+.btn-zoom-in:hover,
+.btn-zoom-out:hover {
+  color: inherit;
+  opacity: 0.8;
+}
+.btn-zoom-in:active,
+.btn-zoom-out:active {
+  color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.btn-zoom-in > .fa,
+.btn-zoom-out > .fa {
+  position: relative;
+  font-size: 16px;
+}
+.btn-zoom-in > .fa > .fa,
+.btn-zoom-out > .fa > .fa {
+  font-size: 8px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.graph-view.moving-man-graph-view {
+  position: absolute;
+  top: 10px;
+  left: 180px;
+  right: 30px;
+  bottom: 10px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 30px;
+  left: 40px;
+  right: 0;
+  min-width: inherit;
+  min-height: inherit;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > button {
+  position: absolute;
+  color: #888;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-in-x,
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-out-x {
+  top: 100%;
+  margin-top: 19px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-in-x {
+  right: 72px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-out-x {
+  right: 48px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-in-y,
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-out-y {
+  left: 100%;
+  margin-left: 4px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-in-y {
+  top: 50%;
+  margin-top: -22px;
+}
+.graph-view.moving-man-graph-view > .graph-view-graph-wrapper > .zoom-out-y {
+  top: 50%;
+  margin-top: 5px;
+}
+.playback-time-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding-left: 1px;
+  padding-right: 1px;
+  z-index: 100;
+  display: none;
+  /* Functional styling;
+     * These styles are required for noUiSlider to function.
+     * You don't need to change these rules to apply your design.
+     */
+}
+.playback-time-slider.noUi-target,
+.playback-time-slider.noUi-target * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -ms-touch-action: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.playback-time-slider .noUi-base {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.playback-time-slider .noUi-origin {
+  position: absolute;
+  right: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+.playback-time-slider .noUi-handle {
+  position: relative;
+  z-index: 1;
+}
+.playback-time-slider .noUi-stacking .noUi-handle {
+  /* This class is applied to the lower origin when
+       its values is > 50%. */
+  z-index: 10;
+}
+.playback-time-slider .noUi-stacking + .noUi-origin {
+  /* Fix stacking order in IE7, which incorrectly
+       creates a new context for the origins. */
+  *z-index: -1;
+}
+.playback-time-slider.noUi-state-drag * {
+  cursor: inherit !important;
+}
+.playback-time-slider .noUi-handle {
+  height: 100%;
+  width: 2px;
+  left: -1px;
+  top: 0;
+  border-left: 4px solid rgba(80, 80, 80, 0.5);
+  cusror: move;
+  cursor: ew-resize;
+}
+.playback-time-slider .noUi-handle:before,
+.playback-time-slider .noUi-handle:after {
+  content: '';
+  position: absolute;
+  height: 8px;
+  left: 0;
+  width: 100%;
+  cusror: move;
+  cursor: ew-resize;
+}
+.playback-time-slider .noUi-handle:before {
+  bottom: 0px;
+}
+.playback-time-slider .noUi-handle:after {
+  top: 0px;
+}
+.playback-time-slider .noUi-handle > .handle-top,
+.playback-time-slider .noUi-handle > .handle-bottom {
+  position: absolute;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -13px;
+}
+.playback-time-slider .noUi-handle > .handle-top:after,
+.playback-time-slider .noUi-handle > .handle-bottom:after {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -6px;
+  margin-left: -6px;
+  background: #21366b;
+  border-radius: 50%;
+  -webkit-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+  -o-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+  transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+}
+.playback-time-slider .noUi-handle > .handle-top:before,
+.playback-time-slider .noUi-handle > .handle-bottom:before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: 50%;
+  margin-left: -6px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.playback-time-slider .noUi-handle.noUi-active {
+  border-color: rgba(33, 54, 107, 0.6);
+}
+.playback-time-slider .noUi-handle.noUi-active > .handle-top:after,
+.playback-time-slider .noUi-handle.noUi-active > .handle-bottom:after {
+  width: 100%;
+  height: 100%;
+  margin-left: -50%;
+}
+.playback-time-slider .noUi-handle.noUi-active > .handle-top:after {
+  margin-top: -18px;
+}
+.playback-time-slider .noUi-handle > .handle-top {
+  bottom: 100%;
+}
+.playback-time-slider .noUi-handle > .handle-top:before {
+  border-top: 12px solid #21366b;
+  top: 50%;
+}
+.playback-time-slider .noUi-handle > .handle-right {
+  top: 100%;
+}
+.playback-time-slider .noUi-handle > .handle-right:before {
+  border-bottom: 12px solid #21366b;
+  bottom: 50%;
+}

@@ -44,8 +44,14 @@ define(function (require) {
          * Destroys circuit and solution and releases this instance to the object pool.
          */
         destroy: function() {
-            this.dynamicCircuit.destroy();
-            this.solution.destroy();
+            if (this.dynamicCircuit) {
+                this.dynamicCircuit.destroy();
+                this.dynamicCircuit = null;
+            }
+            if (this.solution) {
+                this.solution.destroy();
+                this.solution = null;
+            }
 
             pool.remove(this);
         }

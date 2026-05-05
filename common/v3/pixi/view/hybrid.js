@@ -2,6 +2,7 @@ define(function(require) {
 
     'use strict';
 
+    var _        = require('underscore');
     var Backbone = require('backbone');
     var PIXI     = require('pixi');
     var PixiView = require('../view');
@@ -19,6 +20,7 @@ define(function(require) {
         tagName: Backbone.View.prototype.tagName,
 
         constructor: function() {
+            this.cid = _.uniqueId('view');
             this._ensureElement();
             this.delegateHtmlEvents();
 
@@ -34,6 +36,7 @@ define(function(require) {
             Backbone.View.prototype.delegateEvents.apply(this, [ this.htmlEvents ]);
         },
 
+        delegate:         Backbone.View.prototype.delegate,
         undelegateEvents: Backbone.View.prototype.undelegateEvents,
 
         // Backbone >= 1.2 setElement calls delegateEvents(), which fires PixiView's

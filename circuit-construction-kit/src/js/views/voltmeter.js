@@ -74,7 +74,7 @@ define(function(require) {
         initVoltmeterBrick: function() {
             this.voltmeterSprite = Assets.createSprite(Assets.Images.VOLTMETER);
 
-            this.voltmeterContainer = new PIXI.DisplayObjectContainer();
+            this.voltmeterContainer = new PIXI.Container();
             this.voltmeterContainer.buttonMode = true;
             this.voltmeterContainer.defaultCursor = 'move';
             this.voltmeterContainer.addChild(this.voltmeterSprite);

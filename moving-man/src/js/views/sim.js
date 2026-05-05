@@ -13,10 +13,10 @@ define(function (require) {
     require('bootstrap');
 
     // CSS
-    require('less!styles/sim');
-    require('less!styles/variable-controls');
-    require('less!common/styles/slider');
-    require('less!common/styles/radio');
+    require('css!styles/sim');
+    require('css!styles/variable-controls');
+    require('css!common/styles/slider');
+    require('css!common/styles/radio');
 
     // HTML
     var simHtml             = require('text!templates/sim.html');

@@ -10,7 +10,7 @@ define(function (require, exports, module) {
 
     var html = require('text!templates/moving-man.html');
 
-    require('less!styles/moving-man');
+    require('css!styles/moving-man');
 
     /**
      * Constants

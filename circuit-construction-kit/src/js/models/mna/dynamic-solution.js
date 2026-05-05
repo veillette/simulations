@@ -94,7 +94,7 @@ define(function (require) {
 
             // Destroy all states and clear the states array
             for (i = this.states.length - 1; i >= 0; i--) {
-                this.states[i].destroy();
+                try { this.states[i].destroy(); } catch (e) { console.warn('DynamicState.destroy failed:', e); }
                 this.states.splice(i, 1);
             }
 

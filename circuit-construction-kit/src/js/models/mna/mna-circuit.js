@@ -53,6 +53,11 @@ define(function (require) {
             this.currentSources = currentSources.slice();
 
             this.elements = batteries.concat(resistors, currentSources);
+
+            // Clear derived caches so recycled pool instances don't use stale values
+            this.nodeSet = null;
+            this.unknownVoltages = null;
+            this.unknownCurrents = null;
         },
 
         getElements: function() {

@@ -1,0 +1,180 @@
+/* 
+ * This is the default style for a graph-view.  It should be extended
+ *   and overriden to fit the needs of the application.
+ * ------------------------------------------------------------------
+ */
+.graph-view {
+  position: relative;
+  padding: 40px;
+}
+.graph-view .graph-view-graph-wrapper {
+  min-width: 400px;
+  min-height: 200px;
+}
+.graph-view-graph-wrapper {
+  position: relative;
+}
+.graph-view-graph-wrapper .graph-title {
+  position: absolute;
+  bottom: 100%;
+  height: 40px;
+  line-height: 42px;
+  font-size: 20px;
+  font-weight: 400;
+  text-align: center;
+  color: #333;
+}
+.graph-view-graph-wrapper .graph-canvas-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #bbb;
+  z-index: 1;
+}
+.graph-view-graph-wrapper .graph-canvas-wrapper > .graph-canvas {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+.graph-view-graph-wrapper .graph-x {
+  position: absolute;
+  height: 40px;
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number {
+  float: left;
+  height: 100%;
+  position: relative;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number > span {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  left: -50%;
+  text-align: center;
+  padding-top: 6px;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 4px;
+  width: 4px;
+  border: 0px solid #bbb;
+  border-left-width: 1px;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number:last-child {
+  position: absolute;
+  right: 0;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number:last-child > span {
+  left: 48%;
+}
+.graph-view-graph-wrapper .graph-x .graph-x-numbers .graph-number:last-child:after {
+  border-left-width: 0;
+  border-right-width: 1px;
+  left: auto;
+  right: 0;
+}
+.graph-view-graph-wrapper .graph-x .graph-axis-label {
+  width: 100%;
+  text-align: center;
+  line-height: 20px;
+  padding-top: 20px;
+}
+.graph-view-graph-wrapper .graph-y {
+  position: absolute;
+  width: 40px;
+  right: 100%;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number {
+  width: 100%;
+  position: relative;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number > span {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 20px;
+  top: 0;
+  margin-top: -7px;
+  text-align: right;
+  padding-right: 6px;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 4px;
+  width: 4px;
+  border: 0px solid #bbb;
+  border-top-width: 1px;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number:last-child {
+  position: absolute;
+  bottom: 0;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number:last-child > span {
+  top: 100%;
+}
+.graph-view-graph-wrapper .graph-y .graph-y-numbers .graph-number:last-child:after {
+  border-top-width: 0;
+  border-bottom-width: 1px;
+  top: auto;
+  bottom: 0;
+}
+.graph-view-graph-wrapper .graph-y .graph-axis-label {
+  position: absolute;
+  display: block;
+  left: 0px;
+  top: 0;
+  right: 0px;
+  bottom: 0;
+  max-width: none;
+  width: 350px;
+  height: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 14px;
+  -webkit-transform: rotate(-90deg) translateY(-175px);
+  -moz-transform: rotate(-90deg) translateY(-175px);
+  -ms-transform: rotate(-90deg) translateY(-175px);
+  transform: rotate(-90deg) translateY(-175px);
+  -webkit-transform-origin: center center;
+  -moz-transform-origin: center center;
+  -ms-transform-origin: center center;
+  transform-origin: center center;
+  text-align: center;
+}
+.graph-view-graph-wrapper .graph-number {
+  font-size: 10px;
+  color: #888;
+}
+.graph-view-graph-wrapper .graph-axis-label {
+  font-size: 12px;
+  color: #888;
+}

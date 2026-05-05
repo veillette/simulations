@@ -68,6 +68,15 @@
       -ms-transform: @transform;
           transform: @transform;
 }
+.translate(@x, @y) {
+  .transform(translate(@x, @y));
+}
+.scaleX(@ratio) {
+  .transform(scaleX(@ratio));
+}
+.rotate(@degrees) {
+  .transform(rotate(@degrees));
+}
 .transform-origin(@origin) {
   -webkit-transform-origin: @origin;
       -ms-transform-origin: @origin;

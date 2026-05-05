@@ -212,7 +212,7 @@ define(function (require) {
 
             var updatedInductors = [];
             for (i = 0; i < this.inductors.length; i++)
-                updatedCapacitors.push(this.inductors[i].cloneWithSolution(solution));
+                updatedInductors.push(this.inductors[i].cloneWithSolution(solution));
 
             return DynamicCircuit.create(
                 this.batteries, 

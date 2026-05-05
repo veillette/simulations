@@ -9,7 +9,7 @@ define(function(require) {
     var MovingManView = require('views/moving-man');
 
     // CSS
-    require('less!styles/scene');
+    require('css!styles/scene');
 
     // HTML
     var template = require('text!templates/scene.html');

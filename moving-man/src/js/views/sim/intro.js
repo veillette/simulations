@@ -11,7 +11,7 @@ define(function(require) {
     var playbackControlsHtml = require('text!templates/intro-controls.html');
 
     // CSS
-    require('less!styles/playback-controls');
+    require('css!styles/playback-controls');
 
     /**
      * Extends the functionality of the MovingManSimView to create

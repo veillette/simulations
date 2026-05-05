@@ -1,0 +1,92 @@
+input[type="radio"],
+input[type="checkbox"] {
+  display: none;
+}
+input[type="radio"] + label,
+input[type="checkbox"] + label {
+  display: inline-block;
+  position: relative;
+  padding-left: 26px;
+  margin-bottom: 12px;
+  line-height: 16px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+input[type="radio"] + label:last-child,
+input[type="checkbox"] + label:last-child {
+  margin-bottom: 0;
+}
+input[type="radio"] + label:before,
+input[type="checkbox"] + label:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #333;
+  cursor: pointer;
+}
+input[type="radio"] + label:before {
+  border-radius: 50%;
+}
+input[type="radio"] + label:after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  margin-top: 0;
+  margin-left: 0;
+  background: #21366b;
+  border-radius: 50%;
+  -webkit-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease;
+  -o-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease;
+  transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease;
+}
+input[type="radio"]:checked + label:after {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+  margin-left: 0;
+  margin-top: -7px;
+  margin-left: -7px;
+}
+input[type="checkbox"] + label:after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  margin-top: 0;
+  margin-left: 0;
+  background: #21366b;
+  -webkit-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg);
+  -webkit-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, transform 0.2s ease;
+  -o-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, transform 0.2s ease;
+  transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+input[type="checkbox"]:checked + label:after {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+  margin-left: 0;
+  margin-top: -7px;
+  margin-left: -7px;
+  -webkit-transform: rotate(0);
+  -ms-transform: rotate(0);
+  -o-transform: rotate(0);
+  transform: rotate(0);
+}

@@ -1,0 +1,272 @@
+.slider {
+  position: relative;
+  /* Functional styling;
+     * These styles are required for noUiSlider to function.
+     * You don't need to change these rules to apply your design.
+     */
+  /* Slider size and handle placement;
+     */
+  /* 
+     * These allow us to click above and below and
+     *   still trigger a click event on .noUi-base
+     *
+     *                                   - Patrick
+     */
+  /* Styling;
+     */
+  /* Handles and cursors;
+     */
+  /* Disabled state;
+     */
+  /* Pips Extension
+     * --------------------------
+     */
+  /* Base;
+     *
+     */
+  /* Values;
+     *
+     */
+  /* Markings;
+     *
+     */
+  /* Horizontal layout;
+     *
+     */
+  /* Vertical layout;
+     *
+     */
+}
+.slider.noUi-target,
+.slider.noUi-target * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -ms-touch-action: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.slider .noUi-base {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.slider .noUi-origin {
+  position: absolute;
+  right: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+.slider .noUi-handle {
+  position: relative;
+  z-index: 1;
+}
+.slider .noUi-stacking .noUi-handle {
+  /* This class is applied to the lower origin when
+       its values is > 50%. */
+  z-index: 10;
+}
+.slider .noUi-stacking + .noUi-origin {
+  /* Fix stacking order in IE7, which incorrectly
+       creates a new context for the origins. */
+  *z-index: -1;
+}
+.slider.noUi-state-tap .noUi-origin {
+  -webkit-transition: left 0.3s, top 0.3s;
+  transition: left 0.3s, top 0.3s;
+}
+.slider.noUi-state-drag * {
+  cursor: inherit !important;
+}
+.slider.noUi-horizontal {
+  height: 2px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.slider.noUi-horizontal .noUi-base:before,
+.slider.noUi-horizontal .noUi-base:after {
+  content: '';
+  position: absolute;
+  height: 14px;
+  left: 0;
+  width: 100%;
+}
+.slider.noUi-horizontal .noUi-base:before {
+  bottom: 2px;
+}
+.slider.noUi-horizontal .noUi-base:after {
+  top: 2px;
+}
+.slider.noUi-vertical .noUi-base:before,
+.slider.noUi-vertical .noUi-base:after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  top: 0;
+  height: 100%;
+}
+.slider.noUi-vertical .noUi-base:before {
+  right: 2px;
+}
+.slider.noUi-vertical .noUi-base:after {
+  left: 2px;
+}
+.slider.noUi-horizontal .noUi-handle {
+  width: 26px;
+  height: 26px;
+  left: -12px;
+  top: -12px;
+}
+.slider.noUi-horizontal.noUi-extended {
+  padding: 0 15px;
+}
+.slider.noUi-horizontal.noUi-extended .noUi-origin {
+  right: -15px;
+}
+.slider.noUi-vertical {
+  width: 2px;
+}
+.slider.noUi-vertical .noUi-handle {
+  width: 26px;
+  height: 26px;
+  left: -12px;
+  top: -12px;
+}
+.slider.noUi-vertical.noUi-extended {
+  padding: 15px 0;
+}
+.slider.noUi-vertical.noUi-extended .noUi-origin {
+  bottom: -15px;
+}
+.slider .noUi-background {
+  background: #FAFAFA;
+}
+.slider.noUi-connect {
+  background: #21366b;
+  -webkit-transition: background 450ms ease;
+  -o-transition: background 450ms ease;
+  transition: background 450ms ease;
+}
+.slider .noUi-dragable {
+  cursor: w-resize;
+}
+.slider.noUi-vertical .noUi-dragable {
+  cursor: n-resize;
+}
+.slider .noUi-handle {
+  text-align: center;
+}
+.slider .noUi-handle:after {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -6px;
+  margin-left: -6px;
+  background: #21366b;
+  border-radius: 50%;
+  -webkit-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+  -o-transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+  transition: width 0.2s ease, height 0.2s ease, margin-top 0.2s ease, margin-left 0.2s ease, background 450ms ease;
+}
+.slider .noUi-active:after {
+  width: 100%;
+  height: 100%;
+  margin-top: -50%;
+  margin-left: -50%;
+}
+.slider[disabled].noUi-connect,
+.slider[disabled] .noUi-connect {
+  background: #B8B8B8;
+}
+.slider[disabled] .noUi-handle {
+  cursor: not-allowed;
+}
+.slider[disabled] .noUi-handle:before,
+.slider[disabled] .noUi-handle:after {
+  background: #B8B8B8;
+}
+.slider.pipped {
+  margin-bottom: 30px;
+}
+.slider .noUi-pips,
+.slider .noUi-pips * {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.slider .noUi-pips {
+  position: absolute;
+  font: 400 12px Arial;
+  color: #999;
+}
+.slider .noUi-value {
+  width: 40px;
+  position: absolute;
+  text-align: center;
+}
+.slider .noUi-value-sub {
+  color: #ccc;
+  font-size: 10px;
+}
+.slider .noUi-marker {
+  position: absolute;
+  background: #afafaf;
+}
+.slider .noUi-marker-sub {
+  background: #ddd;
+}
+.slider .noUi-marker-large {
+  background: #ccc;
+}
+.slider .noUi-pips-horizontal {
+  padding: 8px 0;
+  height: 50px;
+  top: 100%;
+  left: 0;
+  width: 100%;
+}
+.slider .noUi-value-horizontal {
+  margin-left: -20px;
+  padding-top: 16px;
+}
+.slider .noUi-value-horizontal.noUi-value-sub {
+  padding-top: 12px;
+}
+.slider .noUi-marker-horizontal.noUi-marker {
+  margin-left: -1px;
+  width: 2px;
+  height: 4px;
+}
+.slider .noUi-marker-horizontal.noUi-marker-sub {
+  height: 8px;
+}
+.slider .noUi-marker-horizontal.noUi-marker-large {
+  height: 12px;
+}
+.slider .noUi-pips-vertical {
+  padding: 0 8px;
+  height: 100%;
+  top: 0;
+  left: 100%;
+}
+.slider .noUi-value-vertical {
+  width: 15px;
+  margin-left: 20px;
+  margin-top: -5px;
+}
+.slider .noUi-marker-vertical.noUi-marker {
+  width: 5px;
+  height: 2px;
+  margin-top: -1px;
+}
+.slider .noUi-marker-vertical.noUi-marker-sub {
+  width: 10px;
+}
+.slider .noUi-marker-vertical.noUi-marker-large {
+  width: 15px;
+}

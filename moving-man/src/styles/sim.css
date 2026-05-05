@@ -1,0 +1,292 @@
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus {
+  outline: none !important;
+}
+@-webkit-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-moz-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-o-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-webkit-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-moz-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-o-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-webkit-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.btn-zoom-in,
+.btn-zoom-out {
+  background: transparent;
+  padding: 0;
+  font-weight: normal;
+}
+.btn-zoom-in:focus,
+.btn-zoom-out:focus {
+  outline: none;
+  color: inherit;
+}
+.btn-zoom-in:hover,
+.btn-zoom-out:hover {
+  color: inherit;
+  opacity: 0.8;
+}
+.btn-zoom-in:active,
+.btn-zoom-out:active {
+  color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.btn-zoom-in > .fa,
+.btn-zoom-out > .fa {
+  position: relative;
+  font-size: 16px;
+}
+.btn-zoom-in > .fa > .fa,
+.btn-zoom-out > .fa > .fa {
+  font-size: 8px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.sim-content {
+  min-height: inherit;
+}
+.sim-controls {
+  background: #ededed;
+  padding-bottom: 20px;
+}
+@media screen and (max-height: 560px) {
+  .sim-controls {
+    padding-bottom: 8px;
+  }
+  #sim-charts .sim-controls {
+    padding-bottom: 20px;
+  }
+}
+.sim-controls .variable-row {
+  position: relative;
+}
+.modal-backdrop {
+  bottom: 0;
+  z-index: 1020;
+}
+#sim-intro .row-hide,
+#sim-intro .row-show,
+#sim-intro .hidden-title {
+  display: none;
+}
+#sim-charts .variable-row {
+  height: 160px;
+  margin: -10px 0 -40px 0;
+  padding: 10px 0 0;
+}
+#sim-charts .variable-row .row-content {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+#sim-charts .variable-row.collapsed {
+  height: 60px;
+}
+#sim-charts .variable-row.collapsed .row-content {
+  height: 0;
+}
+#sim-charts .variable-row.collapsed .row-show {
+  display: block;
+}
+#sim-charts .variable-row.collapsed .row-hide {
+  display: none;
+}
+#sim-charts .variable-row.collapsed .hidden-title {
+  display: block;
+}
+#sim-charts .variable-row .hidden-title {
+  position: absolute;
+  left: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  opacity: 0.5;
+  cursor: pointer;
+  z-index: 50;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  display: none;
+}
+#sim-charts .variable-row .hidden-title:hover {
+  opacity: 0.7;
+}
+#sim-charts .variable-row.position-row .hidden-title {
+  color: #2575BA;
+}
+#sim-charts .variable-row.velocity-row .hidden-title {
+  color: #CD2520;
+}
+#sim-charts .variable-row.acceleration-row .hidden-title {
+  color: #349E34;
+}
+#sim-charts .variable-row .row-show,
+#sim-charts .variable-row .row-hide {
+  position: absolute;
+  top: 14px;
+  left: 100%;
+  margin-left: -26px;
+  font-size: 16px;
+  color: #888;
+  z-index: 50;
+  background: transparent;
+  padding: 0;
+  font-weight: bold;
+}
+#sim-charts .variable-row .row-show:focus,
+#sim-charts .variable-row .row-hide:focus {
+  outline: none;
+  color: inherit;
+}
+#sim-charts .variable-row .row-show:hover,
+#sim-charts .variable-row .row-hide:hover {
+  color: inherit;
+  opacity: 0.8;
+}
+#sim-charts .variable-row .row-show:active,
+#sim-charts .variable-row .row-hide:active {
+  color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+#sim-charts .variable-row .row-show {
+  display: none;
+}
+#sim-charts .sim-controls .acceleration-row {
+  margin-bottom: -14px;
+}

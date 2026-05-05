@@ -1,0 +1,359 @@
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus {
+  outline: none !important;
+}
+@-webkit-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-moz-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-o-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-webkit-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-moz-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-o-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-webkit-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.playback-controls-wrapper {
+  position: relative;
+  margin-top: 10px;
+  padding: 10px;
+  background: #ededed;
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+@media screen and (max-height: 560px) {
+  .playback-controls-wrapper {
+    margin-top: 0;
+    border-top: 2px solid #fff;
+    padding: 4px 10px;
+  }
+}
+.playback-controls-wrapper > .playback-btn {
+  display: inline-block;
+  background: #ccc;
+  color: #21366b;
+  outline: none;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+}
+.playback-controls-wrapper > .playback-btn:hover {
+  opacity: 0.9;
+}
+.playback-controls-wrapper > .playback-btn:active {
+  background: #21366b;
+  color: #fff;
+}
+.playback-controls-wrapper > .playback-btn.play-btn,
+.playback-controls-wrapper > .playback-btn.record-btn,
+.playback-controls-wrapper > .playback-btn.pause-btn {
+  display: none;
+}
+.sim-view:not(.record-mode):not(.playing) .playback-controls-wrapper > .playback-btn.play-btn {
+  display: inline-block;
+}
+.sim-view.record-mode:not(.playing) .playback-controls-wrapper > .playback-btn.record-btn {
+  display: inline-block;
+}
+.sim-view.playing .playback-controls-wrapper > .playback-btn.pause-btn {
+  display: inline-block;
+}
+.playback-controls-wrapper > .playback-btn.play-btn,
+.playback-controls-wrapper > .playback-btn.pause-btn,
+.playback-controls-wrapper > .playback-btn.record-btn {
+  width: 42px;
+  height: 42px;
+  font-size: 16px;
+}
+.playback-controls-wrapper > .playback-btn.play-btn {
+  padding-left: 10px;
+}
+.playback-controls-wrapper .btn-normal {
+  font-weight: 500;
+  color: #21366b;
+  background-color: #ccc;
+  border: none;
+  margin: 5px 5px 0;
+}
+.playback-controls-wrapper .btn-normal:hover {
+  color: #21366b;
+  opacity: 0.9;
+}
+.playback-controls-wrapper .btn-normal:active,
+.playback-controls-wrapper .btn-normal:focus:active {
+  color: #fff;
+  background: #21366b;
+  outline: 0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.playback-controls-wrapper .btn-normal:focus {
+  outline: 0;
+  color: #21366b;
+}
+.playback-controls-wrapper .btn-normal.disabled,
+.playback-controls-wrapper .btn-normal[disabled],
+fieldset[disabled] .playback-controls-wrapper .btn-normal,
+.playback-controls-wrapper .btn-normal.disabled:hover,
+.playback-controls-wrapper .btn-normal[disabled]:hover,
+fieldset[disabled] .playback-controls-wrapper .btn-normal:hover,
+.playback-controls-wrapper .btn-normal.disabled:focus,
+.playback-controls-wrapper .btn-normal[disabled]:focus,
+fieldset[disabled] .playback-controls-wrapper .btn-normal:focus,
+.playback-controls-wrapper .btn-normal.disabled:active,
+.playback-controls-wrapper .btn-normal[disabled]:active,
+fieldset[disabled] .playback-controls-wrapper .btn-normal:active,
+.playback-controls-wrapper .btn-normal.disabled.active,
+.playback-controls-wrapper .btn-normal[disabled].active,
+fieldset[disabled] .playback-controls-wrapper .btn-normal.active {
+  background-color: #ccc;
+}
+.playback-controls-wrapper .clear-btn {
+  float: left;
+}
+.playback-controls-wrapper .reset-btn {
+  float: right;
+}
+.playback-controls-wrapper .playback-speed-wrapper {
+  position: absolute;
+  right: 143px;
+  height: 100%;
+  top: 0;
+  padding-top: 18px;
+}
+@media screen and (max-height: 560px) {
+  .playback-controls-wrapper .playback-speed-wrapper {
+    padding-top: 12px;
+  }
+}
+.playback-controls-wrapper .playback-speed-wrapper .playback-speed {
+  width: 140px;
+  display: inline-block;
+  vertical-align: middle;
+  background: #aaa;
+}
+.playback-controls-wrapper .playback-speed-wrapper label {
+  vertical-align: middle;
+  margin: 0 8px;
+  color: #777;
+  font-weight: normal;
+}
+.sim-view.record-mode .playback-controls-wrapper .playback-speed-wrapper {
+  display: none;
+}
+.playback-controls-wrapper .playback-mode-wrapper {
+  position: absolute;
+  top: 22px;
+  left: 170px;
+}
+@media screen and (max-height: 560px) {
+  .playback-controls-wrapper .playback-mode-wrapper {
+    top: 16px;
+  }
+}
+.playback-controls-wrapper .playback-mode-wrapper label {
+  margin-right: 16px;
+}
+.playback-controls-wrapper.intro-controls-wrapper .reset-btn {
+  position: absolute;
+  right: 10px;
+}
+.playback-controls-wrapper.intro-controls-wrapper .play-btn {
+  -webkit-animation-name: beacon;
+  animation-name: beacon;
+  -webkit-animation-duration: 2s;
+  animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+}
+@-webkit-keyframes beacon {
+  0% {
+    opacity: 1;
+    color: #21366b;
+  }
+  50% {
+    opacity: 0.5;
+    color: #8099d8;
+  }
+  100% {
+    opacity: 1;
+    color: #21366b;
+  }
+}
+@-moz-keyframes beacon {
+  0% {
+    opacity: 1;
+    color: #21366b;
+  }
+  50% {
+    opacity: 0.5;
+    color: #8099d8;
+  }
+  100% {
+    opacity: 1;
+    color: #21366b;
+  }
+}
+@-o-keyframes beacon {
+  0% {
+    opacity: 1;
+    color: #21366b;
+  }
+  50% {
+    opacity: 0.5;
+    color: #8099d8;
+  }
+  100% {
+    opacity: 1;
+    color: #21366b;
+  }
+}
+@keyframes beacon {
+  0% {
+    opacity: 1;
+    color: #21366b;
+  }
+  50% {
+    opacity: 0.5;
+    color: #8099d8;
+  }
+  100% {
+    opacity: 1;
+    color: #21366b;
+  }
+}

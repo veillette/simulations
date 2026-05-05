@@ -1,0 +1,597 @@
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus {
+  outline: none !important;
+}
+@-webkit-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-moz-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-o-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-webkit-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-moz-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-o-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-webkit-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.btn-zoom-in,
+.btn-zoom-out {
+  background: transparent;
+  padding: 0;
+  font-weight: normal;
+}
+.btn-zoom-in:focus,
+.btn-zoom-out:focus {
+  outline: none;
+  color: inherit;
+}
+.btn-zoom-in:hover,
+.btn-zoom-out:hover {
+  color: inherit;
+  opacity: 0.8;
+}
+.btn-zoom-in:active,
+.btn-zoom-out:active {
+  color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.btn-zoom-in > .fa,
+.btn-zoom-out > .fa {
+  position: relative;
+  font-size: 16px;
+}
+.btn-zoom-in > .fa > .fa,
+.btn-zoom-out > .fa > .fa {
+  font-size: 8px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+/*
+ * Clouds CSS from http://thecodeplayer.com/walkthrough/pure-css3-animated-clouds-background,
+ *   modified and adapted for LESS
+ */
+.scene-view {
+  width: 100%;
+  height: 334px;
+  position: relative;
+  overflow: hidden;
+}
+@media screen and (max-height: 560px) {
+  .scene-view {
+    height: 199px;
+  }
+}
+.scene-view.compact {
+  height: 174px;
+}
+@media screen and (max-height: 560px) {
+  .scene-view.compact {
+    height: 155px;
+  }
+}
+.scene-view.compact .scene {
+  height: 140px;
+}
+@media screen and (max-height: 560px) {
+  .scene-view.compact .scene {
+    height: 121px;
+  }
+}
+.scene-view.compact .clouds {
+  position: absolute;
+  bottom: 0;
+}
+.scene-view.compact .clock {
+  display: block;
+}
+/* Clouds
+ * -----------------------------------------------------------------
+ */
+.clouds {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background: #c9dbe9;
+  background-image: -webkit-linear-gradient(top, #81C8FF 0%, #fff 100%);
+  background-image: -o-linear-gradient(top, #81C8FF 0%, #fff 100%);
+  background-image: linear-gradient(to bottom, #81C8FF 0%, #fff 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff81c8ff', endColorstr='#ffffffff', GradientType=0);
+  background-repeat: repeat-x;
+}
+@media screen and (max-height: 560px) {
+  .clouds,
+  .scene-view.compact .clouds {
+    position: absolute;
+    bottom: 0;
+    height: 165px;
+    background-image: -webkit-linear-gradient(top, #81C8FF 0%, #F5FBFF 100%);
+    background-image: -o-linear-gradient(top, #81C8FF 0%, #F5FBFF 100%);
+    background-image: linear-gradient(to bottom, #81C8FF 0%, #F5FBFF 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff81c8ff', endColorstr='#fff5fbff', GradientType=0);
+    background-repeat: repeat-x;
+  }
+  .clouds .cloud.cloud-1,
+  .scene-view.compact .clouds .cloud.cloud-1 {
+    top: 0px;
+  }
+  .clouds .cloud.cloud-2,
+  .scene-view.compact .clouds .cloud.cloud-2 {
+    top: 1px;
+    margin-left: 125px;
+  }
+  .clouds .cloud.cloud-3,
+  .scene-view.compact .clouds .cloud.cloud-3 {
+    top: -32px;
+    margin-left: -40px;
+  }
+  .clouds .cloud.cloud-4,
+  .scene-view.compact .clouds .cloud.cloud-4 {
+    top: -19px;
+  }
+  .clouds .cloud.cloud-5,
+  .scene-view.compact .clouds .cloud.cloud-5 {
+    top: -20px;
+  }
+}
+.clouds.moving > .cloud-1 {
+  -webkit-animation: moveclouds 60s linear infinite;
+  -o-animation: moveclouds 60s linear infinite;
+  animation: moveclouds 60s linear infinite;
+}
+.clouds.moving > .cloud-2 {
+  -webkit-animation: moveclouds 100s linear infinite;
+  -o-animation: moveclouds 100s linear infinite;
+  animation: moveclouds 100s linear infinite;
+  -webkit-animation-delay: -40s;
+  animation-delay: -40s;
+}
+.clouds.moving > .cloud-3 {
+  -webkit-animation: moveclouds 80s linear infinite;
+  -o-animation: moveclouds 80s linear infinite;
+  animation: moveclouds 80s linear infinite;
+  -webkit-animation-delay: -30s;
+  animation-delay: -30s;
+}
+.clouds.moving > .cloud-4 {
+  -webkit-animation: moveclouds 72s linear infinite;
+  -o-animation: moveclouds 72s linear infinite;
+  animation: moveclouds 72s linear infinite;
+  -webkit-animation-delay: -50s;
+  animation-delay: -50s;
+}
+.clouds.moving > .cloud-5 {
+  -webkit-animation: moveclouds 80s linear infinite;
+  -o-animation: moveclouds 80s linear infinite;
+  animation: moveclouds 80s linear infinite;
+  -webkit-animation-delay: -10s;
+  animation-delay: -10s;
+}
+@-webkit-keyframes moveclouds {
+  0% {
+    margin-left: 130%;
+  }
+  100% {
+    margin-left: -30%;
+  }
+}
+@-moz-keyframes moveclouds {
+  0% {
+    margin-left: 130%;
+  }
+  100% {
+    margin-left: -30%;
+  }
+}
+@-o-keyframes moveclouds {
+  0% {
+    margin-left: 130%;
+  }
+  100% {
+    margin-left: -30%;
+  }
+}
+@keyframes moveclouds {
+  0% {
+    margin-left: 130%;
+  }
+  100% {
+    margin-left: -30%;
+  }
+}
+.cloud {
+  left: 0;
+  width: 200px;
+  height: 60px;
+  background: #fff;
+  border-radius: 200px;
+  -moz-border-radius: 200px;
+  -webkit-border-radius: 200px;
+  position: absolute;
+}
+.cloud:before,
+.cloud:after {
+  content: '';
+  background: #fff;
+  width: 100px;
+  height: 80px;
+  position: absolute;
+  top: -15px;
+  left: 10px;
+  border-radius: 100px;
+  -moz-border-radius: 100px;
+  -webkit-border-radius: 100px;
+  -webkit-transform: rotate(30deg);
+  -moz-transform: rotate(30deg);
+  -ms-transform: rotate(30deg);
+  transform: rotate(30deg);
+}
+.cloud:after {
+  width: 120px;
+  height: 120px;
+  top: -55px;
+  left: auto;
+  right: 15px;
+}
+.cloud.cloud-1 {
+  top: 50px;
+  margin-left: 700px;
+  -webkit-transform: scale(0.5);
+  -moz-transform: scale(0.5);
+  -ms-transform: scale(0.5);
+  transform: scale(0.5);
+}
+.cloud.cloud-2 {
+  top: 40px;
+  margin-left: 80px;
+  -webkit-transform: scale(0.3);
+  -moz-transform: scale(0.3);
+  -ms-transform: scale(0.3);
+  transform: scale(0.3);
+  opacity: 0.7;
+  /*opacity proportional to the size*/
+}
+.cloud.cloud-3 {
+  top: 30px;
+  -webkit-transform: scale(-0.4, 0.4);
+  -moz-transform: scale(-0.4, 0.4);
+  -ms-transform: scale(-0.4, 0.4);
+  transform: scale(-0.4, 0.4);
+  opacity: 0.9;
+  /*opacity proportional to the size*/
+}
+.cloud.cloud-4 {
+  top: 20px;
+  margin-left: 500px;
+  -webkit-transform: scale(-0.35, 0.35);
+  -moz-transform: scale(-0.35, 0.35);
+  -ms-transform: scale(-0.35, 0.35);
+  transform: scale(-0.35, 0.35);
+  opacity: 0.85;
+  /*opacity proportional to the size*/
+}
+.cloud.cloud-5 {
+  top: -20px;
+  margin-left: 800px;
+  -webkit-transform: scale(0.4);
+  -moz-transform: scale(0.4);
+  -ms-transform: scale(0.4);
+  transform: scale(0.4);
+  opacity: 0.9;
+  /*opacity proportional to the size*/
+}
+/* Ruler (ground)
+ * -----------------------------------------------------------------
+ */
+.ruler {
+  position: absolute;
+  z-index: 60;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+  background: #ededed;
+  border-top: 4px solid #595959;
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.ruler .ruler-number {
+  display: inline-block;
+  width: 40px;
+  height: 100%;
+  padding-top: 6px;
+  position: relative;
+  color: #777;
+}
+.ruler .ruler-number:after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  margin-left: -1px;
+  height: 4px;
+  width: 4px;
+  border: 0px solid #777;
+  border-left-width: 2px;
+}
+.ruler .ruler-label {
+  position: absolute;
+  left: 50%;
+  margin-left: 12px;
+  top: 6px;
+  color: #777;
+}
+/* Scene
+ * -----------------------------------------------------------------
+ */
+.scene {
+  position: absolute;
+  width: 960px;
+  height: 300px;
+  top: 0;
+  left: 50%;
+  margin-left: -480px;
+}
+@media screen and (max-height: 560px) {
+  .scene {
+    height: 165px;
+  }
+}
+.clock {
+  position: absolute;
+  z-index: 40;
+  left: 80px;
+  top: 7px;
+  font-size: 18px;
+  color: #004B79;
+  display: none;
+}
+@media screen and (max-height: 560px) {
+  .clock {
+    left: 39px;
+    top: 1px;
+  }
+}
+.clock > .time {
+  display: inline-block;
+  min-width: 35px;
+  text-align: right;
+}
+.tree {
+  position: absolute;
+  z-index: 30;
+  bottom: 0;
+  left: 75px;
+  width: 109px;
+  height: 100px;
+  background-image: url(../img/phet/tree.png);
+}
+.house {
+  position: absolute;
+  z-index: 30;
+  bottom: -8px;
+  right: 80px;
+  width: 100px;
+  height: 88px;
+  background-image: url(../img/phet/cottage.gif);
+}
+.walls-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+#sim-intro .walls-container {
+  top: 100px;
+}
+@media screen and (max-height: 560px) {
+  #sim-intro .walls-container {
+    top: 13px;
+  }
+}
+.wall {
+  position: absolute;
+  z-index: 80;
+  bottom: 0;
+  width: 30px;
+  height: 140px;
+  background-image: url(../img/brick.jpg);
+  border: 2px solid #88463D;
+  border-bottom: none;
+  -webkit-transition: bottom 1s;
+  -o-transition: bottom 1s;
+  transition: bottom 1s;
+}
+.wall.wall-left {
+  left: 0;
+  border-left: none;
+  border-top-right-radius: 2px;
+}
+.wall.wall-right {
+  right: 0;
+  border-right: none;
+  border-top-left-radius: 2px;
+}
+.wall .wall-hide,
+.wall .wall-show {
+  position: absolute;
+  left: 4px;
+  padding: 0;
+  font-size: 20px;
+  background: transparent;
+}
+.wall .wall-hide:focus,
+.wall .wall-show:focus {
+  outline: none;
+}
+.wall .wall-hide:active,
+.wall .wall-show:active {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.wall .wall-hide {
+  bottom: 0;
+  color: #ececec;
+  text-shadow: 0 0 5px #000;
+}
+.wall .wall-hide:hover {
+  color: #FFD700;
+}
+.wall .wall-show {
+  top: -30px;
+  color: #595959;
+  display: none;
+}
+.wall .wall-show:hover {
+  opacity: 0.8;
+}
+.wall.disabled {
+  bottom: -140px;
+}
+.wall.disabled .wall-show {
+  display: inline;
+}
+.man-container {
+  position: absolute;
+  height: 140px;
+  width: 880px;
+  bottom: 0;
+  left: 50%;
+  margin-left: -440px;
+}

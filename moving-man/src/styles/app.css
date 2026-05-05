@@ -1,0 +1,205 @@
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus {
+  outline: none !important;
+}
+@-webkit-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-moz-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-o-keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@keyframes btn-clicked {
+  0% {
+    background-color: #B8B8B8;
+  }
+  100% {
+    background-color: #21366b;
+  }
+}
+@-webkit-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-moz-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-o-keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@keyframes panel-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    color: #21366b;
+    background-color: #ededed;
+  }
+}
+@-webkit-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes graph-show-btn-clicked {
+  0% {
+    color: #fff;
+    background-color: #21366b;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes graph-show-btn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.btn-zoom-in,
+.btn-zoom-out {
+  background: transparent;
+  padding: 0;
+  font-weight: normal;
+}
+.btn-zoom-in:focus,
+.btn-zoom-out:focus {
+  outline: none;
+  color: inherit;
+}
+.btn-zoom-in:hover,
+.btn-zoom-out:hover {
+  color: inherit;
+  opacity: 0.8;
+}
+.btn-zoom-in:active,
+.btn-zoom-out:active {
+  color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.btn-zoom-in > .fa,
+.btn-zoom-out > .fa {
+  position: relative;
+  font-size: 16px;
+}
+.btn-zoom-in > .fa > .fa,
+.btn-zoom-out > .fa > .fa {
+  font-size: 8px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.sound-btn-wrapper {
+  position: absolute;
+  top: 4px;
+  right: 30px;
+}
+.sound-btn-wrapper > .sound-btn {
+  background: #ededed;
+  color: #21366b;
+  outline: none;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+}
+.sound-btn-wrapper > .sound-btn:hover {
+  opacity: 0.9;
+}
+.sound-btn-wrapper > .sound-btn:active {
+  background: #21366b;
+  color: #fff;
+}
+.sound-btn-wrapper > .sound-btn.sound-btn-mute,
+.sound-btn-wrapper > .sound-btn.sound-btn-high {
+  display: none;
+}

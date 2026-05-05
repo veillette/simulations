@@ -52,9 +52,17 @@ module.exports = function(grunt){
 			}
 		},
 		connect: {
+			src: {
+				options: {
+					port: 8080,
+					base: require('path').resolve('..'),
+					keepalive: false,
+					open: 'http://localhost:8080/moving-man/src/'
+				}
+			},
 			dist: {
 				options: {
-					port: '8090',
+					port: 8090,
 					base: 'dist'
 				}
 			}
@@ -88,16 +96,7 @@ module.exports = function(grunt){
 						name: 'css',
 						location: '../../bower_components/require-css',
 						main: 'css'
-					}, {
-						name: 'less',
-						location: '../../bower_components/require-less',
-						main: 'less'
 					}],
-					less: {
-						modifyVars: {
-							'fa-font-path': '"../node_modules/font-awesome/fonts/"'
-						}
-					},
 					shim: {
 						fparser: {
 							exports: 'Formula'
@@ -125,10 +124,44 @@ module.exports = function(grunt){
 				}
 			}		
 		},		
+		less: {
+			dev: {
+				files: [
+					{
+						expand: true,
+						cwd: 'src/styles',
+						src: ['*.less', '!variables.less', '!mixins.less'],
+						dest: 'src/styles',
+						ext: '.css'
+					},
+					{
+						expand: true,
+						cwd: '../common/styles',
+						src: ['slider.less', 'radio.less'],
+						dest: '../common/styles',
+						ext: '.css'
+					},
+					{
+						expand: true,
+						cwd: '../common/app',
+						src: ['app.less', 'tabs.less'],
+						dest: '../common/app',
+						ext: '.css'
+					},
+					{
+						expand: true,
+						cwd: '../common/graph',
+						src: ['graph.less'],
+						dest: '../common/graph',
+						ext: '.css'
+					}
+				]
+			}
+		},
 		watch: {
 			styles: {
-				files: ['src/less/**/*.less'], // files to watch
-				tasks: ['less:development'],
+				files: ['src/styles/**/*.less', '../common/styles/*.less'],
+				tasks: ['less:dev'],
 				options: {
 					nospawn: true
 				}
@@ -152,20 +185,19 @@ module.exports = function(grunt){
 
 	require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
-
-		// Build the template, replacing {{ test }} with the list of test files
-		var template = grunt.file.read(options.template).replace('{{ tests }}', JSON.stringify(tests));
-
-		// Write template to tests directory and run tests
-		grunt.file.write(options.runner, template);
-	});
-
 	grunt.registerTask('default', [
+		'watch'
+	]);
+
+	grunt.registerTask('serve', [
+		'less:dev',
+		'connect:src',
 		'watch'
 	]);
 
 	grunt.registerTask('dist', [
 		'clean:dist',
+		'less:dev',
 		'requirejs:compile',
 		'copy',
 		'rename:optimized',

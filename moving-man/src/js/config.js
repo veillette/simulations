@@ -18,27 +18,15 @@
             models:     '../js/models',
             templates:  '../templates',
             styles:     '../styles',
-            common:     '../../../common'
+            common:     '../../../common',
+            less:       '../js/less-shim'
         },
 
         packages: [{
             name: 'css',
             location: '../../bower_components/require-css',
             main: 'css'
-        }, {
-            name: 'less',
-            location: '../../bower_components/require-less',
-            main: 'less'
         }],
-
-        less: {
-            logLevel: 1,
-            async: true,
-
-            globalVars: {
-                dependencyDir: '"/bower_components"'
-            }
-        },
 
         shim: {
             fparser: {

@@ -1,0 +1,90 @@
+.moving-man-view {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-left: -25px;
+  -webkit-transform: translate(50%, 0);
+  -ms-transform: translate(50%, 0);
+  transform: translate(50%, 0);
+  z-index: 70;
+  width: 50px;
+  height: 113px;
+  cursor: move;
+  cursor: ew-resize;
+}
+.moving-man-view > .image {
+  width: 100%;
+  height: 100%;
+  background-image: url(../img/phet/man-standing.gif);
+  background-size: 100% 100%;
+}
+.moving-man-view.left > .image,
+.moving-man-view.right > .image {
+  background-image: url(../img/phet/man-left.gif);
+}
+.moving-man-view.right > .image {
+  -webkit-transform: scaleX(-1);
+  -ms-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+.moving-man-view .arrow {
+  position: absolute;
+  height: 30px;
+  opacity: 0.8;
+  overflow: hidden;
+  display: none;
+}
+.moving-man-view .arrow.left {
+  right: 50%;
+}
+.moving-man-view .arrow.left > .arrow-head {
+  left: 0;
+  border-top: 15px solid transparent !important;
+  border-right: 20px solid;
+  border-bottom: 15px solid transparent !important;
+  border-left: none;
+}
+.moving-man-view .arrow.left > .arrow-shaft {
+  left: 19px;
+}
+.moving-man-view .arrow.right {
+  left: 50%;
+}
+.moving-man-view .arrow.right > .arrow-head {
+  right: 0;
+  border-top: 15px solid transparent !important;
+  border-left: 20px solid;
+  border-bottom: 15px solid transparent !important;
+  border-right: none;
+}
+.moving-man-view .arrow.right > .arrow-shaft {
+  right: 19px;
+}
+.moving-man-view .arrow.velocity {
+  bottom: -9px;
+}
+.moving-man-view .arrow.velocity > .arrow-head {
+  border-color: #CD2520;
+}
+.moving-man-view .arrow.velocity > .arrow-shaft {
+  background: #CD2520;
+}
+.moving-man-view .arrow.acceleration {
+  bottom: -25px;
+}
+.moving-man-view .arrow.acceleration > .arrow-head {
+  border-color: #349E34;
+}
+.moving-man-view .arrow.acceleration > .arrow-shaft {
+  background: #349E34;
+}
+.moving-man-view .arrow > .arrow-head {
+  position: absolute;
+  bottom: 0;
+}
+.moving-man-view .arrow > .arrow-shaft {
+  position: absolute;
+  bottom: 9px;
+  height: 12px;
+  width: 100%;
+}

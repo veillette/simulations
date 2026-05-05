@@ -1,0 +1,60 @@
+.sim-tabs > ul {
+  margin: 0;
+  padding: 0 0 0 30px;
+  font-size: 0;
+  list-style-type: none;
+  color: #21366b;
+  border-bottom: 2px solid #21366b;
+}
+.sim-tabs > ul > li {
+  display: inline-block;
+  padding: 7px 10px;
+  margin-right: 3px;
+  font-size: 1.4rem;
+  background-color: #ededed;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.sim-tabs > ul > li.singleton {
+  cursor: default;
+}
+.sim-tabs > ul > li > .tab-title {
+  margin-left: 2px;
+  vertical-align: middle;
+}
+.sim-tabs > ul > li > .tab-title::after {
+  font-weight: bold;
+  margin-left: 5px;
+  vertical-align: top;
+  content: "+";
+}
+.sim-tabs > ul > li.active {
+  color: #ededed;
+  background-color: #21366b;
+}
+.sim-tabs > ul > li.active > .tab-title::after {
+  content: "\2212";
+}
+.sim-tabs > ul > li.disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.65;
+}
+.sim-tabs > ul > li.singleton > .tab-title::after,
+.sim-tabs > ul > li.singleton.active > .tab-title::after {
+  content: "";
+}
+.sim-content {
+  display: none;
+  width: 100%;
+  min-height: 600px;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+.sim-content.active {
+  display: block;
+}

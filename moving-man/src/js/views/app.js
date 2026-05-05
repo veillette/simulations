@@ -9,8 +9,8 @@ define(function(require) {
     var IntroSimView  = require('views/sim/intro');
     var ChartsSimView = require('views/sim/charts');
 
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+    require('css!styles/font-awesome');
+    require('css!styles/app');
 
     var universalControlsHtml = require('text!templates/universal-controls.html');
 
