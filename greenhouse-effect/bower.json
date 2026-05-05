@@ -20,10 +20,11 @@
     "require-css": "~0.1.5",
     "require-less": "~0.1.2",
     "bootstrap": "~3.2.0",
-    "sinonjs": "~1.10.2",
+    "sinonjs": "~1.17.1",
     "mocha": "~1.21.4",
     "chai": "~1.9.1",
     "nouislider": "~7.0.3 >=7.0.3",
-    "pixi": "~3.0.10"
+    "pixi": "~3.0.10",
+    "underscore": "~1.8.3"
   }
 }

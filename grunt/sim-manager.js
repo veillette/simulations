@@ -1,6 +1,6 @@
 var _      = require('underscore');
 var touch  = require('touch');
-var wrench = require('wrench');
+var fse    = require('fs-extra');
 
 module.exports = function(grunt) {
 
@@ -192,7 +192,7 @@ module.exports = function(grunt) {
 			for (var i = 0; i < simDirNames.length; i++) {
 				var directory = './dist/' + simDirNames[i];
 				if (grunt.file.exists(directory)) {
-					wrench.rmdirSyncRecursive(directory);
+					fse.removeSync(directory);
 					dirsCleaned++;
 				}
 			}
@@ -223,7 +223,7 @@ module.exports = function(grunt) {
 				var dst = './dist/' + dirName;
 
 				if (grunt.file.exists(src)) {
-					wrench.copyDirSyncRecursive(src, dst);
+					fse.copySync(src, dst);
 					dirsCopied++;
 				}
 			}
@@ -278,8 +278,10 @@ module.exports = function(grunt) {
 			for (var i = 0; i < packageFiles.length; i++) {
 				packageDir = packageFiles[i].substring(0, packageFiles[i].indexOf('package.json'));
 
-				// Spawn a child process that will run the install
-				childProcess = spawn('npm', ['install'], { 
+				// Spawn a child process that will run the install. Pass
+				// --legacy-peer-deps so abandoned dev tooling (grunt-rename,
+				// grunt-contrib-less 0.11) installs alongside grunt 1.x.
+				childProcess = spawn('npm', ['install', '--legacy-peer-deps'], {
 					cwd: packageDir, // Where the package file lives
 					stdio: 'inherit' // Makes it so output gets automatically routed to our current output stream
 				});
@@ -306,7 +308,7 @@ module.exports = function(grunt) {
 			for (var i = 0; i < dirs.length; i++) {
 				var directory = dirs[i] + 'node_modules';
 				if (grunt.file.exists(directory)) {
-					wrench.rmdirSyncRecursive(directory);
+					fse.removeSync(directory);
 					dirsCleaned++;
 				}
 			}
@@ -323,11 +325,11 @@ module.exports = function(grunt) {
 		createNewSim: function(dirName, packageName, classPrefix, title) {
 			// Remove the current template's /dist directory if it exists--just slows down the copy
 			if (grunt.file.exists('./template/dist/'))
-				wrench.rmdirSyncRecursive('./template/dist/');
+				fse.removeSync('./template/dist/');
 
 			// Copy the template directory
 			var newDir = './' + dirName;
-			wrench.copyDirSyncRecursive('./template/', newDir);
+			fse.copySync('./template/', newDir);
 
 			// Replace certain strings in certain files
 			var replacements = [

@@ -21,11 +21,12 @@
     "require-less": "~0.1.2",
     "bootstrap": "~3.2.0",
     "pixi": "~1.6.1",
-    "sinonjs": "~1.10.2",
+    "sinonjs": "~1.17.1",
     "mocha": "~1.21.4",
     "chai": "~1.9.1",
     "nouislider": "~7.0.3 >=7.0.3",
     "timbre": "*",
-    "gl-matrix": "~2.2.1"
+    "gl-matrix": "~2.2.1",
+    "underscore": "~1.8.3"
   }
 }
