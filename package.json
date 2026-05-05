@@ -27,7 +27,7 @@
     "grunt-contrib-copy": "^1.0.0",
     "grunt-gh-pages": "^4.0.0",
     "grunt-targethtml": "^0.2.6",
-    "matchdep": "^2.0.0",
+    "matchdep": "^1.0.0",
     "touch": "^3.1.1",
     "underscore": "^1.13.8"
   }
