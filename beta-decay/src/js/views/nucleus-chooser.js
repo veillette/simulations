@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var NucleusType                     = require('models/nucleus-type');
     var Hydrogen3CompositeNucleus       = require('models/nucleus/hydrogen-3-composite');
     var Carbon14CompositeNucleus        = require('models/nucleus/carbon-14-composite');

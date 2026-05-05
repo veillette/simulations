@@ -1,4 +1,16 @@
-@import "../../node_modules/bootstrap/less/mixins/vendor-prefixes.less";
+// Vendor-prefix mixins formerly from Bootstrap 3 LESS (Bootstrap 5 uses SASS)
+.box-shadow(@shadow) {
+    -webkit-box-shadow: @shadow;
+            box-shadow: @shadow;
+}
+
+.user-select(@select) {
+    -webkit-user-select: @select;
+       -moz-user-select: @select;
+        -ms-user-select: @select;
+            user-select: @select;
+}
+
 @import "../../../common/styles/mixins/vendor-prefixes.less";
 @import "../../../common/styles/mixins/buttons.less";
 

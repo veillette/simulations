@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var ReservoirObjectView = require('views/reservoir-object');
 
     var Constants = require('constants');

@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var NuclearPhysicsSimView = require('views/sim');
     
     var BetaDecayLegendView         = require('beta-decay/views/legend');

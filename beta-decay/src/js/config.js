@@ -3,9 +3,9 @@
 
     var config = {
         paths: {
-            jquery:       '../../../nuclear-physics/bower_components/jquery/dist/jquery',
-            underscore:   '../../../nuclear-physics/bower_components/underscore/underscore',
-            backbone:     '../../../nuclear-physics/bower_components/backbone/backbone',
+            jquery:       '../../../nuclear-physics/node_modules/jquery/dist/jquery',
+            underscore:   '../../../nuclear-physics/node_modules/underscore/underscore',
+            backbone:     '../../../nuclear-physics/node_modules/backbone/backbone',
             bootstrap:    '../../../nuclear-physics/bower_components/bootstrap/dist/js/bootstrap.min',
             text:         '../../../nuclear-physics/bower_components/requirejs-text/text',
             pixi:         '../../../nuclear-physics/bower_components/pixi/bin/pixi',

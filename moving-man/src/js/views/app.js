@@ -2,6 +2,8 @@ define(function(require) {
     
     'use strict';
 
+    var _ = require('underscore');
+
     var AppView = require('common/app/app');
 
     var IntroSimView  = require('views/sim/intro');

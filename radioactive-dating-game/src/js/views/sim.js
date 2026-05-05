@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var NuclearPhysicsSimView = require('views/sim');
 
     var Constants = require('constants');

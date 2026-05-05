@@ -3,6 +3,8 @@ define(function (require) {
     'use strict';
 
 
+    var _ = require('underscore');
+
     var Constants = require('nuclear-physics/constants'); 
 
     /*************************************************************************

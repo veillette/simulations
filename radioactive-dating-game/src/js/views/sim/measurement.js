@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var Assets = require('common/v3/pixi/assets');
 
     var TimeFormatter = require('models/time-formatter');

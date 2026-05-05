@@ -3,9 +3,9 @@
 
 	var config = {
 		paths: {
-			jquery:     '../../bower_components/jquery/dist/jquery',
+			jquery:     '../../node_modules/jquery/dist/jquery',
 			underscore: '../../bower_components/lodash/dist/lodash',
-			backbone:   '../../bower_components/backbone/backbone',
+			backbone:   '../../node_modules/backbone/backbone',
 			bootstrap:  '../../bower_components/bootstrap/dist/js/bootstrap.min',
 			text:       '../../bower_components/requirejs-text/text',
 			pixi:       '../../bower_components/pixi/bin/pixi',

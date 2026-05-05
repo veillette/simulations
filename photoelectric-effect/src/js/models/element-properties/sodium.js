@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var DischargeLampElementProperties = require('discharge-lamps/models/element-properties');
     var DefaultEnergyEmissionStrategy  = require('discharge-lamps/models/default-energy-emission-strategy');
 

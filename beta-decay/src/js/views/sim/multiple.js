@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var MultiNucleusBetaDecaySimulation = require('beta-decay/models/simulation/multi-nucleus');
 
     var BetaDecaySimView               = require('beta-decay/views/sim');

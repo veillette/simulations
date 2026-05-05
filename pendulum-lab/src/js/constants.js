@@ -3,6 +3,8 @@ define(function (require) {
     'use strict';
 
 
+    var _ = require('underscore');
+
     var Constants = {}; 
     var ColorConstants = {
         'cool-gray' : '#6a7686',

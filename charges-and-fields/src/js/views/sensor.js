@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var PIXI = require('pixi');
 
     var ArrowView = require('common/v3/pixi/view/arrow');

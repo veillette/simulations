@@ -11,15 +11,12 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "~2.1.1",
     "lodash": "~2.4.1",
-    "backbone": "~1.1.2",
     "font-awesome": "~4.2.0",
     "requirejs": "~2.1.14",
     "requirejs-text": "~2.0.12",
     "require-css": "~0.1.5",
     "require-less": "~0.1.2",
-    "bootstrap": "~3.2.0",
     "sinonjs": "~1.17.1",
     "mocha": "~1.21.4",
     "chai": "~1.9.1",
@@ -27,7 +24,6 @@
     "pixi": "~1.6.1",
     "gl-matrix": "~2.2.1",
     "buzz": "~1.1.7",
-    "fparser": "~1.2.1",
-    "underscore": "~1.8.3"
+    "fparser": "~1.2.1"
   }
 }

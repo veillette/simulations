@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var HalfLifeSimulation = require('radioactive-dating-game/models/simulation/half-life');
 
     var RadioactiveDatingGameSimView = require('radioactive-dating-game/views/sim');

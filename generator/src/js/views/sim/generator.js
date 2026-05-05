@@ -2,6 +2,8 @@ define(function (require) {
 
     'use strict';
 
+    var _ = require('underscore');
+
     var GeneratorSimView = require('views/sim/generator');
 
     /**

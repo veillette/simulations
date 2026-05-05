@@ -3,9 +3,9 @@
 
     var config = {
         paths: {
-            jquery:     '../../../faraday/bower_components/jquery/dist/jquery',
-            underscore: '../../../faraday/bower_components/underscore/underscore',
-            backbone:   '../../../faraday/bower_components/backbone/backbone',
+            jquery:     '../../../faraday/node_modules/jquery/dist/jquery',
+            underscore: '../../../faraday/node_modules/underscore/underscore',
+            backbone:   '../../../faraday/node_modules/backbone/backbone',
             bootstrap:  '../../../faraday/bower_components/bootstrap/dist/js/bootstrap.min',
             text:       '../../../faraday/bower_components/requirejs-text/text',
             pixi:       '../../../faraday/bower_components/pixi/bin/pixi',

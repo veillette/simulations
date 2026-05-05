@@ -3,10 +3,10 @@
 
     var config = {
         paths: {
-            jquery:     '../../bower_components/jquery/dist/jquery',
-            underscore: '../../bower_components/underscore/underscore',
+            jquery:     '../../node_modules/jquery/dist/jquery',
+            underscore: '../../node_modules/underscore/underscore',
             underscoreDeepExtend: '../../bower_components/underscore-deep-extend/index',
-            backbone:   '../../bower_components/backbone/backbone',
+            backbone:   '../../node_modules/backbone/backbone',
             bootstrap:  '../../bower_components/bootstrap/dist/js/bootstrap.min',
             text:       '../../bower_components/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',

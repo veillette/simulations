@@ -3,9 +3,9 @@
 
     var config = {
         paths: {
-            jquery:       '../../../circuit-construction-kit/bower_components/jquery/dist/jquery',
-            underscore:   '../../../circuit-construction-kit/bower_components/underscore/underscore',
-            backbone:     '../../../circuit-construction-kit/bower_components/backbone/backbone',
+            jquery:       '../../../circuit-construction-kit/node_modules/jquery/dist/jquery',
+            underscore:   '../../../circuit-construction-kit/node_modules/underscore/underscore',
+            backbone:     '../../../circuit-construction-kit/node_modules/backbone/backbone',
             bootstrap:    '../../../circuit-construction-kit/bower_components/bootstrap/dist/js/bootstrap.min',
             text:         '../../../circuit-construction-kit/bower_components/requirejs-text/text',
             pixi:         '../../../circuit-construction-kit/bower_components/pixi/bin/pixi',
