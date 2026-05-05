@@ -2,6 +2,7 @@ define(function (require) {
 
     'use strict';
 
+    var _        = require('underscore');
     var Backbone = require('backbone');
     var Pool     = require('object-pool');
     var SAT      = require('sat');

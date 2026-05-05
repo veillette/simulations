@@ -3,10 +3,10 @@
 
     var config = {
         paths: {
-            jquery:     '../../bower_components/jquery/dist/jquery',
-            underscore: '../../bower_components/underscore/underscore',
-            backbone:   '../../bower_components/backbone/backbone',
-            bootstrap:  '../../bower_components/bootstrap/dist/js/bootstrap.min',
+            jquery:     '../../node_modules/jquery/dist/jquery',
+            underscore: '../../node_modules/underscore/underscore',
+            backbone:   '../../node_modules/backbone/backbone',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
             text:       '../../bower_components/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',

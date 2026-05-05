@@ -13,7 +13,7 @@ module.exports = function(grunt) {
 		},
 		copy: {
 			require: {
-				src: 'bower_components/requirejs/require.js',
+				src: 'node_modules/requirejs/require.js',
 				dest: 'dist/js/require.js'
 			},
 			images: {

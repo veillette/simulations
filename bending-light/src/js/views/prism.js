@@ -2,8 +2,9 @@ define(function(require) {
 
     'use strict';
 
+    var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
                    require('common/v3/pixi/extensions');
     var Colors   = require('common/colors/colors');
