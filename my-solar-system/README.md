@@ -24,7 +24,7 @@ To view tests in a browser, you first need to
 
 1. set up a server (check out the Hosting section below)
 2. build the test index file by running `grunt build_tests` or `grunt test` (which runs `build_tests`) 
-3. then go to [http://localhost:8000/test/](http://localhost:8000/test/). 
+3. then go to [http://localhost:8080/my-solar-system/test/](http://localhost:8080/my-solar-system/test/). 
 
 ## Development
 
@@ -34,7 +34,7 @@ To host a development server for this project, follow the instructions found in 
 
 ### Updating
 
-From the root `moving-man` directory, run `npm run-script upgrade`, which executes the following commands:
+From the root `my-solar-system` directory, run `npm run-script upgrade`, which executes the following commands:
 
 1. `npm update`
 2. `bower update`

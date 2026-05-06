@@ -106,9 +106,6 @@ module.exports = function(grunt) {
 			}
 		},
 		eslint: {
-			options: {
-				configType: 'flat'
-			},
 			source: {
 				src: ['src/**/*.js', '!src/js/lib/**/*.js']
 			}

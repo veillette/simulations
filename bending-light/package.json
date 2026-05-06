@@ -22,6 +22,7 @@
     "backbone": "^1.4.1",
     "bootstrap": "^3.4.1",
     "bootstrap-select": "^1.13.18",
+    "chai": "^4.5.0",
     "clipper-lib": "^1.0.0",
     "csso": "^5.0.5",
     "eslint": "^10.3.0",

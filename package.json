@@ -1,6 +1,6 @@
 {
   "name": "os-simulations",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A collection of web-based simulations from OpenStax",
   "type": "module",
   "scripts": {
