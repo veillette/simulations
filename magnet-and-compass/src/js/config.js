@@ -12,9 +12,8 @@
             nouislider: '../../../faraday/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../../faraday/bower_components/buzz/dist/buzz.min',
 
-            'vector2-node':          '../../../faraday/node_modules/vector2-node-shimmed/index',
-            'object-pool':           '../../../faraday/node_modules/object-pool-shimmed/index',
-            'circular-list':         '../../../faraday/node_modules/circular-list-shimmed/index',
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../../faraday/node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../../faraday/node_modules/bootstrap-select/less/bootstrap-select',
 

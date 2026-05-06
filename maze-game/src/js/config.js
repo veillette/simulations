@@ -11,7 +11,7 @@
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../bower_components/buzz/dist/buzz.min',
-            'vector2-node':   '../../node_modules/vector2-node-shimmed/index',
+            'vector2-node':   '../../../common/math/vector2',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
 

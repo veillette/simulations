@@ -12,9 +12,8 @@
             nouislider:   '../../../nuclear-physics/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:         '../../../nuclear-physics/bower_components/buzz/dist/buzz.min',
 
-            'vector2-node':          '../../../nuclear-physics/node_modules/vector2-node-shimmed/index',
-            'object-pool':           '../../../nuclear-physics/node_modules/object-pool-shimmed/index',
-            'circular-list':         '../../../nuclear-physics/node_modules/circular-list-shimmed/index',
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../../nuclear-physics/node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../../nuclear-physics/node_modules/bootstrap-select/less/bootstrap-select',
 

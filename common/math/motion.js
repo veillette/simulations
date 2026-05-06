@@ -4,7 +4,20 @@ define(function (require) {
 
     var _ = require('underscore');
     
-    require('../node_modules/least-squares/lib/least-squares'); var leastSquares = window.lsq;
+    function leastSquares(X, Y, _ignored, out) {
+        var n = X.length;
+        var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        for (var i = 0; i < n; i++) {
+            sumX  += X[i];
+            sumY  += Y[i];
+            sumXY += X[i] * Y[i];
+            sumX2 += X[i] * X[i];
+        }
+        var denom = n * sumX2 - sumX * sumX;
+        if (denom === 0) { out.m = NaN; out.b = NaN; return; }
+        out.m = (n * sumXY - sumX * sumY) / denom;
+        out.b = (sumY - out.m * sumX) / n;
+    }
 
     /**
      * Source ported from phet.common.motion.MotionMath.

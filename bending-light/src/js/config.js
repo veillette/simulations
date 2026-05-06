@@ -13,9 +13,8 @@
             buzz:       '../../bower_components/buzz/dist/buzz.min',
             
             'sat':                   '../../node_modules/sat/SAT',
-            'vector2-node':          '../../node_modules/vector2-node-shimmed/index',
-            'object-pool':           '../../node_modules/object-pool-shimmed/index',
-            'circular-list':         '../../node_modules/circular-list-shimmed/index',
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
             'clipper-lib':           '../../node_modules/clipper-lib/clipper',

@@ -18,7 +18,6 @@
     "url": "https://github.com/Connexions/simulations/issues"
   },
   "homepage": "https://github.com/Connexions/simulations",
-  "dependencies": {},
   "devDependencies": {
     "backbone": "^1.4.1",
     "bootstrap": "^5.3.3",

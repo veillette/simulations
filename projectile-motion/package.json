@@ -4,7 +4,6 @@
   "description": "A simulation to show effects of environment and initial conditions of a projectile launch on a projectile's trajectory through the air.",
   "main": "main.js",
   "scripts": {
-    "postinstall": "r.js -convert node_modules/vector2-node node_modules/vector2-node-shimmed; r.js -convert node_modules/object-pool node_modules/object-pool-shimmed; r.js -convert node_modules/circular-list node_modules/circular-list-shimmed",
     "test": "grunt test"
   },
   "repository": {
@@ -19,7 +18,6 @@
     "url": "https://github.com/Connexions/simulations/issues"
   },
   "homepage": "https://github.com/Connexions/simulations",
-  "dependencies": {},
   "devDependencies": {
     "backbone": "^1.4.1",
     "bootstrap": "^5.3.3",
@@ -46,10 +44,8 @@
     "karma-requirejs": "^1.1.0",
     "less": "^4.6.4",
     "mocha": "^11.7.5",
-    "object-pool": "^0.2.0",
     "requirejs": "^2.3.7",
     "underscore": "^1.13.8",
-    "vector2-node": "0.0.3",
     "load-grunt-tasks": "^5.1.0"
   },
   "overrides": {
