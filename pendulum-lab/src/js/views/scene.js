@@ -8,7 +8,7 @@ define(function(require) {
     // Common dependencies
     var Vector2            = require('common/math/vector2');
     var ModelViewTransform = require('common/math/model-view-transform');
-    var PixiSceneView      = require('common/pixi/view/scene');
+    var PixiSceneView      = require('common/v3/pixi/view/scene');
 
     // Project dependencies
 
@@ -51,9 +51,9 @@ define(function(require) {
         },
 
         initLayers: function() {
-            this.toolsLayer  = new PIXI.DisplayObjectContainer();
-            this.bodyLayer   = new PIXI.DisplayObjectContainer();
-            this.springLayer = new PIXI.DisplayObjectContainer();
+            this.toolsLayer  = new PIXI.Container();
+            this.bodyLayer   = new PIXI.Container();
+            this.springLayer = new PIXI.Container();
 
             this.stage.addChild(this.toolsLayer);
             this.stage.addChild(this.bodyLayer);

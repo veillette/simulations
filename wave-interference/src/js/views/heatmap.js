@@ -161,11 +161,14 @@ define(function(require) {
 			this.$canvas = this.$('.heatmap-canvas');
 
 			this.renderer = PIXI.autoDetectRenderer(
-				this.$canvas.width(),  // Width
-				this.$canvas.height(), // Height
-				this.$canvas[0],       // Canvas element
-				true,                  // Transparent background
-				true                   // Antialiasing
+				this.$canvas.width(),
+				this.$canvas.height(),
+				{
+					resolution:  window.devicePixelRatio ? window.devicePixelRatio : 1,
+					view:        this.$canvas[0],
+					transparent: true,
+					antialias:   true
+				}
 			);
 
 			this.width  = this.$canvas.width();
@@ -174,13 +177,14 @@ define(function(require) {
 
 		initGraphics: function() {
 			// Create a stage to hold everything
-			this.stage = new PIXI.Stage(0x000000);
+			this.stage = new PIXI.Container();
 
-			// Create a specialized container for rendering lots of particles
-			this.spriteBatchContainer = new PIXI.DisplayObjectContainer();
-			this.spriteBatch = new PIXI.SpriteBatch();
-			this.spriteBatchContainer.addChild(this.spriteBatch);
-			this.stage.addChild(this.spriteBatchContainer);
+			var count = this.waveSimulation.lattice.width * this.waveSimulation.lattice.height;
+			this.particleContainer = (PIXI.particles && PIXI.particles.ParticleContainer) ?
+				new PIXI.particles.ParticleContainer(count, { alpha: true }) :
+				new PIXI.Container();
+
+			this.stage.addChild(this.particleContainer);
 
 			this.initParticles();
 			this.initComponents();
@@ -218,7 +222,7 @@ define(function(require) {
 					particle.anchor.x = particle.anchor.y = 0.5;
 
 					row.push(particle);
-					this.spriteBatch.addChild(particle);
+					this.particleContainer.addChild(particle);
 				}
 				this.particles.push(row);
 			}
@@ -242,7 +246,7 @@ define(function(require) {
 			for (i = 0; i < width; i++) {
 				for (j = 0; j < height; j++) {
 					particle = particles[i][j];
-					particle.setTexture(texture);
+					particle.texture = texture;
 					particle.position.x = xSpacing * i;
 					particle.position.y = ySpacing * (height - j - 1); // Reverse bottom to top with offset
 				}
@@ -269,7 +273,7 @@ define(function(require) {
 			ctx.fillStyle = gradient;
 			ctx.fillRect(0, 0, radius * 2, radius * 2);
 
-			return new PIXI.Texture.fromCanvas(canvas);
+			return PIXI.Texture.fromCanvas(canvas);
 		},
 
 		updateParticles: function(interpolationFactor) {

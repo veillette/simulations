@@ -6,7 +6,7 @@ define(function(require) {
 
     var Backbone = require('backbone');
     var PIXI     = require('pixi');
-    require('common/pixi/extensions');
+    require('common/v3/pixi/extensions');
 
     var PixiView = require('../view');
 

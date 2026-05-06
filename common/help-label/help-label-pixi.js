@@ -6,7 +6,7 @@ define(function(require) {
 
     var PIXI = require('pixi');
     
-    var PixiView = require('common/pixi/view');
+    var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     // var Vector2  = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
@@ -29,14 +29,12 @@ define(function(require) {
                     y: 0
                 },
                 attachTo : false,
-                alwaysAttached: false,
                 title : '',
                 content : ''
             }, options);
 
             this.position = options.position;
-            this.attachTo = options.attachTo.displayObject || options.attachTo;
-            this.alwaysAttached = options.alwaysAttached;
+            this.attachTarget = options.attachTo.displayObject || options.attachTo;
             this.width = options.width;
 
             this.labelModel = {};
@@ -54,9 +52,6 @@ define(function(require) {
             this.renderHelpLabel();
             // this.update();
             this.hide();
-
-            if (this.alwaysAttached)
-                this.attachTo.addChild(this.displayObject);
         },
 
         renderHelpLabel: function() {
@@ -71,37 +66,50 @@ define(function(require) {
             this.labelText = new PIXI.Text(this.labelModel.title, style);
             this.labelText.anchor.x = this.labelModel.anchor.x;
             this.labelText.anchor.y = this.labelModel.anchor.y;
+            this.labelText.resolution = this.getResolution();
 
             this.displayObject.addChild(this.labelText);
             this.resize();
         },
 
-        show: function(){
-            if (this.alwaysAttached)
-                this.displayObject.visible = true;
+        attachTo: function(target) {
+            if (target)
+                this.attachTarget = target.displayObject || target;
             else
-                this.attachTo.addChildAt(this.displayObject, 0);
+                this.attachTarget = target;
+            
+            if (this.showing && this.attachTarget)
+                this._attach();
+        },
+
+        _attach: function() {
+            this.attachTarget.addChildAt(this.displayObject, 0);
+            this.resize();
+        },
+
+        show: function(){
+            if (this.attachTarget)
+                this._attach();
             this.showing = true;
         },
 
-        hide: function(){
-            if (this.alwaysAttached)
-                this.displayObject.visible = false;
-            else
-                this.attachTo.removeChild(this.displayObject);
+        hide: function() {
+            if (this.displayObject.parent && this.displayObject.parent.children.indexOf(this.displayObject) !== -1)
+                this.displayObject.parent.removeChild(this.displayObject);
             this.showing = false;
         },
 
         toggle: function(){
-            if(this.showing){
+            if (this.showing){
                 this.hide();
-            }else{
+            }
+            else{
                 this.show();
             }
         },
 
         resize: function(){
-            this.displayObject.y = (this.position.y)? this.position.y : this.attachTo.height;
+            this.displayObject.y = (this.position.y !== undefined) ? this.position.y : this.attachTarget.height;
             this.displayObject.y = Math.round(this.displayObject.y);
 
 

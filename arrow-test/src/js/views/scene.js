@@ -3,8 +3,8 @@ define(function(require) {
     'use strict';
 
 
-    var PixiSceneView = require('common/pixi/view/scene');
-    var DraggableArrowView = require('common/pixi/view/arrow-draggable');
+    var PixiSceneView = require('common/v3/pixi/view/scene');
+    var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
 
 
     // Constants
