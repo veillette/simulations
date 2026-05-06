@@ -407,7 +407,7 @@ define(function (require) {
 
         update: function(time, deltaTime) {
             for (var i = 0; i < this.branches.length; i++) {
-                if (typeof this.branches.at(i).resetDynamics === 'function')
+                if (typeof this.branches.at(i).update === 'function')
                     this.branches.at(i).update(time, deltaTime);
             }
         },
@@ -421,7 +421,7 @@ define(function (require) {
 
         setTime: function(time) {
             for (var i = 0; i < this.branches.length; i++) {
-                if (typeof this.branches.at(i).resetDynamics === 'function')
+                if (typeof this.branches.at(i).setTime === 'function')
                     this.branches.at(i).setTime(time);
             }
         },

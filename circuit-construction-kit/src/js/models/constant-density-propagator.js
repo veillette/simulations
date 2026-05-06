@@ -71,6 +71,8 @@ define(function (require) {
             var max = 0;
             for (var i = 0; i < branches.length; i++) {
                 var current = branches.at(i).get('current');
+                if (typeof current !== 'number' || !isFinite(current))
+                    continue;
                 max = Math.max(max, Math.abs(current));
             }
             return max;
@@ -128,16 +130,27 @@ define(function (require) {
                 //TODO fix this
                 return;
             }
+
+            if (typeof deltaTime !== 'number' || !isFinite(deltaTime))
+                return;
+
             var current = e.get('branch').get('current');
+            if (typeof current !== 'number' || !isFinite(current))
+                return;
 
             if (current === 0 || Math.abs(current) < MIN_CURRENT)
                 return;
 
             var speed = current * this.speedScale;
             var dx = (speed * deltaTime) * this.scale;
+            if (!isFinite(dx))
+                return;
             var newX = x + dx;
 
             var branch = e.get('branch');
+            var branchLength = branch.getLength();
+            if (typeof branchLength !== 'number' || !isFinite(branchLength))
+                return;
             if (branch.containsScalarLocation(newX)) {
                 e.set('distAlongWire', newX);
             }
@@ -150,7 +163,7 @@ define(function (require) {
                     under = true;
                 }
                 else {
-                    overshoot = Math.abs(branch.getLength() - newX);
+                    overshoot = Math.abs(branchLength - newX);
                     under = false;
                 }
 
