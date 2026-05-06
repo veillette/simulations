@@ -1,569 +1,563 @@
-define(function (require) {
-
-    'use strict';
-
-    var Vector2 = require('common/math/vector2');
-
-    var HalfLifeInfo = require('models/half-life-info');
-    var NucleusType  = require('models/nucleus-type');
-
-    var Constants = {};
-
-    /*************************************************************************
-     **                                                                     **
-     **                         UNIVERSAL CONSTANTS                         **
-     **                                                                     **
-     *************************************************************************/
-
-    Constants.FRAME_RATE = 25;
-    Constants.DELTA_TIME_PER_FRAME = 5;
-
-    //----------------------------------------------------------------------------
-    // Paints and Colors
-    //----------------------------------------------------------------------------
-    var defaultColor   = '#ff0';
-    var decayedColor   = '#fff';
-
-    // Color for the isotope labels used for the nucleus views.
-    Constants.POLONIUM_LABEL_COLOR                  = defaultColor;
-    Constants.LEAD_LABEL_COLOR                      = decayedColor;
-    Constants.CUSTOM_NUCLEUS_LABEL_COLOR            = defaultColor;
-    Constants.CUSTOM_NUCLEUS_POST_DECAY_LABEL_COLOR = decayedColor;
-    Constants.HYDROGEN_3_LABEL_COLOR                = defaultColor;
-    Constants.HELIUM_3_LABEL_COLOR                  = decayedColor;
-    Constants.CARBON_14_LABEL_COLOR                 = defaultColor;
-    Constants.NITROGEN_14_LABEL_COLOR               = decayedColor;
-    Constants.URANIUM_235_LABEL_COLOR               = '#0f0';
-    Constants.URANIUM_236_LABEL_COLOR               = '#f80';
-    Constants.URANIUM_238_LABEL_COLOR               = '#ff0';
-    Constants.URANIUM_239_LABEL_COLOR               = '#fff';
-
-    // Color for nuclei when represented as a circle or sphere.
-    Constants.HYDROGEN_COLOR = '#FFC0DB';
-    Constants.HELIUM_COLOR = '#0ff';
-    Constants.CARBON_COLOR = '#E10000';
-    Constants.NITROGEN_COLOR = '#0E56C8';
-    Constants.URANIUM_COLOR = '#969600';
-    Constants.LEAD_COLOR = '#61757E';
-    Constants.POLONIUM_COLOR = '#f80';
-    Constants.CUSTOM_NUCLEUS_PRE_DECAY_COLOR = '#9F1E75';
-    Constants.CUSTOM_NUCLEUS_POST_DECAY_COLOR = '#78b04a';
+import Vector2 from 'common/math/vector2';
+import HalfLifeInfo from 'models/half-life-info';
+import NucleusType from 'models/nucleus-type';
+
+var Constants = {};
+
+/*************************************************************************
+ **                                                                     **
+ **                         UNIVERSAL CONSTANTS                         **
+ **                                                                     **
+ *************************************************************************/
+
+Constants.FRAME_RATE = 25;
+Constants.DELTA_TIME_PER_FRAME = 5;
+
+//----------------------------------------------------------------------------
+// Paints and Colors
+//----------------------------------------------------------------------------
+var defaultColor   = '#ff0';
+var decayedColor   = '#fff';
+
+// Color for the isotope labels used for the nucleus views.
+Constants.POLONIUM_LABEL_COLOR                  = defaultColor;
+Constants.LEAD_LABEL_COLOR                      = decayedColor;
+Constants.CUSTOM_NUCLEUS_LABEL_COLOR            = defaultColor;
+Constants.CUSTOM_NUCLEUS_POST_DECAY_LABEL_COLOR = decayedColor;
+Constants.HYDROGEN_3_LABEL_COLOR                = defaultColor;
+Constants.HELIUM_3_LABEL_COLOR                  = decayedColor;
+Constants.CARBON_14_LABEL_COLOR                 = defaultColor;
+Constants.NITROGEN_14_LABEL_COLOR               = decayedColor;
+Constants.URANIUM_235_LABEL_COLOR               = '#0f0';
+Constants.URANIUM_236_LABEL_COLOR               = '#f80';
+Constants.URANIUM_238_LABEL_COLOR               = '#ff0';
+Constants.URANIUM_239_LABEL_COLOR               = '#fff';
+
+// Color for nuclei when represented as a circle or sphere.
+Constants.HYDROGEN_COLOR = '#FFC0DB';
+Constants.HELIUM_COLOR = '#0ff';
+Constants.CARBON_COLOR = '#E10000';
+Constants.NITROGEN_COLOR = '#0E56C8';
+Constants.URANIUM_COLOR = '#969600';
+Constants.LEAD_COLOR = '#61757E';
+Constants.POLONIUM_COLOR = '#f80';
+Constants.CUSTOM_NUCLEUS_PRE_DECAY_COLOR = '#9F1E75';
+Constants.CUSTOM_NUCLEUS_POST_DECAY_COLOR = '#78b04a';
+
+// Colors for the strata in the Radioactive Dating Game, assumed to go
+// from top to bottom.
+// public static final ArrayList<Color> strataColors = new ArrayList<Color>();
+// static {
+//     strataColors.add( new Color( 111, 131, 151 ) );
+//     strataColors.add( new Color( 153, 185, 216 ) );
+//     strataColors.add( new Color( 216, 175, 208 ) );
+//     strataColors.add( new Color( 198, 218, 119 ) );
+//     strataColors.add( new Color( 179, 179, 179 ) );
+//     strataColors.add( Color.DARK_GRAY );
+// }
+
+//----------------------------------------------------------------------------
+// Misc Constants Shared within the Sim
+//----------------------------------------------------------------------------
+Constants.NUCLEON_DIAMETER        = 1.6;  // In femtometers.
+Constants.ALPHA_PARTICLE_DIAMETER = 3.2;  // In femtometers.
+Constants.ELECTRON_DIAMETER       = 0.75; // In femtometers, not to scale, or even close.
+Constants.ANTINEUTRINO_DIAMETER   = 0.3;  // In femtometers, not to scale, or even close.
+
+Constants.PROTON_COLOR       = '#f00';
+Constants.NEUTRON_COLOR      = '#888';
+Constants.ELECTRON_COLOR     = '#069EC7';
+Constants.ANTINEUTRINO_COLOR = '#00C800';
 
-    // Colors for the strata in the Radioactive Dating Game, assumed to go
-    // from top to bottom.
-    // public static final ArrayList<Color> strataColors = new ArrayList<Color>();
-    // static {
-    //     strataColors.add( new Color( 111, 131, 151 ) );
-    //     strataColors.add( new Color( 153, 185, 216 ) );
-    //     strataColors.add( new Color( 216, 175, 208 ) );
-    //     strataColors.add( new Color( 198, 218, 119 ) );
-    //     strataColors.add( new Color( 179, 179, 179 ) );
-    //     strataColors.add( Color.DARK_GRAY );
-    // }
+Constants.DEFAULT_CUSTOM_NUCLEUS_HALF_LIFE = HalfLifeInfo.convertYearsToMs(100E3);
 
-    //----------------------------------------------------------------------------
-    // Misc Constants Shared within the Sim
-    //----------------------------------------------------------------------------
-    Constants.NUCLEON_DIAMETER        = 1.6;  // In femtometers.
-    Constants.ALPHA_PARTICLE_DIAMETER = 3.2;  // In femtometers.
-    Constants.ELECTRON_DIAMETER       = 0.75; // In femtometers, not to scale, or even close.
-    Constants.ANTINEUTRINO_DIAMETER   = 0.3;  // In femtometers, not to scale, or even close.
 
-    Constants.PROTON_COLOR       = '#f00';
-    Constants.NEUTRON_COLOR      = '#888';
-    Constants.ELECTRON_COLOR     = '#069EC7';
-    Constants.ANTINEUTRINO_COLOR = '#00C800';
 
-    Constants.DEFAULT_CUSTOM_NUCLEUS_HALF_LIFE = HalfLifeInfo.convertYearsToMs(100E3);
+/*************************************************************************
+ **                                                                     **
+ **                   MULTI-NUCLEUS DECAY SIMULATION                    **
+ **                                                                     **
+ *************************************************************************/
 
+var MultiNucleusDecaySimulation = {};
 
+MultiNucleusDecaySimulation.DEFAULT_JITTER_LENGTH = 1;
+MultiNucleusDecaySimulation.FRAMES_PER_JITTER = 1;
 
-    /*************************************************************************
-     **                                                                     **
-     **                   MULTI-NUCLEUS DECAY SIMULATION                    **
-     **                                                                     **
-     *************************************************************************/
+Constants.MultiNucleusDecaySimulation = MultiNucleusDecaySimulation;
 
-    var MultiNucleusDecaySimulation = {};
 
-    MultiNucleusDecaySimulation.DEFAULT_JITTER_LENGTH = 1;
-    MultiNucleusDecaySimulation.FRAMES_PER_JITTER = 1;
+/*************************************************************************
+ **                                                                     **
+ **                               NUCLEON                               **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.MultiNucleusDecaySimulation = MultiNucleusDecaySimulation;
+var Nucleon = {};
 
+// Possible types of nucleons.  Not done as subclasses since they can
+//   change into one another.
+Nucleon.PROTON  = 1;
+Nucleon.NEUTRON = 2;
 
-    /*************************************************************************
-     **                                                                     **
-     **                               NUCLEON                               **
-     **                                                                     **
-     *************************************************************************/
+// Distance used for jittering the nucleons.
+Nucleon.JITTER_DISTANCE = Constants.NUCLEON_DIAMETER * 0.1;
 
-    var Nucleon = {};
+Constants.Nucleon = Nucleon;
 
-    // Possible types of nucleons.  Not done as subclasses since they can
-    //   change into one another.
-    Nucleon.PROTON  = 1;
-    Nucleon.NEUTRON = 2;
 
-    // Distance used for jittering the nucleons.
-    Nucleon.JITTER_DISTANCE = Constants.NUCLEON_DIAMETER * 0.1;
+/*************************************************************************
+ **                                                                     **
+ **                            ALPHA PARTICLE                           **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Nucleon = Nucleon;
+var AlphaParticle = {};
 
+AlphaParticle.MAX_AUTO_TRANSLATE_AMT = 0.75;
 
-    /*************************************************************************
-     **                                                                     **
-     **                            ALPHA PARTICLE                           **
-     **                                                                     **
-     *************************************************************************/
+// Possible states for tunneling.
+AlphaParticle.IN_NUCLEUS               = 0;
+AlphaParticle.TUNNELING_OUT_OF_NUCLEUS = 1;
+AlphaParticle.TUNNELED_OUT_OF_NUCLEUS  = 2;
 
-    var AlphaParticle = {};
+// Distance at which we consider the particle done tunneling, in fm.
+AlphaParticle.MAX_TUNNELING_DISTANCE = 1000;
 
-    AlphaParticle.MAX_AUTO_TRANSLATE_AMT = 0.75;
+Constants.AlphaParticle = AlphaParticle;
 
-    // Possible states for tunneling.
-    AlphaParticle.IN_NUCLEUS               = 0;
-    AlphaParticle.TUNNELING_OUT_OF_NUCLEUS = 1;
-    AlphaParticle.TUNNELED_OUT_OF_NUCLEUS  = 2;
 
-    // Distance at which we consider the particle done tunneling, in fm.
-    AlphaParticle.MAX_TUNNELING_DISTANCE = 1000;
+/*************************************************************************
+ **                                                                     **
+ **                            ATOMIC NUCLEUS                           **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.AlphaParticle = AlphaParticle;
+var AtomicNucleus = {};
 
+// Radius at which the repulsive electrical force overwhelms the strong
+// force.
+AtomicNucleus.DEFAULT_TUNNELING_REGION_RADIUS = 15;
+AtomicNucleus.MAX_TUNNELING_REGION_RADIUS = 200;
 
-    /*************************************************************************
-     **                                                                     **
-     **                            ATOMIC NUCLEUS                           **
-     **                                                                     **
-     *************************************************************************/
+Constants.AtomicNucleus = AtomicNucleus;
 
-    var AtomicNucleus = {};
 
-    // Radius at which the repulsive electrical force overwhelms the strong
-    // force.
-    AtomicNucleus.DEFAULT_TUNNELING_REGION_RADIUS = 15;
-    AtomicNucleus.MAX_TUNNELING_REGION_RADIUS = 200;
+/*************************************************************************
+ **                                                                     **
+ **                       COMPOSITE ATOMIC NUCLEUS                      **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.AtomicNucleus = AtomicNucleus;
+var CompositeAtomicNucleus = {};
 
+// Default value for agitation.
+CompositeAtomicNucleus.DEFAULT_AGITATION_FACTOR = 5;
+// Maximum value for agitation.
+CompositeAtomicNucleus.MAX_AGITATION_FACTOR = 9;
 
-    /*************************************************************************
-     **                                                                     **
-     **                       COMPOSITE ATOMIC NUCLEUS                      **
-     **                                                                     **
-     *************************************************************************/
+Constants.CompositeAtomicNucleus = CompositeAtomicNucleus;
 
-    var CompositeAtomicNucleus = {};
 
-    // Default value for agitation.
-    CompositeAtomicNucleus.DEFAULT_AGITATION_FACTOR = 5;
-    // Maximum value for agitation.
-    CompositeAtomicNucleus.MAX_AGITATION_FACTOR = 9;
+/*************************************************************************
+ **                                                                     **
+ **                     BETA DECAY COMPOSITE NUCLEUS                    **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.CompositeAtomicNucleus = CompositeAtomicNucleus;
+var BetaDecayCompositeNucleus = {};
 
+BetaDecayCompositeNucleus.ANTINEUTRINO_EMISSION_SPEED = 0.8; // Femtometers per clock tick.  Weird, I know.
+BetaDecayCompositeNucleus.ELECTRON_EMISSION_SPEED     = 0.4; // Femtometers per clock tick.  Weird, I know.
 
-    /*************************************************************************
-     **                                                                     **
-     **                     BETA DECAY COMPOSITE NUCLEUS                    **
-     **                                                                     **
-     *************************************************************************/
+Constants.BetaDecayCompositeNucleus = BetaDecayCompositeNucleus;
 
-    var BetaDecayCompositeNucleus = {};
 
-    BetaDecayCompositeNucleus.ANTINEUTRINO_EMISSION_SPEED = 0.8; // Femtometers per clock tick.  Weird, I know.
-    BetaDecayCompositeNucleus.ELECTRON_EMISSION_SPEED     = 0.4; // Femtometers per clock tick.  Weird, I know.
+/*************************************************************************
+ **                                                                     **
+ **                     ABSTRACT BETA DECAY NUCLEUS                     **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.BetaDecayCompositeNucleus = BetaDecayCompositeNucleus;
+var AbstractBetaDecayNucleus = {};
 
+AbstractBetaDecayNucleus.ANTINEUTRINO_EMISSION_SPEED = 1.5; // Femtometers per clock tick.  Weird, I know.
+AbstractBetaDecayNucleus.ELECTRON_EMISSION_SPEED     = 0.8; // Femtometers per clock tick.  Weird, I know.
 
-    /*************************************************************************
-     **                                                                     **
-     **                     ABSTRACT BETA DECAY NUCLEUS                     **
-     **                                                                     **
-     *************************************************************************/
+Constants.AbstractBetaDecayNucleus = AbstractBetaDecayNucleus;
 
-    var AbstractBetaDecayNucleus = {};
 
-    AbstractBetaDecayNucleus.ANTINEUTRINO_EMISSION_SPEED = 1.5; // Femtometers per clock tick.  Weird, I know.
-    AbstractBetaDecayNucleus.ELECTRON_EMISSION_SPEED     = 0.8; // Femtometers per clock tick.  Weird, I know.
+/*************************************************************************
+ **                                                                     **
+ **                  HEAVY ADJUSTABLE-HALF-LIFE NUCLEUS                 **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.AbstractBetaDecayNucleus = AbstractBetaDecayNucleus;
+var HeavyAdjustableHalfLifeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.  The
+// values below are for Bismuth 208.
+HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_PROTONS = 83;
+HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_NEUTRONS = 125;
 
-    /*************************************************************************
-     **                                                                     **
-     **                  HEAVY ADJUSTABLE-HALF-LIFE NUCLEUS                 **
-     **                                                                     **
-     *************************************************************************/
+// Random number generator used for calculating decay time based on half life.
+HeavyAdjustableHalfLifeNucleus.DEFAULT_HALF_LIFE = 1100;  // In milliseconds.
 
-    var HeavyAdjustableHalfLifeNucleus = {};
+Constants.HeavyAdjustableHalfLifeNucleus = HeavyAdjustableHalfLifeNucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.  The
-    // values below are for Bismuth 208.
-    HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_PROTONS = 83;
-    HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_NEUTRONS = 125;
 
-    // Random number generator used for calculating decay time based on half life.
-    HeavyAdjustableHalfLifeNucleus.DEFAULT_HALF_LIFE = 1100;  // In milliseconds.
+/*************************************************************************
+ **                                                                     **
+ **                         POLONIUM 211 NUCLEUS                        **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.HeavyAdjustableHalfLifeNucleus = HeavyAdjustableHalfLifeNucleus;
+var Polonium211Nucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.  The
+// values below are for Bismuth 208.
+Polonium211Nucleus.ORIGINAL_NUM_PROTONS = 84;
+Polonium211Nucleus.ORIGINAL_NUM_NEUTRONS = 127;
 
-    /*************************************************************************
-     **                                                                     **
-     **                         POLONIUM 211 NUCLEUS                        **
-     **                                                                     **
-     *************************************************************************/
+// Random number generator used for calculating decay time based on half life.
+Polonium211Nucleus.HALF_LIFE = 516;  // In milliseconds.
 
-    var Polonium211Nucleus = {};
+Constants.Polonium211Nucleus = Polonium211Nucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.  The
-    // values below are for Bismuth 208.
-    Polonium211Nucleus.ORIGINAL_NUM_PROTONS = 84;
-    Polonium211Nucleus.ORIGINAL_NUM_NEUTRONS = 127;
 
-    // Random number generator used for calculating decay time based on half life.
-    Polonium211Nucleus.HALF_LIFE = 516;  // In milliseconds.
+/*************************************************************************
+ **                                                                     **
+ **                          CARBON 14 NUCLEUS                          **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Polonium211Nucleus = Polonium211Nucleus;
+var Carbon14Nucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Carbon14Nucleus.PROTONS  = 6;
+Carbon14Nucleus.NEUTRONS = 8;
 
-    /*************************************************************************
-     **                                                                     **
-     **                          CARBON 14 NUCLEUS                          **
-     **                                                                     **
-     *************************************************************************/
+// Half life for Carbon 14.
+Carbon14Nucleus.HALF_LIFE = HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.CARBON_14);
 
-    var Carbon14Nucleus = {};
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+Carbon14Nucleus.DECAY_TIME_SCALING_FACTOR = 1500 / Carbon14Nucleus.HALF_LIFE;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Carbon14Nucleus.PROTONS  = 6;
-    Carbon14Nucleus.NEUTRONS = 8;
+Constants.Carbon14Nucleus = Carbon14Nucleus;
 
-    // Half life for Carbon 14.
-    Carbon14Nucleus.HALF_LIFE = HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.CARBON_14);
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    Carbon14Nucleus.DECAY_TIME_SCALING_FACTOR = 1500 / Carbon14Nucleus.HALF_LIFE;
+/*************************************************************************
+ **                                                                     **
+ **                     CARBON 14 COMPOSITE NUCLEUS                     **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Carbon14Nucleus = Carbon14Nucleus;
+var Carbon14CompositeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Carbon14CompositeNucleus.PROTONS  = Carbon14Nucleus.PROTONS;
+Carbon14CompositeNucleus.NEUTRONS = Carbon14Nucleus.NEUTRONS;
 
-    /*************************************************************************
-     **                                                                     **
-     **                     CARBON 14 COMPOSITE NUCLEUS                     **
-     **                                                                     **
-     *************************************************************************/
+// Half life for Carbon 14.
+Carbon14CompositeNucleus.HALF_LIFE = Carbon14Nucleus.HALF_LIFE;
 
-    var Carbon14CompositeNucleus = {};
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+Carbon14CompositeNucleus.DECAY_TIME_SCALING_FACTOR = 700 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.CARBON_14);
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Carbon14CompositeNucleus.PROTONS  = Carbon14Nucleus.PROTONS;
-    Carbon14CompositeNucleus.NEUTRONS = Carbon14Nucleus.NEUTRONS;
+// The "agitation factor" for the various types of nucleus.  The amount of
+//   agitation controls how dynamic the nucleus looks on the canvas. Values
+//   must be in the range 0-9.
+Carbon14CompositeNucleus.CARBON_14_AGITATION_FACTOR = 8;
+Carbon14CompositeNucleus.NITROGEN_14_AGITATION_FACTOR = 2;
 
-    // Half life for Carbon 14.
-    Carbon14CompositeNucleus.HALF_LIFE = Carbon14Nucleus.HALF_LIFE;
+Constants.Carbon14CompositeNucleus = Carbon14CompositeNucleus;
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    Carbon14CompositeNucleus.DECAY_TIME_SCALING_FACTOR = 700 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.CARBON_14);
 
-    // The "agitation factor" for the various types of nucleus.  The amount of
-    //   agitation controls how dynamic the nucleus looks on the canvas. Values
-    //   must be in the range 0-9.
-    Carbon14CompositeNucleus.CARBON_14_AGITATION_FACTOR = 8;
-    Carbon14CompositeNucleus.NITROGEN_14_AGITATION_FACTOR = 2;
+/*************************************************************************
+ **                                                                     **
+ **                     HYDROGEN 3 COMPOSITE NUCLEUS                    **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Carbon14CompositeNucleus = Carbon14CompositeNucleus;
+var Hydrogen3CompositeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Hydrogen3CompositeNucleus.PROTONS  = 1;
+Hydrogen3CompositeNucleus.NEUTRONS = 2;
 
-    /*************************************************************************
-     **                                                                     **
-     **                     HYDROGEN 3 COMPOSITE NUCLEUS                    **
-     **                                                                     **
-     *************************************************************************/
+// Time scaling factor - scales the rate at which decay occurs so that we
+// don't really have to wait around thousands of years.  Smaller values
+// cause quicker decay.
+Hydrogen3CompositeNucleus.DECAY_TIME_SCALING_FACTOR = 500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.HYDROGEN_3);
 
-    var Hydrogen3CompositeNucleus = {};
+// The "agitation factor" for the various types of nucleus.  The amount of
+//   agitation controls how dynamic the nucleus looks on the canvas. Values
+//   must be in the range 0-9.
+Hydrogen3CompositeNucleus.HYDROGEN_3_AGITATION_FACTOR = 8;
+Hydrogen3CompositeNucleus.HELIUM_3_AGITATION_FACTOR   = 2;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Hydrogen3CompositeNucleus.PROTONS  = 1;
-    Hydrogen3CompositeNucleus.NEUTRONS = 2;
+Constants.Hydrogen3CompositeNucleus = Hydrogen3CompositeNucleus;
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    // don't really have to wait around thousands of years.  Smaller values
-    // cause quicker decay.
-    Hydrogen3CompositeNucleus.DECAY_TIME_SCALING_FACTOR = 500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.HYDROGEN_3);
 
-    // The "agitation factor" for the various types of nucleus.  The amount of
-    //   agitation controls how dynamic the nucleus looks on the canvas. Values
-    //   must be in the range 0-9.
-    Hydrogen3CompositeNucleus.HYDROGEN_3_AGITATION_FACTOR = 8;
-    Hydrogen3CompositeNucleus.HELIUM_3_AGITATION_FACTOR   = 2;
+/*************************************************************************
+ **                                                                     **
+ **                         HYDROGEN 3 NUCLEUS                          **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Hydrogen3CompositeNucleus = Hydrogen3CompositeNucleus;
+var Hydrogen3Nucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Hydrogen3Nucleus.PROTONS  = 1;
+Hydrogen3Nucleus.NEUTRONS = 2;
 
-    /*************************************************************************
-     **                                                                     **
-     **                         HYDROGEN 3 NUCLEUS                          **
-     **                                                                     **
-     *************************************************************************/
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+Hydrogen3Nucleus.DECAY_TIME_SCALING_FACTOR = 1500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.HYDROGEN_3);
 
-    var Hydrogen3Nucleus = {};
+Constants.Hydrogen3Nucleus = Hydrogen3Nucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Hydrogen3Nucleus.PROTONS  = 1;
-    Hydrogen3Nucleus.NEUTRONS = 2;
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    Hydrogen3Nucleus.DECAY_TIME_SCALING_FACTOR = 1500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.HYDROGEN_3);
+/*************************************************************************
+ **                                                                     **
+ **                         URANIUM 235 NUCLEUS                         **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Hydrogen3Nucleus = Hydrogen3Nucleus;
+var Uranium235Nucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Uranium235Nucleus.PROTONS  = 92;
+Uranium235Nucleus.NEUTRONS = 143;
 
-    /*************************************************************************
-     **                                                                     **
-     **                         URANIUM 235 NUCLEUS                         **
-     **                                                                     **
-     *************************************************************************/
+// Number of neutrons and protons in the daughter nucleus that is produced
+// if and when this nucleus fissions.  This nucleus represents Krypton-92.
+Uranium235Nucleus.DAUGHTER_NUCLEUS_PROTONS = 36;
+Uranium235Nucleus.DAUGHTER_NUCLEUS_NEUTRONS = 56;
 
-    var Uranium235Nucleus = {};
+Constants.Uranium235Nucleus = Uranium235Nucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Uranium235Nucleus.PROTONS  = 92;
-    Uranium235Nucleus.NEUTRONS = 143;
 
-    // Number of neutrons and protons in the daughter nucleus that is produced
-    // if and when this nucleus fissions.  This nucleus represents Krypton-92.
-    Uranium235Nucleus.DAUGHTER_NUCLEUS_PROTONS = 36;
-    Uranium235Nucleus.DAUGHTER_NUCLEUS_NEUTRONS = 56;
+/*************************************************************************
+ **                                                                     **
+ **                    URANIUM 235 COMPOSITE NUCLEUS                    **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Uranium235Nucleus = Uranium235Nucleus;
+var Uranium235CompositeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Uranium235CompositeNucleus.PROTONS  = Uranium235Nucleus.PROTONS;
+Uranium235CompositeNucleus.NEUTRONS = Uranium235Nucleus.NEUTRONS;
 
-    /*************************************************************************
-     **                                                                     **
-     **                    URANIUM 235 COMPOSITE NUCLEUS                    **
-     **                                                                     **
-     *************************************************************************/
+// The "agitation factor" for the various types of nucleus.  The amount of
+//   agitation controls how dynamic the nucleus looks on the canvas. Values
+//   must be in the range 0-9.
+Uranium235CompositeNucleus.URANIUM_235_AGITATION_FACTOR = 4;
+Uranium235CompositeNucleus.URANIUM_236_AGITATION_FACTOR = 8;
 
-    var Uranium235CompositeNucleus = {};
+Constants.Uranium235CompositeNucleus = Uranium235CompositeNucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Uranium235CompositeNucleus.PROTONS  = Uranium235Nucleus.PROTONS;
-    Uranium235CompositeNucleus.NEUTRONS = Uranium235Nucleus.NEUTRONS;
 
-    // The "agitation factor" for the various types of nucleus.  The amount of
-    //   agitation controls how dynamic the nucleus looks on the canvas. Values
-    //   must be in the range 0-9.
-    Uranium235CompositeNucleus.URANIUM_235_AGITATION_FACTOR = 4;
-    Uranium235CompositeNucleus.URANIUM_236_AGITATION_FACTOR = 8;
+/*************************************************************************
+ **                                                                     **
+ **                         URANIUM 238 NUCLEUS                         **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Uranium235CompositeNucleus = Uranium235CompositeNucleus;
+var Uranium238Nucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+Uranium238Nucleus.PROTONS  = 92;
+Uranium238Nucleus.NEUTRONS = 146;
 
-    /*************************************************************************
-     **                                                                     **
-     **                         URANIUM 238 NUCLEUS                         **
-     **                                                                     **
-     *************************************************************************/
+// Half life for this nucleus.
+Uranium238Nucleus.HALF_LIFE = 1.41E20; // 4.46 billion years, converted into milliseconds.
 
-    var Uranium238Nucleus = {};
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+Uranium238Nucleus.DECAY_TIME_SCALING_FACTOR = 2500 / Uranium238Nucleus.HALF_LIFE;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    Uranium238Nucleus.PROTONS  = 92;
-    Uranium238Nucleus.NEUTRONS = 146;
+Constants.Uranium238Nucleus = Uranium238Nucleus;
 
-    // Half life for this nucleus.
-    Uranium238Nucleus.HALF_LIFE = 1.41E20; // 4.46 billion years, converted into milliseconds.
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    Uranium238Nucleus.DECAY_TIME_SCALING_FACTOR = 2500 / Uranium238Nucleus.HALF_LIFE;
+/*************************************************************************
+ **                                                                     **
+ **                 LIGHT ADJUSTABLE-HALF-LIFE NUCLEUS                  **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.Uranium238Nucleus = Uranium238Nucleus;
+var LightAdjustableHalfLifeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction.
+LightAdjustableHalfLifeNucleus.PROTONS  = 8;
+LightAdjustableHalfLifeNucleus.NEUTRONS = 8;
 
-    /*************************************************************************
-     **                                                                     **
-     **                 LIGHT ADJUSTABLE-HALF-LIFE NUCLEUS                  **
-     **                                                                     **
-     *************************************************************************/
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+LightAdjustableHalfLifeNucleus.DECAY_TIME_SCALING_FACTOR = 1500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.LIGHT_CUSTOM);
 
-    var LightAdjustableHalfLifeNucleus = {};
+Constants.LightAdjustableHalfLifeNucleus = LightAdjustableHalfLifeNucleus;
 
-    // Number of neutrons and protons in the nucleus upon construction.
-    LightAdjustableHalfLifeNucleus.PROTONS  = 8;
-    LightAdjustableHalfLifeNucleus.NEUTRONS = 8;
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    LightAdjustableHalfLifeNucleus.DECAY_TIME_SCALING_FACTOR = 1500 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.LIGHT_CUSTOM);
+/*************************************************************************
+ **                                                                     **
+ **                 LIGHT ADJUSTABLE COMPOSITE NUCLEUS                  **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.LightAdjustableHalfLifeNucleus = LightAdjustableHalfLifeNucleus;
+var LightAdjustableCompositeNucleus = {};
 
+// Number of neutrons and protons in the nucleus upon construction. The
+//   values below are for Oxygen-16, which by convention in this sim is
+//   the light nucleus with adjustable half life.
+LightAdjustableCompositeNucleus.PROTONS  = 8;
+LightAdjustableCompositeNucleus.NEUTRONS = 8;
 
-    /*************************************************************************
-     **                                                                     **
-     **                 LIGHT ADJUSTABLE COMPOSITE NUCLEUS                  **
-     **                                                                     **
-     *************************************************************************/
+// Time scaling factor - scales the rate at which decay occurs so that we
+//   don't really have to wait around thousands of years.  Smaller values
+//   cause quicker decay.
+LightAdjustableCompositeNucleus.DECAY_TIME_SCALING_FACTOR = 700 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.LIGHT_CUSTOM);
 
-    var LightAdjustableCompositeNucleus = {};
+// The "agitation factor" for the various types of nucleus.  The amount of
+//   agitation controls how dynamic the nucleus looks on the canvas. Values
+//   must be in the range 0-9.
+LightAdjustableCompositeNucleus.PRE_DECAY_AGITATION_FACTOR = 8;
+LightAdjustableCompositeNucleus.POST_DECAY_AGITATION_FACTOR = 2;
 
-    // Number of neutrons and protons in the nucleus upon construction. The
-    //   values below are for Oxygen-16, which by convention in this sim is
-    //   the light nucleus with adjustable half life.
-    LightAdjustableCompositeNucleus.PROTONS  = 8;
-    LightAdjustableCompositeNucleus.NEUTRONS = 8;
+Constants.LightAdjustableCompositeNucleus = LightAdjustableCompositeNucleus;
 
-    // Time scaling factor - scales the rate at which decay occurs so that we
-    //   don't really have to wait around thousands of years.  Smaller values
-    //   cause quicker decay.
-    LightAdjustableCompositeNucleus.DECAY_TIME_SCALING_FACTOR = 700 / HalfLifeInfo.getHalfLifeForNucleusType(NucleusType.LIGHT_CUSTOM);
 
-    // The "agitation factor" for the various types of nucleus.  The amount of
-    //   agitation controls how dynamic the nucleus looks on the canvas. Values
-    //   must be in the range 0-9.
-    LightAdjustableCompositeNucleus.PRE_DECAY_AGITATION_FACTOR = 8;
-    LightAdjustableCompositeNucleus.POST_DECAY_AGITATION_FACTOR = 2;
+/*************************************************************************
+ **                                                                     **
+ **                     DAUGHTER COMPOSITE NUCLEUS                      **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.LightAdjustableCompositeNucleus = LightAdjustableCompositeNucleus;
+var DaughterCompositeNucleus = {};
 
+// The "agitation factor" for the various types of nucleus.  The amount of
+//   agitation controls how dynamic the nucleus looks on the canvas. Values
+//   must be in the range 0-9.
+DaughterCompositeNucleus.KRYPTON_92_AGITATION_FACTOR = 6;
 
-    /*************************************************************************
-     **                                                                     **
-     **                     DAUGHTER COMPOSITE NUCLEUS                      **
-     **                                                                     **
-     *************************************************************************/
+Constants.DaughterCompositeNucleus = DaughterCompositeNucleus;
 
-    var DaughterCompositeNucleus = {};
 
-    // The "agitation factor" for the various types of nucleus.  The amount of
-    //   agitation controls how dynamic the nucleus looks on the canvas. Values
-    //   must be in the range 0-9.
-    DaughterCompositeNucleus.KRYPTON_92_AGITATION_FACTOR = 6;
+/*************************************************************************
+ **                                                                     **
+ **                         NUCLEUS DECAY CHART                         **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.DaughterCompositeNucleus = DaughterCompositeNucleus;
+var NucleusDecayChart = {};
 
+// Total amount of time in milliseconds represented by this chart.
+NucleusDecayChart.DEFAULT_TIME_SPAN = 3200;
 
-    /*************************************************************************
-     **                                                                     **
-     **                         NUCLEUS DECAY CHART                         **
-     **                                                                     **
-     *************************************************************************/
+// Minimum allowable half life.
+NucleusDecayChart.MIN_HALF_LIFE = 10; // In milliseconds.
 
-    var NucleusDecayChart = {};
+// Constants for controlling the appearance of the chart.
+NucleusDecayChart.AXIS_LABEL_FONT  = 'bold 14px Helvetica Neue';
+NucleusDecayChart.AXIS_LABEL_COLOR = '#000';
+NucleusDecayChart.AXIS_LINE_WIDTH = 2;
+NucleusDecayChart.AXIS_LINE_COLOR = '#000';
+NucleusDecayChart.TICK_MARK_LENGTH = 3;
+NucleusDecayChart.TICK_MARK_WIDTH = 2;
+NucleusDecayChart.TICK_MARK_COLOR = NucleusDecayChart.AXIS_LINE_COLOR;
+NucleusDecayChart.SMALL_LABEL_FONT = '12px Helvetica Neue';
+NucleusDecayChart.LARGE_LABEL_FONT = '14px Helvetica Neue';
+NucleusDecayChart.ISOTOPE_FONT_SIZE = 18;
 
-    // Total amount of time in milliseconds represented by this chart.
-    NucleusDecayChart.DEFAULT_TIME_SPAN = 3200;
+NucleusDecayChart.HALF_LIFE_LINE_WIDTH = 2;
+NucleusDecayChart.HALF_LIFE_LINE_DASHES = [3, 3];
+NucleusDecayChart.HALF_LIFE_LINE_COLOR = '#f00';
+NucleusDecayChart.HALF_LIFE_LINE_ALPHA = 1;
+NucleusDecayChart.HALF_LIFE_TEXT_COLOR = '#f00';
+NucleusDecayChart.HALF_LIFE_TEXT_ALPHA = 1;
+NucleusDecayChart.HALF_LIFE_TEXT_FONT  = 'bold 16px Helvetica Neue';
+NucleusDecayChart.HALF_LIFE_ARROW_LENGTH = 28;
+NucleusDecayChart.HALF_LIFE_ARROW_TAIL_WIDTH = 8;
+NucleusDecayChart.HALF_LIFE_ARROW_HEAD_WIDTH = 24;
+NucleusDecayChart.HALF_LIFE_ARROW_HEAD_LENGTH = 18;
+NucleusDecayChart.HALF_LIFE_HOVER_COLOR = '#fff';
 
-    // Minimum allowable half life.
-    NucleusDecayChart.MIN_HALF_LIFE = 10; // In milliseconds.
+NucleusDecayChart.BUTTON_BG_COLOR = '#21366b';
+NucleusDecayChart.BUTTON_FG_COLOR = '#fff';
+NucleusDecayChart.BUTTON_HOVER_ALPHA = 0.9;
+NucleusDecayChart.BUTTON_FONT = '500 14px Helvetica Neue';
 
-    // Constants for controlling the appearance of the chart.
-    NucleusDecayChart.AXIS_LABEL_FONT  = 'bold 14px Helvetica Neue';
-    NucleusDecayChart.AXIS_LABEL_COLOR = '#000';
-    NucleusDecayChart.AXIS_LINE_WIDTH = 2;
-    NucleusDecayChart.AXIS_LINE_COLOR = '#000';
-    NucleusDecayChart.TICK_MARK_LENGTH = 3;
-    NucleusDecayChart.TICK_MARK_WIDTH = 2;
-    NucleusDecayChart.TICK_MARK_COLOR = NucleusDecayChart.AXIS_LINE_COLOR;
-    NucleusDecayChart.SMALL_LABEL_FONT = '12px Helvetica Neue';
-    NucleusDecayChart.LARGE_LABEL_FONT = '14px Helvetica Neue';
-    NucleusDecayChart.ISOTOPE_FONT_SIZE = 18;
+NucleusDecayChart.DECAY_LABEL_COLOR = NucleusDecayChart.AXIS_LABEL_COLOR;
+NucleusDecayChart.DECAY_LABEL_FONT = NucleusDecayChart.AXIS_LABEL_FONT;
+NucleusDecayChart.DECAY_VALUE_FONT = '14px Helvetica Neue';
 
-    NucleusDecayChart.HALF_LIFE_LINE_WIDTH = 2;
-    NucleusDecayChart.HALF_LIFE_LINE_DASHES = [3, 3];
-    NucleusDecayChart.HALF_LIFE_LINE_COLOR = '#f00';
-    NucleusDecayChart.HALF_LIFE_LINE_ALPHA = 1;
-    NucleusDecayChart.HALF_LIFE_TEXT_COLOR = '#f00';
-    NucleusDecayChart.HALF_LIFE_TEXT_ALPHA = 1;
-    NucleusDecayChart.HALF_LIFE_TEXT_FONT  = 'bold 16px Helvetica Neue';
-    NucleusDecayChart.HALF_LIFE_ARROW_LENGTH = 28;
-    NucleusDecayChart.HALF_LIFE_ARROW_TAIL_WIDTH = 8;
-    NucleusDecayChart.HALF_LIFE_ARROW_HEAD_WIDTH = 24;
-    NucleusDecayChart.HALF_LIFE_ARROW_HEAD_LENGTH = 18;
-    NucleusDecayChart.HALF_LIFE_HOVER_COLOR = '#fff';
+// Tweakable values that can be used to adjust where the nuclei appear on
+// the chart.
+NucleusDecayChart.TIME_ZERO_OFFSET = 100; // In milliseconds
+NucleusDecayChart.FALL_TIME = 0.2; // Time in seconds for nucleus to fall from upper to lower line.
+NucleusDecayChart.TIME_ZERO_OFFSET_PROPORTION = 0.05; // Proportion of total time span
 
-    NucleusDecayChart.BUTTON_BG_COLOR = '#21366b';
-    NucleusDecayChart.BUTTON_FG_COLOR = '#fff';
-    NucleusDecayChart.BUTTON_HOVER_ALPHA = 0.9;
-    NucleusDecayChart.BUTTON_FONT = '500 14px Helvetica Neue';
+// Constants that control the way the nuclei look.
+NucleusDecayChart.NUCLEUS_SIZE_PROPORTION = 0.15;  // Fraction of the overall height of the chart.
 
-    NucleusDecayChart.DECAY_LABEL_COLOR = NucleusDecayChart.AXIS_LABEL_COLOR;
-    NucleusDecayChart.DECAY_LABEL_FONT = NucleusDecayChart.AXIS_LABEL_FONT;
-    NucleusDecayChart.DECAY_VALUE_FONT = '14px Helvetica Neue';
+// Offsets used when positioning atoms prior to decay so that they look
+//   like a bunch of atoms instead of just one.  The values are in terms
+//   of the proportion of the chart height.
+NucleusDecayChart.BUNCHING_OFFSETS = [
+    new Vector2( 0,      0),
+    new Vector2(-0.02,  -0.025),
+    new Vector2( 0.025, -0.02),
+    new Vector2( 0.015,  0.025),
+    new Vector2(-0.015,  0.015)
+];
 
-    // Tweakable values that can be used to adjust where the nuclei appear on
-    // the chart.
-    NucleusDecayChart.TIME_ZERO_OFFSET = 100; // In milliseconds
-    NucleusDecayChart.FALL_TIME = 0.2; // Time in seconds for nucleus to fall from upper to lower line.
-    NucleusDecayChart.TIME_ZERO_OFFSET_PROPORTION = 0.05; // Proportion of total time span
+Constants.NucleusDecayChart = NucleusDecayChart;
 
-    // Constants that control the way the nuclei look.
-    NucleusDecayChart.NUCLEUS_SIZE_PROPORTION = 0.15;  // Fraction of the overall height of the chart.
 
-    // Offsets used when positioning atoms prior to decay so that they look
-    //   like a bunch of atoms instead of just one.  The values are in terms
-    //   of the proportion of the chart height.
-    NucleusDecayChart.BUNCHING_OFFSETS = [
-        new Vector2( 0,      0),
-        new Vector2(-0.02,  -0.025),
-        new Vector2( 0.025, -0.02),
-        new Vector2( 0.015,  0.025),
-        new Vector2(-0.015,  0.015)
-    ];
+/*************************************************************************
+ **                                                                     **
+ **                        EXPLODING NUCLEUS VIEW                       **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.NucleusDecayChart = NucleusDecayChart;
+var ExplodingNucleusView = {};
 
+ExplodingNucleusView.EXPLOSION_TIME = 0.4; // Seconds
+ExplodingNucleusView.EXPLOSION_OUTLINE_WIDTH = 14;
+ExplodingNucleusView.EXPLOSION_OUTLINE_COLOR = '#ffff33';
+ExplodingNucleusView.EXPLOSION_FILL_COLOR = '#ffff33';
+ExplodingNucleusView.EXPLOSION_MAX_ALPHA = 0.4;
+ExplodingNucleusView.EXPLOSION_RADIUS_SCALE = 5;
 
-    /*************************************************************************
-     **                                                                     **
-     **                        EXPLODING NUCLEUS VIEW                       **
-     **                                                                     **
-     *************************************************************************/
+Constants.ExplodingNucleusView = ExplodingNucleusView;
 
-    var ExplodingNucleusView = {};
 
-    ExplodingNucleusView.EXPLOSION_TIME = 0.4; // Seconds
-    ExplodingNucleusView.EXPLOSION_OUTLINE_WIDTH = 14;
-    ExplodingNucleusView.EXPLOSION_OUTLINE_COLOR = '#ffff33';
-    ExplodingNucleusView.EXPLOSION_FILL_COLOR = '#ffff33';
-    ExplodingNucleusView.EXPLOSION_MAX_ALPHA = 0.4;
-    ExplodingNucleusView.EXPLOSION_RADIUS_SCALE = 5;
+/*************************************************************************
+ **                                                                     **
+ **                          ATOM CANISTER VIEW                         **
+ **                                                                     **
+ *************************************************************************/
 
-    Constants.ExplodingNucleusView = ExplodingNucleusView;
+var AtomCanisterView = {};
 
+// Number of tries for finding open nucleus location.
+AtomCanisterView.MAX_PLACEMENT_ATTEMPTS = 100;
+// Preferred distance between nucleus centers when placing them on the canvas.
+AtomCanisterView.PREFERRED_INTER_NUCLEUS_DISTANCE = 7;  // In femtometers.
+// Minimum distance between the center of a nucleus and a wall or other obstacle.
+AtomCanisterView.MIN_NUCLEUS_TO_OBSTACLE_DISTANCE = 2;  // In femtometers.
 
-    /*************************************************************************
-     **                                                                     **
-     **                          ATOM CANISTER VIEW                         **
-     **                                                                     **
-     *************************************************************************/
+Constants.AtomCanisterView = AtomCanisterView;
 
-    var AtomCanisterView = {};
 
-    // Number of tries for finding open nucleus location.
-    AtomCanisterView.MAX_PLACEMENT_ATTEMPTS = 100;
-    // Preferred distance between nucleus centers when placing them on the canvas.
-    AtomCanisterView.PREFERRED_INTER_NUCLEUS_DISTANCE = 7;  // In femtometers.
-    // Minimum distance between the center of a nucleus and a wall or other obstacle.
-    AtomCanisterView.MIN_NUCLEUS_TO_OBSTACLE_DISTANCE = 2;  // In femtometers.
 
-    Constants.AtomCanisterView = AtomCanisterView;
 
-
-
-
-    return Constants;
-});
+export default Constants;

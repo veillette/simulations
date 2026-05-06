@@ -1,195 +1,188 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from '../view';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Rectangle from 'common/math/rectangle';
 
-    'use strict';
+var EPSILON = 0.0001;
 
-    var _ = require('underscore');
+var GridView = PixiView.extend({
 
-    var PIXI = require('pixi');
-    var PixiView = require('../view');
+    initialize: function(options) {
+        options = _.extend({
+            origin: new Vector2(),
+            bounds: new Rectangle(0, 0, 500, 500),
+            gridSize: 25,
+            gridOffsetX: 0,
+            gridOffsetY: 0,
+            smallGridSize: 5,
+            smallGridEnabled: false,
 
-    var Colors    = require('common/colors/colors');
-    var Vector2   = require('common/math/vector2');
-    var Rectangle = require('common/math/rectangle');
+            lineColor: '#000',
+            lineWidth: 1,
+            lineAlpha: 1,
 
-    var EPSILON = 0.0001;
+            smallLineColor: '#000',
+            smallLineWidth: 1,
+            smallLineAlpha: 1
+        }, options);
 
-    var GridView = PixiView.extend({
+        this.origin = new Vector2(options.origin);
+        this.bounds = new Rectangle(options.bounds);
+        this.gridSize = options.gridSize;
+        this.gridOffsetX = options.gridOffsetX;
+        this.gridOffsetY = options.gridOffsetY;
+        this.smallGridSize = options.smallGridSize;
+        this.smallGridEnabled = options.smallGridEnabled;
 
-        initialize: function(options) {
-            options = _.extend({
-                origin: new Vector2(),
-                bounds: new Rectangle(0, 0, 500, 500),
-                gridSize: 25,
-                gridOffsetX: 0,
-                gridOffsetY: 0,
-                smallGridSize: 5,
-                smallGridEnabled: false,
+        this.lineColor = Colors.parseHex(options.lineColor);
+        this.lineWidth = options.lineWidth;
+        this.lineAlpha = options.lineAlpha;
 
-                lineColor: '#000',
-                lineWidth: 1,
-                lineAlpha: 1,
+        this.smallLineColor = Colors.parseHex(options.smallLineColor);
+        this.smallLineWidth = options.smallLineWidth;
+        this.smallLineAlpha = options.smallLineAlpha;
 
-                smallLineColor: '#000',
-                smallLineWidth: 1,
-                smallLineAlpha: 1
-            }, options);
+        this.initGraphics();
+    },
 
-            this.origin = new Vector2(options.origin);
-            this.bounds = new Rectangle(options.bounds);
-            this.gridSize = options.gridSize;
-            this.gridOffsetX = options.gridOffsetX;
-            this.gridOffsetY = options.gridOffsetY;
-            this.smallGridSize = options.smallGridSize;
-            this.smallGridEnabled = options.smallGridEnabled;
+    initGraphics: function() {
+        this.smallGrid = new PIXI.Graphics();
+        this.largeGrid = new PIXI.Graphics();
 
-            this.lineColor = Colors.parseHex(options.lineColor);
-            this.lineWidth = options.lineWidth;
-            this.lineAlpha = options.lineAlpha;
+        this.displayObject.addChild(this.smallGrid);
+        this.displayObject.addChild(this.largeGrid);
 
-            this.smallLineColor = Colors.parseHex(options.smallLineColor);
-            this.smallLineWidth = options.smallLineWidth;
-            this.smallLineAlpha = options.smallLineAlpha;
+        this.drawGrids();
+    },
 
-            this.initGraphics();
-        },
+    drawGrids: function() {
+        if (this.smallGridEnabled)
+            this.drawSmallGrid();
+        this.drawLargeGrid();
+    },
 
-        initGraphics: function() {
-            this.smallGrid = new PIXI.Graphics();
-            this.largeGrid = new PIXI.Graphics();
+    drawLargeGrid: function() {
+        this.drawGrid(
+            this.largeGrid,
+            this.gridSize,
+            null,
+            this.lineColor,
+            this.lineWidth,
+            this.lineAlpha
+        );
+    },
 
-            this.displayObject.addChild(this.smallGrid);
-            this.displayObject.addChild(this.largeGrid);
+    drawSmallGrid: function() {
+        this.drawGrid(
+            this.smallGrid, 
+            this.smallGridSize, 
+            this.gridSize, 
+            this.smallLineColor,
+            this.smallLineWidth,
+            this.smallLineAlpha
+        );
+    },
 
-            this.drawGrids();
-        },
+    drawGrid: function(grid, gridSize, skipEvery, color, lineWidth, alpha) {
+        var origin = this.origin;
+        var top    = this.bounds.top();
+        var bottom = this.bounds.bottom();
+        var left   = this.bounds.left();
+        var right  = this.bounds.right();
 
-        drawGrids: function() {
-            if (this.smallGridEnabled)
-                this.drawSmallGrid();
-            this.drawLargeGrid();
-        },
+        var startX = left   + ((origin.x - left)   % gridSize);
+        var startY = bottom + ((origin.y - bottom) % gridSize);
 
-        drawLargeGrid: function() {
-            this.drawGrid(
-                this.largeGrid,
-                this.gridSize,
-                null,
-                this.lineColor,
-                this.lineWidth,
-                this.lineAlpha
-            );
-        },
+        grid.clear();
+        grid.lineStyle(lineWidth, color, alpha);
+        grid.moveTo(0,0);
 
-        drawSmallGrid: function() {
-            this.drawGrid(
-                this.smallGrid, 
-                this.smallGridSize, 
-                this.gridSize, 
-                this.smallLineColor,
-                this.smallLineWidth,
-                this.smallLineAlpha
-            );
-        },
+        for (var x = startX; x <= right; x += gridSize) {
+            if (skipEvery !== null && (x - origin.x) % skipEvery < EPSILON && (x - origin.x) % skipEvery > -EPSILON)
+                continue;
 
-        drawGrid: function(grid, gridSize, skipEvery, color, lineWidth, alpha) {
-            var origin = this.origin;
-            var top    = this.bounds.top();
-            var bottom = this.bounds.bottom();
-            var left   = this.bounds.left();
-            var right  = this.bounds.right();
-
-            var startX = left   + ((origin.x - left)   % gridSize);
-            var startY = bottom + ((origin.y - bottom) % gridSize);
-
-            grid.clear();
-            grid.lineStyle(lineWidth, color, alpha);
-            grid.moveTo(0,0);
-
-            for (var x = startX; x <= right; x += gridSize) {
-                if (skipEvery !== null && (x - origin.x) % skipEvery < EPSILON && (x - origin.x) % skipEvery > -EPSILON)
-                    continue;
-
-                grid.moveTo(x, top);
-                grid.lineTo(x, bottom);
-            }
-
-            for (var y = startY; y <= top; y += gridSize) {
-                if (skipEvery !== null && (y - origin.y) % skipEvery < EPSILON && (y - origin.y) % skipEvery > -EPSILON)
-                    continue;
-
-                grid.moveTo(left,  y);
-                grid.lineTo(right, y);
-            }
-        },
-
-        showSmallGrid: function() {
-            this.smallGrid.visible = true;
-        },
-
-        hideSmallGrid: function() {
-            this.smallGrid.visible = false;
-        },
-
-        showLargeGrid: function() {
-            this.largeGrid.visible = true;
-        },
-
-        hideLargeGrid: function() {
-            this.largeGrid.visible = false;
-        },
-
-        show: function() {
-            this.smallGrid.visible = true;
-            this.largeGrid.visible = true;
-        },
-
-        hide: function() {
-            this.smallGrid.visible = false;
-            this.largeGrid.visible = false;
-        },
-
-        setGridSize: function(gridSize) {
-            this.gridSize = gridSize;
-            this.drawGrids();
-        },
-
-        setSmallGridSize: function(smallGridSize) {
-            this.smallGridSize = smallGridSize;
-            this.drawGrids();
-        },
-
-        setOrigin: function(origin) {
-            this.origin.set(origin);
-            this.drawGrids();
-        },
-
-        setBounds: function(bounds) {
-            this.bounds.set(bounds);
-            this.drawGrids();
-        },
-
-        set: function(options) {
-            options = _.extend({
-                origin:        this.origin,
-                bounds:        this.bounds,
-                gridSize:      this.gridSize,
-                gridOffsetX:   this.gridOffsetX,
-                gridOffsetY:   this.gridOffsetY,
-                smallGridSize: this.smallGridSize
-            }, options);
-
-            this.origin.set(options.origin);
-            this.bounds.set(options.bounds);
-
-            this.gridSize = options.gridSize;
-            this.gridOffsetX = options.gridOffsetX;
-            this.gridOffsetY = options.gridOffsetY;
-            this.smallGridSize = options.smallGridSize;
-
-            this.drawGrids();
+            grid.moveTo(x, top);
+            grid.lineTo(x, bottom);
         }
 
-    });
+        for (var y = startY; y <= top; y += gridSize) {
+            if (skipEvery !== null && (y - origin.y) % skipEvery < EPSILON && (y - origin.y) % skipEvery > -EPSILON)
+                continue;
 
-    return GridView;
+            grid.moveTo(left,  y);
+            grid.lineTo(right, y);
+        }
+    },
+
+    showSmallGrid: function() {
+        this.smallGrid.visible = true;
+    },
+
+    hideSmallGrid: function() {
+        this.smallGrid.visible = false;
+    },
+
+    showLargeGrid: function() {
+        this.largeGrid.visible = true;
+    },
+
+    hideLargeGrid: function() {
+        this.largeGrid.visible = false;
+    },
+
+    show: function() {
+        this.smallGrid.visible = true;
+        this.largeGrid.visible = true;
+    },
+
+    hide: function() {
+        this.smallGrid.visible = false;
+        this.largeGrid.visible = false;
+    },
+
+    setGridSize: function(gridSize) {
+        this.gridSize = gridSize;
+        this.drawGrids();
+    },
+
+    setSmallGridSize: function(smallGridSize) {
+        this.smallGridSize = smallGridSize;
+        this.drawGrids();
+    },
+
+    setOrigin: function(origin) {
+        this.origin.set(origin);
+        this.drawGrids();
+    },
+
+    setBounds: function(bounds) {
+        this.bounds.set(bounds);
+        this.drawGrids();
+    },
+
+    set: function(options) {
+        options = _.extend({
+            origin:        this.origin,
+            bounds:        this.bounds,
+            gridSize:      this.gridSize,
+            gridOffsetX:   this.gridOffsetX,
+            gridOffsetY:   this.gridOffsetY,
+            smallGridSize: this.smallGridSize
+        }, options);
+
+        this.origin.set(options.origin);
+        this.bounds.set(options.bounds);
+
+        this.gridSize = options.gridSize;
+        this.gridOffsetX = options.gridOffsetX;
+        this.gridOffsetY = options.gridOffsetY;
+        this.smallGridSize = options.smallGridSize;
+
+        this.drawGrids();
+    }
+
 });
+
+export default GridView;

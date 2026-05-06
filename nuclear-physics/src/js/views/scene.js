@@ -1,70 +1,65 @@
-define(function(require) {
+import AppView from 'common/v3/app/app';
+import PixiSceneView from 'common/v3/pixi/view/scene';
 
-    'use strict';
+// Constants
 
-    var AppView       = require('common/v3/app/app');
-    var PixiSceneView = require('common/v3/pixi/view/scene');
+/**
+ *
+ */
+var NuclearPhysicsSceneView = PixiSceneView.extend({
 
-    // Constants
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     *
+     * Calculates and returns the width from the space left between the other panels
      */
-    var NuclearPhysicsSceneView = PixiSceneView.extend({
+    getWidthBetweenPanels: function() {
+        if (AppView.windowIsShort())
+            return this.width - this.getLeftPadding() - this.getRightPadding() - 12 * 2;
+        else
+            return this.width - this.getRightPadding() - 20 * 2;
+    },
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, [options]);
-        },
-
-        /**
-         * Calculates and returns the width from the space left between the other panels
-         */
-        getWidthBetweenPanels: function() {
-            if (AppView.windowIsShort())
-                return this.width - this.getLeftPadding() - this.getRightPadding() - 12 * 2;
-            else
-                return this.width - this.getRightPadding() - 20 * 2;
-        },
-
-        getLeftPadding: function() {
-            var $leftPanel = this.$el.parents('.sim-view').find('.sim-controls-left');
-            if ($leftPanel.length === 0)
-                return 0;
-
-            if (AppView.windowIsShort())
-                return $leftPanel.outerWidth() + 12;
-            else
-                return 0;
-        },
-
-        getRightPadding: function() {
-            var $rightPanel = this.$el.parents('.sim-view').find('.sim-controls-right');
-            if ($rightPanel.length === 0)
-                return 0;
-
-            if (AppView.windowIsShort())
-                return $rightPanel.outerWidth() + 12;
-            else
-                return $rightPanel.outerWidth() + 20;
-        },
-
-        getTopPadding: function() {
+    getLeftPadding: function() {
+        var $leftPanel = this.$el.parents('.sim-view').find('.sim-controls-left');
+        if ($leftPanel.length === 0)
             return 0;
-        },
 
-        getBottomPadding: function() {
+        if (AppView.windowIsShort())
+            return $leftPanel.outerWidth() + 12;
+        else
             return 0;
-        },
+    },
 
-        getAvailableWidth: function() {
-            return this.width - this.getLeftPadding() - this.getRightPadding();
-        },
+    getRightPadding: function() {
+        var $rightPanel = this.$el.parents('.sim-view').find('.sim-controls-right');
+        if ($rightPanel.length === 0)
+            return 0;
 
-        getAvailableHeight: function() {
-            return this.height - this.getTopPadding() - this.getBottomPadding();
-        },
+        if (AppView.windowIsShort())
+            return $rightPanel.outerWidth() + 12;
+        else
+            return $rightPanel.outerWidth() + 20;
+    },
 
-    });
+    getTopPadding: function() {
+        return 0;
+    },
 
-    return NuclearPhysicsSceneView;
+    getBottomPadding: function() {
+        return 0;
+    },
+
+    getAvailableWidth: function() {
+        return this.width - this.getLeftPadding() - this.getRightPadding();
+    },
+
+    getAvailableHeight: function() {
+        return this.height - this.getTopPadding() - this.getBottomPadding();
+    },
+
 });
+
+export default NuclearPhysicsSceneView;

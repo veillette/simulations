@@ -1,62 +1,56 @@
-define(function (require) {
+import _ from 'underscore';
+import Atom from './atom';
 
-    'use strict';
+/**
+ * An Atom that gets its model-dependent specification from an ElementProperties object
+ */
+var PropertiesBasedAtom = Atom.extend({
 
-    var _ = require('underscore');
-
-    var Atom = require('./atom');
+    defaults: _.extend({}, Atom.prototype.defaults, {
+        isStateLifetimeFixed: true
+    }),
 
     /**
-     * An Atom that gets its model-dependent specification from an ElementProperties object
+     * Required options: {
+     *   simulation: simulation model,
+     *   numStates: number of states,
+     *   elementProperties: ElementProperties object
+     * }
      */
-    var PropertiesBasedAtom = Atom.extend({
+    initialize: function(attributes, options) {
+        if (!options.elementProperties)
+            throw 'elementProperties is a required option';
 
-        defaults: _.extend({}, Atom.prototype.defaults, {
-            isStateLifetimeFixed: true
-        }),
+        if (options.elementProperties.getStates().length < 2)
+            throw 'Atom must have at least two states';
 
-        /**
-         * Required options: {
-         *   simulation: simulation model,
-         *   numStates: number of states,
-         *   elementProperties: ElementProperties object
-         * }
-         */
-        initialize: function(attributes, options) {
-            if (!options.elementProperties)
-                throw 'elementProperties is a required option';
+        options = _.extend({
+            numStates: options.elementProperties.getStates().length
+        }, options);
 
-            if (options.elementProperties.getStates().length < 2)
-                throw 'Atom must have at least two states';
+        Atom.prototype.initialize.apply(this, [attributes, options]);
 
-            options = _.extend({
-                numStates: options.elementProperties.getStates().length
-            }, options);
+        this.energyEmissionStrategy = options.elementProperties.getEnergyEmissionStrategy();
 
-            Atom.prototype.initialize.apply(this, [attributes, options]);
+        this.setStates(options.elementProperties.getStates());
+        this.setCurrentState(options.elementProperties.getStates()[0]);
+    },
 
-            this.energyEmissionStrategy = options.elementProperties.getEnergyEmissionStrategy();
+    /**
+     * Returns the state the atom will be in after it emits a photon. By default,
+     *   this is the ground state.
+     *
+     * @return the state the atom will be in after it emits a photon
+     */
+    getEnergyStateAfterEmission: function() {
+        return this.energyEmissionStrategy.emitEnergy(this);
+    },
 
-            this.setStates(options.elementProperties.getStates());
-            this.setCurrentState(options.elementProperties.getStates()[0]);
-        },
+    setElementProperties: function(elementProperties) {
+        this.energyEmissionStrategy = elementProperties.getEnergyEmissionStrategy();
+        this.setStates(elementProperties.getStates());
+    }
 
-        /**
-         * Returns the state the atom will be in after it emits a photon. By default,
-         *   this is the ground state.
-         *
-         * @return the state the atom will be in after it emits a photon
-         */
-        getEnergyStateAfterEmission: function() {
-            return this.energyEmissionStrategy.emitEnergy(this);
-        },
-
-        setElementProperties: function(elementProperties) {
-            this.energyEmissionStrategy = elementProperties.getEnergyEmissionStrategy();
-            this.setStates(elementProperties.getStates());
-        }
-
-    });
-
-    return PropertiesBasedAtom;
 });
+
+export default PropertiesBasedAtom;

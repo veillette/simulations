@@ -1,80 +1,74 @@
-define(function (require) {
+import _ from 'underscore';
+import Electrode from './electrode';
+import ElectronSource from './electron-source';
+import ElectronSink from './electron-sink';
 
-    'use strict';
+/**
+ * A composite Electrode that comprises an ElectronSource and an ElectronSink
+ */
+var Plate = Electrode.extend({
 
-    var _ = require('underscore');
-
-    var Electrode      = require('./electrode');
-    var ElectronSource = require('./electron-source');
-    var ElectronSink   = require('./electron-sink');
+    defaults: _.extend({}, Electrode.prototype.defaults, {
+        simulation: undefined,
+        electromotiveForce: undefined
+    }),
 
     /**
-     * A composite Electrode that comprises an ElectronSource and an ElectronSink
+     * Initializes the Plate
      */
-    var Plate = Electrode.extend({
+    initialize: function(attributes, options) {
+        Electrode.prototype.initialize.apply(this, [attributes, options]);
 
-        defaults: _.extend({}, Electrode.prototype.defaults, {
-            simulation: undefined,
-            electromotiveForce: undefined
-        }),
+        this.source = new ElectronSource({
+            electromotiveForce: this.get('electromotiveForce'), 
+            point1: this.get('point1'), 
+            point2: this.get('point2'), 
+            plate: this
+        });
+        
+        this.sink = new ElectronSink({
+            simulation: this.get('simulation'), 
+            point1: this.get('point1'), 
+            point2: this.get('point2')
+        });
 
-        /**
-         * Initializes the Plate
-         */
-        initialize: function(attributes, options) {
-            Electrode.prototype.initialize.apply(this, [attributes, options]);
+        this.get('simulation').addModel(this.source);
+        this.get('simulation').addModel(this.sink);
 
-            this.source = new ElectronSource({
-                electromotiveForce: this.get('electromotiveForce'), 
-                point1: this.get('point1'), 
-                point2: this.get('point2'), 
-                plate: this
-            });
-            
-            this.sink = new ElectronSink({
-                simulation: this.get('simulation'), 
-                point1: this.get('point1'), 
-                point2: this.get('point2')
-            });
+        this.listenTo(this.sink, 'electron-absorbed', function(model, electron) {
+            this.trigger('electron-absorbed', model, electron);
+        });
+    },
 
-            this.get('simulation').addModel(this.source);
-            this.get('simulation').addModel(this.sink);
+    setCurrent: function(current) {
+        this.source.setCurrent(current);
+    },
 
-            this.listenTo(this.sink, 'electron-absorbed', function(model, electron) {
-                this.trigger('electron-absorbed', model, electron);
-            });
-        },
+    getSource: function() {
+        return this.source;
+    },
 
-        setCurrent: function(current) {
-            this.source.setCurrent(current);
-        },
+    setEmittingLength: function(length) {
+        this.source.setLength(length);
+    },
 
-        getSource: function() {
-            return this.source;
-        },
+    produceElectron: function() {
+        return this.source.produceElectron();
+    },
 
-        setEmittingLength: function(length) {
-            this.source.setLength(length);
-        },
+    destroy: function() {
+        Electrode.prototype.destroy.apply(this, arguments);
 
-        produceElectron: function() {
-            return this.source.produceElectron();
-        },
+        this.stopListening(this.source);
+        this.stopListening(this.sink);
 
-        destroy: function() {
-            Electrode.prototype.destroy.apply(this, arguments);
+        this.get('simulation').removeModel(this.source);
+        this.get('simulation').removeModel(this.sink);
 
-            this.stopListening(this.source);
-            this.stopListening(this.sink);
+        this.source.destroy();
+        this.sink.destroy();
+    }
 
-            this.get('simulation').removeModel(this.source);
-            this.get('simulation').removeModel(this.sink);
-
-            this.source.destroy();
-            this.sink.destroy();
-        }
-
-    });
-
-    return Plate;
 });
+
+export default Plate;

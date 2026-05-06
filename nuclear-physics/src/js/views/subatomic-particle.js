@@ -1,55 +1,50 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
 
-    'use strict';
-
-    var PixiView = require('common/v3/pixi/view');
+/**
+ *
+ */
+var SubatomicParticleView = PixiView.extend({
 
     /**
-     *
+     * Initializes the new SubatomicParticleView.
      */
-    var SubatomicParticleView = PixiView.extend({
+    initialize: function(options) {
+        this.updateMVT(options.mvt);
+    },
 
-        /**
-         * Initializes the new SubatomicParticleView.
-         */
-        initialize: function(options) {
-            this.updateMVT(options.mvt);
-        },
+    update: function(time, deltaTime, paused) {
+        this.updatePosition();
+    },
 
-        update: function(time, deltaTime, paused) {
-            this.updatePosition();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.updateSprite();
+        this.updatePosition();
+    },
 
-            this.updateSprite();
-            this.updatePosition();
-        },
+    updateSprite: function() {
+        if (this.sprite)
+            this.displayObject.removeChild(this.sprite);
 
-        updateSprite: function() {
-            if (this.sprite)
-                this.displayObject.removeChild(this.sprite);
+        this.sprite = this.createSprite();
 
-            this.sprite = this.createSprite();
+        this.displayObject.addChild(this.sprite);
+    },
 
-            this.displayObject.addChild(this.sprite);
-        },
+    createSprite: function() {},
 
-        createSprite: function() {},
+    updatePosition: function() {
+        var viewPosition = this.mvt.modelToView(this.model.get('position'));
+        this.displayObject.x = viewPosition.x;
+        this.displayObject.y = viewPosition.y;
+    }
 
-        updatePosition: function() {
-            var viewPosition = this.mvt.modelToView(this.model.get('position'));
-            this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y;
-        }
-
-    });
-
-
-    return SubatomicParticleView;
 });
+
+
+export default SubatomicParticleView;

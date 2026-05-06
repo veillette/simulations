@@ -1,108 +1,102 @@
-define(function (require) {
+import _ from 'underscore';
+import Pool from 'object-pool';
+import Vector2 from '../math/vector2';
+import PooledModel from '../pooled-object/model';
 
-    'use strict';
-
-    var _    = require('underscore');
-    var Pool = require('object-pool');
-
-    var Vector2     = require('../math/vector2');
-    var PooledModel = require('../pooled-object/model');
-
-    var vectorPool = Pool({
-        init: function() {
-            return new Vector2();
-        },
-        enable: function(vector) {
-            vector.set(0, 0);
-        }
-    });
+var vectorPool = Pool({
+    init: function() {
+        return new Vector2();
+    },
+    enable: function(vector) {
+        vector.set(0, 0);
+    }
+});
 
 var counter = 0;
+/**
+ * Represents an object in 2D space and provides some helper functions
+ *   for changing a position vector in a way that leverages Backbone's
+ *   event system.
+ */
+var VanillaPositionableObject = PooledModel.extend({
+
+    init: function() {
+        PooledModel.prototype.init.apply(this, arguments);
+
+        this._offsetPosition = new Vector2();
+    },
+
+    defaults: {
+        velocity: null,
+        acceleration: null
+    },
+
     /**
-     * Represents an object in 2D space and provides some helper functions
-     *   for changing a position vector in a way that leverages Backbone's
-     *   event system.
+     * Called on the instance after 'create' is called to set initial values
      */
-    var VanillaPositionableObject = PooledModel.extend({
+    onCreate: function(attributes, options) {
+        PooledModel.prototype.onCreate.apply(this, [attributes, options]);
 
-        init: function() {
-            PooledModel.prototype.init.apply(this, arguments);
+        this.set('position', this.createVector2().set(this.get('position')));
+    },
 
-            this._offsetPosition = new Vector2();
-        },
+    toJSON: function(options) {
+        return _.clone(this.attributes);
+    },
 
-        defaults: {
-            velocity: null,
-            acceleration: null
-        },
+    createVector2: function() {
+        return vectorPool.create();
+    },
 
-        /**
-         * Called on the instance after 'create' is called to set initial values
-         */
-        onCreate: function(attributes, options) {
-            PooledModel.prototype.onCreate.apply(this, [attributes, options]);
+    removeVector2: function(vec) {
+        vectorPool.remove(vec);
+    },
 
-            this.set('position', this.createVector2().set(this.get('position')));
-        },
+    getX: function(x) {
+        return this.get('position').x;
+    },
 
-        toJSON: function(options) {
-            return _.clone(this.attributes);
-        },
+    getY: function(y) {
+        return this.get('position').y;
+    },
 
-        createVector2: function() {
-            return vectorPool.create();
-        },
+    setX: function(x) {
+        this.setPosition(x, this.get('position').y);
+    },
 
-        removeVector2: function(vec) {
-            vectorPool.remove(vec);
-        },
+    setY: function(y) {
+        this.setPosition(this.get('position').x, y);
+    },
 
-        getX: function(x) {
-            return this.get('position').x;
-        },
+    translate: function(x, y) {
+        if (x instanceof Vector2)
+            this.get('position').add(x);
+        else
+            this.get('position').add(x, y);
+    },
 
-        getY: function(y) {
-            return this.get('position').y;
-        },
+    setPosition: function(x, y) {
+        if (x instanceof Vector2)
+            this.get('position').set(x);
+        else
+            this.get('position').set(x, y);
+    },
 
-        setX: function(x) {
-            this.setPosition(x, this.get('position').y);
-        },
+    offsetPosition: function(offset) {
+        return this._offsetPosition.set(this.get('position')).add(offset);
+    },
 
-        setY: function(y) {
-            this.setPosition(this.get('position').x, y);
-        },
+    getPosition: function() {
+        return this.get('position');
+    },
 
-        translate: function(x, y) {
-            if (x instanceof Vector2)
-                this.get('position').add(x);
-            else
-                this.get('position').add(x, y);
-        },
+    destroy: function() {
+        if (!this.destroyed) 
+            this.removeVector2(this.get('position'));
+        PooledModel.prototype.destroy.apply(this, arguments);
+    }
 
-        setPosition: function(x, y) {
-            if (x instanceof Vector2)
-                this.get('position').set(x);
-            else
-                this.get('position').set(x, y);
-        },
-
-        offsetPosition: function(offset) {
-            return this._offsetPosition.set(this.get('position')).add(offset);
-        },
-
-        getPosition: function() {
-            return this.get('position');
-        },
-
-        destroy: function() {
-            if (!this.destroyed) 
-                this.removeVector2(this.get('position'));
-            PooledModel.prototype.destroy.apply(this, arguments);
-        }
-
-    });
-
-
-    return VanillaPositionableObject;
 });
+
+
+export default VanillaPositionableObject;

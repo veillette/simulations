@@ -1,76 +1,69 @@
-define(function(require) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import html from './help-label.html?raw';
+import './help-label.less';
 
-	'use strict';
+var HelpLabelView = Backbone.View.extend({
 
-	var _ = require('underscore');
-	var Backbone = require('backbone');
+    template: _.template(html),
 
-	var html  = require('text!./help-label.html');
+    tagName: 'div',
+    className: 'help-label-view',
 
-	require('less!./help-label');
+    initialize: function(options){
+        options = _.extend({
+            position: {
+                x: 0,
+                y: 0
+            },
+            width: 'inherit',
+            style : 'default',
+            orientation : 'bottom left',
+            attachTo : false,
+            title : '',
+            content : ''
+        }, options);
 
-	var HelpLabelView = Backbone.View.extend({
+        this.position = options.position;
+        this.attachTo = options.attachTo;
+        this.width = options.width;
 
-		template: _.template(html),
+        this.labelModel = {};
 
-		tagName: 'div',
-		className: 'help-label-view',
+        this.labelModel.style = options.style; // not fully implemented
+        this.labelModel.orientation = options.orientation; // not fully implemented
+        this.labelModel.title = options.title;
+        this.labelModel.content = options.content; // not fully implemented
+    },
 
-		initialize: function(options){
-			options = _.extend({
-				position: {
-					x: 0,
-					y: 0
-				},
-				width: 'inherit',
-				style : 'default',
-				orientation : 'bottom left',
-				attachTo : false,
-				title : '',
-				content : ''
-			}, options);
+    render: function(){
+        this.renderHelpLabel();
+        this.hide();
+    },
 
-			this.position = options.position;
-			this.attachTo = options.attachTo;
-			this.width = options.width;
+    renderHelpLabel: function(){
+        this.$el.html(this.template(this.labelModel));
+        // this.resize();
+        this.attachTo.$el.append(this.el);
+    },
 
-			this.labelModel = {};
+    show: function(){
+        this.$el.show();
+        this.showing = true;
+    },
 
-			this.labelModel.style = options.style; // not fully implemented
-			this.labelModel.orientation = options.orientation; // not fully implemented
-			this.labelModel.title = options.title;
-			this.labelModel.content = options.content; // not fully implemented
-		},
+    hide: function(){
+        this.$el.hide();
+        this.showing = false;
+    },
 
-		render: function(){
-			this.renderHelpLabel();
-			this.hide();
-		},
-
-		renderHelpLabel: function(){
-			this.$el.html(this.template(this.labelModel));
-			// this.resize();
-			this.attachTo.$el.append(this.el);
-		},
-
-        show: function(){
-            this.$el.show();
-            this.showing = true;
-        },
-
-        hide: function(){
-            this.$el.hide();
-            this.showing = false;
-        },
-
-        toggle: function(){
-        	if(this.showing){
-        		this.hide();
-        	}else{
-        		this.show();
-        	}
+    toggle: function(){
+        if(this.showing){
+            this.hide();
+        }else{
+            this.show();
         }
-	});
-
-	return HelpLabelView; 
+    }
 });
+
+export default HelpLabelView;

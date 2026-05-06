@@ -1,87 +1,80 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Particle from 'common/mechanics/models/particle';
+import PhysicsUtil from './physics-util';
 
-    'use strict';
+/**
+ * This model represents a photon and includes functionality that was previously
+ *   separated into the CollidableAdapter class in the original PhET sims.
+ */
+var Photon = Particle.extend({
 
-    var _ = require('underscore');
+    collidable: true,
 
-    var Vector2  = require('common/math/vector2');
-    var Particle = require('common/mechanics/models/particle');
-    
-    var PhysicsUtil = require('./physics-util');
+    defaults: _.extend({}, Particle.prototype.defaults, {
+        wavelength: undefined,
+        // If this photon was produced by the stimulation of another, this
+        // is a reference to that photon.
+        parentPhoton: null,
+        // If this photon has stimulated the production of another photon, this
+        // is a reference to that photon
+        childPhoton: null
+    }),
+
+    initialize: function(attributes, options) {
+        Particle.prototype.initialize.apply(this, [attributes, options]);
+
+        this.prevPosition = new Vector2(this.get('position'));
+        this.prevVelocity = new Vector2(this.get('velocity'));
+    },
 
     /**
-     * This model represents a photon and includes functionality that was previously
-     *   separated into the CollidableAdapter class in the original PhET sims.
+     * Overrides setPosition function to keep track of the previous position
      */
-    var Photon = Particle.extend({
+    setPosition: function(x, y, options) {
+        this.prevPosition.set(this.get('position'));
 
-        collidable: true,
+        Particle.prototype.setPosition.apply(this, arguments);
+    },
 
-        defaults: _.extend({}, Particle.prototype.defaults, {
-            wavelength: undefined,
-            // If this photon was produced by the stimulation of another, this
-            // is a reference to that photon.
-            parentPhoton: null,
-            // If this photon has stimulated the production of another photon, this
-            // is a reference to that photon
-            childPhoton: null
-        }),
+    /**
+     * Overrides setVelocity function to keep track of the previous velocity
+     */
+    setVelocity: function(x, y, options) {
+        this.prevVelocity.set(this.get('velocity'));
 
-        initialize: function(attributes, options) {
-            Particle.prototype.initialize.apply(this, [attributes, options]);
+        Particle.prototype.setVelocity.apply(this, arguments);
+    },
 
-            this.prevPosition = new Vector2(this.get('position'));
-            this.prevVelocity = new Vector2(this.get('velocity'));
-        },
+    getPreviousPosition: function() {
+        return this.prevPosition;
+    },
 
-        /**
-         * Overrides setPosition function to keep track of the previous position
-         */
-        setPosition: function(x, y, options) {
-            this.prevPosition.set(this.get('position'));
+    getPreviousVelocity: function() {
+        return this.prevVelocity;
+    },
 
-            Particle.prototype.setPosition.apply(this, arguments);
-        },
+    /**
+     * Converts wavelength to energy and returns it.
+     */
+    getEnergy: function() {
+        return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+    }
 
-        /**
-         * Overrides setVelocity function to keep track of the previous velocity
-         */
-        setVelocity: function(x, y, options) {
-            this.prevVelocity.set(this.get('velocity'));
+}, {
 
-            Particle.prototype.setVelocity.apply(this, arguments);
-        },
+    // Defaults
+    DEFAULT_SPEED:          1,
+    RADIUS:                 10,
 
-        getPreviousPosition: function() {
-            return this.prevPosition;
-        },
+    // Savelength constants
+    RED:                    680,
+    DEEP_RED:               640,
+    BLUE:                   440,
+    MIN_VISIBLE_WAVELENGTH: 380,
+    MAX_VISIBLE_WAVELENGTH: 710,
+    GRAY:                   5000
 
-        getPreviousVelocity: function() {
-            return this.prevVelocity;
-        },
-
-        /**
-         * Converts wavelength to energy and returns it.
-         */
-        getEnergy: function() {
-            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
-        }
-
-    }, {
-
-        // Defaults
-        DEFAULT_SPEED:          1,
-        RADIUS:                 10,
-
-        // Savelength constants
-        RED:                    680,
-        DEEP_RED:               640,
-        BLUE:                   440,
-        MIN_VISIBLE_WAVELENGTH: 380,
-        MAX_VISIBLE_WAVELENGTH: 710,
-        GRAY:                   5000
-
-    });
-
-    return Photon;
 });
+
+export default Photon;

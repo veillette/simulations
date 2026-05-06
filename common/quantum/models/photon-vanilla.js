@@ -1,110 +1,103 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from '../../math/vector2';
+import VanillaParticle from '../../mechanics/models/particle-vanilla';
+import PhysicsUtil from './physics-util';
 
-    'use strict';
+/**
+ * This model represents a photon and includes functionality that was previously
+ *   separated into the CollidableAdapter class in the original PhET sims.
+ */
+var VanillaPhoton = VanillaParticle.extend({
 
-    var _ = require('underscore');
+    collidable: true,
 
-    var Vector2         = require('../../math/vector2');
-    var VanillaParticle = require('../../mechanics/models/particle-vanilla');
-    
-    var PhysicsUtil = require('./physics-util');
+    init: function() {
+        VanillaParticle.prototype.init.apply(this, arguments);
+
+        this.prevPosition = new Vector2();
+        this.prevVelocity = new Vector2();
+    },
+
+    defaults: _.extend({}, VanillaParticle.prototype.defaults, {
+        wavelength: undefined,
+        // If this photon was produced by the stimulation of another, this
+        // is a reference to that photon.
+        parentPhoton: null,
+        // If this photon has stimulated the production of another photon, this
+        // is a reference to that photon
+        childPhoton: null
+    }),
+
+    onCreate: function(attributes, options) {
+        VanillaParticle.prototype.onCreate.apply(this, [attributes, options]);
+
+        this.prevPosition.set(this.get('position'));
+        this.prevVelocity.set(this.get('velocity'));
+
+        this._markedForDestruction = false;
+    },
 
     /**
-     * This model represents a photon and includes functionality that was previously
-     *   separated into the CollidableAdapter class in the original PhET sims.
+     * Sets a flag for the electron to be destroyed on the next loop
      */
-    var VanillaPhoton = VanillaParticle.extend({
+    markForDestruction: function() {
+        this._markedForDestruction = true;
+    },
 
-        collidable: true,
+    /**
+     * Returns whether the electron has been marked for destruction
+     */
+    markedForDestruction: function() {
+        return this._markedForDestruction;
+    },
 
-        init: function() {
-            VanillaParticle.prototype.init.apply(this, arguments);
+    /**
+     * Overrides setPosition function to keep track of the previous position
+     */
+    setPosition: function(x, y, options) {
+        this.prevPosition.set(this.get('position'));
 
-            this.prevPosition = new Vector2();
-            this.prevVelocity = new Vector2();
-        },
+        VanillaParticle.prototype.setPosition.apply(this, arguments);
+    },
 
-        defaults: _.extend({}, VanillaParticle.prototype.defaults, {
-            wavelength: undefined,
-            // If this photon was produced by the stimulation of another, this
-            // is a reference to that photon.
-            parentPhoton: null,
-            // If this photon has stimulated the production of another photon, this
-            // is a reference to that photon
-            childPhoton: null
-        }),
+    /**
+     * Overrides setVelocity function to keep track of the previous velocity
+     */
+    setVelocity: function(x, y, options) {
+        this.prevVelocity.set(this.get('velocity'));
 
-        onCreate: function(attributes, options) {
-            VanillaParticle.prototype.onCreate.apply(this, [attributes, options]);
+        VanillaParticle.prototype.setVelocity.apply(this, arguments);
+    },
 
-            this.prevPosition.set(this.get('position'));
-            this.prevVelocity.set(this.get('velocity'));
+    getPreviousPosition: function() {
+        return this.prevPosition;
+    },
 
-            this._markedForDestruction = false;
-        },
+    getPreviousVelocity: function() {
+        return this.prevVelocity;
+    },
 
-        /**
-         * Sets a flag for the electron to be destroyed on the next loop
-         */
-        markForDestruction: function() {
-            this._markedForDestruction = true;
-        },
+    /**
+     * Converts wavelength to energy and returns it.
+     */
+    getEnergy: function() {
+        return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+    }
 
-        /**
-         * Returns whether the electron has been marked for destruction
-         */
-        markedForDestruction: function() {
-            return this._markedForDestruction;
-        },
+}, {
 
-        /**
-         * Overrides setPosition function to keep track of the previous position
-         */
-        setPosition: function(x, y, options) {
-            this.prevPosition.set(this.get('position'));
+    // Defaults
+    DEFAULT_SPEED:          1,
+    RADIUS:                 10,
 
-            VanillaParticle.prototype.setPosition.apply(this, arguments);
-        },
+    // Savelength constants
+    RED:                    680,
+    DEEP_RED:               640,
+    BLUE:                   440,
+    MIN_VISIBLE_WAVELENGTH: 380,
+    MAX_VISIBLE_WAVELENGTH: 710,
+    GRAY:                   5000
 
-        /**
-         * Overrides setVelocity function to keep track of the previous velocity
-         */
-        setVelocity: function(x, y, options) {
-            this.prevVelocity.set(this.get('velocity'));
-
-            VanillaParticle.prototype.setVelocity.apply(this, arguments);
-        },
-
-        getPreviousPosition: function() {
-            return this.prevPosition;
-        },
-
-        getPreviousVelocity: function() {
-            return this.prevVelocity;
-        },
-
-        /**
-         * Converts wavelength to energy and returns it.
-         */
-        getEnergy: function() {
-            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
-        }
-
-    }, {
-
-        // Defaults
-        DEFAULT_SPEED:          1,
-        RADIUS:                 10,
-
-        // Savelength constants
-        RED:                    680,
-        DEEP_RED:               640,
-        BLUE:                   440,
-        MIN_VISIBLE_WAVELENGTH: 380,
-        MAX_VISIBLE_WAVELENGTH: 710,
-        GRAY:                   5000
-
-    });
-
-    return VanillaPhoton;
 });
+
+export default VanillaPhoton;

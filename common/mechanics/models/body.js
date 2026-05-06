@@ -1,91 +1,84 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Particle from './particle';
 
-    'use strict';
+/**
+ * A body with mass and momentum
+ */
+var Body = Particle.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Particle.prototype.defaults, {
+        lastColidedBody: null,
+        theta: 0,
+        omega: 0,
+        alpha: 0,
+        prevAlpha: 0,
+        mass: 0
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        Particle.prototype.initialize.apply(this, [attributes, options]);
 
-    var Particle = require('./particle');
+        this._momentum = new Vector2();
+    },
 
     /**
-     * A body with mass and momentum
+     * 
      */
-    var Body = Particle.extend({
+    update: function(deltaTime) {
+        var alpha = this.get('alpha');
+        var omega = this.get('omega');
+        var prevAlpha = this.get('prevAlpha');
+        
+        // New orientation
+        this.set('theta', this.get('theta') + deltaTime * omega + deltaTime * deltaTime * alpha / 2);
+        // New angular velocity
+        this.set('omega', omega + deltaTime * (alpha + prevAlpha) / 2);
+        // Track angular acceleration
+        this.set('prevAlpha', alpha);
 
-        defaults: _.extend({}, Particle.prototype.defaults, {
-            lastColidedBody: null,
-            theta: 0,
-            omega: 0,
-            alpha: 0,
-            prevAlpha: 0,
-            mass: 0
-        }),
+        Particle.prototype.update.apply(this, arguments);
+    },
 
-        initialize: function(attributes, options) {
-            Particle.prototype.initialize.apply(this, [attributes, options]);
+    getCM: function() {
+        throw 'Must be implemented in child class';
+    },
 
-            this._momentum = new Vector2();
-        },
+    getMomentOfInertia: function() {
+        throw 'Must be implemented in child class';
+    },
 
-        /**
-         * 
-         */
-        update: function(deltaTime) {
-            var alpha = this.get('alpha');
-            var omega = this.get('omega');
-            var prevAlpha = this.get('prevAlpha');
-            
-            // New orientation
-            this.set('theta', this.get('theta') + deltaTime * omega + deltaTime * deltaTime * alpha / 2);
-            // New angular velocity
-            this.set('omega', omega + deltaTime * (alpha + prevAlpha) / 2);
-            // Track angular acceleration
-            this.set('prevAlpha', alpha);
+    /**
+     * Returns the total kinetic energy of the body, translational
+     * and rotational
+     *
+     * @return the kinetic energy
+     */
+    getKineticEnergy: function() {
+        return (
+            (this.get('mass') * this.get('velocity').lengthSq() / 2) +
+            (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2)
+        );
+    },
 
-            Particle.prototype.update.apply(this, arguments);
-        },
+    getMomentum: function() {
+        return this._momentum.set(
+            this.get('velocity').x * this.get('mass'),
+            this.get('velocity').y * this.get('mass')
+        );
+    },
 
-        getCM: function() {
-            throw 'Must be implemented in child class';
-        },
+    /**
+     * Function that facilitates setting the momentum vector 
+     *   while still triggering a change event.
+     */
+    setMomentum: function(x, y, options) {
+        if (x instanceof Vector2)
+            this.setVelocity(x.x / this.get('mass'), x.y / this.get('mass'), y);
+        else
+            this.setVelocity(x / this.get('mass'), y / this.get('mass'), options);
+    }
 
-        getMomentOfInertia: function() {
-            throw 'Must be implemented in child class';
-        },
-
-        /**
-         * Returns the total kinetic energy of the body, translational
-         * and rotational
-         *
-         * @return the kinetic energy
-         */
-        getKineticEnergy: function() {
-            return (
-                (this.get('mass') * this.get('velocity').lengthSq() / 2) +
-                (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2)
-            );
-        },
-
-        getMomentum: function() {
-            return this._momentum.set(
-                this.get('velocity').x * this.get('mass'),
-                this.get('velocity').y * this.get('mass')
-            );
-        },
-
-        /**
-         * Function that facilitates setting the momentum vector 
-         *   while still triggering a change event.
-         */
-        setMomentum: function(x, y, options) {
-            if (x instanceof Vector2)
-                this.setVelocity(x.x / this.get('mass'), x.y / this.get('mass'), y);
-            else
-                this.setVelocity(x / this.get('mass'), y / this.get('mass'), options);
-        }
-
-    });
-
-    return Body;
 });
+
+export default Body;

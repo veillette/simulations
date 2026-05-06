@@ -1,64 +1,58 @@
-define(function (require) {
+import Rectangle from 'common/math/rectangle';
+import Photon from './photon';
 
-    'use strict';
+/**
+ * Extends photon to add static functions to produce photons due to stimulated emission.
+ */
+var StimulatedPhoton = Photon.extend({}, {
 
-    var Rectangle = require('common/math/rectangle');
+    separation: 9,
 
-    var Photon = require('./photon');
+    // The bounds within which a stimulated photon must be created. This keeps them
+    //   inside the laser cavity
+    stimulationBounds: new Rectangle(),
 
-    /**
-     * Extends photon to add static functions to produce photons due to stimulated emission.
-     */
-    var StimulatedPhoton = Photon.extend({}, {
+    setStimulationBounds: function(stimulationBounds) {
+        StimulatedPhoton.stimulationBounds = stimulationBounds;
+    },
 
-        separation: 9,
+    getSeparation: function() {
+        return StimulatedPhoton.separation;
+    },
 
-        // The bounds within which a stimulated photon must be created. This keeps them
-        //   inside the laser cavity
-        stimulationBounds: new Rectangle(),
+    setSeparation: function(separation) {
+        StimulatedPhoton.separation = separation;
+    },
 
-        setStimulationBounds: function(stimulationBounds) {
-            StimulatedPhoton.stimulationBounds = stimulationBounds;
-        },
+    createStimulated: function(stimulatingPhoton, location, atom) {
+        var newPhoton = new Photon({
+            wavelength: stimulatingPhoton.get('wavelength'), 
+            position: location,
+            velocity: stimulatingPhoton.get('velocity')
+        });
 
-        getSeparation: function() {
-            return StimulatedPhoton.separation;
-        },
+        var idx = 1;
+        var yOffset = StimulatedPhoton.separation;
+        var sign = idx % 2 === 0 ? 1 : -1;
+        var dy = yOffset *  sign * (stimulatingPhoton.get('velocity').x / stimulatingPhoton.get('velocity').length());
+        var dx = yOffset * -sign * (stimulatingPhoton.get('velocity').y / stimulatingPhoton.get('velocity').length());
+        var newY = stimulatingPhoton.getY() + dy;
+        var newX = stimulatingPhoton.getX() + dx;
 
-        setSeparation: function(separation) {
-            StimulatedPhoton.separation = separation;
-        },
-
-        createStimulated: function(stimulatingPhoton, location, atom) {
-            var newPhoton = new Photon({
-                wavelength: stimulatingPhoton.get('wavelength'), 
-                position: location,
-                velocity: stimulatingPhoton.get('velocity')
-            });
-
-            var idx = 1;
-            var yOffset = StimulatedPhoton.separation;
-            var sign = idx % 2 === 0 ? 1 : -1;
-            var dy = yOffset *  sign * (stimulatingPhoton.get('velocity').x / stimulatingPhoton.get('velocity').length());
-            var dx = yOffset * -sign * (stimulatingPhoton.get('velocity').y / stimulatingPhoton.get('velocity').length());
-            var newY = stimulatingPhoton.getY() + dy;
-            var newX = stimulatingPhoton.getX() + dx;
-
-            // Keep the photon inside the cavity.
-            var minY = StimulatedPhoton.stimulationBounds.bottom() + Photon.RADIUS;
-            var maxY = StimulatedPhoton.stimulationBounds.top();
-            if (newY < minY || newY > maxY) {
-                newY = atom.getY();
-                newX = atom.getX() - Photon.RADIUS;
-            }
-
-            newPhoton.setPosition(newX, newY);
-
-            return newPhoton;
+        // Keep the photon inside the cavity.
+        var minY = StimulatedPhoton.stimulationBounds.bottom() + Photon.RADIUS;
+        var maxY = StimulatedPhoton.stimulationBounds.top();
+        if (newY < minY || newY > maxY) {
+            newY = atom.getY();
+            newX = atom.getX() - Photon.RADIUS;
         }
 
-        
-    });
+        newPhoton.setPosition(newX, newY);
 
-    return StimulatedPhoton;
+        return newPhoton;
+    }
+
+    
 });
+
+export default StimulatedPhoton;

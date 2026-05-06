@@ -1,70 +1,63 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Body from './body';
 
-    'use strict';
+/**
+ * A spherical body with mass and momentum
+ */
+var SphericalBody = Body.extend({
 
-    var _ = require('underscore');
+    collidable: true,
 
-    var Vector2 = require('common/math/vector2');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        radius: 0
+    }),
 
-    var Body = require('./body');
+    initialize: function(attributes, options) {
+        Body.prototype.initialize.apply(this, [attributes, options]);
+
+        this.prevPosition = new Vector2(this.get('position'));
+        this.prevVelocity = new Vector2(this.get('velocity'));
+    },
+
+    getCM: function() {
+        return this.get('position');
+    },
+
+    getMomentOfInertia: function() {
+        return this.get('mass') * this.get('radius') * this.get('radius') * 2 / 5;
+    },
+
+    getCenter: function() {
+        return this.get('position');
+    },
 
     /**
-     * A spherical body with mass and momentum
+     * Overrides setPosition function to keep track of the previous position
      */
-    var SphericalBody = Body.extend({
+    setPosition: function(x, y, options) {
+        this.prevPosition.set(this.get('position'));
 
-        collidable: true,
+        Body.prototype.setPosition.apply(this, arguments);
+    },
 
-        defaults: _.extend({}, Body.prototype.defaults, {
-            radius: 0
-        }),
+    /**
+     * Overrides setVelocity function to keep track of the previous velocity
+     */
+    setVelocity: function(x, y, options) {
+        this.prevVelocity.set(this.get('velocity'));
 
-        initialize: function(attributes, options) {
-            Body.prototype.initialize.apply(this, [attributes, options]);
+        Body.prototype.setVelocity.apply(this, arguments);
+    },
 
-            this.prevPosition = new Vector2(this.get('position'));
-            this.prevVelocity = new Vector2(this.get('velocity'));
-        },
+    getPreviousPosition: function() {
+        return this.prevPosition;
+    },
 
-        getCM: function() {
-            return this.get('position');
-        },
+    getPreviousVelocity: function() {
+        return this.prevVelocity;
+    }
 
-        getMomentOfInertia: function() {
-            return this.get('mass') * this.get('radius') * this.get('radius') * 2 / 5;
-        },
-
-        getCenter: function() {
-            return this.get('position');
-        },
-
-        /**
-         * Overrides setPosition function to keep track of the previous position
-         */
-        setPosition: function(x, y, options) {
-            this.prevPosition.set(this.get('position'));
-
-            Body.prototype.setPosition.apply(this, arguments);
-        },
-
-        /**
-         * Overrides setVelocity function to keep track of the previous velocity
-         */
-        setVelocity: function(x, y, options) {
-            this.prevVelocity.set(this.get('velocity'));
-
-            Body.prototype.setVelocity.apply(this, arguments);
-        },
-
-        getPreviousPosition: function() {
-            return this.prevPosition;
-        },
-
-        getPreviousVelocity: function() {
-            return this.prevVelocity;
-        }
-
-    });
-
-    return SphericalBody;
 });
+
+export default SphericalBody;

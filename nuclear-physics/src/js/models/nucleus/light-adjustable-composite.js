@@ -1,56 +1,49 @@
-define(function (require) {
+import _ from 'underscore';
+import BetaDecayCompositeNucleus from 'models/nucleus/beta-decay-composite';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *  This class defines the behavior of a composite nucleus that exhibits beta
+ *   decay and that has an adjustable half life.
+ */
+var LightAdjustableCompositeNucleus = BetaDecayCompositeNucleus.extend({
 
-    var _ = require('underscore');
-
-    var BetaDecayCompositeNucleus = require('models/nucleus/beta-decay-composite');
-
-    var Constants = require('constants');
+    defaults: _.extend({}, BetaDecayCompositeNucleus.prototype.defaults, {
+        // Number of neutrons and protons in this nucleus.
+        numProtons:  Constants.LightAdjustableCompositeNucleus.PROTONS,
+        numNeutrons: Constants.LightAdjustableCompositeNucleus.NEUTRONS,
+        // Carbon-14 half-life
+        halfLife:    Constants.LightAdjustableCompositeNucleus.HALF_LIFE,
+        // Different decay-time scaling factor for carbon-14
+        decayTimeScalingFactor: Constants.LightAdjustableCompositeNucleus.DECAY_TIME_SCALING_FACTOR
+    }),
 
     /**
-     *  This class defines the behavior of a composite nucleus that exhibits beta
-     *   decay and that has an adjustable half life.
+     * Update the agitation factor for this nucleus.
      */
-    var LightAdjustableCompositeNucleus = BetaDecayCompositeNucleus.extend({
+    updateAgitationFactor: function() {
+        // Determine the amount of agitation that should be exhibited by this
+        // particular nucleus based on its atomic weight.
+        switch (this.get('numProtons')) {
 
-        defaults: _.extend({}, BetaDecayCompositeNucleus.prototype.defaults, {
-            // Number of neutrons and protons in this nucleus.
-            numProtons:  Constants.LightAdjustableCompositeNucleus.PROTONS,
-            numNeutrons: Constants.LightAdjustableCompositeNucleus.NEUTRONS,
-            // Carbon-14 half-life
-            halfLife:    Constants.LightAdjustableCompositeNucleus.HALF_LIFE,
-            // Different decay-time scaling factor for carbon-14
-            decayTimeScalingFactor: Constants.LightAdjustableCompositeNucleus.DECAY_TIME_SCALING_FACTOR
-        }),
+            case 8:
+                // Oxygen
+                this.agitationFactor = LightAdjustableCompositeNucleus.PRE_DECAY_AGITATION_FACTOR;
+                break;
 
-        /**
-         * Update the agitation factor for this nucleus.
-         */
-        updateAgitationFactor: function() {
-            // Determine the amount of agitation that should be exhibited by this
-            // particular nucleus based on its atomic weight.
-            switch (this.get('numProtons')) {
+            case 9:
+                // Flourine
+                this.agitationFactor = LightAdjustableCompositeNucleus.POST_DECAY_AGITATION_FACTOR;
+                break;
 
-                case 8:
-                    // Oxygen
-                    this.agitationFactor = LightAdjustableCompositeNucleus.PRE_DECAY_AGITATION_FACTOR;
-                    break;
+            default:
+                // If we reach this point in the code, there is a problem
+                //   somewhere that should be debugged.
+                console.error('Error: Unexpected atomic weight in beta decay nucleus.');
 
-                case 9:
-                    // Flourine
-                    this.agitationFactor = LightAdjustableCompositeNucleus.POST_DECAY_AGITATION_FACTOR;
-                    break;
-
-                default:
-                    // If we reach this point in the code, there is a problem
-                    //   somewhere that should be debugged.
-                    console.error('Error: Unexpected atomic weight in beta decay nucleus.');
-
-            }
         }
+    }
 
-    }, Constants.LightAdjustableCompositeNucleus);
+}, Constants.LightAdjustableCompositeNucleus);
 
-    return LightAdjustableCompositeNucleus;
-});
+export default LightAdjustableCompositeNucleus;

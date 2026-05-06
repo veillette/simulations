@@ -1,27 +1,21 @@
-define(function (require) {
+import _ from 'underscore';
+import AtomicState from './atomic-state';
 
-    'use strict';
+/**
+ * The ground state for an atom
+ */
+var GroundState = AtomicState.extend({
 
-    var _ = require('underscore');
-    
-    var AtomicState = require('./atomic-state');
+    defaults: _.extend({}, AtomicState.prototype.defaults, {
+        energyLevel: 0,
+        meanLifetime: Number.POSITIVE_INFINITY
+    }),
 
-    /**
-     * The ground state for an atom
-     */
-    var GroundState = AtomicState.extend({
+    getNextLowerEnergyState: function() {
+        return AtomicState.MinEnergyState.instance();
+    }
 
-        defaults: _.extend({}, AtomicState.prototype.defaults, {
-            energyLevel: 0,
-            meanLifetime: Number.POSITIVE_INFINITY
-        }),
-
-        getNextLowerEnergyState: function() {
-            return AtomicState.MinEnergyState.instance();
-        }
-
-    });
-
-
-    return GroundState;
 });
+
+
+export default GroundState;

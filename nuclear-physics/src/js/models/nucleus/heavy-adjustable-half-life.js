@@ -1,48 +1,41 @@
-define(function (require) {
+import _ from 'underscore';
+import AbstractAlphaDecayNucleus from 'models/nucleus/alpha-decay';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Base class for alpha-decay nuclei.  This class contains much of the behavior that
+ *   is common to all nuclei that exhibit alpha decay.
+ */
+var HeavyAdjustableHalfLifeNucleus = AbstractAlphaDecayNucleus.extend({
 
-    var _ = require('underscore');
-
-    var AbstractAlphaDecayNucleus = require('models/nucleus/alpha-decay');
-
-    var Constants = require('constants');
+    defaults: _.extend({}, AbstractAlphaDecayNucleus.prototype.defaults, {
+        // Number of neutrons and protons in this nucleus.
+        numProtons:  Constants.HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_PROTONS,
+        numNeutrons: Constants.HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_NEUTRONS,
+        halfLife: Constants.HeavyAdjustableHalfLifeNucleus.DEFAULT_HALF_LIFE
+    }),
 
     /**
-     * Base class for alpha-decay nuclei.  This class contains much of the behavior that
-     *   is common to all nuclei that exhibit alpha decay.
+     * Resets the nucleus to its original state, before any decay has occurred.
      */
-    var HeavyAdjustableHalfLifeNucleus = AbstractAlphaDecayNucleus.extend({
+    reset: function(deltaTime) {
+        AbstractAlphaDecayNucleus.prototype.reset.apply(this, arguments);
 
-        defaults: _.extend({}, AbstractAlphaDecayNucleus.prototype.defaults, {
-            // Number of neutrons and protons in this nucleus.
-            numProtons:  Constants.HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_PROTONS,
-            numNeutrons: Constants.HeavyAdjustableHalfLifeNucleus.ORIGINAL_NUM_NEUTRONS,
-            halfLife: Constants.HeavyAdjustableHalfLifeNucleus.DEFAULT_HALF_LIFE
-        }),
+        // Reset the decay time to 0, indicating that it shouldn't occur
+        //   until something changes.
+        this.decayTime = 0;
+        this.activatedLifetime = 0;
 
-        /**
-         * Resets the nucleus to its original state, before any decay has occurred.
-         */
-        reset: function(deltaTime) {
-            AbstractAlphaDecayNucleus.prototype.reset.apply(this, arguments);
+        if ((this.get('numNeutrons') !== this.originalNumNeutrons) || (this.get('numProtons') !== this.originalNumProtons)) {
+            // Decay had occurred prior to reset.
+            this.set('numNeutrons', this.originalNumNeutrons);
+            this.set('numProtons', this.originalNumProtons);
 
-            // Reset the decay time to 0, indicating that it shouldn't occur
-            //   until something changes.
-            this.decayTime = 0;
-            this.activatedLifetime = 0;
-
-            if ((this.get('numNeutrons') !== this.originalNumNeutrons) || (this.get('numProtons') !== this.originalNumProtons)) {
-                // Decay had occurred prior to reset.
-                this.set('numNeutrons', this.originalNumNeutrons);
-                this.set('numProtons', this.originalNumProtons);
-
-                // Notify all listeners of the change to our atomic weight.
-                this.triggerNucleusChange(null);
-            }
+            // Notify all listeners of the change to our atomic weight.
+            this.triggerNucleusChange(null);
         }
+    }
 
-    });
-
-    return HeavyAdjustableHalfLifeNucleus;
 });
+
+export default HeavyAdjustableHalfLifeNucleus;

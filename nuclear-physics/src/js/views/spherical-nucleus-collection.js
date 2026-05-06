@@ -1,74 +1,67 @@
-define(function(require) {
+import SpriteCollectionView from 'common/v3/pixi/view/sprite-collection';
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
 
-    'use strict';
+/**
+ * A view that renders photon sprites for every photon in the sim
+ */
+var SphericalNucleusCollectionView = SpriteCollectionView.extend({
 
+    initialize: function(options) {
+        SpriteCollectionView.prototype.initialize.apply(this, arguments);
 
-    var SpriteCollectionView = require('common/v3/pixi/view/sprite-collection');
+        this.simulation = options.simulation;
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
+        this.listenTo(this.simulation, 'change:nucleusType', this.nucleusTypeChanged);
+        this.nucleusTypeChanged();
+    },
 
     /**
-     * A view that renders photon sprites for every photon in the sim
+     * Returns texture used for sprites.  Override in child classes.
      */
-    var SphericalNucleusCollectionView = SpriteCollectionView.extend({
+    getTexture: function() {
+        return ParticleGraphicsGenerator.getSphereTexture();
+    },
 
-        initialize: function(options) {
-            SpriteCollectionView.prototype.initialize.apply(this, arguments);
+    /**
+     * Calculates current scale for sprites.  Override in child classes.
+     */
+    getSpriteScale: function() {
+        var nucleus = this.simulation.createNucleus();
+        var targetWidth = this.mvt.modelToViewDeltaX(nucleus.get('diameter'));
+        var scale = targetWidth / this.texture.width;
+        nucleus.destroy();
+        return scale;
+    },
 
-            this.simulation = options.simulation;
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.listenTo(this.simulation, 'change:nucleusType', this.nucleusTypeChanged);
-            this.nucleusTypeChanged();
-        },
+        this.update();
+    },
 
-        /**
-         * Returns texture used for sprites.  Override in child classes.
-         */
-        getTexture: function() {
-            return ParticleGraphicsGenerator.getSphereTexture();
-        },
+    updateSprite: function(sprite, model) {
+        SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
 
-        /**
-         * Calculates current scale for sprites.  Override in child classes.
-         */
-        getSpriteScale: function() {
-            var nucleus = this.simulation.createNucleus();
-            var targetWidth = this.mvt.modelToViewDeltaX(nucleus.get('diameter'));
-            var scale = targetWidth / this.texture.width;
-            nucleus.destroy();
-            return scale;
-        },
+        if (model.hasDecayed())
+            sprite.tint = this.decayedColor;
+        else
+            sprite.tint = this.activeColor;
+    },
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    nucleusTypeChanged: function(simulation) {
+        var nucleus = this.simulation.createNucleus();
+        this.activeColor = ParticleGraphicsGenerator.getColorForElement(nucleus);
+        nucleus.decay();
+        this.decayedColor = ParticleGraphicsGenerator.getColorForElement(nucleus);
+        nucleus.destroy();
 
-            this.update();
-        },
+        this.spriteScale = this.getSpriteScale();
+    }
 
-        updateSprite: function(sprite, model) {
-            SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-
-            if (model.hasDecayed())
-                sprite.tint = this.decayedColor;
-            else
-                sprite.tint = this.activeColor;
-        },
-
-        nucleusTypeChanged: function(simulation) {
-            var nucleus = this.simulation.createNucleus();
-            this.activeColor = ParticleGraphicsGenerator.getColorForElement(nucleus);
-            nucleus.decay();
-            this.decayedColor = ParticleGraphicsGenerator.getColorForElement(nucleus);
-            nucleus.destroy();
-
-            this.spriteScale = this.getSpriteScale();
-        }
-
-    });
-
-    return SphericalNucleusCollectionView;
 });
+
+export default SphericalNucleusCollectionView;

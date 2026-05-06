@@ -1,120 +1,114 @@
-define(function (require) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import AtomicState from './atomic-state';
+import GroundState from './ground-state';
 
-    'use strict';
+/**
+ * A place to store element properties
+ */
+var ElementProperties = Backbone.Model.extend({
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+    defaults: {
+        name: '',
+        energyLevels: [],
+        levelsMovable: false,
+        energyEmissionStrategy: null,
+        meanStateLifetime: 0,
+        workFunction: 0
+    },
+    
+    initialize: function(attributes, options) {
+        this.states = [];
+        this.set('energyLevels', _.toArray(this.get('energyLevels')));
 
-    var AtomicState = require('./atomic-state');
-    var GroundState = require('./ground-state');
+        this.initStates();
 
-    /**
-     * A place to store element properties
-     */
-    var ElementProperties = Backbone.Model.extend({
+        this.on('change:energyLevels', this.energyLevelsChanged);
+    },
 
-        defaults: {
-            name: '',
-            energyLevels: [],
-            levelsMovable: false,
-            energyEmissionStrategy: null,
-            meanStateLifetime: 0,
-            workFunction: 0
-        },
-        
-        initialize: function(attributes, options) {
-            this.states = [];
-            this.set('energyLevels', _.toArray(this.get('energyLevels')));
+    getGroundState: function() {
+        return this.states[0];
+    },
 
-            this.initStates();
+    getMeanStateLifetime: function() {
+        return this.get('meanStateLifetime');
+    },
 
-            this.on('change:energyLevels', this.energyLevelsChanged);
-        },
+    setMeanStateLifetime: function(meanStateLifetime) {
+        this.set('meanStateLifetime', meanStateLifetime);
+    },
 
-        getGroundState: function() {
-            return this.states[0];
-        },
+    getEnergyEmissionStrategy: function() {
+        return this.get('energyEmissionStrategy');
+    },
 
-        getMeanStateLifetime: function() {
-            return this.get('meanStateLifetime');
-        },
+    getEnergyLevels: function() {
+        return this.get('energyLevels');
+    },
 
-        setMeanStateLifetime: function(meanStateLifetime) {
-            this.set('meanStateLifetime', meanStateLifetime);
-        },
+    setWorkFunction: function(workFunction) {
+        this.set('workFunction', workFunction);
+    },
 
-        getEnergyEmissionStrategy: function() {
-            return this.get('energyEmissionStrategy');
-        },
+    getWorkFunction: function() {
+        return this.get('workFunction');
+    },
 
-        getEnergyLevels: function() {
-            return this.get('energyLevels');
-        },
+    isLevelsMovable: function() {
+        return this.get('levelsMovable');
+    },
 
-        setWorkFunction: function(workFunction) {
-            this.set('workFunction', workFunction);
-        },
+    setLevelsMovable: function(levelsMovable) {
+        this.set('levelsMovable', levelsMovable);
+    },
 
-        getWorkFunction: function() {
-            return this.get('workFunction');
-        },
+    getStates: function() {
+        return this.states;
+    },
 
-        isLevelsMovable: function() {
-            return this.get('levelsMovable');
-        },
+    initStates: function() {
+        var energyLevels = this.get('energyLevels');
+        this.states[0] = new GroundState();
+        this.states[0].set('energyLevel', energyLevels[0]);
 
-        setLevelsMovable: function(levelsMovable) {
-            this.set('levelsMovable', levelsMovable);
-        },
-
-        getStates: function() {
-            return this.states;
-        },
-
-        initStates: function() {
-            var energyLevels = this.get('energyLevels');
-            this.states[0] = new GroundState();
-            this.states[0].set('energyLevel', energyLevels[0]);
-
-            for (var i = 1; i < energyLevels.length; i++) {
-                this.states[i] = new AtomicState();
-                this.states[i].set('energyLevel', 0);
-            }
-
-            AtomicState.linkStates(this.states);
-
-            this.updateStates();
-        },
-
-        updateStates: function() {
-            var i;
-
-            // Copy the energies into a new array, sort and normalize them
-            var energyLevels = this.get('energyLevels');
-            var energies = [];
-            for (i = 0; i < energyLevels.length; i++)
-                energies[i] = energyLevels[i];
-            
-            energies.sort(function(a, b) {
-                return a - b;
-            });
-
-            this.states[0].set('energyLevel', energies[0]);
-            for (i = 1; i < this.states.length; i++) {
-                this.states[i].set('energyLevel', energies[i]);
-                this.states[i].set('meanLifetime', this.get('meanStateLifetime'));
-            }
-        },
-
-        energyLevelsChanged: function(model, energyLevels) {
-            if (energyLevels.length !== this.states.length)
-                this.initStates();
-            else
-                this.updateStates();
+        for (var i = 1; i < energyLevels.length; i++) {
+            this.states[i] = new AtomicState();
+            this.states[i].set('energyLevel', 0);
         }
 
-    });
+        AtomicState.linkStates(this.states);
 
+        this.updateStates();
+    },
 
-    return ElementProperties;
+    updateStates: function() {
+        var i;
+
+        // Copy the energies into a new array, sort and normalize them
+        var energyLevels = this.get('energyLevels');
+        var energies = [];
+        for (i = 0; i < energyLevels.length; i++)
+            energies[i] = energyLevels[i];
+        
+        energies.sort(function(a, b) {
+            return a - b;
+        });
+
+        this.states[0].set('energyLevel', energies[0]);
+        for (i = 1; i < this.states.length; i++) {
+            this.states[i].set('energyLevel', energies[i]);
+            this.states[i].set('meanLifetime', this.get('meanStateLifetime'));
+        }
+    },
+
+    energyLevelsChanged: function(model, energyLevels) {
+        if (energyLevels.length !== this.states.length)
+            this.initStates();
+        else
+            this.updateStates();
+    }
+
 });
+
+
+export default ElementProperties;

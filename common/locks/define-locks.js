@@ -1,18 +1,12 @@
-define(function (require) {
+import inputLock from './input';
+import updateLock from './update';
 
-    'use strict';
+/**
+ * Function that adds the two functions to a constructor's prototype.
+ */
+var defineInputUpdateLocks = function(constructor) {
+    constructor.prototype.inputLock = inputLock;
+    constructor.prototype.updateLock = updateLock;
+};
 
-    var inputLock = require('./input');
-	var updateLock = require('./update');
-
-    /**
-     * Function that adds the two functions to a constructor's prototype.
-     */
-    var defineInputUpdateLocks = function(constructor) {
-		constructor.prototype.inputLock = inputLock;
-		constructor.prototype.updateLock = updateLock;
-    };
-
-	return defineInputUpdateLocks;
-
-});
+export default defineInputUpdateLocks;

@@ -1,80 +1,72 @@
-define(function(require) {
+import _ from 'underscore';
+import ExplodingNucleusView from 'views/nucleus/exploding';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var DraggableExplodingNucleusView = ExplodingNucleusView.extend({
 
-    var _ = require('underscore');
-
-
-    var ExplodingNucleusView = require('views/nucleus/exploding');
-
-    var Constants = require('constants');
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd'
+    },
 
     /**
-     *
+     * Initializes the new DraggableExplodingNucleusView.
      */
-    var DraggableExplodingNucleusView = ExplodingNucleusView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            interactive: true
+        }, options);
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd'
-        },
+        this.atomCanister = options.atomCanister;
+        this.interactive = options.interactive;
 
-        /**
-         * Initializes the new DraggableExplodingNucleusView.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                interactive: true
-            }, options);
+        ExplodingNucleusView.prototype.initialize.apply(this, [options]);
+    },
 
-            this.atomCanister = options.atomCanister;
-            this.interactive = options.interactive;
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        ExplodingNucleusView.prototype.initGraphics.apply(this, arguments);
 
-            ExplodingNucleusView.prototype.initialize.apply(this, [options]);
-        },
+        this.displayObject.buttonMode = true;
+    },
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            ExplodingNucleusView.prototype.initGraphics.apply(this, arguments);
+    dragStart: function(event) {
+        if (!this.interactive)
+            return;
 
-            this.displayObject.buttonMode = true;
-        },
+        this.dragging = true;
 
-        dragStart: function(event) {
-            if (!this.interactive)
-                return;
+        this.atomCanister.showRemoveOverlay();
+    },
 
-            this.dragging = true;
-
-            this.atomCanister.showRemoveOverlay();
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                this.model.setPosition(
-                    this.mvt.viewToModelX(event.data.global.x),
-                    this.mvt.viewToModelY(event.data.global.y)
-                );
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-
-            this.atomCanister.hideRemoveOverlay();
-            this.atomCanister.offerForDestruction(this);
+    drag: function(event) {
+        if (this.dragging) {
+            this.model.setPosition(
+                this.mvt.viewToModelX(event.data.global.x),
+                this.mvt.viewToModelY(event.data.global.y)
+            );
         }
+    },
 
-    }, Constants.DraggableExplodingNucleusView);
+    dragEnd: function(event) {
+        this.dragging = false;
+
+        this.atomCanister.hideRemoveOverlay();
+        this.atomCanister.offerForDestruction(this);
+    }
+
+}, Constants.DraggableExplodingNucleusView);
 
 
-    return DraggableExplodingNucleusView;
-});
+export default DraggableExplodingNucleusView;

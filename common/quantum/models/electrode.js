@@ -1,49 +1,42 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Particle from 'common/mechanics/models/particle';
 
-    'use strict';
+/**
+ * An electrode is a line between two endpoints. Its location is considered to be
+ *   the midpoint between the two endpoints.
+ * 
+ * An electrode has potential and can notify listeners when its potential changes.
+ */
+var Electrode = Particle.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Particle.prototype.defaults, {
+        potential: 0,
+        point1: undefined,
+        point2: undefined
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        Particle.prototype.initialize.apply(this, [attributes, options]);
 
-    var Particle = require('common/mechanics/models/particle');
+        this.set('point1', new Vector2(this.get('point1')));
+        this.set('point2', new Vector2(this.get('point2')));
 
-    /**
-     * An electrode is a line between two endpoints. Its location is considered to be
-     *   the midpoint between the two endpoints.
-     * 
-     * An electrode has potential and can notify listeners when its potential changes.
-     */
-    var Electrode = Particle.extend({
+        this.on('change:point1 change:point2', this.endpointsChanged);
+        this.endpointsChanged();
+    },
 
-        defaults: _.extend({}, Particle.prototype.defaults, {
-            potential: 0,
-            point1: undefined,
-            point2: undefined
-        }),
+    endpointsChanged: function(electrode, point) {
+        this.setPosition(
+            (this.get('point1').x + this.get('point2').x) / 2, 
+            (this.get('point1').y + this.get('point2').y) / 2
+        );
+    },
 
-        initialize: function(attributes, options) {
-            Particle.prototype.initialize.apply(this, [attributes, options]);
+    getPotential: function() {
+        return this.get('potential');
+    }
 
-            this.set('point1', new Vector2(this.get('point1')));
-            this.set('point2', new Vector2(this.get('point2')));
-
-            this.on('change:point1 change:point2', this.endpointsChanged);
-            this.endpointsChanged();
-        },
-
-        endpointsChanged: function(electrode, point) {
-            this.setPosition(
-                (this.get('point1').x + this.get('point2').x) / 2, 
-                (this.get('point1').y + this.get('point2').y) / 2
-            );
-        },
-
-        getPotential: function() {
-            return this.get('potential');
-        }
-
-    });
-
-    return Electrode;
 });
+
+export default Electrode;

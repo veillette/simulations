@@ -1,79 +1,73 @@
-define(function (require) {
+/**
+ * Polynomial term
+ */
+var PolynomialTerm = function(power, coeff) {
+    if (coeff === undefined) {
+        this.power = 0;
+        this.coeff = power;
+    }
+    else {
+        this.power = power;
+        this.coeff = coeff;
+    }
+};
 
-    'use strict';
+PolynomialTerm.prototype.getPower = function() {
+    return this.power;
+};
 
-    /**
-     * Polynomial term
-     */
-    var PolynomialTerm = function(power, coeff) {
-        if (coeff === undefined) {
-            this.power = 0;
-            this.coeff = power;
-        }
-        else {
-            this.power = power;
-            this.coeff = coeff;
-        }
-    };
+PolynomialTerm.prototype.getCoeff = function() {
+    return this.coeff;
+};
 
-    PolynomialTerm.prototype.getPower = function() {
-        return this.power;
-    };
+PolynomialTerm.prototype.derive = function(numDerivations) {
+    if (numDerivations === undefined) {
+        return this._derive();
+    }
+    else {
+        var term = this;
+        for (var i = 0; i < numDerivations; i++)
+            term = term.derive();
+        return term;
+    }
+};
 
-    PolynomialTerm.prototype.getCoeff = function() {
-        return this.coeff;
-    };
+PolynomialTerm.prototype._derive = function() {
+    if (this.power === 0)
+        return PolynomialTerm.ZERO;
+    else
+        return new PolynomialTerm(this.power - 1, this.coeff * this.power);
+};
 
-    PolynomialTerm.prototype.derive = function(numDerivations) {
-        if (numDerivations === undefined) {
-            return this._derive();
-        }
-        else {
-            var term = this;
-            for (var i = 0; i < numDerivations; i++)
-                term = term.derive();
-            return term;
-        }
-    };
+PolynomialTerm.prototype.eval = function(x) {
+    return Math.pow(x, this.power) * this.coeff;
+};
 
-    PolynomialTerm.prototype._derive = function() {
-        if (this.power === 0)
-            return PolynomialTerm.ZERO;
-        else
-            return new PolynomialTerm(this.power - 1, this.coeff * this.power);
-    };
+PolynomialTerm.prototype.times = function(that) {
+    return new PolynomialTerm(this.power + that.power, this.coeff * that.coeff);
+};
 
-    PolynomialTerm.prototype.eval = function(x) {
-        return Math.pow(x, this.power) * this.coeff;
-    };
+PolynomialTerm.prototype.plus = function(that) {
+    if (this.power === that.power)
+        return new PolynomialTerm(this.power, this.coeff + that.coeff);
+    else
+        throw 'Illegal argument';
+};
 
-    PolynomialTerm.prototype.times = function(that) {
-        return new PolynomialTerm(this.power + that.power, this.coeff * that.coeff);
-    };
-
-    PolynomialTerm.prototype.plus = function(that) {
-        if (this.power === that.power)
-            return new PolynomialTerm(this.power, this.coeff + that.coeff);
-        else
-            throw 'Illegal argument';
-    };
-
-    PolynomialTerm.prototype.equals = function(that) {
-        if (this === that)
-            return true;
-        if (that === null)
-            return false;
-
-        if (this.coeff !== that.coeff)
-            return false;
-        if (this.power !== that.power)
-            return false;
-
+PolynomialTerm.prototype.equals = function(that) {
+    if (this === that)
         return true;
-    };
+    if (that === null)
+        return false;
 
-    PolynomialTerm.ZERO = new PolynomialTerm(0, 0);
+    if (this.coeff !== that.coeff)
+        return false;
+    if (this.power !== that.power)
+        return false;
 
-    return PolynomialTerm;
+    return true;
+};
 
-});
+PolynomialTerm.ZERO = new PolynomialTerm(0, 0);
+
+export default PolynomialTerm;

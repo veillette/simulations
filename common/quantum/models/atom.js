@@ -1,167 +1,159 @@
-define(function (require) {
+import _ from 'underscore';
+import SphericalBody from 'common/mechanics/models/spherical-body';
+import StateLifetimeManager from './state-lifetime-manager';
+import QuantumConfig from '../config';
 
-    'use strict';
+/**
+ * A spherical body with mass and momentum
+ */
+var Atom = SphericalBody.extend({
 
-    var _ = require('underscore');
-
-    var SphericalBody = require('common/mechanics/models/spherical-body');
-
-    var StateLifetimeManager = require('./state-lifetime-manager');
-
-    var QuantumConfig = require('../config');
+    defaults: _.extend({}, SphericalBody.prototype.defaults, {
+        radius: QuantumConfig.DEFAULT_ATOM_RADIUS,
+        mass: 1000,
+        currentState: null,
+        isStateLifetimeFixed: false
+    }),
 
     /**
-     * A spherical body with mass and momentum
+     * Required options: {
+     *   simulation: simulation model,
+     *   numStates: number of states    
+     * }
      */
-    var Atom = SphericalBody.extend({
+    initialize: function(attributes, options) {
+        SphericalBody.prototype.initialize.apply(this, [attributes, options]);
 
-        defaults: _.extend({}, SphericalBody.prototype.defaults, {
-            radius: QuantumConfig.DEFAULT_ATOM_RADIUS,
-            mass: 1000,
-            currentState: null,
-            isStateLifetimeFixed: false
-        }),
+        this.simulation = options.simulation;
+        this.groundState = null;
+        this.highestEnergyState = null;
 
-        /**
-         * Required options: {
-         *   simulation: simulation model,
-         *   numStates: number of states    
-         * }
-         */
-        initialize: function(attributes, options) {
-            SphericalBody.prototype.initialize.apply(this, [attributes, options]);
+        this.states = [];
 
-            this.simulation = options.simulation;
-            this.groundState = null;
-            this.highestEnergyState = null;
+        this.on('change:currentState', this.currentStateChanged);
 
-            this.states = [];
+        this.set('currentState', this.simulation.getGroundState());
+        this.setNumEnergyLevels(options.numStates, this.simulation);
+    },
 
-            this.on('change:currentState', this.currentStateChanged);
+    getCurrentState: function() {
+        return this.get('currentState');
+    },
 
-            this.set('currentState', this.simulation.getGroundState());
-            this.setNumEnergyLevels(options.numStates, this.simulation);
-        },
+    setCurrentState: function(currentState) {
+        this.set('currentState', currentState);
+    },
 
-        getCurrentState: function() {
-            return this.get('currentState');
-        },
+    getStates: function() {
+        return this.states;
+    },
 
-        setCurrentState: function(currentState) {
-            this.set('currentState', currentState);
-        },
+    getModel: function() {
+        return this.simulation;
+    },
 
-        getStates: function() {
-            return this.states;
-        },
+    /**
+     * Returns the number of the atom's current state. This is the index of the state in the
+     *   atom's array of state. The ground state is number 0
+     */
+    getCurrentStateNumber: function() {
+        for (var i = 0; i < this.states.length; i++) {
+            if (this.getCurrentState() == this.states[i])
+                return i;
+        }
+        return 0;
+    },
 
-        getModel: function() {
-            return this.simulation;
-        },
-
-        /**
-         * Returns the number of the atom's current state. This is the index of the state in the
-         *   atom's array of state. The ground state is number 0
-         */
-        getCurrentStateNumber: function() {
-            for (var i = 0; i < this.states.length; i++) {
-                if (this.getCurrentState() == this.states[i])
-                    return i;
+    /**
+     * Sets the states that the atom can be in.  Sets the atom's current state to the
+     *   ground state
+     */
+    setStates: function(states) {
+        this.states = states;
+        // Find the minimum and maximum energy states
+        var maxEnergy = -Number.MAX_VALUE;
+        for (var i = 0; i < states.length; i++) {
+            var state = states[i];
+            var energy = state.get('energyLevel');
+            if (energy > maxEnergy) {
+                maxEnergy = energy;
+                this.highestEnergyState = state;
             }
-            return 0;
-        },
-
-        /**
-         * Sets the states that the atom can be in.  Sets the atom's current state to the
-         *   ground state
-         */
-        setStates: function(states) {
-            this.states = states;
-            // Find the minimum and maximum energy states
-            var maxEnergy = -Number.MAX_VALUE;
-            for (var i = 0; i < states.length; i++) {
-                var state = states[i];
-                var energy = state.get('energyLevel');
-                if (energy > maxEnergy) {
-                    maxEnergy = energy;
-                    this.highestEnergyState = state;
-                }
-            }
-
-            this.groundState = this.getLowestEnergyState();
-            this.set('currentState', this.groundState);
-        },
-
-        /**
-         * Populates the list of AtomicStates that this atom can be in, based on the
-         *   specified number of energy levels it can occupy
-         */
-        setNumEnergyLevels: function(numEnergyLevels, simulation) {
-            for (var i = 0; i < numEnergyLevels; i++)
-                this.states[i] = null;
-            this.states[0] = simulation.getGroundState();
-            this.groundState = this.states[0];
-            this.highestEnergyState = this.states[this.states.length - 1];
-        },
-
-        getGroundState: function() {
-            return this.groundState;
-        },
-
-        /**
-         * Returns the atom's state with the lowest energy
-         */
-        getLowestEnergyState: function() {
-            var lowestState = null;
-            var lowestEnergy = Number.MAX_VALUE;
-            for (var i = 0; i < this.states.length; i++) {
-                var state = this.states[i];
-                if (state.get('energyLevel') < lowestEnergy) {
-                    lowestEnergy = state.get('energyLevel');
-                    lowestState = state;
-                }
-            }
-            return lowestState;
-        },
-
-        getHighestEnergyState: function() {
-            return this.highestEnergyState;
-        },
-
-        /**
-         * Returns the state the atom will be in if it emits a photon. By default,
-         *   this is the next lower energy state
-         */
-        getEnergyStateAfterEmission: function() {
-            return this.get('currentState').getNextLowerEnergyState();
-        },
-
-        emitPhoton: function(emittedPhoton) {
-            this.trigger('photon-emitted', this, emittedPhoton);
-        },
-
-        collideWithPhoton: function(photon) {
-            this.get('currentState').collideWithPhoton(this, photon);
-        },
-
-        currentStateChanged: function(atom, currentState) {
-            if (this.stateLifetimeManager)
-                this.stateLifetimeManager.kill();
-
-            if (this.previous('currentState'))
-                this.previous('currentState').leaveState(this);
-            
-            if (currentState)
-                currentState.enterState(this);
-
-            this.stateLifetimeManager = new StateLifetimeManager(this, true, this.simulation);
         }
 
-    }, {
+        this.groundState = this.getLowestEnergyState();
+        this.set('currentState', this.groundState);
+    },
 
-        DEFAULT_RADIUS: QuantumConfig.DEFAULT_ATOM_RADIUS
+    /**
+     * Populates the list of AtomicStates that this atom can be in, based on the
+     *   specified number of energy levels it can occupy
+     */
+    setNumEnergyLevels: function(numEnergyLevels, simulation) {
+        for (var i = 0; i < numEnergyLevels; i++)
+            this.states[i] = null;
+        this.states[0] = simulation.getGroundState();
+        this.groundState = this.states[0];
+        this.highestEnergyState = this.states[this.states.length - 1];
+    },
 
-    });
+    getGroundState: function() {
+        return this.groundState;
+    },
 
-    return Atom;
+    /**
+     * Returns the atom's state with the lowest energy
+     */
+    getLowestEnergyState: function() {
+        var lowestState = null;
+        var lowestEnergy = Number.MAX_VALUE;
+        for (var i = 0; i < this.states.length; i++) {
+            var state = this.states[i];
+            if (state.get('energyLevel') < lowestEnergy) {
+                lowestEnergy = state.get('energyLevel');
+                lowestState = state;
+            }
+        }
+        return lowestState;
+    },
+
+    getHighestEnergyState: function() {
+        return this.highestEnergyState;
+    },
+
+    /**
+     * Returns the state the atom will be in if it emits a photon. By default,
+     *   this is the next lower energy state
+     */
+    getEnergyStateAfterEmission: function() {
+        return this.get('currentState').getNextLowerEnergyState();
+    },
+
+    emitPhoton: function(emittedPhoton) {
+        this.trigger('photon-emitted', this, emittedPhoton);
+    },
+
+    collideWithPhoton: function(photon) {
+        this.get('currentState').collideWithPhoton(this, photon);
+    },
+
+    currentStateChanged: function(atom, currentState) {
+        if (this.stateLifetimeManager)
+            this.stateLifetimeManager.kill();
+
+        if (this.previous('currentState'))
+            this.previous('currentState').leaveState(this);
+        
+        if (currentState)
+            currentState.enterState(this);
+
+        this.stateLifetimeManager = new StateLifetimeManager(this, true, this.simulation);
+    }
+
+}, {
+
+    DEFAULT_RADIUS: QuantumConfig.DEFAULT_ATOM_RADIUS
+
 });
+
+export default Atom;

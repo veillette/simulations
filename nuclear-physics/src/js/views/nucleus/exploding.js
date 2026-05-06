@@ -1,103 +1,94 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Colors from 'common/colors/colors';
+import NucleusView from 'views/nucleus';
+import Constants from 'constants';
+var EXPLOSION_OUTLINE_COLOR = Colors.parseHex(Constants.ExplodingNucleusView.EXPLOSION_OUTLINE_COLOR);
+var EXPLOSION_FILL_COLOR    = Colors.parseHex(Constants.ExplodingNucleusView.EXPLOSION_FILL_COLOR);
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var Colors = require('common/colors/colors');
-
-    var NucleusView               = require('views/nucleus');
-
-    var Constants = require('constants');
-    var EXPLOSION_OUTLINE_COLOR = Colors.parseHex(Constants.ExplodingNucleusView.EXPLOSION_OUTLINE_COLOR);
-    var EXPLOSION_FILL_COLOR    = Colors.parseHex(Constants.ExplodingNucleusView.EXPLOSION_FILL_COLOR);
+/**
+ *
+ */
+var ExplodingNucleusView = NucleusView.extend({
 
     /**
-     *
+     * Initializes the new ExplodingNucleusView.
      */
-    var ExplodingNucleusView = NucleusView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            showNucleus: true
+        }, options);
 
-        /**
-         * Initializes the new ExplodingNucleusView.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                showNucleus: true
-            }, options);
+        this.showNucleus = options.showNucleus;
 
-            this.showNucleus = options.showNucleus;
+        NucleusView.prototype.initialize.apply(this, [options]);
+    },
 
-            NucleusView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.explosionGraphics = new PIXI.Graphics();
+        this.explosionGraphics.visible = false;
+        this.displayObject.addChild(this.explosionGraphics);
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.explosionGraphics = new PIXI.Graphics();
-            this.explosionGraphics.visible = false;
-            this.displayObject.addChild(this.explosionGraphics);
+        NucleusView.prototype.initGraphics.apply(this, arguments);
+    },
 
-            NucleusView.prototype.initGraphics.apply(this, arguments);
-        },
+    updateSprite: function() {
+        if (this.showNucleus)
+            NucleusView.prototype.updateSprite.apply(this, arguments);
+    },
 
-        updateSprite: function() {
-            if (this.showNucleus)
-                NucleusView.prototype.updateSprite.apply(this, arguments);
-        },
+    update: function(time, deltaTime, paused) {
+        NucleusView.prototype.update.apply(this, arguments);
 
-        update: function(time, deltaTime, paused) {
-            NucleusView.prototype.update.apply(this, arguments);
+        if (!paused) {
+            var explosionGraphics = this.explosionGraphics;
 
-            if (!paused) {
-                var explosionGraphics = this.explosionGraphics;
+            if (this._exploding) {
+                var progression = this._explosionTime / ExplodingNucleusView.EXPLOSION_TIME;
+                var alpha = (1 - progression) * ExplodingNucleusView.EXPLOSION_MAX_ALPHA;
+                var finalRadius = this.mvt.modelToViewDeltaX(this.model.get('diameter')) * ExplodingNucleusView.EXPLOSION_RADIUS_SCALE;
+                var radius = progression * finalRadius;
+                var ringWidth = ExplodingNucleusView.EXPLOSION_OUTLINE_WIDTH;
+                var ringRadius = (radius > ringWidth) ? radius - ringWidth : 1;
 
-                if (this._exploding) {
-                    var progression = this._explosionTime / ExplodingNucleusView.EXPLOSION_TIME;
-                    var alpha = (1 - progression) * ExplodingNucleusView.EXPLOSION_MAX_ALPHA;
-                    var finalRadius = this.mvt.modelToViewDeltaX(this.model.get('diameter')) * ExplodingNucleusView.EXPLOSION_RADIUS_SCALE;
-                    var radius = progression * finalRadius;
-                    var ringWidth = ExplodingNucleusView.EXPLOSION_OUTLINE_WIDTH;
-                    var ringRadius = (radius > ringWidth) ? radius - ringWidth : 1;
+                explosionGraphics.visible = true;
+                explosionGraphics.alpha = alpha;
+                explosionGraphics.clear();
+                explosionGraphics.beginFill(EXPLOSION_FILL_COLOR, 1);
+                explosionGraphics.drawCircle(0, 0, radius ? radius : 1);
+                explosionGraphics.endFill();
+                explosionGraphics.lineStyle(ringWidth, EXPLOSION_OUTLINE_COLOR, 1);
+                explosionGraphics.drawCircle(0, 0, ringRadius);
 
-                    explosionGraphics.visible = true;
-                    explosionGraphics.alpha = alpha;
-                    explosionGraphics.clear();
-                    explosionGraphics.beginFill(EXPLOSION_FILL_COLOR, 1);
-                    explosionGraphics.drawCircle(0, 0, radius ? radius : 1);
-                    explosionGraphics.endFill();
-                    explosionGraphics.lineStyle(ringWidth, EXPLOSION_OUTLINE_COLOR, 1);
-                    explosionGraphics.drawCircle(0, 0, ringRadius);
-
-                    this._explosionTime += deltaTime;
-                    if (this._explosionTime >= ExplodingNucleusView.EXPLOSION_TIME)
-                        this._exploding = false;
-                }
-                else {
-                    explosionGraphics.visible = false;
-                }
-            }
-        },
-
-        nucleusChanged: function() {
-            NucleusView.prototype.nucleusChanged.apply(this, arguments);
-
-            if (this.model.hasDecayed()) {
-                // Kick off the explosion graphic.
-                this.explosionGraphics.clear();
-                this._explosionTime = 0;
-                this._exploding = true;
+                this._explosionTime += deltaTime;
+                if (this._explosionTime >= ExplodingNucleusView.EXPLOSION_TIME)
+                    this._exploding = false;
             }
             else {
-                this.explosionGraphics.visible = false;
-                this._exploding = false;
+                explosionGraphics.visible = false;
             }
         }
+    },
 
-    }, Constants.ExplodingNucleusView);
+    nucleusChanged: function() {
+        NucleusView.prototype.nucleusChanged.apply(this, arguments);
+
+        if (this.model.hasDecayed()) {
+            // Kick off the explosion graphic.
+            this.explosionGraphics.clear();
+            this._explosionTime = 0;
+            this._exploding = true;
+        }
+        else {
+            this.explosionGraphics.visible = false;
+            this._exploding = false;
+        }
+    }
+
+}, Constants.ExplodingNucleusView);
 
 
-    return ExplodingNucleusView;
-});
+export default ExplodingNucleusView;

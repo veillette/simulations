@@ -1,57 +1,50 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Rectangle from 'common/math/rectangle';
+import Body from './body';
 
-    'use strict';
+/**
+ * A spherical body with mass and momentum
+ */
+var Wall = Body.extend({
 
-    var _ = require('underscore');
+    collidable: true,
 
-    var Vector2   = require('common/math/vector2');
-    var Rectangle = require('common/math/rectangle');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        bounds: null
+    }),
 
-    var Body = require('./body');
+    initialize: function(attributes, options) {
+        Body.prototype.initialize.apply(this, [attributes, options]);
 
-    /**
-     * A spherical body with mass and momentum
-     */
-    var Wall = Body.extend({
+        this.set('bounds', new Rectangle(this.get('bounds')));
 
-        collidable: true,
+        this._centerOfMass = new Vector2();
+    },
 
-        defaults: _.extend({}, Body.prototype.defaults, {
-            bounds: null
-        }),
+    getCM: function() {
+        return this._centerOfMass.set(
+            this.get('bounds').left()   + this.get('bounds').w / 2,
+            this.get('bounds').bottom() + this.get('bounds').h / 2
+        );
+    },
 
-        initialize: function(attributes, options) {
-            Body.prototype.initialize.apply(this, [attributes, options]);
+    getMomentOfInertia: function() {
+        return Number.POSITIVE_INFINITY;
+    },
 
-            this.set('bounds', new Rectangle(this.get('bounds')));
+    getBounds: function() {
+        return this.get('bounds');
+    },
 
-            this._centerOfMass = new Vector2();
-        },
+    getPreviousPosition: function() {
+        return null;
+    },
 
-        getCM: function() {
-            return this._centerOfMass.set(
-                this.get('bounds').left()   + this.get('bounds').w / 2,
-                this.get('bounds').bottom() + this.get('bounds').h / 2
-            );
-        },
+    getPreviousVelocity: function() {
+        return this.get('velocity');
+    }
 
-        getMomentOfInertia: function() {
-            return Number.POSITIVE_INFINITY;
-        },
-
-        getBounds: function() {
-            return this.get('bounds');
-        },
-
-        getPreviousPosition: function() {
-            return null;
-        },
-
-        getPreviousVelocity: function() {
-            return this.get('velocity');
-        }
-
-    });
-
-    return Wall;
 });
+
+export default Wall;

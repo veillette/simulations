@@ -1,177 +1,169 @@
-define(function (require) {
+import _ from 'underscore';
+import selectText from '../dom/select-text';
+import Draggable from './draggable';
+import html from './stopwatch.html?raw';
+import './stopwatch.less';
 
-	'use strict';
+var dx,
+    dy,
+    translate;
 
-	var _ = require('underscore');
+var StopwatchView = Draggable.extend({
 
-	var selectText = require('../dom/select-text');
-	var Draggable = require('./draggable');
+    template: _.template(html),
 
-	var html  = require('text!./stopwatch.html');
+    tagName: 'div',
+    className: 'stopwatch-view',
 
-	require('less!./stopwatch');
+    events: {
+        'mousedown' : 'panelDown',
+        'touchstart': 'panelDown',
 
-	var dx,
-	    dy,
-	    translate;
+        'click .stopwatch-toggle-btn' : 'toggleClicked',
+        'click .stopwatch-reset-btn'  : 'resetClicked',
 
-	var StopwatchView = Draggable.extend({
+        'click .stopwatch-label-value': 'labelClicked'
+    },
 
-		template: _.template(html),
+    initialize: function(options) {
+        options = _.extend({
+            position: {
+                x: 30,
+                y: 30
+            },
+            captureOnBody: false,
+            mouseLeaveCancels: true,
+            units : 'sec',
+            decimals : 2,
+            unitRatio : 1
+        }, options);
 
-		tagName: 'div',
-		className: 'stopwatch-view',
+        Draggable.prototype.initialize.apply(this, [options]);
 
-		events: {
-			'mousedown' : 'panelDown',
-			'touchstart': 'panelDown',
+        this.position = options.position;
 
-			'click .stopwatch-toggle-btn' : 'toggleClicked',
-			'click .stopwatch-reset-btn'  : 'resetClicked',
+        this.units = options.units;
+        this.unitRatio = options.unitRatio;
+        this.decimals = options.decimals;
 
-			'click .stopwatch-label-value': 'labelClicked'
-		},
+        this.timing = false;
+    },
 
-		initialize: function(options) {
-			options = _.extend({
-				position: {
-					x: 30,
-					y: 30
-				},
-				captureOnBody: false,
-				mouseLeaveCancels: true,
-				units : 'sec',
-				decimals : 2,
-				unitRatio : 1
-			}, options);
+    render: function() {
+        this.renderStopwatch();
+        this.bindDragEvents();
+        this.resize();
+        this.reset();
+        this.update(0, 0);
+    },
 
-			Draggable.prototype.initialize.apply(this, [options]);
+    renderStopwatch: function() {
+        this.$el.html(this.template());
+        this.$labelValue = this.$('.stopwatch-label-value');
+        this.$toggleButtonText = this.$('.stopwatch-toggle-btn .btn-text');
+        this.$('.stopwatch-label-units').text(this.units);
+    },
 
-			this.position = options.position;
+    panelDown: function(event) {
 
-			this.units = options.units;
-			this.unitRatio = options.unitRatio;
-			this.decimals = options.decimals;
+        if (event.currentTarget === this.el) {
+            event.preventDefault();
 
-			this.timing = false;
-		},
+            this.$el.addClass('dragging');
 
-		render: function() {
-			this.renderStopwatch();
-			this.bindDragEvents();
-			this.resize();
-			this.reset();
-			this.update(0, 0);
-		},
+            this.dragging = true;
 
-		renderStopwatch: function() {
-			this.$el.html(this.template());
-			this.$labelValue = this.$('.stopwatch-label-value');
-			this.$toggleButtonText = this.$('.stopwatch-toggle-btn .btn-text');
-			this.$('.stopwatch-label-units').text(this.units);
-		},
+            this.fixTouchEvents(event);
 
-		panelDown: function(event) {
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
+        }
+    },
 
-			if (event.currentTarget === this.el) {
-				event.preventDefault();
+    drag: function(event) {
+        if (this.dragging) {
 
-				this.$el.addClass('dragging');
+            this.fixTouchEvents(event);
 
-				this.dragging = true;
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-				this.fixTouchEvents(event);
+            if (!this.boxOutOfBounds(this.position.x + dx, this.position.y + dy)) {
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-			}
-		},
+                this.position.x += dx;
+                this.position.y += dy;
+            }
 
-		drag: function(event) {
-			if (this.dragging) {
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-				this.fixTouchEvents(event);
+            this.updateOnNextFrame = true;
+        }
+    },
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+    dragEnd: function(event) {
+        if (this.dragging) {
+            this.dragging = false;
+            this.$el.removeClass('dragging');
+        }
+    },
 
-				if (!this.boxOutOfBounds(this.position.x + dx, this.position.y + dy)) {
+    toggleClicked: function(event) {
+        this.timing = !this.timing;
+        if (this.timing)
+            this.$toggleButtonText.text('Stop');
+        else
+            this.$toggleButtonText.text('Start');
+    },
 
-					this.position.x += dx;
-					this.position.y += dy;
-				}
+    resetClicked: function(event) {
+        this.reset();
+    },
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+    labelClicked: function(event) {
+        selectText(this.$labelValue[0]);
+    },
 
-				this.updateOnNextFrame = true;
-			}
-		},
+    reset: function() {
+        this.time = 0;
+        this.$labelValue.text(this.time.toFixed(this.decimals));
+    },
 
-		dragEnd: function(event) {
-			if (this.dragging) {
-				this.dragging = false;
-				this.$el.removeClass('dragging');
-			}
-		},
+    stop: function() {
+        this.timing = false;
+    },
 
-		toggleClicked: function(event) {
-			this.timing = !this.timing;
-			if (this.timing)
-				this.$toggleButtonText.text('Stop');
-			else
-				this.$toggleButtonText.text('Start');
-		},
+    setPosition: function(x, y) {
+        this.position.x = x;
+        this.position.y = y;
+        this.updateOnNextFrame = true;
+    },
 
-		resetClicked: function(event) {
-			this.reset();
-		},
+    update: function(time, delta, paused, timeScale) {
 
-		labelClicked: function(event) {
-			selectText(this.$labelValue[0]);
-		},
+        timeScale = timeScale || 1;
 
-		reset: function() {
-			this.time = 0;
-			this.$labelValue.text(this.time.toFixed(this.decimals));
-		},
+        if (this.timing && !paused) {
+            this.time += delta * this.unitRatio;
+            var scaledTime = this.time * timeScale;
+            this.$labelValue.text(scaledTime.toFixed(this.decimals));
+        }
 
-		stop: function() {
-			this.timing = false;
-		},
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-		setPosition: function(x, y) {
-			this.position.x = x;
-			this.position.y = y;
-			this.updateOnNextFrame = true;
-		},
+        this.updateOnNextFrame = false;
 
-		update: function(time, delta, paused, timeScale) {
+        translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
 
-			timeScale = timeScale || 1;
-
-			if (this.timing && !paused) {
-				this.time += delta * this.unitRatio;
-				var scaledTime = this.time * timeScale;
-				this.$labelValue.text(scaledTime.toFixed(this.decimals));
-			}
-
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
-
-			this.updateOnNextFrame = false;
-
-			translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
-
-			this.$el.css({
-				'-webkit-transform': translate,
-				'-ms-transform': translate,
-				'-o-transform': translate,
-				'transform': translate,
-			});
-		}
-	});
-
-	return StopwatchView;
+        this.$el.css({
+            '-webkit-transform': translate,
+            '-ms-transform': translate,
+            '-o-transform': translate,
+            'transform': translate,
+        });
+    }
 });
+
+export default StopwatchView;

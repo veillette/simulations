@@ -1,37 +1,31 @@
-define(function (require) {
+import AtomicNucleus from 'models/atomic-nucleus';
+import AlphaParticle from 'models/alpha-particle';
 
-    'use strict';
 
-
-    var AtomicNucleus = require('models/atomic-nucleus');
-    var AlphaParticle = require('models/alpha-particle');
-
+/**
+ * Base class for alpha-decay nuclei.  This class contains much of the behavior that
+ *   is common to all nuclei that exhibit alpha decay.
+ */
+var AbstractAlphaDecayNucleus = AtomicNucleus.extend({
 
     /**
-     * Base class for alpha-decay nuclei.  This class contains much of the behavior that
-     *   is common to all nuclei that exhibit alpha decay.
+     * Take the actions that simulate alpha decay.
      */
-    var AbstractAlphaDecayNucleus = AtomicNucleus.extend({
+    decay: function(deltaTime) {
+        AtomicNucleus.prototype.decay.apply(this, arguments);
 
-        /**
-         * Take the actions that simulate alpha decay.
-         */
-        decay: function(deltaTime) {
-            AtomicNucleus.prototype.decay.apply(this, arguments);
+        this.set('numNeutrons', this.get('numNeutrons') - 2);
+        this.set('numProtons',  this.get('numProtons')  - 2);
 
-            this.set('numNeutrons', this.get('numNeutrons') - 2);
-            this.set('numProtons',  this.get('numProtons')  - 2);
+        var byProducts = [
+            AlphaParticle.create({
+                position: this.get('position')
+            })
+        ];
 
-            var byProducts = [
-                AlphaParticle.create({
-                    position: this.get('position')
-                })
-            ];
+        this.triggerNucleusChange(byProducts);
+    }
 
-            this.triggerNucleusChange(byProducts);
-        }
-
-    });
-
-    return AbstractAlphaDecayNucleus;
 });
+
+export default AbstractAlphaDecayNucleus;

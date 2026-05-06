@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import NuclearPhysicsSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var NuclearPhysicsAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var NuclearPhysicsSimView = require('views/sim');
+    simViewConstructors: [
+        NuclearPhysicsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var NuclearPhysicsAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            NuclearPhysicsSimView
-        ]
-
-    });
-
-    return NuclearPhysicsAppView;
 });
+
+export default NuclearPhysicsAppView;

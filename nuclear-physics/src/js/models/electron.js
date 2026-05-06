@@ -1,14 +1,8 @@
-define(function (require) {
+import SubatomicParticle from 'models/subatomic-particle';
 
-    'use strict';
+/**
+ * An electron
+ */
+var Electron = SubatomicParticle.extend();
 
-
-    var SubatomicParticle = require('models/subatomic-particle');
-
-    /**
-     * An electron
-     */
-    var Electron = SubatomicParticle.extend();
-
-    return Electron;
-});
+export default Electron;

@@ -1,22 +1,17 @@
-define(function (require) {
+import _ from 'underscore';
+import Backbone from 'backbone';
 
-    'use strict';
+/**
+ * Strategy for atoms emitting energy
+ */
+var EnergyEmissionStrategy = function() {};
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
-    
-    /**
-     * Strategy for atoms emitting energy
-     */
-    var EnergyEmissionStrategy = function() {};
+_.extend(EnergyEmissionStrategy.prototype, {
 
-    _.extend(EnergyEmissionStrategy.prototype, {
+    emitEnergy: function(atom) {}
 
-        emitEnergy: function(atom) {}
-
-    });
-
-    EnergyEmissionStrategy.extend = Backbone.Model.extend;
-
-    return EnergyEmissionStrategy;
 });
+
+EnergyEmissionStrategy.extend = Backbone.Model.extend;
+
+export default EnergyEmissionStrategy;

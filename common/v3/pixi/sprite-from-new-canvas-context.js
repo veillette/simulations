@@ -1,29 +1,24 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+var textureFromCanvas = function(canvas) {
+    if (PIXI.Texture.from)
+        return PIXI.Texture.from(canvas);
+    return PIXI.Texture.fromCanvas(canvas);
+};
 
-    'use strict';
+/**
+ * Creates a canvas and then calls the given drawing callback with its
+ *   2D canvas context.  Any drawing that happens to the context needs
+ *   to happen within that context.  It then creates a sprite out of
+ *   that canvas and returns it with default anchors.
+ */
+PIXI.Sprite.fromNewCanvasContext = function(width, height, contextDrawCallback) {
+    var canvas = document.createElement('canvas');
+    canvas.width  = width;
+    canvas.height = height;
 
-    var PIXI = require('pixi');
-    var textureFromCanvas = function(canvas) {
-        if (PIXI.Texture.from)
-            return PIXI.Texture.from(canvas);
-        return PIXI.Texture.fromCanvas(canvas);
-    };
+    contextDrawCallback(canvas.getContext('2d'));
 
-    /**
-     * Creates a canvas and then calls the given drawing callback with its
-     *   2D canvas context.  Any drawing that happens to the context needs
-     *   to happen within that context.  It then creates a sprite out of
-     *   that canvas and returns it with default anchors.
-     */
-    PIXI.Sprite.fromNewCanvasContext = function(width, height, contextDrawCallback) {
-        var canvas = document.createElement('canvas');
-        canvas.width  = width;
-        canvas.height = height;
+    return new PIXI.Sprite(textureFromCanvas(canvas));
+};
 
-        contextDrawCallback(canvas.getContext('2d'));
-
-        return new PIXI.Sprite(textureFromCanvas(canvas));
-    };
-
-    return PIXI;
-});
+export default PIXI;

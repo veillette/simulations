@@ -1,23 +1,18 @@
-define(function (require) {
+import WavelengthColors from 'common/colors/wavelength';
 
-    'use strict';
+var QuantumConfig = {};
 
-    var WavelengthColors = require('common/colors/wavelength');
+QuantumConfig.STIMULATION_LIKELIHOOD = 0.2;
+QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
 
-    var QuantumConfig = {};
+// Tolerances used to determine if a photon matches with an atomic state energy
+QuantumConfig.ENERGY_TOLERANCE = 0.05;
 
-    QuantumConfig.STIMULATION_LIKELIHOOD = 0.2;
-    QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+QuantumConfig.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
+QuantumConfig.MAX_WAVELENGTH = WavelengthColors.MAX_WAVELENGTH;
 
-    // Tolerances used to determine if a photon matches with an atomic state energy
-    QuantumConfig.ENERGY_TOLERANCE = 0.05;
+QuantumConfig.DEFAULT_ATOM_RADIUS = 15;
 
-    QuantumConfig.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
-    QuantumConfig.MAX_WAVELENGTH = WavelengthColors.MAX_WAVELENGTH;
+QuantumConfig.PIXELS_PER_NM = 1E6;
 
-    QuantumConfig.DEFAULT_ATOM_RADIUS = 15;
-
-    QuantumConfig.PIXELS_PER_NM = 1E6;
-
-    return QuantumConfig;
-});
+export default QuantumConfig;

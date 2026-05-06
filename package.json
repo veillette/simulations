@@ -36,7 +36,8 @@
   "homepage": "https://github.com/veillette/simulations",
   "devDependencies": {
     "gh-pages": "^6.3.0",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "jscodeshift": "^17.3.0"
   },
   "overrides": {
     "braces": "^3.0.3",

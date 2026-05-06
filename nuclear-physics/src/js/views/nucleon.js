@@ -1,45 +1,39 @@
-define(function(require) {
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
+import SubatomicParticleView from 'views/subatomic-particle';
+import Nucleon from 'models/nucleon';
 
-    'use strict';
+/**
+ *
+ */
+var NucleonView = SubatomicParticleView.extend({
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
-    var SubatomicParticleView     = require('views/subatomic-particle');
+    initialize: function(options) {
+        SubatomicParticleView.prototype.initialize.apply(this, arguments);
 
-    var Nucleon = require('models/nucleon');
+        this._type = this.model.get('type');
+    },
 
-    /**
-     *
-     */
-    var NucleonView = SubatomicParticleView.extend({
+    update: function(time, deltaTime) {
+       SubatomicParticleView.prototype.update.apply(this, arguments);
 
-        initialize: function(options) {
-            SubatomicParticleView.prototype.initialize.apply(this, arguments);
-
+        if (this._type !== this.model.get('type')) {
             this._type = this.model.get('type');
-        },
-
-        update: function(time, deltaTime) {
-           SubatomicParticleView.prototype.update.apply(this, arguments);
-
-            if (this._type !== this.model.get('type')) {
-                this._type = this.model.get('type');
-                this.typeChanged();
-            }
-        },
-
-        createSprite: function() {
-            if (this.model.get('type') === Nucleon.PROTON)
-                return ParticleGraphicsGenerator.generateProton(this.mvt);
-            else
-                return ParticleGraphicsGenerator.generateNeutron(this.mvt);
-        },
-
-        typeChanged: function() {
-            this.updateSprite();
+            this.typeChanged();
         }
+    },
 
-    });
+    createSprite: function() {
+        if (this.model.get('type') === Nucleon.PROTON)
+            return ParticleGraphicsGenerator.generateProton(this.mvt);
+        else
+            return ParticleGraphicsGenerator.generateNeutron(this.mvt);
+    },
 
+    typeChanged: function() {
+        this.updateSprite();
+    }
 
-    return NucleonView;
 });
+
+
+export default NucleonView;

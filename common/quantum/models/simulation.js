@@ -1,34 +1,28 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import FixedIntervalSimulation from 'common/simulation/fixed-interval-simulation';
 
-    'use strict';
+/**
+ * Base simulation model for quantum physics simulations
+ */
+var QuantumSimulation = FixedIntervalSimulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
+        photonSpeedScale: 1,
+        elementProperties: undefined
+    }),
 
-    var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
+    getGroundState: function() {
+        return this.get('elementProperties').getGroundState();
+    },
 
-    /**
-     * Base simulation model for quantum physics simulations
-     */
-    var QuantumSimulation = FixedIntervalSimulation.extend({
+    getCurrentElementProperties: function() {
+        return this.get('elementProperties');
+    },
 
-        defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
-            photonSpeedScale: 1,
-            elementProperties: undefined
-        }),
+    setCurrentElementProperties: function(elementProperties) {
+        this.set('elementProperties', elementProperties);
+    }
 
-        getGroundState: function() {
-            return this.get('elementProperties').getGroundState();
-        },
-
-        getCurrentElementProperties: function() {
-            return this.get('elementProperties');
-        },
-
-        setCurrentElementProperties: function(elementProperties) {
-            this.set('elementProperties', elementProperties);
-        }
-
-    });
-
-    return QuantumSimulation;
 });
+
+export default QuantumSimulation;

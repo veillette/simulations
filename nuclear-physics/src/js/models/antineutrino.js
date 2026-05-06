@@ -1,14 +1,8 @@
-define(function (require) {
+import SubatomicParticle from 'models/subatomic-particle';
 
-    'use strict';
+/**
+ * An antineutrino
+ */
+var Antineutrino = SubatomicParticle.extend();
 
-
-    var SubatomicParticle = require('models/subatomic-particle');
-
-    /**
-     * An antineutrino
-     */
-    var Antineutrino = SubatomicParticle.extend();
-
-    return Antineutrino;
-});
+export default Antineutrino;

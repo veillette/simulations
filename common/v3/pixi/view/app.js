@@ -1,76 +1,78 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import AppView from '../../app/app';
 
-    'use strict';
+// Pixi v7+ removed Loader in favour of the async PIXI.Assets API.
+var useAssetsApi = !!(PIXI.Assets && PIXI.Assets.load);
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+var getLoader = function() {
+    if (PIXI.Loader && PIXI.Loader.shared)
+        return PIXI.Loader.shared;
+    return PIXI.loader;
+};
 
-    var AppView = require('../../app/app');
+/**
+ * This is a version of the AppView that has asset preloading
+ *   capabilities.  When extending this view, one must pass
+ *   in an array from assets (from Assets.getAssetList() for
+ *   example).  Calling the AppView.load function will then
+ *   start the assets downloading and won't call AppView's
+ *   postLoad function until the sim views AND the assets
+ *   have been loaded.
+ */
+var PixiAppView = AppView.extend({
 
-    var getLoader = function() {
-        if (PIXI.Loader && PIXI.Loader.shared)
-            return PIXI.Loader.shared;
-        return PIXI.loader;
-    };
+    assets: [],
+    
+    initialize: function(options) {
+        AppView.prototype.initialize.apply(this, [options]);
+    },
 
-    /**
-     * This is a version of the AppView that has asset preloading
-     *   capabilities.  When extending this view, one must pass
-     *   in an array from assets (from Assets.getAssetList() for
-     *   example).  Calling the AppView.load function will then
-     *   start the assets downloading and won't call AppView's
-     *   postLoad function until the sim views AND the assets
-     *   have been loaded.
-     */
-    var PixiAppView = AppView.extend({
-
-    	assets: [],
+    load: function() {
+        this.$el.empty();
+        this.showLoading();
         
-        initialize: function(options) {
-            AppView.prototype.initialize.apply(this, [options]);
-        },
+        this.on('sim-views-initialized assets-loaded', function() {
+            if (this.simViewsInitialized && this.assetsLoaded)
+                this.postLoad();
+        });
 
-        load: function() {
-        	this.$el.empty();
-        	this.showLoading();
-        	
-        	this.on('sim-views-initialized assets-loaded', function() {
-        		if (this.simViewsInitialized && this.assetsLoaded)
-        			this.postLoad();
-        	});
+        this.loadAssets();
+        this.initSimViews();
+    },
 
-        	this.loadAssets();
-        	this.initSimViews();
-        },
+    loadAssets: function() {
+        this.assetsLoaded = false;
 
-    	loadAssets: function() {
-            this.assetsLoaded = false;
+        var onComplete = _.bind(function(){
+            this.assetsLoaded = true;
+            this.trigger('assets-loaded');
+        }, this);
 
-            var onComplete = _.bind(function(){
-                this.assetsLoaded = true;
-                this.trigger('assets-loaded');
-            }, this);
-
-            if (this.assets.length > 0) {
+        if (this.assets.length > 0) {
+            if (useAssetsApi) {
+                // Pixi v7+: PIXI.Assets is async/Promise-based.
+                // load() is idempotent — already-cached assets resolve immediately.
+                PIXI.Assets.load(this.assets).then(onComplete);
+            } else {
+                // Pixi v5 and below: use PIXI.Loader
                 var assetLoader = getLoader();
                 var resources = assetLoader && assetLoader.resources ? assetLoader.resources : {};
                 var assetsToLoad = _.filter(this.assets, function(assetPath) {
                     return !resources[assetPath];
                 });
-
                 if (assetsToLoad.length === 0) {
                     onComplete();
                     return;
                 }
-
                 assetLoader.add(assetsToLoad);
                 assetLoader.load(onComplete);
             }
-            else {
-                onComplete();
-            }
-        },
-    });
-
-    return PixiAppView;
+        }
+        else {
+            onComplete();
+        }
+    },
 });
+
+export default PixiAppView;

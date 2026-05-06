@@ -1,21 +1,16 @@
-define(function(require) {
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
+import SubatomicParticleView from 'views/subatomic-particle';
 
-    'use strict';
+/**
+ *
+ */
+var AlphaParticleView = SubatomicParticleView.extend({
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
-    var SubatomicParticleView     = require('views/subatomic-particle');
+    createSprite: function() {
+        return ParticleGraphicsGenerator.generateAlphaParticle(this.mvt);
+    }
 
-    /**
-     *
-     */
-    var AlphaParticleView = SubatomicParticleView.extend({
-
-        createSprite: function() {
-            return ParticleGraphicsGenerator.generateAlphaParticle(this.mvt);
-        }
-
-    });
-
-
-    return AlphaParticleView;
 });
+
+
+export default AlphaParticleView;

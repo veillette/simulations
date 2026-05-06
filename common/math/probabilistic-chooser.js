@@ -1,93 +1,87 @@
-define(function (require) {
+/**
+ *  An object that selects from a collection of objects based on probabilities
+ */
+var ProbabilisticChooser = function() {
+    this.items = [];
+    this.weights = [];
+    this._normalizedWeights = [];
 
-    'use strict';
+    this._dirty = false;
 
-    /**
-     *  An object that selects from a collection of objects based on probabilities
-     */
-    var ProbabilisticChooser = function() {
-        this.items = [];
-        this.weights = [];
-        this._normalizedWeights = [];
+    return this;
+};
 
-        this._dirty = false;
+/**
+ * Clears all items and probabilities.
+ */
+ProbabilisticChooser.prototype.clear = function() {
+    this.items.splice(0, this.items.length);
+    this.weights.splice(0, this.weights.length);
+    this._normalizedWeights.splice(0, this._normalizedWeights.length);
 
-        return this;
-    };
+    this._dirty = false;
 
-    /**
-     * Clears all items and probabilities.
-     */
-    ProbabilisticChooser.prototype.clear = function() {
-        this.items.splice(0, this.items.length);
-        this.weights.splice(0, this.weights.length);
-        this._normalizedWeights.splice(0, this._normalizedWeights.length);
+    return this;
+};
 
-        this._dirty = false;
+/**
+ * Adds an item with a certain weight to the list.
+ */
+ProbabilisticChooser.prototype.add = function(weight, item) {
+    this.weights.push(weight);
+    this.items.push(item);
 
-        return this;
-    };
+    this._dirty = true;
 
-    /**
-     * Adds an item with a certain weight to the list.
-     */
-    ProbabilisticChooser.prototype.add = function(weight, item) {
-        this.weights.push(weight);
-        this.items.push(item);
+    return this;
+};
 
-        this._dirty = true;
+/**
+ * Chooses an item based on probability.  A probability value
+ *   can be optionally specified.
+ */
+ProbabilisticChooser.prototype.get = function(p) {
+    if (p === undefined)
+        p = Math.random();
 
-        return this;
-    };
+    if (this._dirty)
+        this.update();
 
-    /**
-     * Chooses an item based on probability.  A probability value
-     *   can be optionally specified.
-     */
-    ProbabilisticChooser.prototype.get = function(p) {
-        if (p === undefined)
-            p = Math.random();
+    var result = null;
+    for (var i = 0; i < this.items.length && result == null; i++) {
+        if (p <= this._normalizedWeights[i])
+            result = this.items[i];
+    }
+    return result;
+};
 
-        if (this._dirty)
-            this.update();
+/**
+ * Updates the internal normalized weights 
+ */
+ProbabilisticChooser.prototype.update = function() {
+    var i;
 
-        var result = null;
-        for (var i = 0; i < this.items.length && result == null; i++) {
-            if (p <= this._normalizedWeights[i])
-                result = this.items[i];
-        }
-        return result;
-    };
+    // Get the normalization factor for the probabilities
+    var pTotal = 0;
+    for (i = 0; i < this.weights.length; i++)
+        pTotal += this.weights[i];
+    
+    var fNorm = 1 / pTotal;
 
-    /**
-     * Updates the internal normalized weights 
-     */
-    ProbabilisticChooser.prototype.update = function() {
-        var i;
+    // Build the internal list that is used for choosing. Each choose-able object is
+    //   put in an array, with an associated probability that is the sum of its own
+    //   probability plus the cummulative probability of all objects before it in
+    //   the list.
+    var p = 0;
+    for (i = 0; i < this.weights.length; i++) {
+        p += this.weights[i] * fNorm;
+        this._normalizedWeights[i] = p;
+    }
 
-        // Get the normalization factor for the probabilities
-        var pTotal = 0;
-        for (i = 0; i < this.weights.length; i++)
-            pTotal += this.weights[i];
-        
-        var fNorm = 1 / pTotal;
+    this._dirty = false;
 
-        // Build the internal list that is used for choosing. Each choose-able object is
-        //   put in an array, with an associated probability that is the sum of its own
-        //   probability plus the cummulative probability of all objects before it in
-        //   the list.
-        var p = 0;
-        for (i = 0; i < this.weights.length; i++) {
-            p += this.weights[i] * fNorm;
-            this._normalizedWeights[i] = p;
-        }
-
-        this._dirty = false;
-
-        return this;
-    };
+    return this;
+};
 
 
-    return ProbabilisticChooser;
-
-});
+export default ProbabilisticChooser;

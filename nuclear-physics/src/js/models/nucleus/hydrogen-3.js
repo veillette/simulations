@@ -1,54 +1,47 @@
-define(function (require) {
+import _ from 'underscore';
+import AbstractBetaDecayNucleus from 'models/nucleus/beta-decay';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * This class represents a non-composite Hydrogen 3 nucleus.  In other words,
+ *   this nucleus does not create or keep track of any constituent nucleons.
+ */
+var Hydrogen3Nucleus = AbstractBetaDecayNucleus.extend({
 
-    var _ = require('underscore');
-
-    var AbstractBetaDecayNucleus = require('models/nucleus/beta-decay');
-
-    var Constants = require('constants');
+    defaults: _.extend({}, AbstractBetaDecayNucleus.prototype.defaults, {
+        // Number of neutrons and protons in this nucleus.
+        numProtons:  Constants.Hydrogen3Nucleus.PROTONS,
+        numNeutrons: Constants.Hydrogen3Nucleus.NEUTRONS,
+        // Different decay-time scaling factor for carbon-14
+        decayTimeScalingFactor: Constants.Hydrogen3Nucleus.DECAY_TIME_SCALING_FACTOR
+    }),
 
     /**
-     * This class represents a non-composite Hydrogen 3 nucleus.  In other words,
-     *   this nucleus does not create or keep track of any constituent nucleons.
+     * Resets the nucleus to its original state, before any fission has occurred.
      */
-    var Hydrogen3Nucleus = AbstractBetaDecayNucleus.extend({
+    reset: function() {
+        AbstractBetaDecayNucleus.prototype.reset.apply(this, arguments);
 
-        defaults: _.extend({}, AbstractBetaDecayNucleus.prototype.defaults, {
-            // Number of neutrons and protons in this nucleus.
-            numProtons:  Constants.Hydrogen3Nucleus.PROTONS,
-            numNeutrons: Constants.Hydrogen3Nucleus.NEUTRONS,
-            // Different decay-time scaling factor for carbon-14
-            decayTimeScalingFactor: Constants.Hydrogen3Nucleus.DECAY_TIME_SCALING_FACTOR
-        }),
+        if ((this.get('numNeutrons') !== this.originalNumNeutrons) || (this.get('numProtons') !== this.originalNumProtons)) {
+            // Decay has occurred.
+            this.set('numNeutrons', this.originalNumNeutrons);
+            this.set('numProtons', this.originalNumProtons);
 
-        /**
-         * Resets the nucleus to its original state, before any fission has occurred.
-         */
-        reset: function() {
-            AbstractBetaDecayNucleus.prototype.reset.apply(this, arguments);
-
-            if ((this.get('numNeutrons') !== this.originalNumNeutrons) || (this.get('numProtons') !== this.originalNumProtons)) {
-                // Decay has occurred.
-                this.set('numNeutrons', this.originalNumNeutrons);
-                this.set('numProtons', this.originalNumProtons);
-
-                // Notify all listeners of the change to our atomic weight.
-                this.triggerNucleusChange(null);
-            }
-        },
-
-        /**
-         * Return a value indicating whether or not the nucleus has decayed.
-         */
-        hasDecayed: function(){
-            if (this.get('numNeutrons') !== this.originalNumNeutrons)
-                return true;
-            else
-                return false;
+            // Notify all listeners of the change to our atomic weight.
+            this.triggerNucleusChange(null);
         }
+    },
 
-    }, Constants.Hydrogen3Nucleus);
+    /**
+     * Return a value indicating whether or not the nucleus has decayed.
+     */
+    hasDecayed: function(){
+        if (this.get('numNeutrons') !== this.originalNumNeutrons)
+            return true;
+        else
+            return false;
+    }
 
-    return Hydrogen3Nucleus;
-});
+}, Constants.Hydrogen3Nucleus);
+
+export default Hydrogen3Nucleus;

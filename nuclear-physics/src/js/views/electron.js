@@ -1,21 +1,16 @@
-define(function(require) {
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
+import SubatomicParticleView from 'views/subatomic-particle';
 
-    'use strict';
+/**
+ *
+ */
+var ElectronView = SubatomicParticleView.extend({
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
-    var SubatomicParticleView     = require('views/subatomic-particle');
+    createSprite: function() {
+        return ParticleGraphicsGenerator.generateElectron(this.mvt);
+    }
 
-    /**
-     *
-     */
-    var ElectronView = SubatomicParticleView.extend({
-
-        createSprite: function() {
-            return ParticleGraphicsGenerator.generateElectron(this.mvt);
-        }
-
-    });
-
-
-    return ElectronView;
 });
+
+
+export default ElectronView;

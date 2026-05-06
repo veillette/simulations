@@ -1,221 +1,214 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import html from './graph.html?raw';
+import './graph.less';
 
-    'use strict';
+/**
+ * GraphView is not intended to be directly instantiated but extended
+ *   for specific purposes.  Functions that must be filled by child
+ *   prototypes before the GraphView is useful:
+ *
+ *     + renderContainer
+ *     + initPoints
+ *     + calculatePoints
+ */
+var GraphView = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+    template: _.template(html),
 
-    var html = require('text!./graph.html');
+    tagName: 'figure',
+    className: 'graph-view',
 
-    require('less!./graph');
+    initialize: function(options) {
+
+        // Default values
+        options = _.extend({
+            title: 'Value',
+            x: {
+                start: 0,
+                end: 100,
+                step: 10,
+                label: 'x',
+                decimalPlaces: 0,
+                showNumbers: true
+            },
+            y: {
+                start: 0,
+                end: 100,
+                step: 10,
+                label: 'y',
+                decimalPlaces: 0,
+                showNumbers: true
+            },
+            lineThickness: 5,
+            lineColor: '#000',
+            gridColor: '#ddd',
+            latitudinalGridLines: 3,
+            longitudinalGridLines: 9
+        }, options);
+
+        // Save graph information for rendering
+        this.graphInfo = {
+            title: options.title,
+            x: options.x,
+            y: options.y
+        };
+
+        this.latitudinalGridLines  = options.latitudinalGridLines;
+        this.longitudinalGridLines = options.longitudinalGridLines;
+
+        this.lineThickness = options.lineThickness;
+        this.lineColor = options.lineColor;
+        this.gridColor = options.gridColor;
+
+        this.graphVisible = true;
+
+        // Bind events
+        $(window).bind('resize', $.proxy(this.windowResized, this));
+
+        this.initPoints();
+    },
 
     /**
-     * GraphView is not intended to be directly instantiated but extended
-     *   for specific purposes.  Functions that must be filled by child
-     *   prototypes before the GraphView is useful:
-     *
-     *     + renderContainer
-     *     + initPoints
-     *     + calculatePoints
+     * Renders content and canvas for heatmap
      */
-    var GraphView = Backbone.View.extend({
+    render: function() {
+        this.$el.empty();
 
-        template: _.template(html),
+        this.renderContainer();
+        this.initCanvas();
+        this.initPoints();
 
-        tagName: 'figure',
-        className: 'graph-view',
+        return this;
+    },
 
-        initialize: function(options) {
+    /**
+     * Renders html container
+     */
+    renderContainer: function() {},
 
-            // Default values
-            options = _.extend({
-                title: 'Value',
-                x: {
-                    start: 0,
-                    end: 100,
-                    step: 10,
-                    label: 'x',
-                    decimalPlaces: 0,
-                    showNumbers: true
-                },
-                y: {
-                    start: 0,
-                    end: 100,
-                    step: 10,
-                    label: 'y',
-                    decimalPlaces: 0,
-                    showNumbers: true
-                },
-                lineThickness: 5,
-                lineColor: '#000',
-                gridColor: '#ddd',
-                latitudinalGridLines: 3,
-                longitudinalGridLines: 9
-            }, options);
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.resize();
+    },
 
-            // Save graph information for rendering
-            this.graphInfo = {
-                title: options.title,
-                x: options.x,
-                y: options.y
-            };
+    /**
+     * Saves references to the canvas element and its context
+     */
+    initCanvas: function() {
+        this.$canvas = this.$('canvas');
+        this.$canvasWrapper = this.$canvas.parent();
 
-            this.latitudinalGridLines  = options.latitudinalGridLines;
-            this.longitudinalGridLines = options.longitudinalGridLines;
+        this.context = this.$canvas[0].getContext('2d');
+    },
 
-            this.lineThickness = options.lineThickness;
-            this.lineColor = options.lineColor;
-            this.gridColor = options.gridColor;
+    /**
+     * Called on a window resize to resize the canvas
+     */
+    windowResized: function(event) {
+        this.resizeOnNextUpdate = true;
+    },
 
-            this.graphVisible = true;
+    /**
+     * Does the actual resizing of the canvas
+     */
+    resize: function(event) {
+        var width  = this.$canvas.parent().innerWidth();
+        var height = this.$canvas.parent().innerHeight() || 200;
+        this.width  = width;
+        this.height = height;
+        this.$canvas.width(width);
+        this.$canvas.height(height);
+        this.$canvas[0].width = width;
+        this.$canvas[0].height = height;
+        this.resizeOnNextUpdate = false;
+    },
 
-            // Bind events
-            $(window).bind('resize', $.proxy(this.windowResized, this));
+    /**
+     * Initializes points array and sets default points.
+     */
+    initPoints: function() {
+        this.points = [];
+    },
 
-            this.initPoints();
-        },
+    /**
+     * Calculates point data before drawing.
+     */
+    calculatePoints: function(time, delta) {},
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            this.$el.empty();
+    /**
+     * Draws a blank graph with lines.
+     */
+    drawGraph: function() {
+        var context = this.context;
 
-            this.renderContainer();
-            this.initCanvas();
-            this.initPoints();
+        // Draw background
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, this.width, this.height);
 
-            return this;
-        },
+        // Draw Grid
+        context.beginPath();
 
-        /**
-         * Renders html container
-         */
-        renderContainer: function() {},
+        var gridCellHeight = Math.round((this.height + 2) / (this.latitudinalGridLines + 1));
+        var gridCellWidth  = Math.round((this.width  + 2) / (this.longitudinalGridLines + 1));
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.resize();
-        },
-
-        /**
-         * Saves references to the canvas element and its context
-         */
-        initCanvas: function() {
-            this.$canvas = this.$('canvas');
-            this.$canvasWrapper = this.$canvas.parent();
-
-            this.context = this.$canvas[0].getContext('2d');
-        },
-
-        /**
-         * Called on a window resize to resize the canvas
-         */
-        windowResized: function(event) {
-            this.resizeOnNextUpdate = true;
-        },
-
-        /**
-         * Does the actual resizing of the canvas
-         */
-        resize: function(event) {
-            var width  = this.$canvas.parent().innerWidth();
-            var height = this.$canvas.parent().innerHeight() || 200;
-            this.width  = width;
-            this.height = height;
-            this.$canvas.width(width);
-            this.$canvas.height(height);
-            this.$canvas[0].width = width;
-            this.$canvas[0].height = height;
-            this.resizeOnNextUpdate = false;
-        },
-
-        /**
-         * Initializes points array and sets default points.
-         */
-        initPoints: function() {
-            this.points = [];
-        },
-
-        /**
-         * Calculates point data before drawing.
-         */
-        calculatePoints: function(time, delta) {},
-
-        /**
-         * Draws a blank graph with lines.
-         */
-        drawGraph: function() {
-            var context = this.context;
-
-            // Draw background
-            context.fillStyle = '#fff';
-            context.fillRect(0, 0, this.width, this.height);
-
-            // Draw Grid
-            context.beginPath();
-
-            var gridCellHeight = Math.round((this.height + 2) / (this.latitudinalGridLines + 1));
-            var gridCellWidth  = Math.round((this.width  + 2) / (this.longitudinalGridLines + 1));
-
-            // Draw latitudinal grid lines
-            for (var j = 1; j <= this.latitudinalGridLines; j++) {
-                context.moveTo(0, gridCellHeight * j - 0.5);
-                context.lineTo(this.width, gridCellHeight * j - 0.5);
-            }
-
-            // Draw longitudinal grid lines
-            for (var i = 1; i <= this.longitudinalGridLines; i++) {
-                context.moveTo(gridCellWidth * i - 0.5, 0);
-                context.lineTo(gridCellWidth * i - 0.5, this.height);
-            }
-
-            context.lineWidth   = 1;
-            context.strokeStyle = this.gridColor;
-            context.stroke();
-        },
-
-        /**
-         * Draws the points as a curve on the graph.
-         */
-        drawCurve: function() {
-            if (this.points.length === 0)
-                return;
-
-            var context = this.context;
-            var points  = this.points;
-
-            context.beginPath();
-            context.moveTo(points[0].x, points[0].y);
-
-            for (var i = 1; i < points.length; i++) {
-                context.lineTo(points[i].x, points[i].y);
-            }
-
-            context.lineWidth = 3;
-            context.lineJoin = 'round';
-            context.strokeStyle = this.lineColor;
-            context.stroke();
-        },
-
-        /**
-         * Responds to resize events and draws everything.
-         */
-        update: function(time, delta) {
-            if (this.resizeOnNextUpdate)
-                this.resize();
-
-            if (this.graphVisible) {
-                this.calculatePoints(time, delta);
-                this.drawGraph(time, delta);
-                this.drawCurve(time, delta);
-            }
+        // Draw latitudinal grid lines
+        for (var j = 1; j <= this.latitudinalGridLines; j++) {
+            context.moveTo(0, gridCellHeight * j - 0.5);
+            context.lineTo(this.width, gridCellHeight * j - 0.5);
         }
-    });
 
-    return GraphView;
+        // Draw longitudinal grid lines
+        for (var i = 1; i <= this.longitudinalGridLines; i++) {
+            context.moveTo(gridCellWidth * i - 0.5, 0);
+            context.lineTo(gridCellWidth * i - 0.5, this.height);
+        }
+
+        context.lineWidth   = 1;
+        context.strokeStyle = this.gridColor;
+        context.stroke();
+    },
+
+    /**
+     * Draws the points as a curve on the graph.
+     */
+    drawCurve: function() {
+        if (this.points.length === 0)
+            return;
+
+        var context = this.context;
+        var points  = this.points;
+
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+
+        for (var i = 1; i < points.length; i++) {
+            context.lineTo(points[i].x, points[i].y);
+        }
+
+        context.lineWidth = 3;
+        context.lineJoin = 'round';
+        context.strokeStyle = this.lineColor;
+        context.stroke();
+    },
+
+    /**
+     * Responds to resize events and draws everything.
+     */
+    update: function(time, delta) {
+        if (this.resizeOnNextUpdate)
+            this.resize();
+
+        if (this.graphVisible) {
+            this.calculatePoints(time, delta);
+            this.drawGraph(time, delta);
+            this.drawCurve(time, delta);
+        }
+    }
 });
+
+export default GraphView;

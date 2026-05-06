@@ -1,258 +1,250 @@
-define(function (require) {
-
-	'use strict';
-
-	var $ = require('jquery');
-	var _ = require('underscore');
-
-	var Vector2    = require('common/math/vector2');
-	var selectText = require('common/dom/select-text');
-	var Draggable  = require('./draggable');
-
-	var html  = require('text!./measuring-tape.html');
+import $ from 'jquery';
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import selectText from 'common/dom/select-text';
+import Draggable from './draggable';
+import html from './measuring-tape.html?raw';
+import './measuring-tape.less';
+
+var padding,
+    angle,
+    lineLength,
+    modelLineLength,
+    startX,
+    startY,
+    dx,
+    dy,
+    translate,
+    rotate;
+var line = new Vector2();
+
+var RADIANS_TO_DEGREES = 180 / Math.PI;
+
+var MeasuringTapeView = Draggable.extend({
+
+    template: _.template(html),
+
+    tagName: 'div',
+    className: 'measuring-tape-view',
+
+    events: {
+        'mousedown  .measuring-tape-handle': 'handleDown',
+        'touchstart .measuring-tape-handle': 'handleDown',
+        'mousedown  .measuring-tape': 'tapeDown',
+        'touchstart .measuring-tape': 'tapeDown',
+
+        'click .measuring-tape-label': 'labelClicked'
+    },
+
+    initialize: function(options) {
+        options = _.extend({
+            start: new Vector2( 30, 30),
+            end:   new Vector2(120, 30),
+            viewToModelDeltaX: function() { return 1; },
+            viewToModelDeltaY: function() { return 1; },
+            units: 'm',
+            decimalPlaces: 2,
+            format: undefined // specify a function(distance)
+        }, options);
+
+        Draggable.prototype.initialize.apply(this, [options]);
+
+        this.start = options.start;
+        this.end   = options.end;
+
+        this.units = options.units;
+        this.decimalPlaces = options.decimalPlaces;
+        this.format = options.format;
+
+        this.viewToModelDeltaX = options.viewToModelDeltaX;
+        this.viewToModelDeltaY = options.viewToModelDeltaY;
+    },
+
+    render: function() {
+        this.renderMeasuringTape();
+        this.bindDragEvents();
+    },
+
+    renderMeasuringTape: function() {
+        this.$el.html(this.template());
+        this.$tape = this.$('.measuring-tape');
+        this.$label = this.$('.measuring-tape-label');
+    },
+
+    postRender: function() {
+        Draggable.prototype.postRender.apply(this);
+
+        this.update(0, 0);
+    },
+
+    resize: function(){
+        Draggable.prototype.resize.apply(this);
+    },
+
+    setStart: function(x, y) {
+        this.start.x = x;
+        this.start.y = y;
+        this.updateOnNextFrame = true;
+    },
+
+    setEnd: function(x, y) {
+        this.end.x = x;
+        this.end.y = y;
+        this.updateOnNextFrame = true;
+    },
+
+    handleDown: function(event) {
+        event.preventDefault();
+
+        if ($(event.target).index() === 0)
+            this.draggingStart = true;
+        else
+            this.draggingEnd = true;
 
-	require('less!./measuring-tape');
-
-	var padding,
-	    angle,
-	    lineLength,
-	    modelLineLength,
-	    startX,
-	    startY,
-	    dx,
-	    dy,
-	    translate,
-	    rotate;
-	var line = new Vector2();
+        this.fixTouchEvents(event);
 
-	var RADIANS_TO_DEGREES = 180 / Math.PI;
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
 
-	var MeasuringTapeView = Draggable.extend({
+        $(event.target).addClass('dragging');
+    },
 
-		template: _.template(html),
+    tapeDown: function(event) {
+        if (event.target === this.$tape[0]) {
+            event.preventDefault();
 
-		tagName: 'div',
-		className: 'measuring-tape-view',
+            this.$el.addClass('dragging');
 
-		events: {
-			'mousedown  .measuring-tape-handle': 'handleDown',
-			'touchstart .measuring-tape-handle': 'handleDown',
-			'mousedown  .measuring-tape': 'tapeDown',
-			'touchstart .measuring-tape': 'tapeDown',
+            this.draggingTape = true;
 
-			'click .measuring-tape-label': 'labelClicked'
-		},
+            this.fixTouchEvents(event);
 
-		initialize: function(options) {
-			options = _.extend({
-				start: new Vector2( 30, 30),
-				end:   new Vector2(120, 30),
-				viewToModelDeltaX: function() { return 1; },
-				viewToModelDeltaY: function() { return 1; },
-				units: 'm',
-				decimalPlaces: 2,
-				format: undefined // specify a function(distance)
-			}, options);
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
+        }
+    },
 
-			Draggable.prototype.initialize.apply(this, [options]);
+    drag: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
 
-			this.start = options.start;
-			this.end   = options.end;
+            this.fixTouchEvents(event);
 
-			this.units = options.units;
-			this.decimalPlaces = options.decimalPlaces;
-			this.format = options.format;
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-			this.viewToModelDeltaX = options.viewToModelDeltaX;
-			this.viewToModelDeltaY = options.viewToModelDeltaY;
-		},
+            if (this.draggingStart && !this.outOfBounds(this.start.x + dx, this.start.y + dy)) {
+                this.start.x += dx;
+                this.start.y += dy;
+            }
+            if (this.draggingEnd && !this.outOfBounds(this.end.x + dx, this.end.y + dy)) {
+                this.end.x += dx;
+                this.end.y += dy;
+            }
 
-		render: function() {
-			this.renderMeasuringTape();
-			this.bindDragEvents();
-		},
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-		renderMeasuringTape: function() {
-			this.$el.html(this.template());
-			this.$tape = this.$('.measuring-tape');
-			this.$label = this.$('.measuring-tape-label');
-		},
+            this.updateOnNextFrame = true;
+        }
+        else if (this.draggingTape) {
 
-		postRender: function() {
-		    Draggable.prototype.postRender.apply(this);
+            this.fixTouchEvents(event);
 
-		    this.update(0, 0);
-		},
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-		resize: function(){
-			Draggable.prototype.resize.apply(this);
-		},
-
-		setStart: function(x, y) {
-			this.start.x = x;
-			this.start.y = y;
-			this.updateOnNextFrame = true;
-		},
+            if (!this.outOfBounds(this.start.x + dx, this.start.y + dy) &&
+                !this.outOfBounds(this.end.x   + dx, this.end.y   + dy)) {
 
-		setEnd: function(x, y) {
-			this.end.x = x;
-			this.end.y = y;
-			this.updateOnNextFrame = true;
-		},
+                this.start.x += dx;
+                this.start.y += dy;
+                this.end.x += dx;
+                this.end.y += dy;
+            }
 
-		handleDown: function(event) {
-			event.preventDefault();
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-			if ($(event.target).index() === 0)
-				this.draggingStart = true;
-			else
-				this.draggingEnd = true;
+            this.updateOnNextFrame = true;
+        }
+    },
 
-			this.fixTouchEvents(event);
+    dragEnd: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
+            this.draggingStart = false;
+            this.draggingEnd   = false;
+            this.$('.measuring-tape-handle').removeClass('dragging');
+        }
+        else if (this.draggingTape) {
+            this.draggingTape = false;
+            this.$el.removeClass('dragging');
+        }
+    },
 
-			this.dragX = event.pageX;
-			this.dragY = event.pageY;
+    labelClicked: function(event) {
+        selectText(event.target);
+    },
 
-			$(event.target).addClass('dragging');
-		},
+    update: function(time, delta) {
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-		tapeDown: function(event) {
-			if (event.target === this.$tape[0]) {
-				event.preventDefault();
+        this.updateOnNextFrame = false;
 
-				this.$el.addClass('dragging');
+        padding = this.$tape.height() / 2;
 
-				this.draggingTape = true;
+        line.set(this.end).sub(this.start);
 
-				this.fixTouchEvents(event);
+        angle = line.angle() * RADIANS_TO_DEGREES;
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-			}
-		},
+        lineLength = line.length();
 
-		drag: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
+        startX = this.start.x;
+        startY = this.start.y - padding;
 
-				this.fixTouchEvents(event);
+        translate = 'translateX(' + startX + 'px) translateY(' + startY + 'px)';
+        rotate = 'rotateZ(' + (angle) + 'deg)';
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+        this.$el.css({
+            '-webkit-transform': translate,
+            '-ms-transform': translate,
+            '-o-transform': translate,
+            'transform': translate,
+        });
 
-				if (this.draggingStart && !this.outOfBounds(this.start.x + dx, this.start.y + dy)) {
-					this.start.x += dx;
-					this.start.y += dy;
-				}
-				if (this.draggingEnd && !this.outOfBounds(this.end.x + dx, this.end.y + dy)) {
-					this.end.x += dx;
-					this.end.y += dy;
-				}
+        this.$tape.css({
+            width: lineLength,
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+            '-webkit-transform': rotate,
+            '-ms-transform': rotate,
+            '-o-transform': rotate,
+            'transform': rotate,
+        });
 
-				this.updateOnNextFrame = true;
-			}
-			else if (this.draggingTape) {
+        modelLineLength = Math.sqrt(
+            Math.pow(this.viewToModelDeltaX(this.end.x - this.start.x), 2) + 
+            Math.pow(this.viewToModelDeltaY(this.end.y - this.start.y), 2)
+        );
 
-				this.fixTouchEvents(event);
+        this.updateLabel(modelLineLength);
+        
+    },
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+    updateLabel: function(distance) {
+        if (!this.format || !_.isFunction(this.format))
+            this.$label.html(modelLineLength.toFixed(this.decimalPlaces) + ' ' + this.units);
+        else
+            this.$label.html(this.format(distance));
+    },
 
-				if (!this.outOfBounds(this.start.x + dx, this.start.y + dy) &&
-					!this.outOfBounds(this.end.x   + dx, this.end.y   + dy)) {
+    show: function() {
+        this.$el.show();
+    },
 
-					this.start.x += dx;
-					this.start.y += dy;
-					this.end.x += dx;
-					this.end.y += dy;
-				}
-
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-
-				this.updateOnNextFrame = true;
-			}
-		},
-
-		dragEnd: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
-				this.draggingStart = false;
-				this.draggingEnd   = false;
-				this.$('.measuring-tape-handle').removeClass('dragging');
-			}
-			else if (this.draggingTape) {
-				this.draggingTape = false;
-				this.$el.removeClass('dragging');
-			}
-		},
-
-		labelClicked: function(event) {
-			selectText(event.target);
-		},
-
-		update: function(time, delta) {
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
-
-			this.updateOnNextFrame = false;
-
-			padding = this.$tape.height() / 2;
-
-			line.set(this.end).sub(this.start);
-
-			angle = line.angle() * RADIANS_TO_DEGREES;
-
-			lineLength = line.length();
-
-			startX = this.start.x;
-			startY = this.start.y - padding;
-
-			translate = 'translateX(' + startX + 'px) translateY(' + startY + 'px)';
-			rotate = 'rotateZ(' + (angle) + 'deg)';
-
-			this.$el.css({
-				'-webkit-transform': translate,
-				'-ms-transform': translate,
-				'-o-transform': translate,
-				'transform': translate,
-			});
-
-			this.$tape.css({
-				width: lineLength,
-
-				'-webkit-transform': rotate,
-				'-ms-transform': rotate,
-				'-o-transform': rotate,
-				'transform': rotate,
-			});
-
-			modelLineLength = Math.sqrt(
-				Math.pow(this.viewToModelDeltaX(this.end.x - this.start.x), 2) + 
-				Math.pow(this.viewToModelDeltaY(this.end.y - this.start.y), 2)
-			);
-
-			this.updateLabel(modelLineLength);
-			
-		},
-
-		updateLabel: function(distance) {
-			if (!this.format || !_.isFunction(this.format))
-				this.$label.html(modelLineLength.toFixed(this.decimalPlaces) + ' ' + this.units);
-			else
-				this.$label.html(this.format(distance));
-		},
-
-		show: function() {
-			this.$el.show();
-		},
-
-		hide: function() {
-			this.$el.hide();
-		}
-	});
-
-	return MeasuringTapeView;
+    hide: function() {
+        this.$el.hide();
+    }
 });
+
+export default MeasuringTapeView;
