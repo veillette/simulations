@@ -7,15 +7,18 @@ This repository holds all simulations that will be embedded into OpenStax textbo
 
 ## <a name="deploying-and-building"></a>Building and Deploying
 
-### <a name="pre-build-setup"></a>Pre-Build Setup:
-  * First install node dependencies by running `npm install`.
-  * Install grunt-cli globally by running `npm install -g grunt-cli` to make things simpler.
+### <a name="pre-build-setup"></a>Pre-Build Setup
+  * Install root dependencies: `npm install`
+  * Install dependencies for simulation packages:
+    * Changed-only sims: `npm run npm-install`
+    * All sims: `npm run npm-install:all`
 
-### Building:
-  * To build all the simulations and place their `dist` folders into a single top-level `dist` folder for serving, run `grunt dist` from the repository root.
+### Building
+  * Build changed simulations and assemble a top-level `dist` folder: `npm run dist`
+  * Force-build all simulations: `npm run dist:all`
 
 ### Deploying
-  * To build and deploy all simulations to github-pages, run `grunt deploy`.
+  * Build and deploy all simulations to GitHub Pages: `npm run deploy`
 
 ## Development
 
@@ -37,7 +40,7 @@ where PORT and SIM-NAME are replaced by appropriate values.  Example:
 #### <a name="node-hosting"></a>Node.js Hosting
 
 1. Follow the [Pre-Build Setup](#pre-build-setup) under [Building and Deploying](#deploying-and-building)
-2. Run `grunt dev` from the repository root.
+2. Run `npm run dev` from the repository root.
 3. Open up [http://localhost:8080](http://localhost:8080) in your browser to view a list of simulations.
 
 #### <a name="nginx-hosting"></a>Nginx Hosting

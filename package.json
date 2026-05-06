@@ -6,12 +6,16 @@
   "scripts": {
     "postinstall": "node scripts/npm-install.mjs",
     "dev": "npx http-server . -p 8080 -c-1",
+    "serve": "npm run dev",
     "dist": "node scripts/dist.mjs",
     "dist:all": "node scripts/dist.mjs --all",
+    "build": "npm run dist",
+    "build:all": "npm run dist:all",
     "deploy": "node scripts/deploy.mjs",
     "npm-install": "node scripts/npm-install.mjs",
     "npm-install:all": "node scripts/npm-install.mjs --all",
-    "npm-clean": "node scripts/npm-clean.mjs"
+    "npm-clean": "node scripts/npm-clean.mjs",
+    "clean": "npm run npm-clean"
   },
   "repository": {
     "type": "git",
