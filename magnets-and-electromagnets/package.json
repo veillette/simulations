@@ -47,5 +47,14 @@
     "matchdep": "^2.0.0",
     "mocha": "^11.7.5",
     "underscore": "^1.13.8"
+  },
+  "overrides": {
+    "diff": "^9.0.0",
+    "serialize-javascript": "^7.0.5",
+    "braces": "^3.0.3",
+    "findup-sync": "^5.0.0",
+    "micromatch": "^4.0.8",
+    "minimatch": "^3.1.4",
+    "requirejs": "^2.3.7"
   }
 }
