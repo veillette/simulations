@@ -74,14 +74,10 @@ module.exports = function(grunt){
                 'test/**/*.js'
             ]
         },
-        mocha: {
-            // Test all files ending in .html anywhere inside the test directory.
-            browser: ['test/index.html'],
-            options: {
-                reporter: 'Spec',
-                run: false,
-                log: false,
-                timeout: 15000
+        karma: {
+            unit: {
+                configFile: 'karma.conf.js',
+                singleRun: true
             }
         },
         build_tests: {
@@ -118,7 +114,7 @@ module.exports = function(grunt){
     grunt.registerTask('test', [
         //'jshint:source',
         'build_tests',
-        'mocha'
+        'karma:unit'
     ]);
 
     grunt.registerTask('lint', ['jshint']);
