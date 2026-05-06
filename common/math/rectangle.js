@@ -17,20 +17,34 @@ define(function (require) {
     var lineIntersect = require('./line-intersection');
 
     function Rectangle(x, y, w, h) {
-        this.x = x || 0;
-        this.y = y || 0;
-        this.w = w || 0;
-        this.h = h || 0;
         this._centerVector   = new Vector2();
         this._positionVector = new Vector2();
         this._sizeVector     = new Vector2();
+        if (x instanceof Rectangle) {
+            this.x = x.x;
+            this.y = x.y;
+            this.w = x.w;
+            this.h = x.h;
+        } else {
+            this.x = x || 0;
+            this.y = y || 0;
+            this.w = w || 0;
+            this.h = h || 0;
+        }
     }
 
     Rectangle.prototype.set = function (x, y, w, h) {
-        this.x = (x !== undefined) ? x : 0;
-        this.y = (y !== undefined) ? y : 0;
-        this.w = (w !== undefined) ? w : 0;
-        this.h = (h !== undefined) ? h : 0;
+        if (x instanceof Rectangle) {
+            this.x = x.x;
+            this.y = x.y;
+            this.w = x.w;
+            this.h = x.h;
+        } else {
+            this.x = (x !== undefined) ? x : 0;
+            this.y = (y !== undefined) ? y : 0;
+            this.w = (w !== undefined) ? w : 0;
+            this.h = (h !== undefined) ? h : 0;
+        }
         return this;
     };
 
@@ -127,6 +141,14 @@ define(function (require) {
         else if (x !== undefined)
             return this.position(x - this.w / 2, y - this.h / 2);
         return this._centerVector.set(this.x + this.w / 2, this.y + this.h / 2);
+    };
+
+    /** Returns whether this rectangle overlaps another rectangle (AABB test). */
+    Rectangle.prototype.overlaps = function (that) {
+        return this.left()   < that.right()  &&
+               this.right()  > that.left()   &&
+               this.bottom() < that.top()    &&
+               this.top()    > that.bottom();
     };
 
     /**

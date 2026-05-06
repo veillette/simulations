@@ -105,6 +105,9 @@ define(function () {
     /** Alias for magnitude. */
     p.getMagnitude = p.magnitude;
 
+    /** Alias for magnitude (matches the former vector2-node API). */
+    p.length = p.magnitude;
+
     /** Returns the angle of this vector in radians (atan2). */
     p.angle = function () {
         return Math.atan2(this.y, this.x);
@@ -139,6 +142,14 @@ define(function () {
             dy = this.y - y;
         }
         return dx * dx + dy * dy;
+    };
+
+    /** Returns true when v has the same x and y (within optional epsilon). */
+    p.equals = function (v, epsilon) {
+        if (epsilon === undefined) {
+            return this.x === v.x && this.y === v.y;
+        }
+        return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     };
 
     /** Returns a new Vector2 with the same components. */

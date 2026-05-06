@@ -106,7 +106,9 @@ define(function(require) {
         },
 
         centerOn: function(x, y) {
-            this.model.centerOn(x, y);
+            var dx = this.model.get('targetX') - this.model.get('originX');
+            var dy = this.model.get('targetY') - this.model.get('originY');
+            this.model.moveTo(x - dx / 2, y - dy / 2);
             this.updateText();
         },
 

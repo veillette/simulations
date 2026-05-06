@@ -244,7 +244,7 @@ define(function (require) {
                 if (!model)
                     continue;
 
-                var index = this.indexOf(model);
+                var index = this.models.indexOf(model);
                 this.models.splice(index, 1);
                 this.length--;
 
@@ -272,6 +272,10 @@ define(function (require) {
                 model.collections = [];
             if (model.collections.indexOf(this) === -1)
                 model.collections.push(this);
+        },
+
+        _isModel: function() {
+            return false;
         },
 
         _removeReference: function(model) {
