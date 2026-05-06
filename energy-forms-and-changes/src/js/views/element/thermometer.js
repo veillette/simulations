@@ -124,10 +124,10 @@ define(function(require) {
 
             var liquidFill = new PIXI.Graphics();
             liquidFill.beginFill(Colors.parseHex(ThermometerView.LIQUID_COLOR), 1);
-            liquidFill.drawRect(0, 0, width, 1);
+            // Draw with bottom at y=0 so scaling in y keeps the bulb end fixed.
+            liquidFill.drawRect(0, -1, width, 1);
 
-            this.liquid = new PIXI.Sprite(liquidFill.generateTexture());
-            this.liquid.anchor.y = 1;
+            this.liquid = liquidFill;
             this.liquid.y = centerOfBulb.y;
             this.liquid.x = centerOfBulb.x - width / 2 + this.width * 0.02;
             this.backLayer.addChild(this.liquid);

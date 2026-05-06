@@ -202,7 +202,7 @@ define(function(require) {
 
 			for (i = 0; i < width; i++) {
 				for (j = 0; j < height; j++) {
-					particles[i][j].setTexture(texture);
+					particles[i][j].texture = texture;
 				}
 			}
 		},

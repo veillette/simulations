@@ -6,12 +6,44 @@ define(function(require) {
     var _        = require('underscore');
     var Backbone = require('backbone');
     var PIXI     = require('pixi');
+    var version = (PIXI.VERSION || '').replace(/^v/i, '');
+    var majorVersion = parseInt(version.split('.')[0], 10);
+    var useRendererOptionsObject = !isNaN(majorVersion) ? majorVersion >= 5 : !!PIXI.Renderer;
+    var fallbackSceneWidth = 800;
+    var fallbackSceneHeight = 600;
+    var MAX_POST_RENDER_SIZE_ATTEMPTS = 20;
 
     /**
      * SceneView is the main focus of the app. 
      *
      */
     var PixiSceneView = Backbone.View.extend({
+        getTargetSize: function() {
+            var width = this.$el.width();
+            var height = this.$el.height();
+            var $parent = this.$el.parent();
+
+            if (!width && $parent.length)
+                width = $parent.width();
+            if (!height && $parent.length)
+                height = $parent.height();
+
+            if (!width && this.renderer && this.renderer.width)
+                width = this.renderer.width;
+            if (!height && this.renderer && this.renderer.height)
+                height = this.renderer.height;
+
+            if (!width)
+                width = fallbackSceneWidth;
+            if (!height)
+                height = fallbackSceneHeight;
+
+            return {
+                width: width,
+                height: height
+            };
+        },
+
 
         tagName: 'canvas',
         className: 'scene-view',
@@ -57,8 +89,22 @@ define(function(require) {
          *   things like widths and heights and offsets are correct.
          */
         postRender: function() {
-            this.resize(true);
+            this.ensureSizedAndInitGraphics(0);
+        },
 
+        ensureSizedAndInitGraphics: function(attempt) {
+            var measuredWidth = this.$el.width();
+            var measuredHeight = this.$el.height();
+            var hasMeasuredSceneSize = measuredWidth > 1 && measuredHeight > 1;
+
+            if (!hasMeasuredSceneSize && attempt < MAX_POST_RENDER_SIZE_ATTEMPTS) {
+                setTimeout(_.bind(function() {
+                    this.ensureSizedAndInitGraphics(attempt + 1);
+                }, this), 0);
+                return;
+            }
+
+            this.resize(true);
             this.initGraphics();
         },
 
@@ -66,19 +112,27 @@ define(function(require) {
          * Initializes a renderer
          */
         initRenderer: function() {
-            this.renderer = PIXI.autoDetectRenderer(
-                this.$el.width(),  // Width
-                this.$el.height(), // Height
-                {
-                    resolution:  window.devicePixelRatio ? window.devicePixelRatio : 1,
-                    view:        this.el, // Canvas element
-                    transparent: true,    // Transparent background
-                    antialias:   true     // Antialiasing
-                }
-            );
+            var targetSize = this.getTargetSize();
+            var width = targetSize.width;
+            var height = targetSize.height;
+            var options = {
+                resolution: window.devicePixelRatio ? window.devicePixelRatio : 1,
+                view: this.el,
+                transparent: true,
+                antialias: true
+            };
 
-            this.width  = this.$el.width();
-            this.height = this.$el.height();
+            if (useRendererOptionsObject) {
+                options.width = width;
+                options.height = height;
+                options.autoDensity = true;
+                this.renderer = PIXI.autoDetectRenderer(options);
+            } else {
+                this.renderer = PIXI.autoDetectRenderer(width, height, options);
+            }
+
+            this.width  = width;
+            this.height = height;
 
             // Create a stage to hold everything
             this.stage = new PIXI.Container();
@@ -96,8 +150,9 @@ define(function(require) {
         },
 
         resize: function(override) {
-            var width  = this.$el.width();
-            var height = this.$el.height();
+            var targetSize = this.getTargetSize();
+            var width = targetSize.width;
+            var height = targetSize.height;
             this.width  = width;
             this.height = height;
             if (override || width != this.renderer.width || height != this.renderer.height) {

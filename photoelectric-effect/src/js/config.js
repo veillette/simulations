@@ -8,7 +8,7 @@
             backbone:   '../../node_modules/backbone/backbone',
             bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.min',
             text:       '../../node_modules/requirejs-text/text',
-            pixi:       '../../bower_components/pixi/bin/pixi',
+            pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
 
             'vector2-node':          '../../../common/math/vector2',
@@ -49,6 +49,9 @@
         },
 
         shim: {
+            'pixi': {
+                exports: 'PIXI'
+            },
             'bootstrap-select': {
                 deps: ['jquery']
             }

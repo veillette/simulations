@@ -48,6 +48,10 @@ define(function (require) {
         return this;
     };
 
+    Rectangle.prototype.clone = function () {
+        return new Rectangle(this);
+    };
+
     Rectangle.prototype.left   = function () { return this.x; };
     Rectangle.prototype.right  = function () { return this.x + this.w; };
     Rectangle.prototype.bottom = function () { return this.y; };
@@ -141,6 +145,21 @@ define(function (require) {
         else if (x !== undefined)
             return this.position(x - this.w / 2, y - this.h / 2);
         return this._centerVector.set(this.x + this.w / 2, this.y + this.h / 2);
+    };
+
+    /**
+     * Translates this rectangle by the provided delta and returns itself.
+     * Supports (dx, dy) or a Vector2-like argument.
+     */
+    Rectangle.prototype.translate = function (dx, dy) {
+        if (dx instanceof Vector2) {
+            this.x += dx.x;
+            this.y += dx.y;
+        } else {
+            this.x += dx || 0;
+            this.y += dy || 0;
+        }
+        return this;
     };
 
     /** Returns whether this rectangle overlaps another rectangle (AABB test). */

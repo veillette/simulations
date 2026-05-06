@@ -42,14 +42,10 @@ define(function(require) {
         },
 
         events: {
-            'touchstart      .geigerProbe': 'dragStart',
-            'mousedown       .geigerProbe': 'dragStart',
-            'touchmove       .geigerProbe': 'drag',
-            'mousemove       .geigerProbe': 'drag',
-            'touchend        .geigerProbe': 'dragEnd',
-            'mouseup         .geigerProbe': 'dragEnd',
-            'touchendoutside .geigerProbe': 'dragEnd',
-            'mouseupoutside  .geigerProbe': 'dragEnd'
+            'pointerdown      .geigerProbe': 'dragStart',
+            'pointermove      .geigerProbe': 'drag',
+            'pointerup        .geigerProbe': 'dragEnd',
+            'pointerupoutside .geigerProbe': 'dragEnd'
         },
 
         template: _.template(panelHtml),

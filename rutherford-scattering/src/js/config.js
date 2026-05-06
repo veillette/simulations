@@ -8,13 +8,11 @@
             backbone:   '../../node_modules/backbone/backbone',
             bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.min',
             text:       '../../node_modules/requirejs-text/text',
-            pixi:       '../../bower_components/pixi/bin/pixi',
+            pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../bower_components/buzz/dist/buzz.min',
 
-            'point-in-polygon':      '../../node_modules/point-in-polygon-shimmed/index',
-            'flat.js':               '../../node_modules/point-in-polygon-shimmed/flat',
-            'nested.js':             '../../node_modules/point-in-polygon-shimmed/nested',
+            'point-in-polygon':      '../js/point-in-polygon',
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
@@ -57,6 +55,9 @@
         },
 
         shim: {
+            'pixi': {
+                exports: 'PIXI'
+            },
             'bootstrap-select': {
                 deps: ['jquery']
             }

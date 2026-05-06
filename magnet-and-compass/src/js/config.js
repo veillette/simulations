@@ -8,7 +8,7 @@
             backbone:   '../../../faraday/node_modules/backbone/backbone',
             bootstrap:  '../../../faraday/bower_components/bootstrap/dist/js/bootstrap.min',
             text:       '../../../faraday/bower_components/requirejs-text/text',
-            pixi:       '../../../faraday/bower_components/pixi/bin/pixi',
+            pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../../faraday/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../../faraday/bower_components/buzz/dist/buzz.min',
 
@@ -48,6 +48,9 @@
         },
 
         shim: {
+            'pixi': {
+                exports: 'PIXI'
+            },
             'bootstrap-select': {
                 deps: ['jquery']
             }

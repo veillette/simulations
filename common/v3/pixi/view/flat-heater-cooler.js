@@ -4,6 +4,11 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
+    var textureFromCanvas = function(canvas) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(canvas);
+        return PIXI.Texture.fromCanvas(canvas);
+    };
 
     var PiecewiseCurve   = require('common/math/piecewise-curve');
     var Colors           = require('common/colors/colors');
@@ -158,7 +163,7 @@ define(function(require) {
             ctx.fill();
             ctx.stroke();
 
-            var sliderBackground = new PIXI.Sprite(PIXI.Texture.fromCanvas(canvas));
+            var sliderBackground = new PIXI.Sprite(textureFromCanvas(canvas));
             sliderBackground.anchor.y = 0.5;
 
             // Create the slider view

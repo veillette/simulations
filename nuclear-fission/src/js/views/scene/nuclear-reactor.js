@@ -67,7 +67,8 @@ define(function(require) {
         initNuclearReactor: function() {
             this.nuclearReactorView = new NuclearReactorView({
                 simulation: this.simulation,
-                mvt: this.mvt
+                mvt: this.mvt,
+                renderer: this.renderer
             });
 
             this.stage.addChild(this.nuclearReactorView.displayObject);

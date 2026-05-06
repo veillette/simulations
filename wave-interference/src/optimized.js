@@ -22253,6 +22253,20 @@ define('utils/updater',['require','pixi'],function (require) {
 
 		var dormancyCheckInterval = null;
 
+		var requestFrame = function(callback) {
+			if (window.requestAnimFrame)
+				return window.requestAnimFrame(callback);
+			if (window.requestAnimationFrame)
+				return window.requestAnimationFrame(callback);
+			return window.setTimeout(callback, 16);
+		};
+
+		var cancelFrame = function(id) {
+			if (window.cancelAnimationFrame)
+				return window.cancelAnimationFrame(id);
+			return window.clearTimeout(id);
+		};
+
 		this.total = 0;
 
 		// Runs every frame and calls listening functions
@@ -22269,7 +22283,7 @@ define('utils/updater',['require','pixi'],function (require) {
 			else if (delta < DORMANCY_THRESHOLD)
 				awaken();
 
-			animationFrame = window.requestAnimFrame(frame);
+			animationFrame = requestFrame(frame);
 		}.bind(this);
 
 		/**
@@ -22325,8 +22339,9 @@ define('utils/updater',['require','pixi'],function (require) {
 		};
 
 		this.pause = function() {
-			window.cancelAnimationFrame(animationFrame);
+			cancelFrame(animationFrame);
 			playing = false;
+			clearInterval(dormancyCheckInterval);
 		};
 
 		this.paused = function() {

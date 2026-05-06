@@ -108,6 +108,11 @@ define(function () {
     /** Alias for magnitude (matches the former vector2-node API). */
     p.length = p.magnitude;
 
+    /** Returns squared Euclidean length (former vector2-node API). */
+    p.lengthSq = function () {
+        return this.x * this.x + this.y * this.y;
+    };
+
     /** Returns the angle of this vector in radians (atan2). */
     p.angle = function () {
         return Math.atan2(this.y, this.x);

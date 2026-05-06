@@ -45,6 +45,7 @@
     "less": "^1.7.5",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^11.7.5",
+    "pixi.js": "^5.3.12",
     "requirejs": "^2.3.7",
     "requirejs-text": "^2.0.12",
     "underscore": "^1.13.8"

@@ -62363,7 +62363,8 @@ define('nuclear-fission/views/scene/nuclear-reactor',['require','underscore','jq
         initNuclearReactor: function() {
             this.nuclearReactorView = new NuclearReactorView({
                 simulation: this.simulation,
-                mvt: this.mvt
+                mvt: this.mvt,
+                renderer: this.renderer
             });
 
             this.stage.addChild(this.nuclearReactorView.displayObject);

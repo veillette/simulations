@@ -3,6 +3,11 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
+    var textureFromCanvas = function(canvas) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(canvas);
+        return PIXI.Texture.fromCanvas(canvas);
+    };
 
     /**
      * Creates a canvas and then calls the given drawing callback with its
@@ -17,7 +22,7 @@ define(function(require) {
 
         contextDrawCallback(canvas.getContext('2d'));
 
-        return new PIXI.Sprite(PIXI.Texture.fromCanvas(canvas));
+        return new PIXI.Sprite(textureFromCanvas(canvas));
     };
 
     return PIXI;

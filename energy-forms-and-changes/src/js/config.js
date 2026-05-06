@@ -8,7 +8,7 @@
             backbone:         '../../node_modules/backbone/backbone',
             bootstrap:        '../../node_modules/bootstrap/dist/js/bootstrap.min',
             text:             '../../node_modules/requirejs-text/text',
-            pixi:             '../../bower_components/pixi/bin/pixi',
+            pixi:             '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider:       '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             'vector2-node':   '../../../common/math/vector2',
             'object-pool':    '../../../common/pool',
@@ -39,8 +39,14 @@
             globalVars: {
                 dependencyDir: '"/bower_components"'
             }
-        }
-    };
+        },
+    
+
+        shim: {
+            'pixi': {
+                exports: 'PIXI'
+            }
+        }};
 
     require.config(config);
 })();

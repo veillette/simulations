@@ -9,8 +9,18 @@ define(function(require) {
     var NORTH_COLOR = Colors.parseHex(Constants.NORTH_COLOR);
     var SOUTH_COLOR = Colors.parseHex(Constants.SOUTH_COLOR);
 
-    var graphics = new PIXI.Graphics();
     var cache = {};
+    var textureFromCanvas = function(canvas) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(canvas);
+        return PIXI.Texture.fromCanvas(canvas);
+    };
+    var hexIntegerToCss = function(value) {
+        var hex = value.toString(16);
+        while (hex.length < 6)
+            hex = '0' + hex;
+        return '#' + hex;
+    };
 
     var CompassNeedleTexture = {
 
@@ -29,21 +39,33 @@ define(function(require) {
             var halfHeight = height / 2;
             var halfWidth = width / 2;
 
-            graphics.clear();
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
 
-            graphics.beginFill(NORTH_COLOR, 1);
-            graphics.moveTo(0, halfHeight);
-            graphics.lineTo(halfWidth, 0);
-            graphics.lineTo(0, -halfHeight);
-            graphics.endFill();
+            var centerX = halfWidth;
+            var centerY = halfHeight;
+            var northHex = hexIntegerToCss(NORTH_COLOR);
+            var southHex = hexIntegerToCss(SOUTH_COLOR);
 
-            graphics.beginFill(SOUTH_COLOR, 1);
-            graphics.moveTo(0, halfHeight);
-            graphics.lineTo(-halfWidth, 0);
-            graphics.lineTo(0, -halfHeight);
-            graphics.endFill();
+            ctx.fillStyle = northHex;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY + halfHeight);
+            ctx.lineTo(centerX + halfWidth, centerY);
+            ctx.lineTo(centerX, centerY - halfHeight);
+            ctx.closePath();
+            ctx.fill();
 
-            var texture = graphics.generateTexture();
+            ctx.fillStyle = southHex;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY + halfHeight);
+            ctx.lineTo(centerX - halfWidth, centerY);
+            ctx.lineTo(centerX, centerY - halfHeight);
+            ctx.closePath();
+            ctx.fill();
+
+            var texture = textureFromCanvas(canvas);
             cache[width] = texture;
 
             return texture;

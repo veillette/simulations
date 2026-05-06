@@ -39,14 +39,11 @@ define(function(require) {
         },
 
         initGraphics: function() {
-            //var renderer = PIXI.autoDetectRenderer(this.width, this.height, { transparent: true });
-            this.raysRenderTexture = new PIXI.RenderTexture(this.renderer, this.width, this.height);
-            this.raysSprite = new PIXI.Sprite(this.raysRenderTexture);
             this.raysGraphics = new PIXI.Graphics();
 
             this.wavesSprite = new PIXI.Sprite();
 
-            this.displayObject.addChild(this.raysSprite);
+            this.displayObject.addChild(this.raysGraphics);
             this.displayObject.addChild(this.wavesSprite);
         },
 
@@ -82,12 +79,12 @@ define(function(require) {
         draw: function() {
             if (this.simulation.laser.get('wave')) {
                 this.wavesSprite.visible = true;
-                this.raysSprite.visible = false;
+                this.raysGraphics.visible = false;
                 this.drawLightWaves();
             }
             else {
                 this.wavesSprite.visible = false;
-                this.raysSprite.visible = true;
+                this.raysGraphics.visible = true;
                 this.drawLightRays();
             }
         },
@@ -117,8 +114,6 @@ define(function(require) {
                 graphics.lineTo(point.x, point.y);
             }
 
-            this.raysRenderTexture.clear();
-            this.raysRenderTexture.render(graphics);
         },
 
         drawLightWaves: function() {
@@ -206,7 +201,9 @@ define(function(require) {
             }
 
             // Render it to a texture to apply to the sprite
-            var canvasTexture = PIXI.Texture.fromCanvas(this.wavesCanvas);
+            var canvasTexture = PIXI.Texture.from ?
+                PIXI.Texture.from(this.wavesCanvas) :
+                PIXI.Texture.fromCanvas(this.wavesCanvas);
             this.wavesSprite.texture = canvasTexture;
             this.wavesSprite.texture.baseTexture.update();
         },

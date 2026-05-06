@@ -8,7 +8,7 @@
             backbone:     '../../../circuit-construction-kit/node_modules/backbone/backbone',
             bootstrap:    '../../../circuit-construction-kit/bower_components/bootstrap/dist/js/bootstrap.min',
             text:         '../../../circuit-construction-kit/bower_components/requirejs-text/text',
-            pixi:         '../../../circuit-construction-kit/bower_components/pixi/bin/pixi',
+            pixi:         '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider:   '../../../circuit-construction-kit/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             'file-saver': '../../../circuit-construction-kit/bower_components/file-saver/dist/FileSaver',
 
@@ -50,6 +50,9 @@
         },
 
         shim: {
+            'pixi': {
+                exports: 'PIXI'
+            },
             'bootstrap-select': {
                 deps: ['jquery']
             }

@@ -8,7 +8,7 @@
             backbone:     '../../../nuclear-physics/node_modules/backbone/backbone',
             bootstrap:    '../../../nuclear-physics/bower_components/bootstrap/dist/js/bootstrap.min',
             text:         '../../../nuclear-physics/bower_components/requirejs-text/text',
-            pixi:         '../../../nuclear-physics/bower_components/pixi/bin/pixi',
+            pixi:         '../../../nuclear-physics/node_modules/pixi.js/dist/pixi',
             nouislider:   '../../../nuclear-physics/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:         '../../../nuclear-physics/bower_components/buzz/dist/buzz.min',
 
@@ -52,6 +52,9 @@
         },
 
         shim: {
+            'pixi': {
+                exports: 'PIXI'
+            },
             'bootstrap-select': {
                 deps: ['jquery']
             }

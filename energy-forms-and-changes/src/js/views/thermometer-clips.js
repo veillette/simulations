@@ -150,7 +150,7 @@ define(function(require) {
             }, this);
 
             // Sort the distances to find which is closest
-            _.sortBy(distances, function(obj) {
+            distances = _.sortBy(distances, function(obj) {
                 return obj.distance;
             });
 
@@ -162,6 +162,8 @@ define(function(require) {
                 }
                 i++;
             }
+
+            return false;
         },
 
         /**

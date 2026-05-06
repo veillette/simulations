@@ -4,7 +4,22 @@ define(function(require) {
 
     var PIXI = require('pixi');
 
-    var Vector2 = require('common/math/vector2');
+    if (!PIXI.Graphics.prototype.__dashToPatched) {
+        var originalMoveTo = PIXI.Graphics.prototype.moveTo;
+        var originalLineTo = PIXI.Graphics.prototype.lineTo;
+
+        PIXI.Graphics.prototype.moveTo = function(x, y) {
+            this.__dashCurrentPoint = { x: x, y: y };
+            return originalMoveTo.call(this, x, y);
+        };
+
+        PIXI.Graphics.prototype.lineTo = function(x, y) {
+            this.__dashCurrentPoint = { x: x, y: y };
+            return originalLineTo.call(this, x, y);
+        };
+
+        PIXI.Graphics.prototype.__dashToPatched = true;
+    }
 
     /**
      * Works the same as the lineTo function but draws a dashed line. Each
@@ -14,9 +29,14 @@ define(function(require) {
      * Used this as a starting point: http://stackoverflow.com/a/15968095
      */
     PIXI.Graphics.prototype.dashTo = function(x, y, dashStyle) {
-        var pathPoints = this.currentPath.shape.points;
-        var x0 = pathPoints[pathPoints.length - 2];
-        var y0 = pathPoints[pathPoints.length - 1];
+        var current = this.__dashCurrentPoint;
+        if (!current) {
+            this.moveTo(x, y);
+            return;
+        }
+
+        var x0 = current.x;
+        var y0 = current.y;
 
         if (dashStyle === undefined) {
             if (!this._dashStyle)
@@ -49,6 +69,7 @@ define(function(require) {
             i++;
         }
         this[i % dashStyle.length === 0 ? 'lineTo' : 'moveTo'](x, y);
+        this.__dashCurrentPoint = { x: x, y: y };
     };
 
     return PIXI;

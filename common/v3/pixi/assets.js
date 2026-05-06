@@ -5,6 +5,91 @@ define(function (require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
 
+    var getLoader = function() {
+        if (PIXI.Loader && PIXI.Loader.shared)
+            return PIXI.Loader.shared;
+        return PIXI.loader;
+    };
+
+    var textureFromFrameName = function(frameName) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(frameName);
+        return PIXI.Texture.fromFrame(frameName);
+    };
+
+    var resolveTextureFromSpriteSheetResources = function(resources, filename, pathPrefixedFilename) {
+        var texture = null;
+
+        _.find(resources, function(resource) {
+            if (!resource || !resource.textures)
+                return false;
+
+            if (resource.textures[filename]) {
+                texture = resource.textures[filename];
+                return true;
+            }
+            if (resource.textures[pathPrefixedFilename]) {
+                texture = resource.textures[pathPrefixedFilename];
+                return true;
+            }
+
+            var matchingKey = _.find(_.keys(resource.textures), function(key) {
+                return key === filename ||
+                    key === pathPrefixedFilename ||
+                    key.slice(-filename.length) === filename;
+            });
+            if (matchingKey) {
+                texture = resource.textures[matchingKey];
+                return true;
+            }
+
+            return false;
+        });
+
+        return texture;
+    };
+
+    var resolveDirectResource = function(resources, filename, pathPrefixedFilename) {
+        if (resources[filename])
+            return resources[filename];
+        if (resources[pathPrefixedFilename])
+            return resources[pathPrefixedFilename];
+
+        var keys = _.keys(resources);
+        var matchingKey = _.find(keys, function(key) {
+            if (key === filename || key === pathPrefixedFilename)
+                return true;
+            if (key.length >= filename.length && key.slice(-filename.length) === filename)
+                return true;
+            if (key.length >= pathPrefixedFilename.length && key.slice(-pathPrefixedFilename.length) === pathPrefixedFilename)
+                return true;
+            return false;
+        });
+
+        if (matchingKey)
+            return resources[matchingKey];
+
+        var matchingByUrl = _.find(resources, function(resource) {
+            if (!resource || !resource.url)
+                return false;
+            var url = resource.url;
+            return url === filename ||
+                url === pathPrefixedFilename ||
+                (url.length >= filename.length && url.slice(-filename.length) === filename) ||
+                (url.length >= pathPrefixedFilename.length && url.slice(-pathPrefixedFilename.length) === pathPrefixedFilename);
+        });
+
+        return matchingByUrl || null;
+    };
+
+    var getBaseTextureSource = function(baseTexture) {
+        if (!baseTexture)
+            return null;
+        if (baseTexture.resource && baseTexture.resource.source)
+            return baseTexture.resource.source;
+        return baseTexture.source || null;
+    };
+
     /**
      * There should really only be one Assets object per app, so
      *   to customize the Assets object to fit the needs of a 
@@ -100,10 +185,16 @@ define(function (require) {
      *   part of a sprite sheet.
      */
     Assets.Texture = function(filename) {
-        if (filename in PIXI.loader.resources)
-            return PIXI.loader.resources[filename].texture;
-        if (this.Path + filename in PIXI.loader.resources)
-            return PIXI.loader.resources[this.Path + filename].texture;
+        var loader = getLoader();
+        var resources = loader && loader.resources ? loader.resources : {};
+        var pathPrefixedFilename = this.Path + filename;
+        var directResource = resolveDirectResource(resources, filename, pathPrefixedFilename);
+        if (directResource && directResource.texture)
+            return directResource.texture;
+
+        var textureFromSheets = resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename);
+        if (textureFromSheets)
+            return textureFromSheets;
 
         var spriteSheet;
         _.each(this.SpriteSheets, function(images, key) {
@@ -118,9 +209,9 @@ define(function (require) {
         }, this);
 
         if (spriteSheet)
-            return PIXI.Texture.fromFrame(filename);
+            return resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename) || textureFromFrameName(filename);
         else
-            return PIXI.loader.resources[this.Path + filename].texture;
+            return directResource && directResource.texture ? directResource.texture : null;
     };
 
     /**
@@ -147,8 +238,12 @@ define(function (require) {
         if (!texture)
             throw 'Texture not found for ' + filename;
 
-        var x = texture.crop.x;
-        var y = texture.crop.y;
+        var frame = texture.frame || texture.crop;
+        var x = frame.x;
+        var y = frame.y;
+        var source = getBaseTextureSource(texture.baseTexture);
+        if (!source || !source.src)
+            throw 'Texture source not found for ' + filename;
         var scale = 1;
 
         if (iconWidth !== undefined) {
@@ -167,7 +262,7 @@ define(function (require) {
             'top:  50%',
             'margin-left: -' + (texture.width / 2)  + 'px',
             'margin-top:  -' + (texture.height / 2) + 'px',
-            'background-image: url(' + texture.baseTexture.source.src + ')',
+            'background-image: url(' + source.src + ')',
             'background-position: -' + x + 'px -' + y + 'px',
             'transform: scale(' + scale + ', ' + scale + ')',
             'width: ' + texture.width  + 'px',
@@ -200,9 +295,13 @@ define(function (require) {
         if (!texture)
             throw 'Texture not found for ' + filename;
 
+        var source = getBaseTextureSource(texture.baseTexture);
+        if (!source || !source.src)
+            throw 'Texture source not found for ' + filename;
+
         return {
-            src: texture.baseTexture.source.src,
-            bounds: texture.crop
+            src: source.src,
+            bounds: texture.frame || texture.crop
         };
     };
 

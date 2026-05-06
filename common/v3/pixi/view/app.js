@@ -7,6 +7,12 @@ define(function(require) {
 
     var AppView = require('../../app/app');
 
+    var getLoader = function() {
+        if (PIXI.Loader && PIXI.Loader.shared)
+            return PIXI.Loader.shared;
+        return PIXI.loader;
+    };
+
     /**
      * This is a version of the AppView that has asset preloading
      *   capabilities.  When extending this view, one must pass
@@ -46,10 +52,19 @@ define(function(require) {
             }, this);
 
             if (this.assets.length > 0) {
-                var assetLoader = PIXI.loader;
-                assetLoader.add(this.assets);
-                assetLoader.once('complete', onComplete);
-                assetLoader.load();
+                var assetLoader = getLoader();
+                var resources = assetLoader && assetLoader.resources ? assetLoader.resources : {};
+                var assetsToLoad = _.filter(this.assets, function(assetPath) {
+                    return !resources[assetPath];
+                });
+
+                if (assetsToLoad.length === 0) {
+                    onComplete();
+                    return;
+                }
+
+                assetLoader.add(assetsToLoad);
+                assetLoader.load(onComplete);
             }
             else {
                 onComplete();

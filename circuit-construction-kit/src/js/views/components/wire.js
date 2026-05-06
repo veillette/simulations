@@ -146,21 +146,10 @@ define(function(require) {
         },
 
         generateTexture: function() {
-            return this.displayObject.generateTexture();
-            var container = new PIXI.Container();
-            container.addChild(this.displayObject);
-            container.addChild(this.junctionLayer);
-            // var graphics = new PIXI.Graphics();
-            // graphics.lineStyle(10, 0, 1);
-            // graphics.moveTo(-20, -20);
-            // graphics.lineTo(20, 20);
-            // graphics.lineTo(-20, 20);
-            // graphics.lineTo(20, -20);
-            // container.addChild(graphics);
-            var texture = PixiToImage.displayObjectToTexture(container);
-            // container.removeChild(this.displayObject);
-            // container.removeChild(this.junctionLayer);
-            return texture;
+            var canvas = PixiToImage.displayObjectToCanvas(this.displayObject, 2);
+            if (PIXI.Texture.from)
+                return PIXI.Texture.from(canvas);
+            return PIXI.Texture.fromCanvas(canvas);
         },
 
         schematicModeChanged: function(circuit, schematic) {

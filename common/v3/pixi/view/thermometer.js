@@ -6,6 +6,7 @@ define(function(require) {
 
     var PIXI = require('pixi');
     var PixiView = require('../view');
+    var PixiToTexture = require('../pixi-to-texture');
 
     var Colors    = require('common/colors/colors');
     var Vector2   = require('common/math/vector2');
@@ -55,6 +56,7 @@ define(function(require) {
 
             this.tickColor = Colors.parseHex(options.tickColor);
             this.tickWidth = options.tickWidth;
+            this.renderer = options.renderer || null;
 
             this.value = 0;
 
@@ -87,12 +89,19 @@ define(function(require) {
             background.drawCircle(0, -radius - height, halfWidth);
             background.endFill();
 
-            // (Except that applying an alpha to the graphics is actually buggy,
-            //   so I'll create a texture and set an alpha on a sprite.)
-            var bgSprite = new PIXI.Sprite(background.generateTexture());
-            bgSprite.anchor.x = 0.5;
-            bgSprite.anchor.y = (bgSprite.height - radius) / bgSprite.height;
-            bgSprite.alpha = this.fillAlpha;
+            // Prefer a texture-backed sprite for crispness, but gracefully
+            // fallback when texture extraction support is unavailable.
+            var bgSprite;
+            try {
+                var bgTexture = PixiToTexture.displayObjectToTexture(background, this.renderer);
+                bgSprite = new PIXI.Sprite(bgTexture);
+                bgSprite.anchor.x = 0.5;
+                bgSprite.anchor.y = (bgSprite.height - radius) / bgSprite.height;
+                bgSprite.alpha = this.fillAlpha;
+            } catch (e) {
+                background.alpha = this.fillAlpha;
+                bgSprite = background;
+            }
 
             // It's drawing the outline that's tricky.
             var theta = Math.acos(halfWidth / radius);

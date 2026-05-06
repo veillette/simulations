@@ -8,6 +8,12 @@ define(function(require) {
     var PiecewiseCurve = require('common/math/piecewise-curve');
     var Colors = require('common/colors/colors');
 
+    var textureFromCanvas = function(canvas) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(canvas);
+        return PIXI.Texture.fromCanvas(canvas);
+    };
+
 
     var doNothing = function() {};
     var beginPath = function(graphics) {
@@ -184,7 +190,7 @@ define(function(require) {
      */
     PIXI.Sprite.fromPiecewiseCurve = function(curve, style) {
         if (curve.size() === 0)
-            return new PIXI.DisplayObject();
+            return new PIXI.Container();
 
         style = _.extend({
             lineWidth: 1,
@@ -237,7 +243,7 @@ define(function(require) {
         PIXI.drawPiecewiseCurve(ctx, curve, xShift, yShift, fill, stroke);
 
         // Create the sprite and shift the anchor proportionally to the shift
-        var sprite = new PIXI.Sprite(PIXI.Texture.fromCanvas(canvas));
+        var sprite = new PIXI.Sprite(textureFromCanvas(canvas));
         sprite.anchor.x = xShift / sprite.width;
         sprite.anchor.y = yShift / sprite.height;
 
@@ -251,7 +257,7 @@ define(function(require) {
      */
     PIXI.Sprite.fromPointArrays = function(pointArrays, style) {
         if (pointArrays.length === 0)
-            return new PIXI.DisplayObject();
+            return new PIXI.Container();
 
         if (!_.isArray(pointArrays[0]))
             pointArrays = [ pointArrays ];
@@ -266,12 +272,14 @@ define(function(require) {
      *   the display object relative to the stage by applying all
      *   transforms through the hierarchy.
      */
-    PIXI.DisplayObject.prototype.getGlobalPosition = function() {
-        if (this.parent && !this.parent.parent)
-            return this.position;
-        else
-            return this.toGlobal(this.parent.getGlobalPosition());
-    };
+    if (!PIXI.DisplayObject.prototype.getGlobalPosition) {
+        PIXI.DisplayObject.prototype.getGlobalPosition = function() {
+            if (this.parent && !this.parent.parent)
+                return this.position;
+            else
+                return this.toGlobal(this.parent.getGlobalPosition());
+        };
+    }
 
     /**
      * Creates a texture of a circle with a radial gradient.  The
@@ -365,7 +373,7 @@ define(function(require) {
             ctx.stroke();
         }
 
-        return new PIXI.Texture.fromCanvas(canvas);
+        return textureFromCanvas(canvas);
     };
 
     /**
@@ -395,7 +403,7 @@ define(function(require) {
         ctx.rect(0, 0, width, height);
         ctx.fill();
 
-        return PIXI.Texture.fromCanvas(canvas);
+        return textureFromCanvas(canvas);
     };
 
     var _colorStops = [[],[]];

@@ -87,15 +87,26 @@ define(function(require) {
 			this.pressureParticles = [];
 			this.pressureParticleSprites = [];
 
-			this.pressureParticleSpriteBatch = new PIXI.SpriteBatch();
-			this.pressureParticleSpriteBatchContainer = new PIXI.Container();
-			this.pressureParticleSpriteBatchContainer.addChild(this.pressureParticleSpriteBatch);
-			this.stage.addChild(this.pressureParticleSpriteBatchContainer);
+			var pressureParticleCount =
+				Math.ceil(this.waveSimulation.lattice.width / PARTICLE_CELL_RATIO) *
+				Math.ceil(this.waveSimulation.lattice.height / PARTICLE_CELL_RATIO);
+			this.pressureParticleContainer = PIXI.ParticleContainer ?
+				new PIXI.ParticleContainer(pressureParticleCount, {
+					position: true,
+					scale: true,
+					alpha: true
+				}) :
+				new PIXI.Container();
+			this.stage.addChild(this.pressureParticleContainer);
 
 			this.disablePressureParticles();
 
-			texture  = PIXI.Texture.fromImage('img/phet/particle-blue.gif');
-			texture2 = PIXI.Texture.fromImage('img/phet/particle-blue-marked.png');
+			texture  = PIXI.Texture.fromImage ?
+				PIXI.Texture.fromImage('img/phet/particle-blue.gif') :
+				PIXI.Texture.from('img/phet/particle-blue.gif');
+			texture2 = PIXI.Texture.fromImage ?
+				PIXI.Texture.fromImage('img/phet/particle-blue-marked.png') :
+				PIXI.Texture.from('img/phet/particle-blue-marked.png');
 
 			this.eachPressureParticle(function(i, j) {
 				if (!this.pressureParticles[i]) {
@@ -119,7 +130,7 @@ define(function(require) {
 				this.pressureParticles[i][j] = particle;
 				this.pressureParticleSprites[i][j] = sprite;
 
-				this.pressureParticleSpriteBatch.addChild(sprite);
+				this.pressureParticleContainer.addChild(sprite);
 			});
 
 			this.resizePressureParticles();
@@ -152,8 +163,8 @@ define(function(require) {
 		 *
 		 */
 		enablePressureParticles: function() {
-			this.pressureParticleSpriteBatchContainer.visible = true;
-			this.spriteBatchContainer.visible = false;
+			this.pressureParticleContainer.visible = true;
+			this.particleContainer.visible = false;
 
 			this.$('.heatmap-title').html('Pressure (Particles) &ndash; XY Plane');
 		},
@@ -162,8 +173,9 @@ define(function(require) {
 		 *
 		 */
 		disablePressureParticles: function() {
-			this.spriteBatchContainer.visible = true;
-			this.pressureParticleSpriteBatchContainer.visible = false;
+			this.particleContainer.visible = true;
+			if (this.pressureParticleContainer)
+				this.pressureParticleContainer.visible = false;
 
 			this.$('.heatmap-title').html(this.graphInfo.title);
 		},

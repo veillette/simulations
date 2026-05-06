@@ -33,7 +33,7 @@
     "karma-requirejs": "^1.1.0",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^11.7.5",
-    "pixi.js": "^3.0.11",
+    "pixi.js": "^5.3.12",
     "requirejs": "^2.3.7",
     "requirejs-text": "^2.0.12",
     "sinon": "^19.0.0",

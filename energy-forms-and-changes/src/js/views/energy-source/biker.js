@@ -15,6 +15,9 @@ define(function(require) {
     var Biker = Constants.Biker;
 
     var Assets = require('assets');
+    var AnimatedSpriteCtor = (PIXI.extras && (PIXI.extras.MovieClip || PIXI.extras.AnimatedSprite)) ||
+                             PIXI.AnimatedSprite ||
+                             PIXI.MovieClip;
 
     var backLegTextures = [
         Assets.Images.BACK_LEG_01,
@@ -110,8 +113,8 @@ define(function(require) {
 
             var legImageOffset = this.mvt.modelToViewDelta(new Vector2(0.009, 0.002).add(Biker.FRAME_CENTER_OFFSET));
 
-            var backLeg  = new PIXI.extras.MovieClip(backLegTextures);
-            var frontLeg = new PIXI.extras.MovieClip(frontLegTextures);
+            var backLeg  = new AnimatedSpriteCtor(backLegTextures);
+            var frontLeg = new AnimatedSpriteCtor(frontLegTextures);
 
             backLeg.x = frontLeg.x = legImageOffset.x;
             backLeg.y = frontLeg.y = legImageOffset.y;

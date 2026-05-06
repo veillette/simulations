@@ -305,7 +305,8 @@ define(function(require) {
                     if (thermometerClips.overlaps(rect)) {
                         this.thermometerLayer.removeChild(thermometerView.displayObject);
                         var point = thermometerClips.addThermometerNear(thermometerView, thermometerView.displayObject.position);
-                        thermometerView.setCenterPosition(point.x, point.y);
+                        if (point)
+                            thermometerView.setCenterPosition(point.x, point.y);
                     }
                 });
             }, this);

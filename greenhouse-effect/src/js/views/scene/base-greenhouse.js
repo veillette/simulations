@@ -121,7 +121,8 @@ define(function(require) {
 
         initThermometer: function() {
             this.thermometerView = new GreenhouseThermometerView({
-                model: this.simulation.thermometer
+                model: this.simulation.thermometer,
+                renderer: this.renderer
             });
             this.thermometerView.displayObject.y = this.height - 50;
             this.positionThermometerView();

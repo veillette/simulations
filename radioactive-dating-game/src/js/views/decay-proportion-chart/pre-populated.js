@@ -25,14 +25,10 @@ define(function(require) {
     var PrePopulatedDatableItemDecayProportionChartView = DatableItemDecayProportionChartView.extend({
 
         events: _.extend({}, DatableItemDecayProportionChartView.prototype.events, {
-            'touchstart      .handle': 'dragStart',
-            'mousedown       .handle': 'dragStart',
-            'touchmove       .handle': 'drag',
-            'mousemove       .handle': 'drag',
-            'touchend        .handle': 'dragEnd',
-            'mouseup         .handle': 'dragEnd',
-            'touchendoutside .handle': 'dragEnd',
-            'mouseupoutside  .handle': 'dragEnd'
+            'pointerdown      .handle': 'dragStart',
+            'pointermove      .handle': 'drag',
+            'pointerup        .handle': 'dragEnd',
+            'pointerupoutside .handle': 'dragEnd'
         }),
 
         /**

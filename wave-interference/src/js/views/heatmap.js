@@ -180,8 +180,8 @@ define(function(require) {
 			this.stage = new PIXI.Container();
 
 			var count = this.waveSimulation.lattice.width * this.waveSimulation.lattice.height;
-			this.particleContainer = (PIXI.particles && PIXI.particles.ParticleContainer) ?
-				new PIXI.particles.ParticleContainer(count, { alpha: true }) :
+			this.particleContainer = PIXI.ParticleContainer ?
+				new PIXI.ParticleContainer(count, { alpha: true }) :
 				new PIXI.Container();
 
 			this.stage.addChild(this.particleContainer);
@@ -273,7 +273,7 @@ define(function(require) {
 			ctx.fillStyle = gradient;
 			ctx.fillRect(0, 0, radius * 2, radius * 2);
 
-			return PIXI.Texture.fromCanvas(canvas);
+			return PIXI.Texture.from(canvas);
 		},
 
 		updateParticles: function(interpolationFactor) {
