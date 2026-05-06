@@ -112,8 +112,8 @@ define(function (require) {
          *   in the pool.
          */
         moveToFront: function() {
-            var highestZIndex = getMaxZIndex();
-            this.zIndex = highestZIndex + 1;
+            maxZIndex = Math.max(maxZIndex, this.zIndex) + 1;
+            this.zIndex = maxZIndex;
         },
 
         getTip: function() {
@@ -342,17 +342,6 @@ define(function (require) {
      * moveToFront stuff
      */
     var maxZIndex = 0;
-    var calculateMaxZIndexCallback = function(lightRay) {
-        maxZIndex = Math.max(maxZIndex, lightRay.zIndex);
-    };
-
-    /**
-     * Calculates and returns the max zIndex of all LightRay instances in the pool.
-     */
-    var getMaxZIndex = function() {
-        pool.each(calculateMaxZIndexCallback);
-        return maxZIndex;
-    };
 
 
 
