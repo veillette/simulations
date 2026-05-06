@@ -3,7 +3,14 @@ define(function (require) {
     'use strict';
 
     var _              = require('underscore');
-    var solveQuadratic = require('../node_modules/solve-quadratic-equation-shimmed/index');
+    function solveQuadratic(a, b, c) {
+        if (a === 0) return b === 0 ? [] : [-c / b];
+        var d = b * b - 4 * a * c;
+        if (d < 0) return [];
+        if (d === 0) return [-b / (2 * a)];
+        var sq = Math.sqrt(d);
+        return [(-b + sq) / (2 * a), (-b - sq) / (2 * a)];
+    }
     var solveCubic     = require('./solve-cubic-equation');
     var lineIntersect  = require('./line-intersection');
     var Rectangle      = require('./rectangle');

@@ -4,7 +4,7 @@
   "description": "A simulation to show how molecules interact at different velocities and how temperature of a system relates to those interactions and causes groups of molecules to take different shapes.",
   "main": "main.js",
   "scripts": {
-    "postinstall": "r.js -convert node_modules/vector2-node node_modules/vector2-node-shimmed; r.js -convert node_modules/object-pool node_modules/object-pool-shimmed; r.js -convert node_modules/circular-list node_modules/circular-list-shimmed; r.js -convert node_modules/gauss-random node_modules/gauss-random-shimmed",
+    "postinstall": "r.js -convert node_modules/gauss-random node_modules/gauss-random-shimmed",
     "test": "grunt test"
   },
   "repository": {
@@ -19,7 +19,6 @@
     "url": "https://github.com/Connexions/simulations/issues"
   },
   "homepage": "https://github.com/Connexions/simulations",
-  "dependencies": {},
   "devDependencies": {
     "backbone": "^1.4.1",
     "bootstrap": "^5.3.3",
@@ -47,10 +46,8 @@
     "karma-requirejs": "^1.1.0",
     "less": "^4.6.4",
     "mocha": "^11.7.5",
-    "object-pool": "^0.2.0",
     "requirejs": "^2.3.7",
     "underscore": "^1.13.8",
-    "vector2-node": "0.0.3",
     "load-grunt-tasks": "^5.1.0"
   },
   "overrides": {

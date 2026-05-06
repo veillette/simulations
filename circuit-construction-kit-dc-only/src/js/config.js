@@ -12,9 +12,8 @@
             nouislider:   '../../../circuit-construction-kit/bower_components/nouislider/distribute/jquery.nouislider.all.min',
             'file-saver': '../../../circuit-construction-kit/bower_components/file-saver/FileSaver',
 
-            'vector2-node':          '../../../circuit-construction-kit/node_modules/vector2-node-shimmed/index',
-            'object-pool':           '../../../circuit-construction-kit/node_modules/object-pool-shimmed/index',
-            'circular-list':         '../../../circuit-construction-kit/node_modules/circular-list-shimmed/index',
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../../circuit-construction-kit/node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../../circuit-construction-kit/node_modules/bootstrap-select/less/bootstrap-select',
             'sat':                   '../../../circuit-construction-kit/node_modules/sat/SAT',

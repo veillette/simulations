@@ -10,9 +10,8 @@
             text:             '../../bower_components/requirejs-text/text',
             pixi:             '../../bower_components/pixi/bin/pixi',
             nouislider:       '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
-            'vector2-node':   '../../node_modules/vector2-node-shimmed/index',
-            'object-pool':    '../../node_modules/object-pool-shimmed/index',
-            'circular-list':  '../../node_modules/circular-list-shimmed/index',
+            'vector2-node':   '../../../common/math/vector2',
+            'object-pool':    '../../../common/pool',
 
             views:      '../js/views',
             models:     '../js/models',
