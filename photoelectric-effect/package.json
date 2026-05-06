@@ -46,12 +46,12 @@
     "karma-mocha": "^2.0.1",
     "karma-requirejs": "^1.1.0",
     "less": "^4.6.4",
-    "matchdep": "^2.0.0",
     "mocha": "^11.7.5",
     "object-pool": "^0.2.0",
     "requirejs": "^2.3.7",
     "underscore": "^1.13.8",
-    "vector2-node": "0.0.3"
+    "vector2-node": "0.0.3",
+    "load-grunt-tasks": "^5.1.0"
   },
   "overrides": {
     "diff": "^9.0.0",

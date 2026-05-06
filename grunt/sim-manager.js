@@ -1,6 +1,4 @@
-var _      = require('underscore');
-var touch  = require('touch');
-var fse    = require('fs-extra');
+var fs = require('fs');
 
 module.exports = function(grunt) {
 
@@ -35,13 +33,12 @@ module.exports = function(grunt) {
 		 */
 		getAllSimDirs: function() {
 			var gruntfiles = this.getAllSimGruntfiles();
-			var dirs = _.map(gruntfiles, function(gruntfile) {
-				// Gets the path leading up to Gruntfile.js
+			var dirs = gruntfiles.map(function(gruntfile) {
 				return gruntfile.substring(0, gruntfile.indexOf('Gruntfile.js'));
 			});
 
-			return _.reject(dirs, function(dir) {
-				return (dir.indexOf('common') !== -1);
+			return dirs.filter(function(dir) {
+				return (dir.indexOf('common') === -1);
 			});
 		},
 
@@ -99,7 +96,7 @@ module.exports = function(grunt) {
 		 * Extracts the names of the directories from a list of paths
 		 */
 		getDirNames: function(dirs) {
-			return _.map(dirs, function(dir) {
+			return dirs.map(function(dir) {
 				return dir.substring(dir.indexOf('/') + 1, dir.lastIndexOf('/'));
 			});
 		},
@@ -160,7 +157,7 @@ module.exports = function(grunt) {
 						grunt.log.writeln('   ' + dirNames[i]);
 
 					// Update the build timestamp
-					touch('.build_timestamp');
+					fs.closeSync(fs.openSync('.build_timestamp', 'w'));
 
 					done();
 				}
@@ -192,7 +189,7 @@ module.exports = function(grunt) {
 			for (var i = 0; i < simDirNames.length; i++) {
 				var directory = './dist/' + simDirNames[i];
 				if (grunt.file.exists(directory)) {
-					fse.removeSync(directory);
+					fs.rmSync(directory, {recursive: true, force: true});
 					dirsCleaned++;
 				}
 			}
@@ -223,7 +220,7 @@ module.exports = function(grunt) {
 				var dst = './dist/' + dirName;
 
 				if (grunt.file.exists(src)) {
-					fse.copySync(src, dst);
+					fs.cpSync(src, dst, {recursive: true});
 					dirsCopied++;
 				}
 			}
@@ -245,7 +242,7 @@ module.exports = function(grunt) {
 			var packageFiles = grunt.file.expand(packageFilePatterns);
 			if (!forceUpdateAll) {
 				var updatedSimDirNames = this.getUpdatedSimDirNames();
-				packageFiles = _.filter(packageFiles, function(packageFile) {
+				packageFiles = packageFiles.filter(function(packageFile) {
 					// It's good if it's in the common files
 					if (packageFile.indexOf('common') !== -1)
 						return true;
@@ -299,8 +296,7 @@ module.exports = function(grunt) {
 			// Get a list of all the package files from each directory
 			var packageFiles = grunt.file.expand(packageFilePatterns);
 			// Get a list of their containing directories
-			var dirs = _.map(packageFiles, function(packageFile) {
-				// Gets the path leading up to package.json
+			var dirs = packageFiles.map(function(packageFile) {
 				return packageFile.substring(0, packageFile.indexOf('package.json'));
 			});
 
@@ -308,7 +304,7 @@ module.exports = function(grunt) {
 			for (var i = 0; i < dirs.length; i++) {
 				var directory = dirs[i] + 'node_modules';
 				if (grunt.file.exists(directory)) {
-					fse.removeSync(directory);
+					fs.rmSync(directory, {recursive: true, force: true});
 					dirsCleaned++;
 				}
 			}
@@ -325,11 +321,11 @@ module.exports = function(grunt) {
 		createNewSim: function(dirName, packageName, classPrefix, title) {
 			// Remove the current template's /dist directory if it exists--just slows down the copy
 			if (grunt.file.exists('./template/dist/'))
-				fse.removeSync('./template/dist/');
+				fs.rmSync('./template/dist/', {recursive: true, force: true});
 
 			// Copy the template directory
 			var newDir = './' + dirName;
-			fse.copySync('./template/', newDir);
+			fs.cpSync('./template/', newDir, {recursive: true});
 
 			// Replace certain strings in certain files
 			var replacements = [
