@@ -8,7 +8,7 @@ define(function (require) {
 
     var Vector2          = require('common/math/vector2');
     var LineIntersection = require('common/math/line-intersection');
-    
+
     var pool = Pool({
         init: function() {
             return new LightRay();
@@ -242,17 +242,17 @@ define(function (require) {
             // If it's in the opposite medium, it's not valid anyway
             if (this.oppositeMediumShape.contains(position))
                 return false;
-            
-            // Otherwise, we just check to make sure it's on the line (or within 
+
+            // Otherwise, we just check to make sure it's on the line (or within
             //   its thickness as a distance)
             var line = this.toLine();
             return LineIntersection.lineAndCircleIntersect(
-                line.start.x, 
-                line.start.y, 
-                line.end.x, 
-                line.end.y, 
-                position.x, 
-                position.y, 
+                line.start.x,
+                line.start.y,
+                line.end.x,
+                line.end.y,
+                position.x,
+                position.y,
                 waveMode ? this.getWaveWidth() / 2 : this.getRayWidth() / 2
             );
         },
