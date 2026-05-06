@@ -2,7 +2,7 @@
     <div class="material-select-wrapper">
         <label><%= label %></label>
         <div class="select-wrapper">
-            <select class="select medium-<%= name % class="form-select">">
+            <select class="form-select select medium-<%= name %>">
                 <% _.each(mediums, function(preset) { %>
                     <option value="<%= preset.key %>"><%= preset.name %></option>
                 <% }); %>
