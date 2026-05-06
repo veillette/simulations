@@ -6,7 +6,7 @@
             jquery:     '../../node_modules/jquery/dist/jquery',
             underscore: '../../bower_components/lodash/dist/lodash',
             backbone:   '../../node_modules/backbone/backbone',
-            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.min',
             text:       '../../node_modules/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',

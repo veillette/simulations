@@ -1,5 +1,6 @@
 module.exports = function(grunt){
 
+    var fs = require('fs');
     var BANNER_TEMPLATE_STRING = '/*! <%= pkg.name %> - v<%= pkg.version %> - '
         + '<%= grunt.template.today("yyyy-mm-dd") %> */\n';
 
@@ -69,7 +70,7 @@ module.exports = function(grunt){
                         pixi:             '../../bower_components/pixi/bin/pixi',
                         nouislider:       '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
                         'vector2-node':   '../../node_modules/vector2-node-shimmed/index',
-                        'object-pool':    '../../node_modules/object-pool-shimmed/index',
+                        'object-pool':    '../../../common/pool',
                         'circular-list':  '../../node_modules/circular-list-shimmed/index',
 
                         views:      '../js/views',

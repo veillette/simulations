@@ -1,5 +1,6 @@
 module.exports = function(grunt){
 
+	var fs              = require('fs');
 	var _               = grunt.util._;
 	var requireJsConfig = require('./src/js/config.js');
 

@@ -20,7 +20,7 @@
   "homepage": "https://github.com/Connexions/simulations",
   "devDependencies": {
     "backbone": "^1.4.1",
-    "bootstrap": "^5.3.3",
+    "bootstrap": "^3.4.1",
     "bootstrap-select": "^1.13.18",
     "clipper-lib": "^1.0.0",
     "csso": "^5.0.5",
@@ -42,7 +42,7 @@
     "karma-chrome-launcher": "^3.2.0",
     "karma-mocha": "^2.0.1",
     "karma-requirejs": "^1.1.0",
-    "less": "^4.6.4",
+    "less": "^1.7.5",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^11.7.5",
     "requirejs": "^2.3.7",
