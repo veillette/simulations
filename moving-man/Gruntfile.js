@@ -1,5 +1,7 @@
 module.exports = function(grunt){
 
+	var fs = require('fs');
+
 	var BANNER_TEMPLATE_STRING = '/*! <%= pkg.name %> - v<%= pkg.version %> - '
 		+ '<%= grunt.template.today("yyyy-mm-dd") %> */\n';
 
@@ -84,7 +86,8 @@ module.exports = function(grunt){
 						models:     '../js/models',
 						templates:  '../templates',
 						styles:     '../styles',
-						common:     '../../../common'
+						common:     '../../../common',
+						less:       '../js/less-shim'
 					},
 					packages: [{
 						name: 'css',

@@ -138,14 +138,6 @@ module.exports = function(grunt) {
 
 	require('load-grunt-tasks')(grunt);
 
-
-		// Build the template, replacing {{ test }} with the list of test files
-		var template = grunt.file.read(options.template).replace('{{ tests }}', JSON.stringify(tests));
-
-		// Write template to tests directory and run tests
-		grunt.file.write(options.runner, template);
-	});
-
 	grunt.registerTask('move-optimized', function() {
 		fs.renameSync('src/optimized.js', 'dist/js/optimized.js');
 	});
