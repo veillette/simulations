@@ -80,7 +80,7 @@ define(function(require) {
 
             this.$select
                 .val(this.getAtom().get('viewMode'))
-                .selectpicker('refresh');
+                ;
 
             AtomicModelView.prototype.activate.apply(this, arguments);
         },

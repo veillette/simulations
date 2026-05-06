@@ -2,8 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var $    = require('jquery');
-    var PIXI = require('pixi');
+    var $         = require('jquery');
+    var Bootstrap = require('bootstrap');
+    var PIXI      = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
@@ -185,14 +186,14 @@ define(function(require) {
             });
             $('.scene-view-ui').append(this.$popoverAnchor);
 
-            this.$popoverAnchor.popover({
+            this._popoverInstance = new Bootstrap.Popover(this.$popoverAnchor[0], {
                 title: title,
                 content: content,
                 placement: placement,
                 trigger: 'focus',
                 html: true
             });
-            this.$popoverAnchor.popover('show');
+            this._popoverInstance.show();
             this.$popover = $('.scene-view-ui').children().last();
             // this.$popover.css('top', parseInt(this.$popover.css('top')) + 16 + 'px');
 
@@ -217,7 +218,10 @@ define(function(require) {
 
         hidePopover: function() {
             if (this.$popoverAnchor) {
-                this.$popoverAnchor.popover('destroy');
+                if (this._popoverInstance) {
+                    this._popoverInstance.dispose();
+                    this._popoverInstance = null;
+                }
                 this.$popoverAnchor.remove();
                 this.$popoverAnchor = null;
                 this.$popover = null;

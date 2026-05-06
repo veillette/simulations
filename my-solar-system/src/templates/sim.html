@@ -2,7 +2,7 @@
 <span class="scene-view-placeholder"></span>
 
 <div class="help-btn-wrapper">
-    <button class="help-btn" title="Help" data-toggle="modal" data-target="#help-dialog"><span class="fa fa-question"></span></button>
+    <button class="help-btn" title="Help" data-bs-toggle="modal" data-bs-target="#help-dialog"><span class="fa fa-question"></span></button>
 </div>
 
 <div class="playback-controls-wrapper">
@@ -42,7 +42,7 @@
 
     <div class="preset-wrapper">
         <label>Preset:</label><br>
-        <select id="preset" class="form-control">
+        <select id="preset" class="form-control" class="form-select">
             <option>Select preset</option>
         <% _.each(presetNames, function(presetName, index) { %>
             <option value="<%= index %>"><%= presetName %></option>

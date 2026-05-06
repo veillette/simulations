@@ -16,7 +16,6 @@ define(function (require) {
 
     require('nouislider');
     require('bootstrap');
-    require('bootstrap-select');
 
     // CSS
     require('less!styles/sim');
@@ -24,7 +23,6 @@ define(function (require) {
     require('less!styles/ball-settings');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
-    require('less!bootstrap-select-less');
 
     // HTML
     var simHtml              = require('text!templates/sim.html');
@@ -160,7 +158,7 @@ define(function (require) {
             this.$el.append(playbackControlsHtml);
             this.$el.append(this.simControlsTemplate(data));
 
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.$('.playback-speed').noUiSlider({
                 start: 0.5,

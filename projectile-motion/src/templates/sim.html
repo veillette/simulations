@@ -5,17 +5,17 @@
     <h2>Shot Stats</h2>
 
     <div class="stat-group">
-        <label for="range" class="control-label">Range (m)</label>
+        <label for="range" class="form-label">Range (m)</label>
         <input type="number" class="form-control" id="range" disabled="disabled">
     </div>
 
     <div class="stat-group">
-        <label for="height" class="control-label">Height (m)</label>
+        <label for="height" class="form-label">Height (m)</label>
         <input type="number" class="form-control" id="height" disabled="disabled">
     </div>
 
     <div class="stat-group">
-        <label for="time" class="control-label">Time (s)</label>
+        <label for="time" class="form-label">Time (s)</label>
         <input type="number" class="form-control" id="time" disabled="disabled">
     </div>
 </div>
@@ -24,35 +24,35 @@
 
     <h2>Shot Parameters</h2>
 
-    <select class="form-control" id="projectile">
+    <select class="form-control" id="projectile" class="form-select">
     <% _.each(Constants.Projectiles, function(projectile, index) { %>
         <option value="<%= index %>"><%= projectile.getName() %></option>
     <% }); %>
     </select>
 
     <div class="control-group">
-        <label for="angle" class="control-label">Angle (degrees)</label>
+        <label for="angle" class="form-label">Angle (degrees)</label>
         <div class="input-wrapper">
             <input type="number" min="<%= Constants.Cannon.MIN_ANGLE %>" max="<%= Constants.Cannon.MAX_ANGLE %>" class="form-control" id="angle" value="<%= simulation.cannon.get('angle') %>">
         </div>
     </div>
 
     <div class="control-group">
-        <label for="speed" class="control-label">Initial speed (m/s)</label>
+        <label for="speed" class="form-label">Initial speed (m/s)</label>
         <div class="input-wrapper">
             <input type="number" min="0" class="form-control" id="speed" value="<%= simulation.get('initialSpeed') %>">
         </div>
     </div>
 
     <div class="control-group">
-        <label for="mass" class="control-label">Mass (kg)</label>
+        <label for="mass" class="form-label">Mass (kg)</label>
         <div class="input-wrapper">
             <input type="number" min="0" class="form-control" id="mass" value="<%= simulation.get('currentProjectile').get('mass') %>">
         </div>
     </div>
 
     <div class="control-group">
-        <label for="diameter" class="control-label">Diameter (m)</label>
+        <label for="diameter" class="form-label">Diameter (m)</label>
         <div class="input-wrapper">
             <input type="number" min="0" class="form-control" id="diameter" value="<%= simulation.get('currentProjectile').get('diameter') %>">
         </div>
@@ -63,14 +63,14 @@
 
     <div class="air-resistance-parameters">
         <div class="control-group">
-            <label for="drag" class="control-label">Drag Coefficient</label>
+            <label for="drag" class="form-label">Drag Coefficient</label>
             <div class="input-wrapper">
                 <input type="number" min="0" class="form-control" id="drag" value="<%= simulation.get('currentProjectile').get('dragCoefficient') %>">
             </div>
         </div>
 
         <div class="control-group">
-            <label for="altitude" class="control-label">Altitude (m)</label>
+            <label for="altitude" class="form-label">Altitude (m)</label>
             <div class="input-wrapper">
                 <input type="number" class="form-control" id="altitude" value="<%= simulation.get('altitude') %>">
             </div>

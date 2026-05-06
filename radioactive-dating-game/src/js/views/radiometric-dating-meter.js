@@ -109,7 +109,7 @@ define(function(require) {
 
             this.$readoutValue = this.$el.find('.readout-value');
 
-            this.$el.find('select').selectpicker();
+            this.$el.find('select');
         },
 
         initTube: function() {

@@ -44,7 +44,7 @@
 
     <div class="scenario-selection-wrapper">
         <label>Scenario:</label><br>
-        <select class="scenario-select form-control">
+        <select class="scenario-select form-control" class="form-select">
         <% _.each(scenarioNames, function(scenarioName, index) { %>
             <option value="<%= index %>" <% if (index === 0) { %>selected<% } %>><%= scenarioName %></option>
         <% }); %>

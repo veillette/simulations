@@ -92,7 +92,7 @@ define(function (require) {
 
             this.$el.html(this.template(data));
 
-            this.$('select').selectpicker();
+            this.$('select');
         },
 
         /**

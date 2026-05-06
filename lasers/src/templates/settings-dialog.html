@@ -1,5 +1,5 @@
 <div class="settings-btn-wrapper">
-    <button class="settings-btn" title="Additional Options" data-toggle="modal" data-target="#settings-dialog"><span class="fa fa-cogs"></span></button>
+    <button class="settings-btn" title="Additional Options" data-bs-toggle="modal" data-bs-target="#settings-dialog"><span class="fa fa-cogs"></span></button>
     <button class="help-btn" title="Toggle Help"><span class="fa fa-question"></span></button>
 </div>
 
@@ -7,7 +7,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <h4 class="modal-title">Additional Options</h4>
             </div>
             <div class="modal-body">
@@ -34,7 +34,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-md-offset-1">
+                    <div class="col-md-6 offset-md-1">
                         <div class="control-wrapper">
                             <input type="checkbox" class="show-all-stimulated-emissions-check" id="show-all-stimulated-emissions-check-<%= unique %>" checked>
                             <label for="show-all-stimulated-emissions-check-<%= unique %>">Show all simulated emissions</label>
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

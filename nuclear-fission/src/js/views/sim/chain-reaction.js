@@ -189,7 +189,7 @@ define(function (require) {
             this.$u235 = this.$('#u-235');
             this.$u238 = this.$('#u-238');
 
-            this.$('select').selectpicker();
+            this.$('select');
         },
 
         /**

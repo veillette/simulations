@@ -20,8 +20,7 @@
   "homepage": "https://github.com/Connexions/simulations",
   "devDependencies": {
     "backbone": "^1.4.1",
-    "bootstrap": "^3.4.1",
-    "bootstrap-select": "^1.13.18",
+    "bootstrap": "^5.3.8",
     "chai": "^4.5.0",
     "chai-stats": "^0.3.0",
     "csso": "^5.0.5",

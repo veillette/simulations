@@ -6,7 +6,7 @@
             jquery:       '../../../circuit-construction-kit/node_modules/jquery/dist/jquery',
             underscore:   '../../../circuit-construction-kit/node_modules/underscore/underscore',
             backbone:     '../../../circuit-construction-kit/node_modules/backbone/backbone',
-            bootstrap:    '../../../circuit-construction-kit/bower_components/bootstrap/dist/js/bootstrap.min',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
             text:         '../../../circuit-construction-kit/bower_components/requirejs-text/text',
             pixi:         '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider:   '../../../circuit-construction-kit/bower_components/nouislider/distribute/jquery.nouislider.all.min',
@@ -14,8 +14,6 @@
 
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
-            'bootstrap-select':      '../../../circuit-construction-kit/node_modules/bootstrap-select/js/bootstrap-select',
-            'bootstrap-select-less': '../../../circuit-construction-kit/node_modules/bootstrap-select/less/bootstrap-select',
             'sat':                   '../../../circuit-construction-kit/node_modules/sat/SAT',
 
             local:            './',
@@ -52,9 +50,6 @@
         shim: {
             'pixi': {
                 exports: 'PIXI'
-            },
-            'bootstrap-select': {
-                deps: ['jquery']
             }
         },
     };

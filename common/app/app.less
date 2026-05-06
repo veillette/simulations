@@ -1,4 +1,4 @@
-@import "../node_modules/bootstrap/less/bootstrap.less"; // Bootstrap
+@import (inline) "../node_modules/bootstrap/dist/css/bootstrap.min.css"; // Bootstrap
 @import "../styles/variables.less";
 @import "../styles/mixins/vendor-prefixes.less";
 
@@ -191,13 +191,9 @@ body {
     width: 100%;
 }
 
-// The order in which rules are applied in bootstrap is
-//   apparently important, and somehow the order gets
-//   changed up when the styles get included with
-//   require-js, so I'm applying a fix here to make
-//   sure the modal gets rendered above its backdrop.
+// Bootstrap 5 default modal z-index is 1055; keep backdrop below it.
 .modal {
-    z-index: 1050 !important;
+    z-index: 1056 !important;
 }
 
 .footer {

@@ -334,7 +334,7 @@ define(function(require) {
                         this.maxVoltage = Constants.MAX_BATTERY_VOLTAGE;
                     }
 
-                    $popover.find('.popover-content').html(voltageControlsTemplate({ moreVoltsChecked: this.moreVoltsChecked }));
+                    $popover.find('.popover-body').html(voltageControlsTemplate({ moreVoltsChecked: this.moreVoltsChecked }));
                     this.initVoltageControls($popover, true);
                     $popover.find('.more-volts-check').prop('checked', checked);
 

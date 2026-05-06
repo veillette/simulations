@@ -98,7 +98,7 @@ define(function (require) {
 
             this.$el.html(this.template(data));
 
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.$powerBar = this.$('#power-bar');
             this.$energyBar = this.$('#energy-bar');

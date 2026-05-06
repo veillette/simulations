@@ -7,14 +7,14 @@
             <div class="value-wrapper">
                 <div class="input-group value-group">
                     <input type="text" class="form-control variable-text" value="0.00" />
-                    <span class="input-group-addon"><%= units %></span>
+                    <span class="input-group-text"><%= units %></span>
                 </div>
                 <% if (expression) { %>
                     <div class="input-group expression-group">
                         <input type="text" class="form-control expression-text" value="7 * sin(t) + 2" />
-                        <span class="input-group-addon"><%= units %></span>
+                        <span class="input-group-text"><%= units %></span>
                     </div>
-                    <button class="btn expression-help" title="Help with Expressions" data-toggle="modal" data-target="#<%= help_modal_id %>"><span class="fa fa-question-circle"></span></button>
+                    <button class="btn expression-help" title="Help with Expressions" data-bs-toggle="modal" data-bs-target="#<%= help_modal_id %>"><span class="fa fa-question-circle"></span></button>
                 <% } %>
             </div>
         </div>

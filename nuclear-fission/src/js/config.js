@@ -6,7 +6,7 @@
             jquery:       '../../../nuclear-physics/node_modules/jquery/dist/jquery',
             underscore:   '../../../nuclear-physics/node_modules/underscore/underscore',
             backbone:     '../../../nuclear-physics/node_modules/backbone/backbone',
-            bootstrap:    '../../../nuclear-physics/bower_components/bootstrap/dist/js/bootstrap.min',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
             text:         '../../../nuclear-physics/bower_components/requirejs-text/text',
             pixi:         '../../../nuclear-physics/node_modules/pixi.js/dist/pixi',
             nouislider:   '../../../nuclear-physics/bower_components/nouislider/distribute/jquery.nouislider.all.min',
@@ -14,8 +14,6 @@
 
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
-            'bootstrap-select':      '../../../nuclear-physics/node_modules/bootstrap-select/js/bootstrap-select',
-            'bootstrap-select-less': '../../../nuclear-physics/node_modules/bootstrap-select/less/bootstrap-select',
 
             views:     '../../../nuclear-physics/src/js/views',
             models:    '../../../nuclear-physics/src/js/models',
@@ -54,9 +52,6 @@
         shim: {
             'pixi': {
                 exports: 'PIXI'
-            },
-            'bootstrap-select': {
-                deps: ['jquery']
             }
         },
     };

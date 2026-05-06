@@ -127,7 +127,7 @@ define(function(require) {
         postRender: function() {
             RutherfordScatteringSceneView.prototype.postRender.apply(this, arguments);
 
-            this.$ui.find('select').selectpicker();
+            this.$ui.find('select');
         },
 
         _update: function(time, deltaTime, paused, timeScale) {

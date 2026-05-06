@@ -24,14 +24,12 @@ define(function (require) {
 
     require('nouislider');
     require('bootstrap');
-    require('bootstrap-select');
 
     // CSS
     require('less!hydrogen-atom/styles/sim');
     require('less!hydrogen-atom/styles/playback-controls');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
-    require('less!bootstrap-select-less');
 
     // HTML
     var simHtml              = require('text!hydrogen-atom/templates/sim.html');
@@ -174,7 +172,7 @@ define(function (require) {
                 iconSize: AppView.windowIsShort() ? 34 : 42
             };
             this.$el.html(this.template(data));
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.wavelengthSliderView = new HydrogenAtomWavelengthSliderView({
                 defaultWavelength: Constants.MIN_WAVELENGTH,

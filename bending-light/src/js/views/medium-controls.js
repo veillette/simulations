@@ -65,7 +65,7 @@ define(function(require) {
             this.$mystery   = this.$('.mystery');
             this.$value     = this.$('.index-of-refraction-value');
 
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.materialChanged(this.model, this.model.get('mediumProperties'));
 
@@ -107,7 +107,7 @@ define(function(require) {
                 });
                 this.$('select')
                     .val(selectedKey)
-                    .selectpicker('refresh');
+                    ;
             });
 
             if (mediumProperties.mystery) {

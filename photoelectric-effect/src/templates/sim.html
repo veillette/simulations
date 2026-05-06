@@ -23,7 +23,7 @@
         <div class="sim-controls options-panel">
             <div class="target-select-wrapper">
                 <label>Target Material</label>
-                <select id="target-material">
+                <select id="target-material" class="form-select">
                 <% _.each(targetMaterials, function(material, index) { %>
                     <option value="<%= index %>"><%= material %></option>
                 <% }) %>

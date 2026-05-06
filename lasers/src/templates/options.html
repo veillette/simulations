@@ -2,21 +2,21 @@
     <h2>Options</h2>
 
     <label>Energy Levels</label>
-    <select class="energy-levels-select">
+    <select class="energy-levels-select" class="form-select">
         <% var twoSelected = (simulation.get('elementProperties') === simulation.twoLevelProperties); %>
         <option value="2" <% if (twoSelected) { %>selected<% } %>>Two Levels</option>
         <option value="3" <% if (!twoSelected) { %>selected<% } %>>Three Levels</option>
     </select>
 
     <label class="<% if (!alwaysShowLampViewOptions) { %>three-level-options<% } %>">Lamp View</label>
-    <select class="lamp-view-select <% if (!alwaysShowLampViewOptions) { %>three-level-options<% } %>">
+    <select class="lamp-view-select <% if (!alwaysShowLampViewOptions) { % class="form-select">three-level-options<% } %>">
         <% var photonsSelected = (simulation.get('pumpingPhotonViewMode') === Constants.PHOTON_DISCRETE); %>
         <option value="photons" <% if (photonsSelected) { %>selected<% } %>>Photons</option>
         <option value="beam" <% if (!photonsSelected) { %>selected<% } %>>Beam</option>
     </select>
 
     <label class="three-level-options">Lower Transition</label>
-    <select class="lower-transition-select three-level-options">
+    <select class="lower-transition-select three-level-options" class="form-select">
         <option value="photons">Photons</option>
         <option value="wave">Wave View</option>
     </select>

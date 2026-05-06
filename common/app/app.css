@@ -1489,7 +1489,7 @@ blockquote .small:before {
   content: "\2014 \00A0";
 }
 .blockquote-reverse,
-blockquote.pull-right {
+blockquote.float-end {
   padding-right: 15px;
   padding-left: 0;
   text-align: right;
@@ -1497,19 +1497,19 @@ blockquote.pull-right {
   border-left: 0;
 }
 .blockquote-reverse footer:before,
-blockquote.pull-right footer:before,
+blockquote.float-end footer:before,
 .blockquote-reverse small:before,
-blockquote.pull-right small:before,
+blockquote.float-end small:before,
 .blockquote-reverse .small:before,
-blockquote.pull-right .small:before {
+blockquote.float-end .small:before {
   content: "";
 }
 .blockquote-reverse footer:after,
-blockquote.pull-right footer:after,
+blockquote.float-end footer:after,
 .blockquote-reverse small:after,
-blockquote.pull-right small:after,
+blockquote.float-end small:after,
 .blockquote-reverse .small:after,
-blockquote.pull-right .small:after {
+blockquote.float-end .small:after {
   content: "\00A0 \2014";
 }
 address {
@@ -3141,56 +3141,56 @@ a.btn.disabled,
 fieldset[disabled] a.btn {
   pointer-events: none;
 }
-.btn-default {
+.btn-secondary {
   color: #333;
   background-color: #fff;
   border-color: #ccc;
 }
-.btn-default:focus,
-.btn-default.focus {
+.btn-secondary:focus,
+.btn-secondary.focus {
   color: #333;
   background-color: #e6e6e6;
   border-color: #8c8c8c;
 }
-.btn-default:hover {
+.btn-secondary:hover {
   color: #333;
   background-color: #e6e6e6;
   border-color: #adadad;
 }
-.btn-default:active,
-.btn-default.active,
-.open > .dropdown-toggle.btn-default {
+.btn-secondary:active,
+.btn-secondary.active,
+.open > .dropdown-toggle.btn-secondary {
   color: #333;
   background-color: #e6e6e6;
   background-image: none;
   border-color: #adadad;
 }
-.btn-default:active:hover,
-.btn-default.active:hover,
-.open > .dropdown-toggle.btn-default:hover,
-.btn-default:active:focus,
-.btn-default.active:focus,
-.open > .dropdown-toggle.btn-default:focus,
-.btn-default:active.focus,
-.btn-default.active.focus,
-.open > .dropdown-toggle.btn-default.focus {
+.btn-secondary:active:hover,
+.btn-secondary.active:hover,
+.open > .dropdown-toggle.btn-secondary:hover,
+.btn-secondary:active:focus,
+.btn-secondary.active:focus,
+.open > .dropdown-toggle.btn-secondary:focus,
+.btn-secondary:active.focus,
+.btn-secondary.active.focus,
+.open > .dropdown-toggle.btn-secondary.focus {
   color: #333;
   background-color: #d4d4d4;
   border-color: #8c8c8c;
 }
-.btn-default.disabled:hover,
-.btn-default[disabled]:hover,
-fieldset[disabled] .btn-default:hover,
-.btn-default.disabled:focus,
-.btn-default[disabled]:focus,
-fieldset[disabled] .btn-default:focus,
-.btn-default.disabled.focus,
-.btn-default[disabled].focus,
-fieldset[disabled] .btn-default.focus {
+.btn-secondary.disabled:hover,
+.btn-secondary[disabled]:hover,
+fieldset[disabled] .btn-secondary:hover,
+.btn-secondary.disabled:focus,
+.btn-secondary[disabled]:focus,
+fieldset[disabled] .btn-secondary:focus,
+.btn-secondary.disabled.focus,
+.btn-secondary[disabled].focus,
+fieldset[disabled] .btn-secondary.focus {
   background-color: #fff;
   border-color: #ccc;
 }
-.btn-default .badge {
+.btn-secondary .badge {
   color: #fff;
   background-color: #333;
 }
@@ -3596,7 +3596,7 @@ tbody.collapse.in {
   -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
 }
-.dropdown-menu.pull-right {
+.dropdown-menu.float-end {
   right: 0;
   left: auto;
 }
@@ -3672,7 +3672,7 @@ tbody.collapse.in {
   left: 0;
   z-index: 990;
 }
-.pull-right > .dropdown-menu {
+.float-end > .dropdown-menu {
   right: 0;
   left: auto;
 }
@@ -5259,11 +5259,11 @@ a.thumbnail.active {
   max-width: none;
 }
 .media-right,
-.media > .pull-right {
+.media > .float-end {
   padding-left: 10px;
 }
 .media-left,
-.media > .pull-left {
+.media > .float-start {
   padding-right: 10px;
 }
 .media-left,
@@ -6266,7 +6266,7 @@ button.close {
   border-right-width: 0;
   border-left-color: #fff;
 }
-.popover-title {
+.popover-header {
   padding: 8px 14px;
   margin: 0;
   font-size: 14px;
@@ -6274,7 +6274,7 @@ button.close {
   border-bottom: 1px solid #ebebeb;
   border-radius: 5px 5px 0 0;
 }
-.popover-content {
+.popover-body {
   padding: 9px 14px;
 }
 .carousel {
@@ -6559,10 +6559,10 @@ button.close {
   margin-right: auto;
   margin-left: auto;
 }
-.pull-right {
+.float-end {
   float: right !important;
 }
-.pull-left {
+.float-start {
   float: left !important;
 }
 .hide {

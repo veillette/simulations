@@ -4,6 +4,7 @@ define(function (require) {
 
     var $ = require('jquery');
     var _ = require('underscore');
+    var Bootstrap = require('bootstrap');
 
     var SimView = require('common/v3/app/sim');
 
@@ -17,7 +18,6 @@ define(function (require) {
 
     require('nouislider');
     require('bootstrap');
-    require('bootstrap-select');
 
     // CSS
     require('less!styles/sim');
@@ -25,7 +25,6 @@ define(function (require) {
     require('less!styles/laser-picture-dialog');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
-    require('less!bootstrap-select-less');
 
     // HTML
     var playbackControlsHtml = require('text!templates/playback-controls.html');
@@ -148,7 +147,7 @@ define(function (require) {
             this.$el.html(this.template(data));
             this.$('.sim-controls-right').append(this.optionsTemplate(data));
 
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.$reflectivitySlider = this.$('.reflectivity-slider');
             this.$reflectivitySlider.noUiSlider({
@@ -223,7 +222,7 @@ define(function (require) {
             this.updateReflectivityLabel(this.simulation.rightMirror.getReflectivity() * 100);
             this.$('.display-high-level-emitted-photons-check').prop('checked', false);
 
-            this.$('select').selectpicker('refresh');
+            this.$('select');
         },
 
         /**
@@ -251,7 +250,7 @@ define(function (require) {
         },
 
         viewLaserPictureDialog: function() {
-            this.$('.picture-dialog').modal('show');
+            Bootstrap.Modal.getOrCreateInstance(this.$('.picture-dialog')[0]).show();
         },
 
         changeEnergyLevels: function(event) {

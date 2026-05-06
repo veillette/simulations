@@ -17,14 +17,12 @@ define(function (require) {
 
     require('nouislider');
     require('bootstrap');
-    require('bootstrap-select');
 
     // CSS
     require('less!styles/sim');
     require('less!styles/playback-controls');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
-    require('less!bootstrap-select-less');
 
     // HTML
     var simHtml              = require('text!templates/sim.html');
@@ -132,7 +130,7 @@ define(function (require) {
                 dcOnly: this.dcOnly
             };
             this.$el.html(this.template(data));
-            this.$('select').selectpicker();
+            this.$('select');
         },
 
         /**

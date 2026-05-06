@@ -88,7 +88,7 @@ define(function (require) {
             this.$('.sim-controls-wrapper').append(this.dielectricTemplate(data));
 
             // Turn basic select into a nice one
-            this.$('select').selectpicker();
+            this.$('select');
 
             this.$('.dielectric-constant-slider').noUiSlider({
                 start: 5,
@@ -113,7 +113,7 @@ define(function (require) {
 
             this.$('.dielectric-material')
                 .val(0)
-                .selectpicker('refresh');
+                ;
 
             this.$('#show-all-charges').click();
 

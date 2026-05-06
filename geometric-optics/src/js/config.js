@@ -7,15 +7,13 @@
             underscore:           '../../node_modules/underscore/underscore',
             underscoreDeepExtend: '../../bower_components/underscore-deep-extend/index',
             backbone:             '../../node_modules/backbone/backbone',
-            bootstrap:            '../../node_modules/bootstrap/dist/js/bootstrap.min',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
             text:                 '../../node_modules/requirejs-text/text',
             pixi:                 '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider:           '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
 
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
-            'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
-            'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
 
             views:      '../js/views',
             models:     '../js/models',
@@ -48,9 +46,6 @@
         shim: {
             'pixi': {
                 exports: 'PIXI'
-            },
-            'bootstrap-select': {
-                deps: ['jquery']
             }
         },
     };

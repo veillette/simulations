@@ -6,7 +6,7 @@
             jquery:     '../../../faraday/node_modules/jquery/dist/jquery',
             underscore: '../../../faraday/node_modules/underscore/underscore',
             backbone:   '../../../faraday/node_modules/backbone/backbone',
-            bootstrap:  '../../../faraday/bower_components/bootstrap/dist/js/bootstrap.min',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
             text:       '../../../faraday/bower_components/requirejs-text/text',
             pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../../faraday/bower_components/nouislider/distribute/jquery.nouislider.all.min',
@@ -14,8 +14,6 @@
 
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
-            'bootstrap-select':      '../../../faraday/node_modules/bootstrap-select/js/bootstrap-select',
-            'bootstrap-select-less': '../../../faraday/node_modules/bootstrap-select/less/bootstrap-select',
 
             local:            './',
             views:            '../../../faraday/src/js/views',
@@ -50,9 +48,6 @@
         shim: {
             'pixi': {
                 exports: 'PIXI'
-            },
-            'bootstrap-select': {
-                deps: ['jquery']
             }
         },
     };
