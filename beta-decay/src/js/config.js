@@ -56,11 +56,12 @@
         },
     };
 
-    // Expose to the rest of the world 
-    if (typeof module !== 'undefined') { 
-        module.exports = config; // For nodejs 
-    } 
-    else if (typeof require.config !== 'undefined') { 
-        require.config(config); // For requirejs 
+    // Dual export: CJS for Gruntfile (Node), RequireJS config for browser AMD loader.
+    // ESM migration: replace this block with `export default config;` and update
+    // main.js to use static `import` instead of `require(['config'], ...)`.
+    if (typeof module !== 'undefined') {
+        module.exports = config;
+    } else if (typeof require !== 'undefined' && require.config) {
+        require.config(config);
     }
 })();

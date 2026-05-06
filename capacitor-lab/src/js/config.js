@@ -6,8 +6,8 @@
             jquery:     '../../node_modules/jquery/dist/jquery',
             underscore: '../../node_modules/underscore/underscore',
             backbone:   '../../node_modules/backbone/backbone',
-            bootstrap:  '../../bower_components/bootstrap/dist/js/bootstrap.min',
-            text:       '../../bower_components/requirejs-text/text',
+            bootstrap:  '../../node_modules/bootstrap/dist/js/bootstrap.bundle.min',
+            text:       '../../node_modules/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             
@@ -53,11 +53,12 @@
         },
     };
 
-    // Expose to the rest of the world 
-    if (typeof module !== 'undefined') { 
-        module.exports = config; // For nodejs 
-    } 
-    else if (typeof require.config !== 'undefined') { 
-        require.config(config); // For requirejs 
+    // Dual export: CJS for Gruntfile (Node), RequireJS config for browser AMD loader.
+    // ESM migration: replace this block with `export default config;` and update
+    // main.js to use static `import` instead of `require(['config'], ...)`.
+    if (typeof module !== 'undefined') {
+        module.exports = config;
+    } else if (typeof require !== 'undefined' && require.config) {
+        require.config(config);
     }
 })();
