@@ -2,13 +2,8 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
-    var Rectangle          = require('common/math/rectangle');
 
     var NuclearPhysicsSceneView = require('views/scene');
 
@@ -19,7 +14,6 @@ define(function(require) {
     var VolcanoLandscapeView                = require('radioactive-dating-game/views/landscape/volcano');
 
     var Constants = require('constants');
-    var Assets = require('assets');
 
     // CSS
     require('less!radioactive-dating-game/styles/scene');

@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var Colors = require('common/colors/colors');
 
     var WaveView = require('views/wave');
 

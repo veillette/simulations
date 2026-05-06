@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
@@ -16,7 +15,6 @@ define(function(require) {
     var BodyTraceView = require('views/body-trace');
     var CollisionView = require('views/collision');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

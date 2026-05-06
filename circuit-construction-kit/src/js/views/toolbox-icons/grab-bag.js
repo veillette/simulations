@@ -12,7 +12,6 @@ define(function(require) {
     var GrabBagResistorView  = require('views/components/grab-bag-resistor');
     var ComponentToolboxIcon = require('views/component-toolbox-icon');
 
-    var Constants = require('constants');
     var Assets    = require('assets');
 
     /**

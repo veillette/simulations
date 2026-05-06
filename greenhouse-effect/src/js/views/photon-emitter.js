@@ -2,13 +2,11 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
 
     var PixiView   = require('common/v3/pixi/view');
     var SliderView = require('common/v3/pixi/view/slider');
-    var Colors     = require('common/colors/colors');
 
     var PhotonAbsorptionSimulation = require('models/simulation/photon-absorption');
 

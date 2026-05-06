@@ -1,5 +1,7 @@
 define(function(require) {
 
+  'use strict';
+
   var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
 
   var SumVectorYViewModel = DraggableArrowView.ArrowViewModel.extend({

@@ -9,7 +9,6 @@ define(function(require) {
     var ObjectReservoir = require('views/object-reservoir');
     var SensorView      = require('views/sensor');
 
-    var Constants = require('constants');
 
     /**
      * The E-Field sensor reservoir

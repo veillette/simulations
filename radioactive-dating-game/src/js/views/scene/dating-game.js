@@ -2,27 +2,20 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
     var buzz = require('buzz');
 
     var AppView            = require('common/v3/app/app');
-    var ModelViewTransform = require('common/math/model-view-transform');
     var Vector2            = require('common/math/vector2');
-    var Rectangle          = require('common/math/rectangle');
 
     var NuclearPhysicsSceneView = require('views/scene');
 
     var PrePopulatedDecayProportionChartView = require('radioactive-dating-game/views/decay-proportion-chart/pre-populated');
     var RadiometricDatingMeterView           = require('radioactive-dating-game/views/radiometric-dating-meter');
-    var LandscapeView                        = require('radioactive-dating-game/views/landscape');
     var DatingGameLandscapeView              = require('radioactive-dating-game/views/landscape/dating-game');
     var DatableItemView                      = require('radioactive-dating-game/views/datable-item');
     var AnswerInputView                      = require('radioactive-dating-game/views/answer-input');
     var AnswerLabelView                      = require('radioactive-dating-game/views/answer-label');
 
-    var Constants = require('constants');
-    var Assets = require('assets');
 
     // CSS
     require('less!radioactive-dating-game/styles/scene');

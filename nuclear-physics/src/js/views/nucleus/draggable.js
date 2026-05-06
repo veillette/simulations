@@ -4,7 +4,6 @@ define(function(require) {
 
     var _ = require('underscore');
 
-    var PIXI = require('pixi');
 
     var ExplodingNucleusView = require('views/nucleus/exploding');
 

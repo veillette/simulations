@@ -2,15 +2,12 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var FaradaySceneView = require('views/scene');
     var WiggleMeView     = require('views/wiggle-me');
     var EarthView        = require('views/earth');
 
-    var Constants = require('constants');
 
-    var Assets = require('assets');
 
     /**
      *

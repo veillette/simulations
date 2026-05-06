@@ -67,7 +67,7 @@ define(function (require) {
             else {
                 // If air resistance is so large that results are unphysical, then reduce time step
                 if (this.B * this.v * dt > 0.25)
-                    dt /= (B * this.v * dt / 0.25);
+                    dt /= (this.B * this.v * dt / 0.25);
 
                 t += dt;
                 this.v = Math.sqrt(this.vX * this.vX + this.vY * this.vY);

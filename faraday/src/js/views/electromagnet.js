@@ -11,9 +11,7 @@ define(function(require) {
     var BatteryView       = require('views/battery');
     var ACPowerSupplyView = require('views/ac-power-supply');
 
-    var Assets = require('assets');
 
-    var Constants = require('constants');
 
     /**
      * View that represents the electromagnet model

@@ -2,19 +2,13 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var FaradaySceneView  = require('views/scene');
-    var CompassView       = require('views/compass');
     var ElectromagnetView = require('views/electromagnet');
 
-    var BFieldInsideView = require('views/bfield/inside');
-    var PickupCoilView   = require('views/pickup-coil');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     /**
      *

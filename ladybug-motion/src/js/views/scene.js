@@ -2,8 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
     var AppView            = require('common/v3/app/app');
@@ -14,7 +12,6 @@ define(function(require) {
     var LadybugTraceView  = require('views/ladybug-trace');
     var RemoteControlView = require('views/remote-control');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

@@ -5,16 +5,12 @@ define(function(require) {
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
     var Colors   = require('common/colors/colors');
 
-    var Projectile = require('models/projectile');
 
-    var Assets = require('assets');
 
     var Constants = require('constants');
 
-    var RADIANS_TO_DEGREES = 180 / Math.PI;
     var AIR_RESISTANCE_ENABLED_COLOR  = Colors.parseHex(Constants.TrajectoryView.AIR_RESISTANCE_ENABLED_COLOR);
     var AIR_RESISTANCE_DISABLED_COLOR = Colors.parseHex(Constants.TrajectoryView.AIR_RESISTANCE_DISABLED_COLOR);
     var SECOND_MARKER_COLOR = Colors.parseHex(Constants.TrajectoryView.SECOND_MARKER_COLOR);

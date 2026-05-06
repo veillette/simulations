@@ -6,7 +6,6 @@ define(function(require) {
     var PixiSceneView = require('common/v3/pixi/view/scene');
 
     // Constants
-    var Constants = require('constants');
 
     /**
      *

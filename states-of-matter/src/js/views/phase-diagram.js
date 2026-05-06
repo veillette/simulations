@@ -92,7 +92,6 @@ define(function(require) {
          *   while the graph is visible because of the label positioning.
          */
         drawDiagram: function() {
-            var ctx = this.context;
 
             // Graph dimensions
             var gw = this.getGraphWidth();
@@ -240,7 +239,6 @@ define(function(require) {
             ctx.fillStyle = C.GAS_COLOR;
             PIXI.drawPiecewiseCurve(ctx, gasArea, 0, 0, true, false);
 
-            var gw = this.getGraphWidth();
             var gh = this.getGraphHeight();
 
             var x = this.getGraphXOffset();

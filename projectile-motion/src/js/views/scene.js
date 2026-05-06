@@ -2,11 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var $        = require('jquery');
     var _         = require('underscore');
     var PIXI      = require('pixi');
     var Vector2   = require('common/math/vector2');
-    var Rectangle = require('common/math/rectangle');
     var Colors    = require('common/colors/colors');
 
     var ModelViewTransform = require('common/math/model-view-transform');
@@ -40,7 +38,6 @@ define(function(require) {
         BuickView
     ];
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');
@@ -224,11 +221,11 @@ define(function(require) {
             this.targetView.updateMVT(mvt);
             this.davidView.updateMVT(mvt);
 
-            for (i = this.projectileViews.length - 1; i >= 0; i--)
+            for (var i = this.projectileViews.length - 1; i >= 0; i--)
                 this.projectileViews[i].updateMVT(mvt);
 
-            for (i = this.trajectoryViews.length - 1; i >= 0; i--)
-                this.trajectoryViews[i].updateMVT(mvt);
+            for (var j = this.trajectoryViews.length - 1; j >= 0; j--)
+                this.trajectoryViews[j].updateMVT(mvt);
 
             this.trigger('change:mvt', this, mvt);
         },

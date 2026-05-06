@@ -8,7 +8,6 @@ define(function (require) {
 
     var SourceObject = require('models/source-object');
 
-    var Constants = require('constants');
 
     /**
      * This class represents an image of the original object seen or

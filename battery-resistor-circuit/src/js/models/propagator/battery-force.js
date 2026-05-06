@@ -28,7 +28,6 @@ define(function (require) {
 
             var m = particle.mass;
             var v = particle.velocity;
-            var x = particle.position;
             var a = f / m;
 
             v = v + a * deltaTime;

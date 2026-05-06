@@ -3,7 +3,6 @@ define(function (require, exports, module) {
     'use strict';
 
     var _        = require('underscore');
-    var Backbone = require('backbone');
 
     var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
     var Rectangle               = require('common/math/rectangle');
@@ -13,7 +12,6 @@ define(function (require, exports, module) {
     var Earth          = require('models/earth');
     var BlackHole      = require('models/black-hole');
     var Sun            = require('models/sun');
-    var Photon         = require('models/photon-basic');
     var Thermometer    = require('models/thermometer');
     var PhotonEarthCollisionModel = require('models/collision-model/photon-earth');
 

@@ -10,7 +10,6 @@ define(function(require) {
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
 
-    var Assets = require('assets');
 
     var Constants = require('constants');
     var CONNECTOR_LINE_COLOR = Colors.parseHex(Constants.VoltageCalculationView.CONNECTOR_LINE_COLOR);
@@ -117,7 +116,6 @@ define(function(require) {
             var rightMargin        = VoltageCalculationView.CALCULATION_RIGHT_MARGIN;
             var minuendYOffset     = VoltageCalculationView.MINUEND_Y_OFFSET;
             var subtrahendYOffset  = VoltageCalculationView.SUBTRAHEND_Y_OFFSET;
-            var connectorMargin    = VoltageCalculationView.CONNECTOR_MARGIN;
             var connectorEndRadius = VoltageCalculationView.CONNECTOR_END_RADIUS;
 
             // Left connector line

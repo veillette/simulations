@@ -14,7 +14,6 @@ define(function (require) {
 
     var Constants = require('constants');
 
-    var Assets = require('assets');
 
     require('nouislider');
     require('bootstrap');
@@ -189,7 +188,6 @@ define(function (require) {
 
         resetSimulation: function() {
             // Save whether or not it was paused when we reset
-            var wasPaused = this.simulation.get('paused');
 
             // Set pause the updater and reset everything
             this.updater.pause();

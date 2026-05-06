@@ -261,8 +261,6 @@ define(function(require) {
                 else
                     return this.dataPercents[rightIndex];
             }
-
-            return returnValue;
         },
 
         getTimeText: function(time) {

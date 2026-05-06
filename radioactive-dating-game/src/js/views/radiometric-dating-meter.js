@@ -8,8 +8,6 @@ define(function(require) {
                          require('common/v3/pixi/create-drop-shadow');
                          require('common/v3/pixi/dash-to');
     var HybridView     = require('common/v3/pixi/view/hybrid');
-    var Colors         = require('common/colors/colors');
-    var Rectangle      = require('common/math/rectangle');
     var Vector2        = require('common/math/vector2');
 
     var NucleusType  = require('models/nucleus-type');
@@ -17,7 +15,6 @@ define(function(require) {
 
     var RadiometricDatingMeter = require('radioactive-dating-game/models/radiometric-dating-meter');
 
-    var Constants = require('constants');
     var Assets    = require('assets');
 
     // CSS

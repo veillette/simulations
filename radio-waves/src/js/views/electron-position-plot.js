@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
 
@@ -10,7 +9,6 @@ define(function(require) {
     var Colors         = require('common/colors/colors');
     var PiecewiseCurve = require('common/math/piecewise-curve');
 
-    var Constants = require('constants');
 
     /**
      * A view that represents an electron-position plot. Its update
@@ -73,7 +71,6 @@ define(function(require) {
         },
 
         initPanel: function() {
-            var halfWidth = this.width / 2;
 
             // Draw the shadow
             var outline = new PiecewiseCurve();
@@ -145,7 +142,6 @@ define(function(require) {
         },
 
         initAxisLabel: function() {
-            var m = this.margin;
 
             var settings = {
                 font: '11px Helvetica Neue',

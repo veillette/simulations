@@ -4,7 +4,6 @@ define(function (require) {
 
     var _ = require('underscore');
 
-    var Backbone = require('backbone');
 
     var MotionObject = require('common/models/motion-object');
     var Rectangle    = require('common/math/rectangle');

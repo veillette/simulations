@@ -9,7 +9,6 @@ define(function (require, exports, module) {
     /**
      * Constants
      */
-    var Constants = require('constants');
 
     /**
      * Wraps the update function in

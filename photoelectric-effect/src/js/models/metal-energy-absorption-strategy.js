@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var EnergyAbsorptionStrategy = require('common/quantum/models/energy-absorption-strategy');
 

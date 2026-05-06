@@ -302,7 +302,6 @@ define(function(require) {
          */
         update: function() {
             if (this.model.get('enabled') && this.simulation.updated()) {
-                var amplitude    = this.model.get('amplitude');
                 var maxAmplitude = this.model.get('maxAmplitude');
                 var frequency    = this.model.get('frequency');
 

@@ -2,10 +2,8 @@ define(function (require) {
 
     'use strict';
 
-    var Vector2   = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
     var range     = require('common/math/range');
-    var Colors    = require('common/colors/colors');
 
     var Constants = {};
 

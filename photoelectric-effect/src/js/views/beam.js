@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var $    = require('jquery');
     var PIXI = require('pixi');
 
     var PixiView         = require('common/v3/pixi/view');
@@ -91,7 +90,6 @@ define(function(require) {
         },
 
         drawLight: function() {
-            var graphics = this.lightGraphics;
             var beam = this.model;
             var color = Colors.parseHex(WavelengthColors.nmToHex(beam.get('wavelength')));
             var minLevel = 200;

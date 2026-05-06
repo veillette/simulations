@@ -3,12 +3,10 @@ define(function (require) {
     'use strict';
 
     var _        = require('underscore');
-    var Backbone = require('backbone');
     var Pool     = require('object-pool');
     var SAT      = require('sat');
 
     var Vector2          = require('common/math/vector2');
-    var PiecewiseCurve   = require('common/math/piecewise-curve');
     var LineIntersection = require('common/math/line-intersection');
     
     var pool = Pool({
@@ -219,6 +217,8 @@ define(function (require) {
         },
 
         getRayWidth: function() {
+            // PhET note: At the default transform, this yields a 4 pixel wide stroke
+            // Patrick: This will need to change.
             return 1.5992063492063494E-7;
         },
 
@@ -275,12 +275,6 @@ define(function (require) {
 
         getLastIntersectionWithCircle: function() {
             return this._satResponse;
-        },
-
-        getRayWidth: function() {
-            // PhET note: At the default transform, this yields a 4 pixel wide stroke
-            // Patrick: This will need to change.
-            return 1.5992063492063494E-7;
         },
 
         getVelocityVector: function() {

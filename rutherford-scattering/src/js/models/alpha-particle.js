@@ -2,8 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var Backbone = require('backbone');
-    var Constants = require('constants');
     var PositionableObject = require('common/models/positionable-object');
 
     var AlphaParticle = PositionableObject.extend({

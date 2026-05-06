@@ -10,7 +10,6 @@ define(function (require) {
     var HalfLifeSceneView            = require('radioactive-dating-game/views/scene/half-life');
     var HalfLifeNucleusChooserView   = require('radioactive-dating-game/views/nucleus-chooser/half-life');
 
-    var Constants = require('constants');
 
     // HTML
     var simHtml              = require('text!radioactive-dating-game/templates/multi-nucleus-sim.html');

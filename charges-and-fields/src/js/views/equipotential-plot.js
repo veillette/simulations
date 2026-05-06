@@ -7,10 +7,6 @@ define(function(require) {
     var PIXI = require('pixi');
 
     var PixiView  = require('common/v3/pixi/view');
-    var Colors    = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
-
-    var Constants = require('constants');
 
     /**
      * An equipotential plot (or a contour plot) draws a curve connecting
@@ -61,14 +57,11 @@ define(function(require) {
             var my = this.mvt.viewToModelY(this.y);
             var voltage = simulation.getV(mx, my);
 
-            var width = this.mvt.modelToViewDeltaX(simulation.get('width'));
-            var height = Math.abs(this.mvt.modelToViewDeltaY(simulation.get('height')));
 
             graphics.lineStyle(1, 0x000000, 1);
 
             var delSA = 0.05;          // Step length along equipotential in meters
             var delSB = 0.05;
-            var VFAC = Constants.VFAC; // Voltage conversion factor
             var tic = 0;
 
             var currXA = mx; // A path is clockwise movement along equipotential

@@ -9,7 +9,6 @@ define(function (require) {
     var BetaDecayLegendView         = require('beta-decay/views/legend');
     var BetaDecayNucleusChooserView = require('beta-decay/views/nucleus-chooser');
 
-    var Constants = require('constants');
 
     // CSS
     require('less!beta-decay/styles/sim');
@@ -125,7 +124,6 @@ define(function (require) {
 
         resetSimulation: function() {
             // Save whether or not it was paused when we reset
-            var wasPaused = this.simulation.get('paused');
 
             // Set pause the updater and reset everything
             this.updater.pause();

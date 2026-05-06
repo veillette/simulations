@@ -17,7 +17,6 @@ define(function(require) {
     var IntensityMeterView = require('views/intensity-meter');
     var ProtractorView     = require('views/protractor');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

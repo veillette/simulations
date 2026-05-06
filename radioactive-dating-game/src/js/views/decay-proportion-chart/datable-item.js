@@ -9,13 +9,11 @@ define(function(require) {
 
     var HalfLifeInfo  = require('models/half-life-info');
     var NucleusType   = require('models/nucleus-type');
-    var AtomicNucleus = require('models/atomic-nucleus');
 
     var IsotopeSymbolGenerator = require('views/isotope-symbol-generator');
 
     var DecayProportionChartView = require('radioactive-dating-game/views/decay-proportion-chart');
 
-    var Constants = require('constants');
 
     /**
      * A panel that contains a chart showing the timeline for decay of nuclei over time.

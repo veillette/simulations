@@ -282,7 +282,6 @@ define(function(require) {
             if (exploded) {
                 this.$button.show();
 
-                var containerHeightAtExplosion = simulation.get('particleContainerHeight');
                 this.rotationAmount = Math.PI / 100 + (Math.random() * Math.PI / 50);
                 if (Math.random() > 0.5)
                     this.rotationAmount *= -1;

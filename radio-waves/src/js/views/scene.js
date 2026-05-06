@@ -2,8 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
     var AppView            = require('common/v3/app/app');
@@ -195,7 +193,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             if (!paused) {
-
+                void time;
             }
         },
 

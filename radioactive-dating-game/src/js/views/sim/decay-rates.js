@@ -10,7 +10,6 @@ define(function (require) {
     var DecayRatesSceneView          = require('radioactive-dating-game/views/scene/decay-rates');
     var DecayRatesNucleusChooserView = require('radioactive-dating-game/views/nucleus-chooser/decay-rates');
 
-    var Constants = require('constants');
 
     // HTML
     var simHtml              = require('text!radioactive-dating-game/templates/multi-nucleus-sim.html');

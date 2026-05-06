@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var CompositeAtomicNucleus = require('models/nucleus/composite');
 

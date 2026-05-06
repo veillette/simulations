@@ -2,14 +2,12 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var BaseGreenhouseSceneView = require('views/scene/base-greenhouse');
     var GlassPaneView           = require('views/glass-pane');
 
     var Assets    = require('assets');
-    var Constants = require('constants');
 
     /**
      * Scene view fro the Greenhouse Effect tab

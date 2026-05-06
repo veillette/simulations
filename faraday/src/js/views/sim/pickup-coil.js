@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var $ = require('jquery');
     var _ = require('underscore');
 
     var PickupCoilSimulation = require('models/simulation/pickup-coil');
@@ -10,7 +9,6 @@ define(function (require) {
     var FaradaySimView      = require('views/sim');
     var PickupCoilSceneView = require('views/scene/pickup-coil');
 
-    var Constants = require('constants');
 
     /**
      *

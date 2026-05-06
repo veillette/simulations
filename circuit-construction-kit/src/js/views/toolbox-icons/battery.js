@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var Vector2 = require('common/math/vector2');
 
@@ -13,7 +12,6 @@ define(function(require) {
     var BatteryView          = require('views/components/battery');
     var ComponentToolboxIcon = require('views/component-toolbox-icon');
 
-    var Constants = require('constants');
     var Assets    = require('assets');
 
     /**

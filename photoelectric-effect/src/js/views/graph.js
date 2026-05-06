@@ -233,7 +233,6 @@ define(function(require) {
             }
 
             if (this.y.showNumbers) {
-                var startY = this.y.start;
                 var stepY = this.y.step;
                 for (y = originY; y >= originY - height; y -= gridCellHeight) {
                     ctx.moveTo(originX + xZeroOffset - halfTick,   y);

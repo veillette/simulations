@@ -9,7 +9,6 @@ define(function(require) {
                          require('common/v3/pixi/draw-stick-arrow');
                          require('common/v3/pixi/draw-arrow');
                          require('common/v3/pixi/dash-to');
-    var AppView        = require('common/v3/app/app');
     var PixiView       = require('common/v3/pixi/view');
     var Colors         = require('common/colors/colors');
     var Rectangle      = require('common/math/rectangle');
@@ -420,7 +419,6 @@ define(function(require) {
          */
         updateHalfLifeMarker: function() {
             // Position the marker for the half life.
-            var halfLife = this.simulation.get('halfLife');
             var halfLifeMarkerX = this.getHalfLifeX();
 
             this.halfLifeMarker.x = halfLifeMarkerX;

@@ -13,7 +13,6 @@ define(function(require) {
     var SpringView = require('views/spring');
     var BodyView   = require('views/body');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

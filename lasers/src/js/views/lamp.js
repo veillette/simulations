@@ -74,7 +74,6 @@ define(function(require) {
         },
 
         drawLight: function() {
-            var graphics = this.lightGraphics;
             var color = Colors.parseHex(WavelengthColors.nmToHex(this.model.get('wavelength')));
 
             this.lampLightGraphics.clear();

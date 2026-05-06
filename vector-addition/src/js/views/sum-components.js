@@ -4,7 +4,6 @@ define(function(require) {
 
   var PIXI = require('pixi');
   var PixiView = require('common/v3/pixi/view');
-  var Simulation = require('models/simulation');
   var Constants = require('constants');
 
   var SumComponentsStyles = PixiView.extend({

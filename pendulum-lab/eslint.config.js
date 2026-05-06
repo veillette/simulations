@@ -11,8 +11,12 @@ module.exports = [
             sourceType: 'script',
             globals: {
                 ...globals.browser,
+                ...globals.jquery,
+                _: 'readonly',
+                Backbone: 'readonly',
                 require: 'readonly',
                 define: 'readonly',
+                module: 'readonly',
             },
         },
         rules: {

@@ -6,7 +6,6 @@ define(function(require) {
 
     var PIXI = require('pixi');
 
-    var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Colors      = require('common/colors/colors');
 
     var RectangularComponentView = require('views/components/rectangular');

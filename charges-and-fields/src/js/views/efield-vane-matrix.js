@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var PIXI = require('pixi');
 
@@ -39,7 +38,6 @@ define(function(require) {
             var arrowHeadLength = this.mvt.modelToViewDeltaX(EFieldVaneMatrix.ARROW_HEAD_LENGTH);
 
             var halfLength = arrowLength / 2;
-            var halfWidth = arrowHeadWidth / 2;
 
             var arrowViewModel = new ArrowView.ArrowViewModel({
                 targetX: arrowLength,
@@ -51,7 +49,6 @@ define(function(require) {
             var yOffset = this.mvt.modelToViewY(0) + spacing / 2;
             var cols = this.mvt.modelToViewDeltaX(this.simulation.get('width'))  / spacing + 1;
             var rows = this.mvt.modelToViewDeltaX(this.simulation.get('height')) / spacing + 1;
-            var totalArrows = cols * rows;
 
             this.arrowContainers = [];
             for (var r = 0; r < rows; r++) {

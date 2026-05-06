@@ -262,7 +262,6 @@ define(function (require) {
 
         resetSimulation: function() {
             // Save whether or not it was paused when we reset
-            var wasPaused = this.simulation.get('paused');
 
             // Set pause the updater and reset everything
             this.updater.pause();

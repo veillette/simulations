@@ -229,7 +229,6 @@ define(function(require) {
 
             var percentage;
             var wavelength;
-            var color;
             var uvStop = originX + this.uvWidth;
             var irStart = originX + width - this.irWidth;
             var spectrumWidth = irStart - uvStop;

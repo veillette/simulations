@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI      = require('pixi');
     var PixiView  = require('common/v3/pixi/view');
     var Assets    = require('assets');
     var Constants = require('constants');

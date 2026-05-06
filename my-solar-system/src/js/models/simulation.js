@@ -315,17 +315,14 @@ define(function (require, exports, module) {
             var posCM = new Vector2(posXCM, posYCM);
 
             var largerMass = Math.max(bodyA.mass, bodyB.mass);
-            var indexToHide;
             var bigBody;
             var smallBody;
 
             if (largerMass == bodyA.mass){
-                indexToHide = body2Index;
                 bigBody = bodyA;
                 smallBody = bodyB;
             }
             else {
-                indexToHide = body1Index;
                 bigBody = bodyB;
                 smallBody = bodyA;
             }

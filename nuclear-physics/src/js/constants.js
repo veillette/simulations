@@ -23,7 +23,6 @@ define(function (require) {
     //----------------------------------------------------------------------------
     var defaultColor   = '#ff0';
     var decayedColor   = '#fff';
-    var alternateColor = '#0f0';
 
     // Color for the isotope labels used for the nucleus views.
     Constants.POLONIUM_LABEL_COLOR                  = defaultColor;

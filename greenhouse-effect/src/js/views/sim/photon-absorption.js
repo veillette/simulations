@@ -15,7 +15,6 @@ define(function (require) {
     var MoleculeView               = require('views/molecule');
 
     var CH4 = require('models/molecule/ch4');
-    var CO  = require('models/molecule/co');
     var CO2 = require('models/molecule/co2');
     var H2O = require('models/molecule/h2o');
     var N2  = require('models/molecule/n2');

@@ -8,7 +8,6 @@ define(function(require) {
 
     var MediumControlsView  = require('views/medium-controls');
 
-    var Constants = require('constants');
 
     var defineInputUpdateLocks = require('common/locks/define-locks');
 

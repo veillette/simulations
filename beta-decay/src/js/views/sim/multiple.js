@@ -9,7 +9,6 @@ define(function (require) {
     var BetaDecaySimView               = require('beta-decay/views/sim');
     var MultiNucleusBetaDecaySceneView = require('beta-decay/views/scene/multiple');
 
-    var Constants = require('constants');
 
     /**
      * Multiple Atoms tab

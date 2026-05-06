@@ -10,7 +10,6 @@ define(function (require) {
     var FaradaySimView     = require('views/sim');
     var BarMagnetSceneView = require('views/scene/bar-magnet');
 
-    var Constants = require('constants');
 
     /**
      * This is the umbrella view for everything in a simulation tab.

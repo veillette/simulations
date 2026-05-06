@@ -3,6 +3,8 @@ define(function (require) {
   'use strict';
 
   var Simulation = require('common/simulation/simulation');
+  var _            = require('underscore');
+  var Backbone     = require('backbone');
   var VectorsViewModel = require('models/vectors');
   var Constants = require('constants');
 

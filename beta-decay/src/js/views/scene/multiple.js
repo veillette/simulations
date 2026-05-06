@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
@@ -13,7 +12,6 @@ define(function(require) {
     var Electron     = require('models/electron');
     var Antineutrino = require('models/antineutrino');
 
-    var ParticleGraphicsGenerator     = require('views/particle-graphics-generator');
     var MultipleNucleusDecayChart     = require('views/nucleus-decay-chart/multiple');
     var NuclearPhysicsSceneView       = require('views/scene');
     var AtomCanisterView              = require('views/atom-canister');

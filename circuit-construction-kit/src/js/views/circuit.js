@@ -10,7 +10,6 @@ define(function(require) {
 
     var Battery         = require('models/components/battery');
     var Resistor        = require('models/components/resistor');
-    var Filament        = require('models/components/filament');
     var Bulb            = require('models/components/bulb');
     var SeriesAmmeter   = require('models/components/series-ammeter');
     var Switch          = require('models/components/switch');

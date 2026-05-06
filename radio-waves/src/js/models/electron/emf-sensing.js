@@ -3,7 +3,6 @@ define(function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var Vector2 = require('common/math/vector2');
 
@@ -48,7 +47,6 @@ define(function (require) {
                 //   electron, multiplied by -1, because the second derivative of a sine or cosine is
                 //   also a sine or cosine
                 if (this.sourceElectron.getMovementTypeAt(location) instanceof SinusoidalMovementStrategy) {
-                    var d = this.sourceElectron.getPositionAt(location);
                     var dy = (this.sourceElectron.getPositionAt(location) - this.startPosition.y) * 0.4;
                     location.set(location.x, this.startPosition.y + dy);
                 }

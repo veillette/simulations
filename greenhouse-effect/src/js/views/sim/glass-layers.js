@@ -2,14 +2,12 @@ define(function (require) {
 
     'use strict';
 
-    var $ = require('jquery');
     var _ = require('underscore');
 
     var GlassLayersSimulation = require('models/simulation/glass-layers');
     var GlassLayersSceneView  = require('views/scene/glass-layers');
     var BaseGreenhouseSimView = require('views/sim/base-greenhouse');
 
-    var Constants = require('constants');
 
     // HTML
     var simHtml = require('text!templates/sim-glass-layers.html');

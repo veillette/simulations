@@ -9,7 +9,6 @@ define(function(require) {
 
     var Assets = require('assets');
 
-    var Constants = require('constants');
 
     /**
      *

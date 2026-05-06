@@ -8,7 +8,6 @@ define(function(require) {
     var Colors = require('common/colors/colors');
 
     var HalfLifeInfo  = require('models/half-life-info');
-    var NucleusType   = require('models/nucleus-type');
     var AtomicNucleus = require('models/atomic-nucleus');
 
     var IsotopeSymbolGenerator = require('views/isotope-symbol-generator');
@@ -146,7 +145,6 @@ define(function(require) {
             graphics.clear();
             graphics.lineStyle(1, 0x000000, 1);
 
-            var nucleusType = this.simulation.get('nucleusType');
 
             var isotope1Color = this.isotope1Color;
             var isotope2Color = this.isotope2Color;

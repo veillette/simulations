@@ -324,7 +324,8 @@ define(function (require) {
                 }
                 this.$expressionGroup.removeClass('error');
             }
-            catch (e) {
+            catch (err) {
+                void err;
                 this.$expressionGroup.addClass('error');
             }
         },

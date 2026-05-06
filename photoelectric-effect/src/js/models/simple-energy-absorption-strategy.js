@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');
 

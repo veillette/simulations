@@ -6,7 +6,6 @@ define(function (require, exports, module) {
     var Backbone = require('backbone');
 
     var Rectangle  = require('common/math/rectangle');
-    var Vector2    = require('common/math/vector2');
 
     var BaseGreenhouseSimulation  = require('models/simulation/base-greenhouse');
     var Earth                     = require('models/earth');
@@ -17,7 +16,6 @@ define(function (require, exports, module) {
     /**
      * Constants
      */
-    var Constants = require('constants');
 
     /**
      * The simulation model for the "Greenhouse Effect" tab

@@ -52,7 +52,7 @@ define(function (require) {
             var dt = deltaTime;
 
             // New orientation
-            this.set('theta', this.get('theta') + dt * omega + dt * dt * this.get('alpha') / 2);
+            this.set('theta', this.get('theta') + dt * this.get('omega') + dt * dt * this.get('alpha') / 2);
 
             // New angular velocity
             this.set('omega', this.get('omega') + dt * (this.get('alpha') + this.get('previousAlpha')) / 2);

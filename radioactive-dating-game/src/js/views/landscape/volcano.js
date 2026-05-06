@@ -5,7 +5,6 @@ define(function(require) {
     var PIXI = require('pixi');
     var buzz = require('buzz');
 
-    var AppView = require('common/v3/app/app');
 
     var AgingRock = require('radioactive-dating-game/models/datable-item/aging-rock');
 

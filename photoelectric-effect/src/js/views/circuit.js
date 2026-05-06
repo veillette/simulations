@@ -2,9 +2,7 @@ define(function(require) {
 
     'use strict';
 
-    var $          = require('jquery');
     var PIXI       = require('pixi');
-    var NoUiSlider = require('nouislider');
 
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');

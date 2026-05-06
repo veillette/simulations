@@ -7,11 +7,8 @@ define(function(require) {
 
 
     var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
     require('common/v3/pixi/dash-to');
 
-    var Assets = require('assets');
-    var Constants = require('constants');
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     /**

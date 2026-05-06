@@ -16,7 +16,6 @@ define(function(require) {
     var BallTraceView  = require('views/ball-trace');
     var MomentaDiagram = require('views/momenta-diagram');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

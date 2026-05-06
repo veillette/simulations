@@ -3,6 +3,7 @@ define(function (require) {
     'use strict';
 
     var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
+    var GroundState           = require('common/quantum/models/ground-state');
 
     /**
      * An energy emission strategy that always sets the atom to the ground state

@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
@@ -14,7 +13,6 @@ define(function(require) {
     var PhotonView        = require('views/photon');
     var PhotonEmitterView = require('views/photon-emitter');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
@@ -23,7 +22,6 @@ define(function(require) {
     var EFieldVaneMatrix        = require('views/efield-vane-matrix');
     var ScaleLegend             = require('views/scale-legend');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

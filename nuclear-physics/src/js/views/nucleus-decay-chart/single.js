@@ -7,14 +7,10 @@ define(function(require) {
 
     var Colors = require('common/colors/colors');
 
-    var HalfLifeInfo  = require('models/half-life-info');
-    var NucleusType   = require('models/nucleus-type');
-    var AtomicNucleus = require('models/atomic-nucleus');
     var TimeFormatter = require('models/time-formatter');
 
     var NucleusDecayChart = require('views/nucleus-decay-chart');
 
-    var Constants = require('constants');
 
 
     /**

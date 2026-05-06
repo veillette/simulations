@@ -5,8 +5,6 @@ define(function (require, exports, module) {
     var _        = require('underscore');
     var Backbone = require('backbone');
 
-    var Rectangle  = require('common/math/rectangle');
-    var Vector2    = require('common/math/vector2');
 
     var BaseGreenhouseSimulation      = require('models/simulation/base-greenhouse');
     var GlassLayersEarth              = require('models/earth-glass-layers');

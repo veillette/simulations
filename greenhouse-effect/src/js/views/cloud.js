@@ -2,13 +2,11 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
 
     var PixiView = require('common/v3/pixi/view');
 
-    var Constants = require('constants');
 
     /**
      * A view that represents a cloud

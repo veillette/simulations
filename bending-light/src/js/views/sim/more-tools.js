@@ -3,14 +3,12 @@ define(function(require) {
     'use strict';
 
     var _        = require('underscore');
-    var Backbone = require('backbone');
 
     var MoreToolsSimulation = require('models/simulation/more-tools');
 
     var IntroSimView        = require('views/sim/intro');
     var MoreToolsSceneView  = require('views/scene/more-tools');
     var LaserControlsView   = require('views/laser-controls');
-    var WaveSensorView      = require('views/wave-sensor');
 
     var simHtml = require('text!templates/sim/more-tools.html');
 

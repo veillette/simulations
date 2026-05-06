@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
 
@@ -14,7 +13,6 @@ define(function(require) {
 
     var Constants = require('constants');
 
-    var Assets = require('assets');
 
     /**
      * A view that represents an atom

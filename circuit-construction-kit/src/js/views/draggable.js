@@ -6,10 +6,8 @@ define(function(require) {
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
     var Colors   = require('common/colors/colors');
 
-    var CircuitInteraction = require('models/circuit-interaction');
 
     var Constants = require('constants');
 

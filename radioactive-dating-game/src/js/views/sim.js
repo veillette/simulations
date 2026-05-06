@@ -6,7 +6,6 @@ define(function (require) {
 
     var NuclearPhysicsSimView = require('views/sim');
 
-    var Constants = require('constants');
 
     // CSS
     require('less!radioactive-dating-game/styles/sim');

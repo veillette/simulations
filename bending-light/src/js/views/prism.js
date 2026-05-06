@@ -11,16 +11,10 @@ define(function(require) {
     var Vector2  = require('common/math/vector2');
 
     var RotationHandle = require('views/rotation-handle');
-    var createReverseCircleMask = require('views/create-reverse-circle-mask');
 
-    var Polygon           = require('models/shape/polygon');
     var Circle            = require('models/shape/circle');
-    var ShapeIntersection = require('models/shape/shape-intersection');
-    var ShapeDifference   = require('models/shape/shape-difference');
 
-    var Constants = require('constants');
 
-    var Assets = require('assets');
 
     /**
      *

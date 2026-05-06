@@ -4,7 +4,6 @@ define(function (require, exports, module) {
 
     var _ = require('underscore');
 
-    var AppView           = require('common/v3/app/app');
     var VanillaCollection = require('common/collections/vanilla');
 
     var NuclearPhysicsSimulation        = require('models/simulation');

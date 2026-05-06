@@ -2,12 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
 
                              require('common/v3/pixi/dash-to');
     var PixiToImage        = require('common/v3/pixi/pixi-to-image');
-    var Colors             = require('common/colors/colors');
     var ModelViewTransform = require('common/math/model-view-transform');
     var Vector2            = require('common/math/vector2');
 
@@ -15,16 +12,11 @@ define(function(require) {
     var VelocitySensor = require('models/velocity-sensor');
 
     var IntroSceneView        = require('views/scene/intro');
-    var LaserView             = require('views/laser');
-    var MediumView            = require('views/medium');
-    var ProtractorView        = require('views/protractor');
     var WaveSensorView        = require('views/wave-sensor');
     var VelocitySensorView    = require('views/velocity-sensor');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     /**
      *

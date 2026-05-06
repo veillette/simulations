@@ -5,7 +5,6 @@ define(function (require, exports, module) {
     var _        = require('underscore');
     var Backbone = require('backbone');
 
-    var Vector2 = require('common/math/vector2');
 
     var ItemDatingSimulation   = require('radioactive-dating-game/models/simulation/item-dating');
     var RadiometricDatingMeter = require('radioactive-dating-game/models/radiometric-dating-meter');
@@ -210,7 +209,6 @@ define(function (require, exports, module) {
 
         getRockEmissionInterval: function() {
             var baseInterval = MeasurementSimulation.FLYING_ROCK_EMISSION_INTERVAL;
-            var deviationWindow = MeasurementSimulation.FLYING_ROCK_EMISSION_INTERVAL * MeasurementSimulation.FLYING_ROCK_EMISSION_DEVIATION;
             return baseInterval + (Math.random() * baseInterval - baseInterval / 2);
         },
 

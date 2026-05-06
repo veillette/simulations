@@ -4,7 +4,6 @@ define(function (require, exports, module) {
 
     var _ = require('underscore');
 
-    var Vector2 = require('common/math/vector2');
 
     var BaseLasersSimulation = require('models/simulation/base');
     var LaserAtom            = require('models/atom');

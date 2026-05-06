@@ -15,7 +15,6 @@ define(function(require) {
 
     var Constants = require('constants');
 
-    var silent = { silent: true };
 
     var BodyView = PixiView.extend({
 

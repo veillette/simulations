@@ -92,8 +92,10 @@ define(function(require) {
         },
 
         viewModeChanged: function(atom, viewMode) {
-            for (var key in this.subViews)
-                this.subViews[key].deactivate();
+            for (var key in this.subViews) {
+                if (Object.prototype.hasOwnProperty.call(this.subViews, key))
+                    this.subViews[key].deactivate();
+            }
 
             this.subViews[viewMode].activate();
         }

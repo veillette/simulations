@@ -19,7 +19,6 @@ define(function(require) {
     var PickupCoilView    = require('views/pickup-coil');
     var ElectromagnetView = require('views/electromagnet');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

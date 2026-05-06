@@ -90,6 +90,7 @@ export async function lintSims({
             'eslint',
             'src/**/*.js',
             '--ignore-pattern', 'src/js/lib/**/*.js',
+            '--ignore-pattern', 'src/optimized.js',
         ];
         if (fix) {
             args.push('--fix');

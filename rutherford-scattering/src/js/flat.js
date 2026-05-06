@@ -1,5 +1,6 @@
 define(function (require, exports, module) {
-module.exports = function pointInPolygonFlat(point, vs, start, end) {
+    'use strict';
+    module.exports = function pointInPolygonFlat(point, vs, start, end) {
     var x = point[0], y = point[1];
     var inside = false;
     if (start === undefined) start = 0;

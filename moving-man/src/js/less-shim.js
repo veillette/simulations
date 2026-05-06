@@ -1,4 +1,5 @@
 define(['css'], function(css) {
+    'use strict';
     return {
         normalize: function(name, normalize) {
             if (name.substr(name.length - 5) === '.less')

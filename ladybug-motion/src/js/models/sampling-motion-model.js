@@ -58,7 +58,6 @@ define(function (require) {
         },
 
         updateAverages: function() {
-            var numPoints = this.numPoints;
             var numPointsAveraged = this.numPointsAveraged;
             var averagesLength = this.lengthOfAveragesArray();
 

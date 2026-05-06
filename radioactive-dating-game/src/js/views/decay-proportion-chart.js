@@ -7,15 +7,12 @@ define(function(require) {
 
                          require('common/v3/pixi/create-drop-shadow');
                          require('common/v3/pixi/dash-to');
-    var AppView        = require('common/v3/app/app');
     var PixiView       = require('common/v3/pixi/view');
     var Colors         = require('common/colors/colors');
     var Rectangle      = require('common/math/rectangle');
 
     var HalfLifeInfo  = require('models/half-life-info');
-    var AtomicNucleus = require('models/atomic-nucleus');
 
-    var IsotopeSymbolGenerator = require('views/isotope-symbol-generator');
 
     var Constants = require('constants');
 
@@ -361,10 +358,7 @@ define(function(require) {
                 var x = this.graphOriginX + (i + 1) * this.halfLife * this.msToPixelsFactor;
                 var y = this.graphOriginY - this.graphHeight;
 
-                var label = new PIXI.Text('' + (i + 1), {
-                    font: DecayProportionChartView.SMALL_LABEL_FONT,
-                    fill: this.tickColor
-                });
+                var label = new PIXI.Text('' + (i + 1), labelSettings);
 
                 label.x = x;
                 label.y = y;
@@ -392,10 +386,7 @@ define(function(require) {
             if (x <= this.graphOriginX + this.graphWidth) {
                 var graphics = this.dataGraphics;
 
-                if (this.lineMode) {
-
-                }
-                else {
+                if (!this.lineMode) {
                     var radius = this.pointRadius;
 
                     graphics.beginFill(color, 1);

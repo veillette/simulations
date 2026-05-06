@@ -6,7 +6,6 @@ define(function(require) {
     var ClipperLib = require('clipper-lib');
 
     var PixiView  = require('common/v3/pixi/view');
-    var Colors    = require('common/colors/colors');
     var Vector2   = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
 
@@ -228,7 +227,6 @@ define(function(require) {
          *   Returns false if no endpoint is within the viewport (roughly).
          */
         getRayEndpoints: function(ray, p0, p1) {
-            var vec = this._checkVec;
 
             var line = ray.extendBackwards ? ray.getExtendedLineBackwards() : ray.getExtendedLine();
 
@@ -340,7 +338,7 @@ define(function(require) {
             this.beamClipper.AddPath(this.beamSubjectPath, ClipperLib.PolyType.ptSubject, true);
             this.beamClipper.AddPath(this.beamClipPath,    ClipperLib.PolyType.ptClip,    true);
 
-            var succeeded = this.beamClipper.Execute(
+            this.beamClipper.Execute(
                 ClipperLib.ClipType.ctDifference,
                 this.beamSolutionPaths,
                 ClipperLib.PolyFillType.pftNonZero,

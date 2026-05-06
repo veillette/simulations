@@ -20,7 +20,6 @@ define(function(require) {
     var RaysView         = require('views/rays');
     var ScreenView       = require('views/screen');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

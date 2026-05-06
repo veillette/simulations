@@ -7,14 +7,11 @@ define(function(require) {
 
     var Colors = require('common/colors/colors');
 
-    var HalfLifeInfo  = require('models/half-life-info');
-    var NucleusType   = require('models/nucleus-type');
     var AtomicNucleus = require('models/atomic-nucleus');
 
     var NucleusDecayChart      = require('views/nucleus-decay-chart');
     var IsotopeSymbolGenerator = require('views/isotope-symbol-generator');
 
-    var Constants = require('constants');
 
     /**
      * A panel that contains a chart showing the timeline for decay of nuclei over time.

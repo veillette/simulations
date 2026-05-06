@@ -12,7 +12,6 @@ define(function (require, exports, module) {
     var Photon   = require('models/photon');
     var Molecule = require('models/molecule');
     var CH4      = require('models/molecule/ch4');
-    var CO       = require('models/molecule/co');
     var CO2      = require('models/molecule/co2');
     var H2O      = require('models/molecule/h2o');
     var N2       = require('models/molecule/n2');
@@ -27,12 +26,8 @@ define(function (require, exports, module) {
 
     var PHOTON_EMISSION_LOCATION    = Constants.PhotonAbsorptionSimulation.PHOTON_EMISSION_LOCATION;
     var PHOTON_EMISSION_ANGLE_RANGE = Constants.PhotonAbsorptionSimulation.PHOTON_EMISSION_ANGLE_RANGE;
-    var SINGLE_MOLECULE_LOCATION    = Constants.PhotonAbsorptionSimulation.SINGLE_MOLECULE_LOCATION;
     var PHOTON_VELOCITY             = Constants.PhotonAbsorptionSimulation.PHOTON_VELOCITY;
     var MAX_PHOTON_DISTANCE         = Constants.PhotonAbsorptionSimulation.MAX_PHOTON_DISTANCE;
-    var CONTAINMENT_AREA_WIDTH      = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_WIDTH;
-    var CONTAINMENT_AREA_HEIGHT     = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_HEIGHT;
-    var CONTAINMENT_AREA_CENTER     = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_CENTER;
     var CONTAINMENT_AREA_RECT       = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_RECT;
     var MIN_DIST_FROM_WALL_X        = Constants.PhotonAbsorptionSimulation.MIN_DIST_FROM_WALL_X = 20;
     var MIN_DIST_FROM_WALL_Y        = Constants.PhotonAbsorptionSimulation.MIN_DIST_FROM_WALL_Y = 20;

@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
     require('common/v3/pixi/dash-to');
@@ -14,7 +13,6 @@ define(function(require) {
     var ModelViewTransform = require('common/math/model-view-transform');
     var Vector2            = require('common/math/vector2');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

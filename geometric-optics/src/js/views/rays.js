@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
@@ -13,7 +12,6 @@ define(function(require) {
     var GUIDE_FILL_COLOR = Colors.parseHex(Constants.RaysView.GUIDE_FILL_COLOR);
     var GUIDE_LINE_COLOR = Colors.parseHex(Constants.RaysView.GUIDE_LINE_COLOR);
 
-    var Assets = require('assets');
 
     /**
      * Draws all the rays coming from points on the source object.
@@ -234,8 +232,6 @@ define(function(require) {
                 var N = 25; // Number of rays
                 var deltaTheta = 180 / N; // Degrees between adjacent arrays
                 var degToRad = Math.PI / 180;
-                var bottomTheta = Math.atan((Ay-By-h) / (Bx-Ax)) * 180 / Math.PI;
-                var topTheta = Math.atan((Ay-By+h) / (Bx-Ax)) * 180 / Math.PI;
                 var bottomSlope = (Ay-By-h) / (Bx-Ax);
                 var topSlope = (Ay-By+h) / (Bx-Ax);
 

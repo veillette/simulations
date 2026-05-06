@@ -14,8 +14,6 @@ define(function(require) {
     var WireView             = require('views/components/wire');
     var ComponentToolboxIcon = require('views/component-toolbox-icon');
 
-    var Constants = require('constants');
-    var Assets    = require('assets');
 
     /**
      * A visual representation of some kind of object supply.  The

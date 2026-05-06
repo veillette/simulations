@@ -262,7 +262,6 @@ define(function (require) {
         },
 
         slideAlphaEnergy: function(event) {
-            var alphaEnergy = parseInt($(event.target).val());
             // clear atoms
             this.simulation.pauseRayGun();
         },

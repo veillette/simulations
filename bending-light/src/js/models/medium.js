@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var _        = require('underscore');
     var Backbone = require('backbone');
 
     var MediumColorFactory = require('models/medium-color-factory');

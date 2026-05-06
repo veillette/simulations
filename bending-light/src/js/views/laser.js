@@ -6,16 +6,12 @@ define(function(require) {
 
     var PixiView = require('common/v3/pixi/view');
                    require('common/v3/pixi/draw-arrow');
-    var Colors   = require('common/colors/colors');
-    var range    = require('common/math/range');
     var Vector2  = require('common/math/vector2');
 
     var RotationHandle = require('views/rotation-handle');
 
     var Assets = require('assets');
 
-    var Constants = require('constants');
-    var RADIANS_TO_DEGREES = 180 / Math.PI;
 
     /**
      * A view that represents the laser and can be moved and rotated

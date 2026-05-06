@@ -10,7 +10,6 @@ define(function (require, exports, module) {
     var VanillaCollection           = require('common/collections/vanilla');
     var Vector2                     = require('common/math/vector2');
     var Tube                        = require('common/quantum/models/tube');
-    var Electron                    = require('common/quantum/models/electron-vanilla');
     var ElectronSink                = require('common/quantum/models/electron-sink');
     var ElectronSource              = require('common/quantum/models/electron-source');
     var ElectronAtomCollisionExpert = require('common/quantum/models/electron-atom-collision-expert');

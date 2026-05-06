@@ -2,7 +2,6 @@ define(function (require) {
 
     'use strict';
 
-    var $ = require('jquery');
     var _ = require('underscore');
 
     var ElectromagnetSimulation = require('models/simulation/electromagnet');
@@ -10,7 +9,6 @@ define(function (require) {
 
     var FaradaySimView = require('views/sim');
 
-    var Constants = require('constants');
 
     /**
      *

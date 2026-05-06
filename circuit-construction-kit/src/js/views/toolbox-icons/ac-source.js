@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var Vector2 = require('common/math/vector2');
 
@@ -13,7 +12,6 @@ define(function(require) {
     var ACSourceView         = require('views/components/ac-source');
     var ComponentToolboxIcon = require('views/component-toolbox-icon');
 
-    var Constants = require('constants');
     var Assets    = require('assets');
 
     /**
@@ -51,7 +49,6 @@ define(function(require) {
          * Creates a new object of whatever this icon represents
          */
         createComponentView: function(x, y) {
-            var batteryScale = 0.75;
             var L = 1;
             var H = 1;
 

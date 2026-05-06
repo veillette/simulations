@@ -12,7 +12,6 @@ define(function(require) {
     var Charge = require('models/charge');
     var ReservoirObjectView = require('views/reservoir-object');
 
-    var Constants = require('constants');
 
     /**
      * A visual representation of some kind of object supply.  The
@@ -205,7 +204,6 @@ define(function(require) {
             var w = this.width;
             var h = this.height;
             var m = this.thickness;
-            var d = this.depth;
 
             // Draw outline
             graphics.beginFill(this.destroyHighlightOutlineColor, this.destroyHighlightOutlineAlpha);

@@ -6,7 +6,6 @@ define(function (require) {
     var ClipperLib = require('clipper-lib');
 
     var BooleanShape = require('models/shape/boolean-shape');
-    var Intersection = require('models/intersection');
 
     /**
      * Creates a shape that is the intersection of two shapes.

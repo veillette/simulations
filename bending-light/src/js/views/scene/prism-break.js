@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
                              require('common/v3/pixi/dash-to');
@@ -12,16 +11,12 @@ define(function(require) {
     var Vector2            = require('common/math/vector2');
 
     var BendingLightSceneView   = require('views/scene');
-    var LaserView               = require('views/laser');
-    var MediumView              = require('views/medium');
     var PrismView               = require('views/prism');
     var IntersectionNormalsView = require('views/intersection-normals');
     var ProtractorView          = require('views/protractor');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     /**
      *

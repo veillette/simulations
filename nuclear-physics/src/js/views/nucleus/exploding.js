@@ -8,8 +8,6 @@ define(function(require) {
 
     var Colors = require('common/colors/colors');
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
-    var IsotopeSymbolGenerator    = require('views/isotope-symbol-generator');
     var NucleusView               = require('views/nucleus');
 
     var Constants = require('constants');

@@ -102,6 +102,7 @@ define(function (require) {
          * Returns a rectangle representing the bounds of the shape
          */
         getBounds: function() {
+            var radius = this.radius;
             return this._bounds.set(this.center.x - radius, this.center.y - radius, radius * 2, radius * 2);
         },
 

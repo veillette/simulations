@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var ObjectView = require('views/object');
@@ -57,6 +56,8 @@ define(function(require) {
 
             // Change the anchors for the reversing effect
             for (var key in this.pictureSprites) {
+                if (!Object.prototype.hasOwnProperty.call(this.pictureSprites, key))
+                    continue;
                 this.pictureSprites[key].anchor.x = 1 - this.pictureSprites[key].anchor.x;
                 this.pictureSprites[key].anchor.y = 1 - this.pictureSprites[key].anchor.y;
             }

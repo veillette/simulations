@@ -7,7 +7,6 @@ define(function (require, exports, module) {
 
     var Rectangle        = require('common/math/rectangle');
     var Vector2          = require('common/math/vector2');
-    var LineIntersection = require('common/math/line-intersection');
     var clamp            = require('common/math/clamp');
 
     var BendingLightSimulation = require('models/simulation');
@@ -202,7 +201,7 @@ define(function (require, exports, module) {
             this.prisms.add(prism);
         },
 
-        removePrism: function() {
+        removePrism: function(prism) {
             this.prisms.remove(prism);
         },
 

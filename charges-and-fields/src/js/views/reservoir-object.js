@@ -10,7 +10,6 @@ define(function(require) {
     var Colors    = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
 
-    var Constants = require('constants');
 
     /**
      * This is a view for any object that is stored in an object

@@ -14,7 +14,6 @@ define(function(require) {
   var TrashCanView  = require('views/trash-can');
   var SumVectorView = require('views/sum-vector');
 
-  var Assets = require('assets');
   var Constants = require('constants');
 
   // CSS

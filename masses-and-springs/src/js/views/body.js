@@ -11,7 +11,6 @@ define(function(require) {
     var Colors   = require('common/colors/colors');
     // var Vector2  = require('common/math/vector2');
     var PiecewiseCurve = require('common/math/piecewise-curve');
-    var Rectangle = require('common/math/rectangle');
 
 
     var buzz = require('buzz');

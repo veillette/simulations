@@ -6,7 +6,6 @@ define(function(require) {
   var PixiView = require('common/v3/pixi/view');
   var CommonArrowView = require('common/v3/pixi/view/arrow');
   var VectorYViewModel = require('models/vector-y');
-  var Constants = require('constants');
 
   var VectorYView = PixiView.extend({
 

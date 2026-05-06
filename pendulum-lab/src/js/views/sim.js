@@ -10,7 +10,6 @@ define(function (require) {
     var SimView = require('common/app/sim');
     var StopwatchView = require('common/tools/stopwatch');
     var RulerView = require('common/tools/ruler');
-    var BarGraphView = require('common/bar-graph/bar-graph');
 
     var PendulumLabSimulation = require('models/simulation');
     var PendulumLabSceneView  = require('views/scene');
@@ -368,14 +367,12 @@ define(function (require) {
 
         changeLength: function(event) {
             var length = parseFloat($(event.target).val());
-            var number = parseInt($(event.target).data('number'));
 
             this.$('#' + $(event.target).attr('id') + '-value').text(length.toFixed(2) + 'm');
         },
 
         changeMass: function(event) {
             var mass   = parseFloat($(event.target).val());
-            var number = parseInt($(event.target).data('number'));
 
             this.$('#' + $(event.target).attr('id') + '-value').text(mass.toFixed(2) + 'kg');
         },

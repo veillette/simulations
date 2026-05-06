@@ -75,8 +75,7 @@ define(function(require) {
 	    prefY,
 	    accelScale,
 	    frictionScale,
-	    vec,
-	    dest;
+	    vec;
 
 	_.extend(Particle.prototype, {
 
@@ -207,7 +206,6 @@ define(function(require) {
 				glMatrix.vec2.scale(this.velocity, this.velocity, this.friction * frictionScale);
 
 				// Figure out where we're going now
-				dest = this._vec;
 				this.destinationX = this.destinationX + this.velocity[0];
 				this.destinationY = this.destinationY + this.velocity[1];
 

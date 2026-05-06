@@ -6,7 +6,6 @@ define(function(require) {
 
     var ReservoirObjectView = require('views/reservoir-object');
 
-    var Constants = require('constants');
 
     /**
      *

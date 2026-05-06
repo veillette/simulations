@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
@@ -14,13 +13,11 @@ define(function(require) {
     var InfraredFilter = require('models/filter/infrared');
 
     var PhotonView                = require('views/photon-basic');
-    var CloudView                 = require('views/cloud');
     var GreenhouseThermometerView = require('views/thermometer');
 
     var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     // CSS
     require('less!styles/scene');

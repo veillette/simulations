@@ -4,12 +4,10 @@ define(function(require) {
 
     var _ = require('underscore');
 
-    var PIXI = require('pixi');
 
     var FaradaySceneView = require('views/scene');
     var TurbineView      = require('views/turbine');
 
-    var Constants = require('constants');
 
     /**
      *

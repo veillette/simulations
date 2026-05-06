@@ -85,7 +85,6 @@ define(function (require) {
             var y  = ladybug.get('position').y;
             var vx = ladybug.get('velocity').x;
             var vy = ladybug.get('velocity').y;
-            var changed = false;
             var bounds = simulation.getBounds();
 
             // Stay within bounds

@@ -2,11 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var FaradaySceneView  = require('views/scene');
 
-    var Constants = require('constants');
 
     /**
      *

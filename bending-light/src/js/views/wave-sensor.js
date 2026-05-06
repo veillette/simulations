@@ -234,10 +234,6 @@ define(function(require) {
         drawGraph: function(graphics, color, data) {
             var plotWidth  = this.plotWidth;
             var plotHeight = this.plotHeight;
-            var yScale     = this.yScale;
-            var yOffset    = this.yOffset;
-            var tickX      = this.tickX;
-            var tickSpace  = this.tickSpace;
             var timeWidth  = this.timeWidth;
 
             var values = data.values;

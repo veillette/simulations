@@ -13,9 +13,7 @@ define(function(require) {
     var LightbulbView = require('views/lightbulb');
     var VoltmeterView = require('views/voltmeter');
 
-    var Assets = require('assets');
 
-    var Constants = require('constants');
 
     /**
      * PickupCoilView is the graphical representation of a pickup coil, with

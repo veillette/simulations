@@ -2,12 +2,10 @@ define(function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var AtomicNucleus = require('models/atomic-nucleus');
     var AlphaParticle = require('models/alpha-particle');
 
-    var Constants = require('constants');
 
     /**
      * Base class for alpha-decay nuclei.  This class contains much of the behavior that

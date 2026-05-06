@@ -6,7 +6,6 @@ define(function(require) {
   var PixiView = require('common/v3/pixi/view');
   var CommonArrowView = require('common/v3/pixi/view/arrow');
   var SumVectorXViewModel = require('models/sum-vector-x');
-  var Constants = require('constants');
 
   var SumVectorXView = PixiView.extend({
 

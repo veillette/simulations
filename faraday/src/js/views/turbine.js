@@ -6,7 +6,6 @@ define(function(require) {
 
     var PixiView   = require('common/v3/pixi/view');
     var SliderView = require('common/v3/pixi/view/slider');
-    var Vector2    = require('common/math/vector2');
     var Colors     = require('common/colors/colors');
 
     var Assets = require('assets');

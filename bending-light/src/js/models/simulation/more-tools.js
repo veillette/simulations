@@ -2,7 +2,6 @@ define(function (require, exports, module) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var Vector2 = require('common/math/vector2');
 
@@ -13,7 +12,6 @@ define(function (require, exports, module) {
     /**
      * Constants
      */
-    var Constants = require('constants');
 
     /**
      *

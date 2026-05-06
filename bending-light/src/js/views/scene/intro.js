@@ -2,21 +2,17 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
                  require('common/v3/pixi/dash-to');
-    var Colors = require('common/colors/colors');
 
     var BendingLightSceneView = require('views/scene');
     var LaserView             = require('views/laser');
     var MediumView            = require('views/medium');
     var IntensityMeterView    = require('views/intensity-meter');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     /**
      *

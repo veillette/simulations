@@ -16,7 +16,6 @@ define(function(require) {
     var NucleusChooser = require('views/nucleus-chooser');
     var NucleusView    = require('views/nucleus');
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     /**
      *

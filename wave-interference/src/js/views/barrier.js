@@ -13,7 +13,6 @@ define(function (require) {
 	var xSpacing,
 	    ySpacing,
 	    halfYSpacing,
-	    halfXSpacing,
 	    //padding,
 	    //height,
 	    //i,
@@ -177,7 +176,6 @@ define(function (require) {
 
 				xSpacing = this.heatmapView.xSpacing;
 				ySpacing = this.heatmapView.ySpacing;
-				halfXSpacing = xSpacing / 2.0;
 				halfYSpacing = ySpacing / 2.0;
 
 				// The width should be the same size on all of them, so which one is arbitrary.

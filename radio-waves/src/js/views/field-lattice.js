@@ -96,7 +96,6 @@ define(function(require) {
             var numLatticePointsY = this.numLatticePointsY;
             var totalLatticePoints = numLatticePointsY * numLatticePointsX;
             var origin = this.origin;
-            var width = this.width;
             var x;
             var minX = this.minX - latticeSpacingX;
             var maxX = this.maxX + latticeSpacingX;

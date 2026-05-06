@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
@@ -19,10 +18,8 @@ define(function(require) {
 
     var PEffectSimulation = require('models/simulation');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
 
     // CSS

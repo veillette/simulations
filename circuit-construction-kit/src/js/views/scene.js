@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
@@ -12,7 +11,6 @@ define(function(require) {
 
     var GrabBagButton            = require('views/grab-bag-button');
     var ComponentToolbox         = require('views/component-toolbox');
-    var ComponentToolboxIcon     = require('views/component-toolbox-icon');
     var WireToolboxIcon          = require('views/toolbox-icons/wire');
     var ResistorToolboxIcon      = require('views/toolbox-icons/resistor');
     var BatteryToolboxIcon       = require('views/toolbox-icons/battery');
@@ -29,7 +27,6 @@ define(function(require) {
     var TimeScaleMessageView     = require('views/time-scale-message');
     var GrabAWireHelpView        = require('views/grab-a-wire-help');
 
-    var Assets    = require('assets');
     var Constants = require('constants');
 
     // CSS

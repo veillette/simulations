@@ -48,7 +48,6 @@ define(function(require) {
         },
 
         initLabels: function() {
-            var margin = 10;
             var font = '12px Helvetica Neue';
 
             var cold = new PIXI.Text('cold', {

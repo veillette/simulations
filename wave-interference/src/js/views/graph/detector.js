@@ -13,7 +13,6 @@ define(function(require) {
 	 */
 	var length,
 	    context,
-		height,
 		xSpacing,
 		xOffset,
 		points,
@@ -178,7 +177,6 @@ define(function(require) {
 		 */
 		calculatePoints: function(time, delta) {
 			points   = this.points;
-			height   = this.height;
 
 			this.xOffset += delta * this.graphingSpeed; // pixels per millisecond
 			while (this.xOffset > this.xSpacing) {

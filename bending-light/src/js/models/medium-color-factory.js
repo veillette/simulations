@@ -4,7 +4,6 @@ define(function (require) {
 
     var Functions = require('common/math/functions');
 
-    var Constants = require('constants');
     var MediumPropertiesPresets = require('medium-properties-presets');
 
     // Precompute to improve readability below

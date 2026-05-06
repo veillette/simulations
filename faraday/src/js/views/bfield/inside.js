@@ -4,7 +4,6 @@ define(function(require) {
 
     var _ = require('underscore');
 
-    var PIXI = require('pixi');
 
     var AbstractBFieldView = require('views/bfield');
 

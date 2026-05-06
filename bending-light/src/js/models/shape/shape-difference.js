@@ -6,7 +6,6 @@ define(function (require) {
     var ClipperLib = require('clipper-lib');
 
     var BooleanShape = require('models/shape/boolean-shape');
-    var Intersection = require('models/intersection');
 
     /**
      * Creates a shape that is the difference of two shapes. It contains a point x iff: A contains x && B does not contain x

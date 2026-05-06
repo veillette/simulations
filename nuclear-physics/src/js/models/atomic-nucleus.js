@@ -316,8 +316,8 @@ define(function (require) {
                     break;
 
                 default:
-                    console.warning('Warning: No decay product information available for requested nucleus, returning original value, nucleus = ', preDecayNucleus);
-                    decayProducts.push(preDecayNucleus);
+                    console.warning('Warning: No decay product information available for requested nucleus, returning original value, nucleus = ', preDecayNucleusType);
+                    decayProducts.push(preDecayNucleusType);
                     break;
             }
 

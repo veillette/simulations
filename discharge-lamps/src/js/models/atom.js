@@ -4,7 +4,6 @@ define(function (require) {
 
     var _ = require('underscore');
 
-    var Vector2 = require('common/math/vector2');
 
     var Atom = require('common/quantum/models/atom');
 
@@ -39,7 +38,7 @@ define(function (require) {
                 numStates: options.elementProperties.getStates().length
             }, options);
 
-            Atom.prototype.initialize.apply(this, [attributes, options]);
+            Atom.prototype.initialize.apply(this, [{}, options]);
 
             if (options.elementProperties.getStates().length < 2)
                 throw 'Atom must have at least two states';
@@ -62,7 +61,7 @@ define(function (require) {
                 numStates: states.length
             }, options);
 
-            Atom.prototype.initialize.apply(this, [attributes, options]);
+            Atom.prototype.initialize.apply(this, [{}, options]);
 
             if (states.length < 2)
                 throw 'Atom must have at least two states';

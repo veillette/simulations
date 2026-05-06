@@ -10,11 +10,9 @@ define(function(require) {
 
     var CompassNeedleTexture = require('views/compass-needle-texture');
 
-    var Assets = require('assets');
 
     var Constants = require('constants');
     var RING_COLOR      = Colors.parseHex(Constants.CompassView.RING_COLOR);
-    var LENS_COLOR      = Colors.parseHex(Constants.CompassView.LENS_COLOR);
     var INDICATOR_COLOR = Colors.parseHex(Constants.CompassView.INDICATOR_COLOR);
     var ANCHOR_COLOR    = Colors.parseHex(Constants.CompassView.ANCHOR_COLOR);
 
@@ -84,8 +82,6 @@ define(function(require) {
             var angle = 0; // Radians
             while (angle < Math.PI * 2) {
                 vec.set(0, ringRadius).rotate(angle);
-                var rx = vec.x;
-                var ry = vec.y;
                 graphics.drawCircle(vec.x, vec.y, indicatorRadius);
                 angle += CompassView.INDICATOR_INCREMENT;
             }

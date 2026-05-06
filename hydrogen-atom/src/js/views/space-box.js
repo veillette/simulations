@@ -6,11 +6,9 @@ define(function(require) {
     var _    = require('underscore');
 
     var HybridView = require('common/v3/pixi/view/hybrid');
-    var Colors     = require('common/colors/colors');
 
     var AtomicModels = require('hydrogen-atom/models/atomic-models');
 
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
     var PhotonCollectionView  = require('hydrogen-atom/views/photon-collection');
     var ExperimentModelView   = require('hydrogen-atom/views/atomic-model/experiment');
     var BilliardBallModelView = require('hydrogen-atom/views/atomic-model/billiard-ball');
@@ -20,8 +18,6 @@ define(function(require) {
     var SchroedingerModelView = require('hydrogen-atom/views/atomic-model/schroedinger');
     var SolarSystemModelView  = require('hydrogen-atom/views/atomic-model/solar-system');
 
-    var Assets = require('assets');
-    var Constants = require('constants');
 
     /**
      * Represents the zoomed in view of the scene and what's happening at the atomic level

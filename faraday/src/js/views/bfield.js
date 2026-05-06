@@ -10,7 +10,6 @@ define(function(require) {
 
     var CompassNeedleTexture = require('views/compass-needle-texture');
 
-    var Assets = require('assets');
 
     var Constants = require('constants');
 

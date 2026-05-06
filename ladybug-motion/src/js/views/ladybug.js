@@ -7,7 +7,6 @@ define(function(require) {
     var HybridView = require('common/v3/pixi/view/hybrid');
     var ArrowView  = require('common/v3/pixi/view/arrow');
 
-    var LadybugMover = require('models/ladybug-mover');
 
     var Assets = require('assets');
 

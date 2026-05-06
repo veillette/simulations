@@ -6,7 +6,6 @@ define(function(require) {
 
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
-    var Colors   = require('common/colors/colors');
 
     var Electron               = require('models/electron');
     var ElectronPathDescriptor = require('models/electron-path-descriptor');
@@ -14,7 +13,6 @@ define(function(require) {
 
     var ElectronView = require('views/electron');
 
-    var Assets = require('assets');
 
     var Constants = require('constants');
     var ELECTRON_SPACING       = Constants.CoilView.ELECTRON_SPACING;

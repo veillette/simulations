@@ -10,7 +10,6 @@ define(function(require) {
   var ComponentsView = require('views/components');
   var VectorXView = require('views/vector-x');
   var VectorYView = require('views/vector-y');
-  var Simulation = require('models/simulation');
   var VectorViewModel = require('models/vectors');
   var Constants = require('constants');
 

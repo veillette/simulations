@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiSceneView      = require('common/v3/pixi/view/scene');
@@ -18,7 +17,6 @@ define(function(require) {
     var SpectrumView           = require('views/spectrum');
     var VoltageCalculationView = require('views/voltage-calculation');
 
-    var Assets = require('assets');
 
     // Constants
     var Constants = require('constants');

@@ -4,16 +4,13 @@ define(function (require) {
 
     var _ = require('underscore');
 
-    var Assets = require('common/v3/pixi/assets');
 
-    var TimeFormatter = require('models/time-formatter');
 
     var DatingGameSimulation = require('radioactive-dating-game/models/simulation/dating-game');
 
     var RadioactiveDatingGameSimView = require('radioactive-dating-game/views/sim');
     var DatingGameSceneView          = require('radioactive-dating-game/views/scene/dating-game');
 
-    var Constants = require('constants');
 
     // HTML
     var simHtml = require('text!radioactive-dating-game/templates/dating-game-sim.html');

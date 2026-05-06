@@ -15,9 +15,7 @@ define(function (require, exports, module) {
     var DischargeLampsConstants  = require('discharge-lamps/constants');
 
     var Ammeter                       = require('models/ammeter');
-    var Circuit                       = require('models/circuit');
     var BeamIntensityMeter            = require('models/beam-intensity-meter');
-    var BeamControl                   = require('models/beamcontrol');
     var PhotoelectricTarget           = require('models/photoelectric-target');
     var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');
     var TargetMaterials               = require('models/target-materials');

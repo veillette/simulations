@@ -3,14 +3,11 @@ define(function(require) {
     'use strict';
 
     var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
 
     var Projectile = require('models/projectile');
 
     var Assets = require('assets');
 
-    var Constants = require('constants');
-    var RADIANS_TO_DEGREES = 180 / Math.PI;
 
     var ProjectileView = PixiView.extend({
 

@@ -2,15 +2,11 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
 
     var PixiSceneView = require('common/v3/pixi/view/scene');
 
-    var Assets = require('assets');
 
     // Constants
-    var Constants = require('constants');
 
     // CSS
     require('less!styles/scene');

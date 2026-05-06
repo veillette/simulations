@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var AbstractBFieldView = require('views/bfield');
 

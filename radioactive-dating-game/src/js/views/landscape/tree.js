@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var AgingTree = require('radioactive-dating-game/models/datable-item/aging-tree');
 
@@ -67,7 +66,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             if (!paused) {
-
+                void time;
             }
         },
 

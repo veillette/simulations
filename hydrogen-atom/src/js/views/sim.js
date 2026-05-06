@@ -14,7 +14,6 @@ define(function (require) {
     var HydrogenAtomLegendView           = require('hydrogen-atom/views/legend');
     var HydrogenAtomWavelengthSliderView = require('hydrogen-atom/views/wavelength-slider');
     var SpectrometerView                 = require('hydrogen-atom/views/spectrometer');
-    var EnergyDiagramView                = require('hydrogen-atom/views/energy-diagram');
     var SolarSystemEnergyDiagramView     = require('hydrogen-atom/views/energy-diagram/solar-system');
     var BohrEnergyDiagramView            = require('hydrogen-atom/views/energy-diagram/bohr');
     var DeBroglieEnergyDiagramView       = require('hydrogen-atom/views/energy-diagram/debroglie');
@@ -212,8 +211,10 @@ define(function (require) {
 
         renderEnergyDiagrams: function() {
             for (var key in this.energyDiagrams) {
-                this.energyDiagrams[key].render();
-                this.$('.energy-level-diagram-panel').append(this.energyDiagrams[key].el);
+                if (Object.prototype.hasOwnProperty.call(this.energyDiagrams, key)) {
+                    this.energyDiagrams[key].render();
+                    this.$('.energy-level-diagram-panel').append(this.energyDiagrams[key].el);
+                }
             }
         },
 
@@ -249,8 +250,10 @@ define(function (require) {
 
             this.$('.spectrometer-panel').addClass('collapsed');
 
-            for (var key in this.energyDiagrams)
-                this.energyDiagrams[key].postRender();
+            for (var key in this.energyDiagrams) {
+                if (Object.prototype.hasOwnProperty.call(this.energyDiagrams, key))
+                    this.energyDiagrams[key].postRender();
+            }
 
             this.$('.energy-level-diagram-panel').addClass('collapsed');
             this.hideEnergyDiagramPanel();
@@ -284,8 +287,10 @@ define(function (require) {
             this.spectrometerView.update(timeSeconds, dtSeconds);
 
             // Update the energy diagrams
-            for (var key in this.energyDiagrams)
-                this.energyDiagrams[key].update(timeSeconds, dtSeconds);
+            for (var key in this.energyDiagrams) {
+                if (Object.prototype.hasOwnProperty.call(this.energyDiagrams, key))
+                    this.energyDiagrams[key].update(timeSeconds, dtSeconds);
+            }
         },
 
         /**
@@ -401,8 +406,10 @@ define(function (require) {
             }
 
             for (var key in this.energyDiagrams) {
-                this.energyDiagrams[key].clearAtom();
-                this.energyDiagrams[key].hide();
+                if (Object.prototype.hasOwnProperty.call(this.energyDiagrams, key)) {
+                    this.energyDiagrams[key].clearAtom();
+                    this.energyDiagrams[key].hide();
+                }
             }
 
             // Determine whether the energy diagram is visible and which one

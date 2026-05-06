@@ -2,14 +2,12 @@ define(function (require, exports, module) {
 
     'use strict';
 
-    var _ = require('underscore');
 
     var Simulation = require('common/simulation/simulation');
 
     /**
      * Constants
      */
-    var Constants = require('constants');
 
     /**
      * The simulation model

@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
@@ -50,6 +49,8 @@ define(function(require) {
             this.pictureSprites[Types.PICTURE_D] = Assets.createSprite(Assets.Images.PICTURE_D);
 
             for (var key in this.pictureSprites) {
+                if (!Object.prototype.hasOwnProperty.call(this.pictureSprites, key))
+                    continue;
                 this.pictureContainer.addChild(this.pictureSprites[key]);
                 this.pictureSprites[key].visible = false;
                 this.pictureSprites[key].anchor.x = ObjectView.PICTURE_X_ANCHOR;
@@ -71,6 +72,8 @@ define(function(require) {
         updatePictureScales: function() {
             var scale = this.getPictureScale();
             for (var key in this.pictureSprites) {
+                if (!Object.prototype.hasOwnProperty.call(this.pictureSprites, key))
+                    continue;
                 this.pictureSprites[key].scale.x = scale;
                 this.pictureSprites[key].scale.y = scale;
             }
@@ -96,8 +99,11 @@ define(function(require) {
         },
 
         hidePictureSprites: function() {
-            for (var key in this.pictureSprites)
+            for (var key in this.pictureSprites) {
+                if (!Object.prototype.hasOwnProperty.call(this.pictureSprites, key))
+                    continue;
                 this.pictureSprites[key].visible = false;
+            }
         },
 
         getPictureScale: function() {

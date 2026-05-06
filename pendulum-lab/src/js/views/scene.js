@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     // Third-party dependencies
-    var _    = require('underscore');
     var PIXI = require('pixi');
 
     // Common dependencies
@@ -14,7 +13,6 @@ define(function(require) {
     // Project dependencies
 
     // Constants
-    var Constants = require('constants');
 
     // CSS
     require('less!styles/scene');

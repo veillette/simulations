@@ -2,7 +2,6 @@ define(function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
 
     var AppView            = require('common/v3/app/app');
     var ModelViewTransform = require('common/math/model-view-transform');
@@ -11,7 +10,6 @@ define(function(require) {
     var LandscapeView = require('radioactive-dating-game/views/landscape');
 
     var Assets = require('assets');
-    var Constants = require('constants');
 
     var SHORT_SCREEN_BACKGROUND_WIDTH = 960;
     var DEFAULT_BACKGROUND_WIDTH = 1400;

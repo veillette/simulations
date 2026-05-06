@@ -281,19 +281,18 @@ define(function(require) {
                 //   It may also be possible to generalize it somewhat to handle
                 //   small numbers of nuclei.
 
-                var protonsToAdd = numProtons;
-                var neutronsToAdd = numNeutrons;
+                var nucleonBudget = { n: numNeutrons, p: numProtons };
                 var rotationOffset = Math.PI;  // In radians, arbitrary and just for looks.
                 var distanceFromCenter = mvt.modelToViewDeltaX(Constants.NUCLEON_DIAMETER / 2 / Math.cos(Math.PI / 6));
                 for (var i = 0; i < 3; i++) {
                     var nucleonSprite;
-                    if (neutronsToAdd > 0) {
+                    if (nucleonBudget.n > 0) {
                         nucleonSprite = this.createNeutronSprite(mvt);
-                        neutronsToAdd--;
+                        nucleonBudget.n--;
                     }
                     else {
                         nucleonSprite = this.createProtonSprite(mvt);
-                        protonsToAdd--;
+                        nucleonBudget.p--;
                     }
 
                     var angle = (Math.PI * 2 / 3) * i + rotationOffset;

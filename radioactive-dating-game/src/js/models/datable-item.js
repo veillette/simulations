@@ -11,7 +11,6 @@ define(function (require) {
     var Carbon14Nucleus   = require('models/nucleus/carbon-14');
     var Uranium238Nucleus = require('models/nucleus/uranium-238');
 
-    var Constants = require('constants');
 
     /**
      * This class represents a physical object that can be dated using radiometric
