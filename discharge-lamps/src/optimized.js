@@ -11,11 +11,13 @@
             pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../bower_components/buzz/dist/buzz.min',
-            'vector2-node':   '../../../common/math/vector2',
-            'object-pool':    '../../../common/pool',
+
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
 
+            lasers:     '../../../lasers/src/js',
             views:      '../js/views',
             models:     '../js/models',
             assets:     '../js/assets',
@@ -58311,41 +58313,773 @@ define('common/v3/app/sim',['require','underscore','backbone','../updater/update
     return SimView;
 });
 
-/**
- * Minimal object pool factory — drop-in replacement for the `object-pool` npm
- * package.  The only API used across the codebase is:
- *
- *   var pool = Pool({ init: fn, enable: fn });
- *   var obj  = pool.create();
- *   pool.remove(obj);
- */
-define('object-pool',[],function () {
+define('common/collections/vanilla',['require','underscore','backbone'],function (require) {
 
     'use strict';
 
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var setOptions = { add: true, remove: true, merge: true };
+    var addOptions = { add: true, remove: false, merge: false };
+    var unshiftOptions = _.extend({ at: 0 }, addOptions);
+    var emptyOptions = {};
+    var silentOptions = { silent: true };
+
+    var splice = function(array, insert, at) {
+        at = Math.min(Math.max(at, 0), array.length);
+        var tail = Array(array.length - at);
+        var length = insert.length;
+        for (var i = 0; i < tail.length; i++) tail[i] = array[i + at];
+        for (i = 0; i < length; i++) array[i + at] = insert[i];
+        for (i = 0; i < tail.length; i++) array[i + length + at] = tail[i];
+    };
+
     /**
-     * @param {Object} [config]
-     * @param {Function} [config.init]   Called once to create a new instance.
-     * @param {Function} [config.enable] Called each time an instance is reused.
+     * This is a replacement for Backbone.Collection that can be used with
+     *   vanilla JavaScript objects but with some of the benefits that the
+     *   Backbone version offers, like events for adding and removing.
+     *   Note that this is not meant to be a complete replacement for the
+     *   Backbone version, but it should at least use the same interface
+     *   for the features that it does replace so it can be swapped out
+     *   without changing much code.  Features should be added to this as
+     *   needed.
+     *
+     * Much of this code is from the original Backbone.Collection source
+     *   or is a modified version of it.  The original is distributed
+     *   under the MIT license.
      */
-    function Pool(config) {
-        var available = [];
-        var init   = (config && config.init)   || function () { return {}; };
-        var enable = (config && config.enable) || null;
+    var VanillaCollection = function(models, options) {
+        options || (options = {});
+        if (options.comparator !== undefined) 
+            this.comparator = options.comparator;
+        this._reset();
+        this.initialize.apply(this, arguments);
+        if (models) 
+            this.reset(models);
+    };
 
-        return {
-            create: function () {
-                var obj = available.length > 0 ? available.pop() : init();
-                if (enable) enable(obj);
-                return obj;
-            },
-            remove: function (obj) {
-                available.push(obj);
+    /**
+     * Instance functions/properties
+     */
+    _.extend(VanillaCollection.prototype, Backbone.Events, {
+
+        initialize: function() {
+            this._pushOptions = _.extend({ at: this.length }, addOptions);
+        },
+
+        add: function(models, options) {
+            if (options)
+                return this.set(models, _.extend(addOptions, options));
+            else
+                return this.set(models, addOptions);
+        },
+
+        push: function(model, options) {
+            // Calling `set` instead of `add` is a design decision.  I've pre-combined the
+            //   'push' and 'add' options to avoid calling `extend` if it's unnecessary.
+            this._pushOptions.at = this.length;
+            if (options)
+                return this.set(model, _.extend(this._pushOptions, options));
+            else
+                return this.set(model, this._pushOptions);
+        },
+
+        pop: function(options) {
+            var model = this.at(this.length - 1);
+            return this.remove(model, options);
+        },
+
+        unshift: function(model, options) {
+            // Calling `set` instead of `add` is a design decision.  I've pre-combined the
+            //   'push' and 'add' options to avoid calling `extend` if it's unnecessary.
+            if (options)
+                return this.set(model, _.extend(unshiftOptions, options));
+            else
+                return this.set(model, unshiftOptions);
+        },
+
+        shift: function(options) {
+            var model = this.at(0);
+            return this.remove(model, options);
+        },
+
+        slice: function() {
+            return Array.prototype.slice.apply(this.models, arguments);
+        },
+
+        set: function(models, options) {
+            if (models == null) return;
+
+            options = _.defaults({}, options, setOptions);
+            if (options.parse && !this._isModel(models)) models = this.parse(models, options);
+
+            var singular = !_.isArray(models);
+            models = singular ? [models] : models.slice();
+
+            var at = options.at;
+            if (at != null) at = +at;
+            if (at < 0) at += this.length + 1;
+
+            var toAdd = [];
+            var toRemove = [];
+            var modelMap = {};
+
+            var add = options.add;
+            var merge = options.merge;
+            var remove = options.remove;
+
+            var sort = false;
+            var sortable = this.comparator && (at == null) && options.sort !== false;
+            var sortAttr = _.isString(this.comparator) ? this.comparator : null;
+
+            // Add models that aren't already in the collection to toAdd
+            var model, i;
+            for (i = 0; i < models.length; i++) {
+                model = models[i];
+
+                // If a duplicate is found, prevent it from being added
+                var existing = this.get(model);
+                if (!existing && add) {
+                    toAdd.push(model);
+                    this._addReference(model);
+                }
             }
-        };
-    }
 
-    return Pool;
+            // Remove stale models.
+            if (remove) {
+                // If the `remove` option was set, we want to remove all
+                // models that aren't in the current set of models being
+                // added or set
+                for (i = 0; i < this.length; i++) {
+                    model = this.models[i];
+                    if (models.indexOf(model) === -1) 
+                        toRemove.push(model);
+                }
+                if (toRemove.length)
+                    this._removeModels(toRemove, options);
+            }
+
+            // See if sorting is needed, update `length` and splice in new models.
+            if (toAdd.length) {
+                if (sortable)
+                    sort = true;
+                splice(this.models, toAdd, at == null ? this.length : at);
+                this.length = this.models.length;
+            }
+
+            // Silently sort the collection if appropriate.
+            if (sort)
+                this.sort(silentOptions);
+
+            // Unless silenced, it's time to fire all appropriate add/sort/update events.
+            if (!options.silent) {
+                for (i = 0; i < toAdd.length; i++) {
+                    if (at != null) options.index = at + i;
+                    model = toAdd[i];
+                    this.trigger('add', model, this, options);
+                }
+
+                if (sort) 
+                    this.trigger('sort', this, options);
+
+                if (toAdd.length || toRemove.length) {
+                    options.changes = {
+                        added: toAdd,
+                        removed: toRemove
+                    };
+                    this.trigger('update', this, options);
+                }
+            }
+
+            // Return the added (or merged) model (or models).
+            return singular ? models[0] : models;
+        },
+
+        remove: function(models, options) {
+            if (!options)
+                options = emptyOptions;
+            var singular = !_.isArray(models);
+            models = singular ? [models] : _.clone(models);
+            var removed = this._removeModels(models, options);
+            if (!options.silent && removed) this.trigger('update', this, options);
+            return singular ? removed[0] : removed;
+        },
+
+        reset: function(models, options) {
+            options = options ? _.clone(options) : {};
+            // Remove references in each model to this collection
+            for (var i = 0; i < this.models.length; i++)
+                this._removeReference(this.models[i]);
+            // Reset and add models
+            this._reset();
+            models = this.add(models, _.extend({silent: true}, options));
+            // Trigger the reset event
+            if (!options.silent)
+                this.trigger('reset', this, options);
+            return models;
+        },
+
+        get: function(obj) {
+            if (obj == null) return void 0;
+            for (var i = 0; i < this.models.length; i++) {
+                if (obj === this.models[i])
+                    return obj;
+            }
+            return null;
+        },
+
+        at: function(index) {
+            if (index < 0) index += this.length;
+            return this.models[index];
+        },
+
+        sort: function(options) {
+            var comparator = this.comparator;
+            if (!comparator) throw new Error('Cannot sort a set without a comparator');
+            options || (options = {});
+
+            var length = comparator.length;
+            if (_.isFunction(comparator)) comparator = _.bind(comparator, this);
+
+            // Run sort based on type of `comparator`.
+            if (length === 1 || _.isString(comparator)) {
+                this.models = this.sortBy(comparator);
+            } else {
+                this.models.sort(comparator);
+            }
+            if (!options.silent) this.trigger('sort', this, options);
+            return this;
+        },
+
+        _removeModels: function(models, options) {
+            var removed = [];
+            for (var i = 0; i < models.length; i++) {
+                var model = this.get(models[i]);
+                if (!model)
+                    continue;
+
+                var index = this.models.indexOf(model);
+                this.models.splice(index, 1);
+                this.length--;
+
+                if (!options.silent) {
+                    options.index = index;
+                    this.trigger('remove', model, this, options);
+                }
+
+                removed.push(model);
+                this._removeReference(model, options);
+            }
+            return removed.length ? removed : false;
+        },
+
+        _reset: function() {
+            this.length = 0;
+            this.models = [];
+        },
+
+        _addReference: function(model) {
+            model.collection = this;
+            // Add this collection to a list of collections in the model, because
+            //   the model could belong to multiple collections
+            if (!model.collections)
+                model.collections = [];
+            if (model.collections.indexOf(this) === -1)
+                model.collections.push(this);
+        },
+
+        _isModel: function() {
+            return false;
+        },
+
+        _removeReference: function(model) {
+            if (this === model.collection) 
+                delete model.collection;
+
+            if (model.collections) {
+                var index = model.collections.indexOf(this);
+                if (index !== -1)
+                    model.collections.splice(index, 1);
+            }
+        },
+
+        alertDestroyed: function(model) {
+            this.remove(model);
+            this.trigger('destroy', model);
+        },
+
+        // Underscore methods
+        forEach:     Backbone.Collection.prototype.forEach,
+        each:        Backbone.Collection.prototype.each,
+        map:         Backbone.Collection.prototype.map,
+        collect:     Backbone.Collection.prototype.collect,
+        reduce:      Backbone.Collection.prototype.reduce,
+        foldl:       Backbone.Collection.prototype.foldl,
+        inject:      Backbone.Collection.prototype.inject,
+        reduceRight: Backbone.Collection.prototype.ight,
+        foldr:       Backbone.Collection.prototype.foldr,
+        find:        Backbone.Collection.prototype.find,
+        detect:      Backbone.Collection.prototype.detect,
+        filter:      Backbone.Collection.prototype.filter,
+        select:      Backbone.Collection.prototype.select,
+        reject:      Backbone.Collection.prototype.reject,
+        every:       Backbone.Collection.prototype.every,
+        all:         Backbone.Collection.prototype.all,
+        some:        Backbone.Collection.prototype.some,
+        any:         Backbone.Collection.prototype.any,
+        include:     Backbone.Collection.prototype.include,
+        includes:    Backbone.Collection.prototype.includes,
+        contains:    Backbone.Collection.prototype.contains,
+        invoke:      Backbone.Collection.prototype.invoke,
+        max:         Backbone.Collection.prototype.max,
+        min:         Backbone.Collection.prototype.min,
+        toArray:     Backbone.Collection.prototype.toArray,
+        size:        Backbone.Collection.prototype.size,
+        first:       Backbone.Collection.prototype.first,
+        head:        Backbone.Collection.prototype.head,
+        take:        Backbone.Collection.prototype.take,
+        initial:     Backbone.Collection.prototype.initial,
+        rest:        Backbone.Collection.prototype.rest,
+        tail:        Backbone.Collection.prototype.tail,
+        drop:        Backbone.Collection.prototype.drop,
+        last:        Backbone.Collection.prototype.last,
+        without:     Backbone.Collection.prototype.without,
+        difference:  Backbone.Collection.prototype.difference,
+        indexOf:     Backbone.Collection.prototype.indexOf,
+        shuffle:     Backbone.Collection.prototype.shuffle,
+        lastIndexOf: Backbone.Collection.prototype.lastIndexOf,
+        isEmpty:     Backbone.Collection.prototype.isEmpty,
+        chain:       Backbone.Collection.prototype.chain,
+        sample:      Backbone.Collection.prototype.sample,
+        partition:   Backbone.Collection.prototype.partition,
+        groupBy:     Backbone.Collection.prototype.groupBy,
+        countBy:     Backbone.Collection.prototype.countBy,
+        sortBy:      Backbone.Collection.prototype.sortBy,
+        indexBy:     Backbone.Collection.prototype.indexBy,
+
+    });
+
+    // Make sure the collection can be extended by giving it Backbone's extend function
+    VanillaCollection.extend = Backbone.Collection.extend;
+
+
+    return VanillaCollection;
+});
+
+define('common/colors/colors',['require'],function (require) {
+
+	'use strict';
+
+	// Regex from http://stackoverflow.com/a/5624139, http://stackoverflow.com/a/5624139
+	var hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+	var _replaceShorthandFunction = function(m, r, g, b) {
+		return r + r + g + g + b + b;
+	};
+
+	/**
+	 * Expands shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+	 */
+	var replaceShorthand = function(hex) {
+		return hex.replace(shorthandRegex, _replaceShorthandFunction);
+	};
+
+
+	var Colors = {
+
+		/**
+		 * 
+		 */
+		parseHex: function(string) {
+			// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+			var fullHex = replaceShorthand(string);
+
+			// Remove the hash sign on the front
+			var numbers = fullHex.replace('#', '');
+
+			// Now we can parse it as hex
+			return parseInt(numbers, 16);
+		},
+
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		rgbToHex: function(r, g, b) {
+			if (typeof r === 'object') {
+				b = r.b;
+				g = r.g;
+				r = r.r;
+			}
+			return '#' + this.rgbToHexInteger(r, g, b).toString(16).slice(1);
+		},
+
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		rgbToHexInteger: function(r, g, b) {
+			if (typeof r === 'object') {
+				b = r.b;
+				g = r.g;
+				r = r.r;
+			}
+			return (1 << 24) + (r << 16) + (g << 8) + b;
+		},
+
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		hexToRgb: function(hex) {
+			hex = replaceShorthand(hex);
+
+			var result = hexRegex.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : null;
+		},
+
+		/**
+		 * 
+		 */
+		hexToValue: function(hex) {
+			hex = replaceShorthand(hex);
+
+			var result = hexRegex.exec(hex);
+			return parseInt(result[1], 16) + parseInt(result[2], 16) + parseInt(result[3], 16);
+		},
+
+		/**
+		 * Parses an rgb/rgba string into its component parts and returns them as an object.
+		 */
+		parseRgba: function(rgbString) {
+			var result = /^rgba?\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\s*(?:,\s*([\d\.]+))?\)$/.exec(rgbString);
+			if (result) {
+				if (result[4] !== undefined) {
+					return {
+						r: parseInt(result[1]),
+						g: parseInt(result[2]),
+						b: parseInt(result[3]),
+						a: parseFloat(result[4])
+					};
+				}
+				else {
+					return {
+						r: parseInt(result[1]),
+						g: parseInt(result[2]),
+						b: parseInt(result[3])
+					};
+				}
+			}
+			else
+				return null;
+		},
+
+		/**
+		 * Takes either hex or rgba format and converts it into an rgba string with alpha.
+		 * If alpha isn't specified, defaults to 1.  If alpha is a boolean, it takes the
+		 *   place of return Object.
+		 */
+		toRgba: function(sourceColor, alpha, returnObject) {
+			var rgb = this.hexToRgb(sourceColor);
+
+			if (!rgb)
+				rgb = this.parseRgba(sourceColor);
+
+			if (rgb) {
+				if (alpha !== undefined && alpha !== false && alpha !== true)
+					rgb.a = alpha;
+				if (rgb.a === undefined)
+					rgb.a = 1;
+
+				if (returnObject || alpha === true)
+					return rgb;
+				else
+					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
+			} 
+			else
+				return null;	
+		},
+
+		/**
+		 * Algorithm from http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+		 */
+		darkenRgba: function(rgba, percent) {
+			var type = typeof rgba;
+			if (type !== 'object')
+				rgba = this.toRgba(rgba);
+			var amount = Math.round(255 * percent);
+			rgba.r -= amount;
+			rgba.g -= amount;
+			rgba.b -= amount;
+			if      (rgba.r > 255) rgba.r = 255;
+			else if (rgba.r < 0)   rgba.r = 0;
+			if      (rgba.g > 255) rgba.g = 255;
+			else if (rgba.g < 0)   rgba.g = 0;
+			if      (rgba.b > 255) rgba.b = 255;
+			else if (rgba.b < 0)   rgba.b = 0;
+
+			if (type === 'object')
+				return rgba;
+			else
+				return 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')';
+		},
+
+		darkenHex: function(colorString, percent) {
+			var rgba = this.toRgba(colorString, true);
+			this.darkenRgba(rgba, percent);
+			return this.rgbToHex(rgba.r, rgba.g, rgba.b);
+		},
+
+		lightenRgba: function(rgba, percent) {
+			return this.darkenRgba(rgba, -percent);
+		},
+
+		lightenHex: function(colorString, percent) {
+			return this.darkenHex(colorString, -percent);
+		},
+
+		interpolateRgba: function(rgba1, rgba2, t, rgba) {
+			if (!rgba)
+				rgba = {};
+
+			rgba.r = Math.round((rgba1.r * t) + (rgba2.r * (1 - t)));
+			rgba.g = Math.round((rgba1.g * t) + (rgba2.g * (1 - t)));
+			rgba.b = Math.round((rgba1.b * t) + (rgba2.b * (1 - t)));
+			if (rgba1.a !== undefined && rgba2.a !== undefined)
+				rgba.a = Math.round((rgba1.a * t) + (rgba2.a * (1 - t)));
+
+			return rgba;
+		},
+
+		interpolateHex: function(hex1, hex2, t) {
+			var rgba = this.interpolateRgba(this.hexToRgb(hex1), this.hexToRgb(hex2), t);
+			return this.rgbToHex(rgba);
+		},
+
+		interpolateHexInteger: function(int1, int2, t) {
+			var b1 =  int1 & 255;
+			var g1 = (int1 >> 8) & 255;
+			var r1 = (int1 >> 16) & 255;
+
+			var b2 =  int2 & 255;
+			var g2 = (int2 >> 8) & 255;
+			var r2 = (int2 >> 16) & 255;
+
+			var r = Math.round((r1 * t) + (r2 * (1 - t)));
+			var g = Math.round((g1 * t) + (g2 * (1 - t)));
+			var b = Math.round((b1 * t) + (b2 * (1 - t)));
+
+			return (1 << 24) + (r << 16) + (g << 8) + b;
+		}
+	};
+
+	return Colors;
+});
+
+/**
+ * From https://github.com/scottbyrns/Wavelength-To-RGB
+ *
+ * Helper method to convert a wavelength value for a given color and
+ * produce an RGB representation of it.
+ * E.g. 484nm = rgb(0, 224, 255) = #00E0FF
+ * 
+ * This method has been added as a static method on the Math object.
+ * 
+ * - (Number[]) nmToRGB : (Number) wavelength
+ * 
+ * @param wavelength The wavelength of to convert to RGB.
+ * @return Object keys: red, green, blue
+ * 
+ * <code>
+ * >    
+ * > Math.nmToRGB(484);
+ * > {
+ * >    red: 0,
+ * >    green: 224,
+ * >    blue: 255
+ * > }
+ * > 
+ * </code>
+ * 
+ */
+define('common/colors/wavelength',['require','./colors'],function (require) {
+
+    'use strict';
+
+    var Colors = require('./colors');
+
+    var WavelengthColors = {
+
+        MIN_WAVELENGTH: 380,
+        MAX_WAVELENGTH: 780,
+
+        /**
+         * Converts wavelengths (in nanometers) to hex format.  Code duplication
+         *   here for the sake of efficiency
+         */
+        nmToHex: function(wavelength, returnHexInteger) {
+            var w = parseInt(wavelength, 10),
+                SSS,
+                R,
+                G,
+                B;
+
+            if (w >= 380 && w < 440) {
+                R = -(w - 440.0) / (440.0 - 350.0);
+                G = 0.0;
+                B = 1.0;
+            } else if (w >= 440 && w < 490) {
+                R = 0.0;
+                G = (w - 440.0) / (490.0 - 440.0);
+                B = 1.0;
+            } else if (w >= 490 && w < 510) {
+                R = 0.0;
+                G = 1.0;
+                B = -(w - 510.0) / (510.0 - 490.0);
+            } else if (w >= 510 && w < 580) {
+                R = (w - 510.0) / (580.0 - 510.0);
+                G = 1.0;
+                B = 0.0;
+            } else if (w >= 580 && w < 645) {
+                R = 1.0;
+                G = -(w - 645.0) / (645.0 - 580.0);
+                B = 0.0;
+            } else if (w >= 645 && w <= 780) {
+                R = 1.0;
+                G = 0.0;
+                B = 0.0;
+            } else {
+                R = 0.0;
+                G = 0.0;
+                B = 0.0;
+            }
+
+            if (w >= 380 && w < 420) {
+                SSS = 0.3 + 0.7 * (w - 350) / (420 - 350);
+            } else if (w >= 420 && w <= 700) {
+                SSS = 1.0;
+            } else if (w > 700 && w <= 780) {
+                SSS = 0.3 + 0.7 * (780 - w) / (780 - 700);
+            } else {
+                SSS = 0.0;
+            }
+
+            SSS *= 255;
+
+            if (returnHexInteger) {
+                return Colors.rgbToHexInteger(
+                    parseInt(SSS * R, 10), 
+                    parseInt(SSS * G, 10), 
+                    parseInt(SSS * B, 10)
+                );
+            }
+            else {
+                return Colors.rgbToHex(
+                    parseInt(SSS * R, 10), 
+                    parseInt(SSS * G, 10), 
+                    parseInt(SSS * B, 10)
+                );  
+            }
+        },
+
+        /**
+         * Converts wavelengths (in nanometers) to rgba format.  Code duplication
+         *   here for the sake of efficiency
+         */
+        nmToRgba: function(wavelength, alpha, returnObject) {
+            var w = parseInt(wavelength, 10),
+                SSS,
+                R,
+                G,
+                B;
+
+            if (w >= 380 && w < 440) {
+                R = -(w - 440.0) / (440.0 - 350.0);
+                G = 0.0;
+                B = 1.0;
+            } else if (w >= 440 && w < 490) {
+                R = 0.0;
+                G = (w - 440.0) / (490.0 - 440.0);
+                B = 1.0;
+            } else if (w >= 490 && w < 510) {
+                R = 0.0;
+                G = 1.0;
+                B = -(w - 510.0) / (510.0 - 490.0);
+            } else if (w >= 510 && w < 580) {
+                R = (w - 510.0) / (580.0 - 510.0);
+                G = 1.0;
+                B = 0.0;
+            } else if (w >= 580 && w < 645) {
+                R = 1.0;
+                G = -(w - 645.0) / (645.0 - 580.0);
+                B = 0.0;
+            } else if (w >= 645 && w <= 780) {
+                R = 1.0;
+                G = 0.0;
+                B = 0.0;
+            } else {
+                R = 0.0;
+                G = 0.0;
+                B = 0.0;
+            }
+
+            if (w >= 380 && w < 420) {
+                SSS = 0.3 + 0.7 * (w - 350) / (420 - 350);
+            } else if (w >= 420 && w <= 700) {
+                SSS = 1.0;
+            } else if (w > 700 && w <= 780) {
+                SSS = 0.3 + 0.7 * (780 - w) / (780 - 700);
+            } else {
+                SSS = 0.0;
+            }
+
+            SSS *= 255;
+
+            if (alpha === undefined)
+                alpha = 1;
+
+            if (returnObject) {
+                return {
+                    r: parseInt(SSS * R, 10), 
+                    g: parseInt(SSS * G, 10), 
+                    b: parseInt(SSS * B, 10),
+                    a: alpha
+                };
+            }
+            else {
+                return 'rgba(' + parseInt(SSS * R, 10) + ',' + parseInt(SSS * G, 10) + ',' + parseInt(SSS * B, 10) + ',' + alpha + ')';
+            }
+        }
+
+    };
+
+    return WavelengthColors;
+});
+
+define('common/quantum/config',['require','common/colors/wavelength'],function (require) {
+
+    'use strict';
+
+    var WavelengthColors = require('common/colors/wavelength');
+
+    var QuantumConfig = {};
+
+    QuantumConfig.STIMULATION_LIKELIHOOD = 0.2;
+    QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+
+    // Tolerances used to determine if a photon matches with an atomic state energy
+    QuantumConfig.ENERGY_TOLERANCE = 0.05;
+
+    QuantumConfig.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
+    QuantumConfig.MAX_WAVELENGTH = WavelengthColors.MAX_WAVELENGTH;
+
+    QuantumConfig.DEFAULT_ATOM_RADIUS = 15;
+
+    QuantumConfig.PIXELS_PER_NM = 1E6;
+
+    return QuantumConfig;
 });
 
 define('common/simulation/simulation',['require','underscore','backbone'],function (require) {
@@ -58445,159 +59179,115 @@ define('common/simulation/simulation',['require','underscore','backbone'],functi
     return Simulation;
 });
 
-define('common/math/motion',['require','underscore'],function (require) {
+define('common/simulation/fixed-interval-simulation',['require','./simulation'],function (require) {
+
+    'use strict';
+
+    var Simulation = require('./simulation');
+
+    /**
+     * Wraps the update function in 
+     */
+    var FixedIntervalSimulation = Simulation.extend({
+
+        /**
+         * Initialization code for new FixedIntervalSimulation objects.
+         *   Sets the frame duration and initializes the frame 
+         *   accumulator to zero.
+         */
+        initialize: function(attributes, options) {
+            Simulation.prototype.initialize.apply(this, [attributes, options]);
+
+            options = options || {};
+            var fps = options.framesPerSecond || 30;
+
+            this.frameDuration = options.frameDuration || (1 / fps); // Seconds
+            this.deltaTimePerFrame = options.deltaTimePerFrame || this.frameDuration; // Seconds
+            this.frameAccumulator = 0;
+        },
+
+        /**
+         * Because we need to update the simulation on a fixed interval
+         *   for accuracy--especially since the propagator isn't based
+         *   off of time but acts in discrete steps--we need a way to
+         *   keep track of step intervals independent of the varying
+         *   intervals created by window.requestAnimationFrame. This 
+         *   clever solution was found here: 
+         *
+         *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
+         */
+        update: function(time, delta) {
+            this._updated = false;
+
+            if (!this.paused) {
+                delta = (delta / 1000) * this.get('timeScale');
+                this.frameAccumulator += delta;
+
+                while (this.frameAccumulator >= this.frameDuration) {
+                    this.time += this.deltaTimePerFrame;
+
+                    this._update(this.time, this.deltaTimePerFrame);
+                    this._updated = true;
+                    
+                    this.frameAccumulator -= this.frameDuration;
+                }    
+            }
+        },
+
+        /**
+         * Returns whether or not a simulation update has occured since
+         *   the last time "update" was called.  Because this version
+         *   only does updates on fixed intervals, it might not actually
+         *   update the simulation every time "update" is called, which
+         *   should be on every frame.  Using this function lets the
+         *   view know whether it should redraw things that are
+         *   dependent on the sim so it doesn't waste its time if
+         *   nothing has actually changed.
+         */
+        updated: function() {
+            return this._updated;
+        }
+
+    });
+
+    return FixedIntervalSimulation;
+});
+
+define('common/quantum/models/simulation',['require','exports','module','underscore','common/simulation/fixed-interval-simulation'],function (require, exports, module) {
 
     'use strict';
 
     var _ = require('underscore');
-    
-    function leastSquares(X, Y, _ignored, out) {
-        var n = X.length;
-        var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        for (var i = 0; i < n; i++) {
-            sumX  += X[i];
-            sumY  += Y[i];
-            sumXY += X[i] * Y[i];
-            sumX2 += X[i] * X[i];
-        }
-        var denom = n * sumX2 - sumX * sumX;
-        if (denom === 0) { out.m = NaN; out.b = NaN; return; }
-        out.m = (n * sumXY - sumX * sumY) / denom;
-        out.b = (sumY - out.m * sumX) / n;
-    }
+
+    var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
 
     /**
-     * Source ported from phet.common.motion.MotionMath.
+     * Base simulation model for quantum physics simulations
      */
-    var MotionMath = {
+    var QuantumSimulation = FixedIntervalSimulation.extend({
 
-        /**
-         * Cached objects
-         */
-        _linearRegressionResults: {},
+        defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
+            photonSpeedScale: 1,
+            elementProperties: undefined
+        }),
 
-        /**
-         * Estimates a derivative using a series of points to 
-         *   create a least-squares regression line to find a
-         *   linear function from which it can take a derivative.
-         * Expects an array of objects that have a "time" and
-         *   a "value" property.
-         */
-        estimateDerivative: function(timeSeries) {
-            var out = this.getLinearRegressionCoefficients(timeSeries);
-            if (_.isNaN(out.m) || !_.isFinite(out.m)) {
-                // PhET never finished this: "todo handle this error elsewhere"
-                return 0;
-            }
-            return out.m;
+        getGroundState: function() {
+            return this.get('elementProperties').getGroundState();
         },
 
-        /**
-         * Returns an object that looks like this: {
-         *     m: line slope
-         *     b: line intercept
-         * }
-         *
-         * See https://www.npmjs.org/package/least-squares for details
-         */
-        getLinearRegressionCoefficients: function(timeSeries) {
-            var X = [];
-            var Y = [];
-            for (var i = 0; i < timeSeries.length; i++) {
-                X[i] = timeSeries[i].time;
-                Y[i] = timeSeries[i].value;
-            }
-            leastSquares(X, Y, false, this._linearRegressionResults);
-            return this._linearRegressionResults;
+        getCurrentElementProperties: function() {
+            return this.get('elementProperties');
         },
 
-        /**
-         * Returns the average time value in a data series.
-         */
-        averageTime: function(timeSeries) {
-            var a = 0;
-            for (var i = 0; i < timeSeries.length; i++) {
-                a += timeSeries[i].time;
-            }
-            return a / timeSeries.length;
-        },
-
-        /**
-         * Returns a point with an estimated derivative as its value
-         *   and an average time as its time.
-         */
-        getDerivative: function(recentPositionTimeSeries) {
-            if (recentPositionTimeSeries.length === 0) {
-                return {
-                    value: 0,
-                    time:  0
-                };
-            }
-            else {
-                return {
-                    value: this.estimateDerivative(recentPositionTimeSeries),
-                    time:  this.averageTime(recentPositionTimeSeries)
-                };
-            }
-        },
-
-        /**
-         * PhET docs:
-         *
-         * "Gets the second derivative of the given time series data using the
-         *  central difference formula
-         *  See: http://mathews.ecs.fullerton.edu/n2003/NumericalDiffMod.html"
-         *
-         * Takes a data series called "x"
-         */
-        getSecondDerivative: function(x) {
-            if (x.length === 0) {
-                return {
-                    value: 0,
-                    time:  0
-                };
-            }
-            var sum = 0;
-            var count = 0;
-            for (var i = 1; i < x.length - 1; i++) {
-                sum += this._getSecondDerivative(x[i - 1], x[i], x[i + 1]);
-                count ++;
-            }
-            if (count === 0) {
-                return {
-                    value: 0,
-                    time: this.averageTime(x)
-                };
-            }
-            else {
-                return {
-                    value: sum / count,
-                    time: this.averageTime(x)
-                };
-            }
-        },
-
-        /**
-         * getSecondDerivative was an overloaded function in PhET's MotionMath
-         *   class, so I've separated the heart of the algorithm into its own
-         *   function.
-         */
-        _getSecondDerivative: function(a, b, c) {
-            var num = a.value - 2*b.value + c.value;
-            var h1 = c.time - b.time;
-            var h2 = b.time - a.time;
-            var h = (h1 + h2) / 2;
-            if (h === 0)
-                throw '_getSecondDerivative: h was zero';
-            else
-                return num / (h * h);
+        setCurrentElementProperties: function(elementProperties) {
+            this.set('elementProperties', elementProperties);
         }
 
-    };
+    });
 
-    return MotionMath;
-
+    return QuantumSimulation;
 });
+
 /**
  * Self-contained 2D vector class.  Previously delegated the base
  * implementation to the `vector2-node` npm package; that dependency has been
@@ -58782,6 +59472,854 @@ define('common/math/vector2',[],function () {
     return Vector2;
 });
 
+/**
+ * Minimal object pool factory — drop-in replacement for the `object-pool` npm
+ * package.  The only API used across the codebase is:
+ *
+ *   var pool = Pool({ init: fn, enable: fn });
+ *   var obj  = pool.create();
+ *   pool.remove(obj);
+ */
+define('object-pool',[],function () {
+
+    'use strict';
+
+    /**
+     * @param {Object} [config]
+     * @param {Function} [config.init]   Called once to create a new instance.
+     * @param {Function} [config.enable] Called each time an instance is reused.
+     */
+    function Pool(config) {
+        var available = [];
+        var init   = (config && config.init)   || function () { return {}; };
+        var enable = (config && config.enable) || null;
+
+        return {
+            create: function () {
+                var obj = available.length > 0 ? available.pop() : init();
+                if (enable) enable(obj);
+                return obj;
+            },
+            remove: function (obj) {
+                available.push(obj);
+            }
+        };
+    }
+
+    return Pool;
+});
+
+define('common/pooled-object/pooled-object2',['require','underscore','object-pool'],function (require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var Pool = require('object-pool');
+
+    var subclasses = 0;
+
+    /**
+     * I wanted to come up with a general solution for this problem of having
+     *   a bunch of pooled objects, and I also wanted to add some extra
+     *   functionality.  I wanted to make it so an object could own any 
+     *   objects that it creates and then just call one static method on this
+     *   class to release all instances that it owns instead of having to
+     *   keep track of instances itself and release them individually.  This
+     *   is what I came up with.  There might be some precedence for this
+     *   kind of thing already, but I don't have time to look it up.  I'm not
+     *   even sure what I'd look for.  I'll probably put this in the common
+     *   files if it turns out useful.
+     */
+    var PooledObject = function() {
+
+    };
+
+    /**
+     * Instance functions/properties
+     */
+    _.extend(PooledObject.prototype, {
+
+        /**
+         * Initializes the PooledObject.  Note that this is only called when a
+         *   new object is made; it is not called after every time a recycled
+         *   object is pulled from the pool.
+         */
+        init: function() {},
+
+        /**
+         * Called with the parameters passed to the create function, this
+         *   function is for settting up the PooledObject instance with its
+         *   initial values after being pulled from the object pool.
+         */
+        onCreate: function() {},
+
+        /**
+         * Releases this instance to the object pool.
+         */
+        destroy: function() {
+            if (!this.destroyed && this.constructor._pool) {
+                this.constructor._pool.remove(this);
+                this.destroyed = true;
+            }
+        }
+
+    });
+
+    /**
+     * Static functions/properties
+     */
+    _.extend(PooledObject, {
+
+        /**
+         * Initializes and returns a new PooledObject instance from the object pool.
+         *   Accepts the normal constructor parameters and passes them on to
+         *   the created instance.
+         */
+        create: function() {
+            if (!this._pool)
+                this.initPool();
+            var pooledObject = this._pool.create();
+            pooledObject.destroyed = false;
+            pooledObject.onCreate.apply(pooledObject, arguments);
+            return pooledObject;
+        },
+
+        /**
+         * Initializes and returns a new PooledObject instance from the object pool.
+         *   Accepts the normal constructor parameters and passes them on to
+         *   the created instance.  The difference is that the first parameter
+         *   is an owner object.  The new object will be added to a list of
+         *   objects owned by that owner, so the owner can later release all
+         *   objects that it owns.
+         */
+        createWithOwner: function(owner) {
+            // See if we need to set up the infrastructure for owned objects
+            if (!this._ownedObjects) {
+                this._ownedObjects = [];
+                this._ownerId = 0;
+            }
+            // Get an array of the args for this function minus the first one (owner)
+            var constructorArgs = Array.prototype.slice.call(arguments, 1);
+            // Create the object instance
+            var pooledObject = this.create.apply(this, constructorArgs);
+            // See if this object already has an owner id, and if it doesn't, create one
+            if (this._getOwnerId(owner) === undefined)
+                this._setOwnerId(owner, this._ownerId++);
+            // Create the array for this owner's objects if it doesn't yet exist
+            if (this._ownedObjects[this._getOwnerId(owner)] === undefined)
+                this._ownedObjects[this._getOwnerId(owner)] = [];
+            // Add this new object to the object's owner array
+            this._ownedObjects[this._getOwnerId(owner)].push(pooledObject);
+            // Then return it!
+            return pooledObject;
+        },
+
+        _getOwnerId: function(owner) {
+            return owner['__ownerId_' + this._subclassId];
+        },
+
+        _setOwnerId: function(owner, id) {
+            owner['__ownerId_' + this._subclassId] = id;
+        },
+
+        /**
+         * Initializes the object pool.  
+         */
+        initPool: function() {
+            this._pool = Pool(this.getPoolConfig());
+        },
+
+        /**
+         * Returns the configuration to pass to the Pool constructor. This is meant
+         *   to be overriden by child classes if necessary.
+         */
+        getPoolConfig: function() {
+            var Constructor = this;
+            return {
+                init: function() {
+                    var obj = new Constructor();
+                    obj.init();
+                    return obj;
+                }
+            };
+        },
+
+        /**
+         * Destroys all objects owned by the given owner.
+         */
+        destroyAllOwnedBy: function(owner) {
+            if (this._ownedObjects && this._getOwnerId(owner) !== undefined && this._ownedObjects[this._getOwnerId(owner)]) {
+                var objects = this._ownedObjects[this._getOwnerId(owner)];
+                for (var i = objects.length - 1; i >= 0; i--) {
+                    objects[i].destroy();
+                    objects.splice(i, 1);
+                }
+            }
+        },
+
+        _subclassId: subclasses,
+
+        /**
+         * Modeled somewhat after Backbone's extend function, this is a convenience
+         *   function for creating child classes of PooledObject.
+         */
+        extend: function(objectConstructor, prototypeProps, staticProps) {
+            if (!_.isFunction(objectConstructor)) {
+                staticProps = prototypeProps;
+                prototypeProps = objectConstructor;
+                objectConstructor = function() {};
+            }
+
+            var parent = this;
+            var child = function() {
+                parent.apply(this, arguments);
+                objectConstructor.apply(this, arguments);
+            };
+
+            // Static functions/properties
+            _.extend(child, parent, staticProps);
+            delete child._pool;
+            delete child._ownedObjects;
+            delete child._ownerId;
+            child._subclassId = subclasses++;
+
+            // If this were the parent instead of PooledObject, it wouldn't work
+            //   because binding a function can only happen once, and if we tried
+            //   to create a wrapper function that used function.apply, it would
+            //   call the parent's wrapper next in the chain, which would bind the
+            //   parent's context instead of the child's, so it would be pointless.
+            for (var key in PooledObject) {
+                if (child.hasOwnProperty(key) && _.isFunction(PooledObject[key]) && !(staticProps && staticProps[key])) {
+                    child[key] = _.bind(PooledObject[key], child);
+                }
+            }
+
+            // This piece is straight from Backbone.js. It "sets the prototype chain to inherit from parent".
+            var Surrogate = function(){ this.constructor = child; };
+            Surrogate.prototype = parent.prototype;
+            child.prototype = new Surrogate;
+
+            // Instance functions/properties
+            _.extend(child.prototype, parent.prototype, prototypeProps);
+
+            child.prototype.constructor = child;
+            
+            return child;
+        }
+
+    });
+
+
+    return PooledObject;
+});
+define('common/pooled-object/model',['require','underscore','./pooled-object2'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var PooledObject = require('./pooled-object2');
+
+
+    /**
+     * A vanilla replacement of the Backbone Model designed to be used with
+     *   a built-in object pool
+     */
+    var PooledModel = PooledObject.extend({
+
+        init: function() {
+            this.attributes = {};
+        },
+
+        /**
+         * Called on the instance after 'create' is called to set initial values
+         */
+        onCreate: function(attributes, options) {
+            attributes = _.defaults({}, attributes, _.result(this, 'defaults'));
+            this.set(attributes, options);
+        },
+
+        set: function(key, val, options) {
+            var attrs;
+            if (typeof key === 'object') {
+                attrs = key;
+                options = val;
+            } 
+            else {
+                attrs = {};
+                attrs[key] = val;
+            }
+
+            for (var key in attrs)
+                this.attributes[key] = attrs[key];
+
+            return this;
+        },
+
+        get: function(key) {
+            return this.attributes[key];
+        },
+
+        destroy: function() {
+            PooledObject.prototype.destroy.apply(this, arguments);
+
+            // Make sure the collection knows we destroyed it
+            if (this.collections) {
+                for (var i = this.collections.length - 1; i >= 0; i--)
+                    this.collections[i].alertDestroyed(this);
+            }
+        }
+
+    });
+
+
+    return PooledModel;
+});
+define('common/models/positionable-object-vanilla',['require','underscore','object-pool','../math/vector2','../pooled-object/model'],function (require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var Pool = require('object-pool');
+
+    var Vector2     = require('../math/vector2');
+    var PooledModel = require('../pooled-object/model');
+
+    var vectorPool = Pool({
+        init: function() {
+            return new Vector2();
+        },
+        enable: function(vector) {
+            vector.set(0, 0);
+        }
+    });
+
+var counter = 0;
+    /**
+     * Represents an object in 2D space and provides some helper functions
+     *   for changing a position vector in a way that leverages Backbone's
+     *   event system.
+     */
+    var VanillaPositionableObject = PooledModel.extend({
+
+        init: function() {
+            PooledModel.prototype.init.apply(this, arguments);
+
+            this._offsetPosition = new Vector2();
+        },
+
+        defaults: {
+            velocity: null,
+            acceleration: null
+        },
+
+        /**
+         * Called on the instance after 'create' is called to set initial values
+         */
+        onCreate: function(attributes, options) {
+            PooledModel.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.set('position', this.createVector2().set(this.get('position')));
+        },
+
+        toJSON: function(options) {
+            return _.clone(this.attributes);
+        },
+
+        createVector2: function() {
+            return vectorPool.create();
+        },
+
+        removeVector2: function(vec) {
+            vectorPool.remove(vec);
+        },
+
+        getX: function(x) {
+            return this.get('position').x;
+        },
+
+        getY: function(y) {
+            return this.get('position').y;
+        },
+
+        setX: function(x) {
+            this.setPosition(x, this.get('position').y);
+        },
+
+        setY: function(y) {
+            this.setPosition(this.get('position').x, y);
+        },
+
+        translate: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('position').add(x);
+            else
+                this.get('position').add(x, y);
+        },
+
+        setPosition: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('position').set(x);
+            else
+                this.get('position').set(x, y);
+        },
+
+        offsetPosition: function(offset) {
+            return this._offsetPosition.set(this.get('position')).add(offset);
+        },
+
+        getPosition: function() {
+            return this.get('position');
+        },
+
+        destroy: function() {
+            if (!this.destroyed) 
+                this.removeVector2(this.get('position'));
+            PooledModel.prototype.destroy.apply(this, arguments);
+        }
+
+    });
+
+
+    return VanillaPositionableObject;
+});
+define('common/models/motion-object-vanilla',['require','underscore','../math/vector2','./positionable-object-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+    
+    var Vector2 = require('../math/vector2');
+
+    var VanillaPositionableObject = require('./positionable-object-vanilla');
+
+    /**
+     * Uses the base of VanillaPositionableObject, which has a position vector
+     *   as one of its attributes, and adds velocity and acceleration
+     *   which can be used to calculate new positions.
+     */
+    var VanillaMotionObject = VanillaPositionableObject.extend({
+
+        init: function() {
+            VanillaPositionableObject.prototype.init.apply(this, arguments);
+
+            // For internal use to avoid creating and destroying objects
+            this._vec2 = new Vector2(0, 0);
+        },
+        
+        defaults: _.extend({}, VanillaPositionableObject.prototype.defaults, {
+            velocity: null,
+            acceleration: null
+        }),
+
+        onCreate: function(attributes, options) {
+            VanillaPositionableObject.prototype.onCreate.apply(this, [attributes, options]);
+
+            // Create new vectors
+            this.set('velocity',     this.createVector2().set(this.get('velocity')));
+            this.set('acceleration', this.createVector2().set(this.get('acceleration')));
+        },
+
+        /**
+         * Updates position with a position function that only takes
+         *   into account velocity and delta time, leaving out
+         *   acceleration.
+         */
+        updatePositionFromVelocity: function(deltaTime, options) {
+            this._vec2.set(this.get('velocity'));
+            this.translate(this._vec2.scale(deltaTime), options);
+        },
+
+        /**
+         * Updates position with a standard position function based
+         *   on delta time and velocity and acceleration.
+         */
+        updatePositionFromAcceleration: function(deltaTime, options) {
+            this._vec2.x = this.get('velocity').x * deltaTime + 0.5 * this.get('acceleration').x * deltaTime * deltaTime;
+            this._vec2.y = this.get('velocity').y * deltaTime + 0.5 * this.get('acceleration').y * deltaTime * deltaTime;
+            this.translate(this._vec2);
+        },
+
+        /**
+         * Updates the velocity based on the acceleration and the
+         *   delta time.
+         */
+        updateVelocity: function(deltaTime, options) {
+            this._vec2.x = this.get('acceleration').x * deltaTime;
+            this._vec2.y = this.get('acceleration').y * deltaTime;
+            this.addVelocity(this._vec2, options);
+        },
+
+        /**
+         * Just combines the calls for a common use case where we
+         *   update the velocity based on the acceleration and
+         *   time and then use velocity and acceleration and time
+         *   to update the position of the object.
+         */
+        updatePositionAndVelocity: function(deltaTime, options) {
+            this.updateVelocity(deltaTime, options);
+            this.updatePositionFromAcceleration(deltaTime, options);
+        },
+
+        /**
+         * An alias of updatePositionAndVelocity
+         */
+        updateMotion: null, // (Defined outside this extend function)
+
+        /**
+         * Function that facilitates setting the velocity vector 
+         *   while still triggering a change event.
+         */
+        setVelocity: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('velocity').set(x);
+            else
+                this.get('velocity').set(x, y);
+        },
+
+        /**
+         * Sets just the velocity in the x direction.
+         */
+        setVelocityX: function(x) {
+            this.setVelocity(x, this.get('velocity').y);
+        },
+
+        /**
+         * Sets just the velocity in the y direction.
+         */
+        setVelocityY: function(y) {
+            this.setVelocity(this.get('velocity').x, y);
+        },
+
+        /**
+         * Kind of like translation but for velocity. Just adds the given
+         *   vector to the current velocity.
+         */
+        addVelocity: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('velocity').add(x);
+            else
+                this.get('velocity').add(x, y);
+        },
+
+        getVelocity: function() {
+            return this.get('velocity');
+        },
+
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('acceleration').set(x);
+            else
+                this.get('acceleration').set(x, y);
+        },
+
+        getAcceleration: function() {
+            return this.get('acceleration');
+        },
+
+        /** 
+         * Avoid memory leaks from the pool.
+         */
+        destroy: function(options) {
+            if (!this.destroyed) {
+                this.removeVector2(this.get('velocity'));
+                this.removeVector2(this.get('acceleration'));
+            }
+
+            VanillaPositionableObject.prototype.destroy.apply(this, arguments);
+        }
+
+    });
+
+    /**
+     * Set function aliases
+     */
+    VanillaMotionObject.prototype.updateMotion = VanillaMotionObject.prototype.updatePositionAndVelocity;
+
+
+    return VanillaMotionObject;
+});
+
+define('common/mechanics/models/particle-vanilla',['require','../../math/vector2','../../models/motion-object-vanilla'],function (require) {
+
+    'use strict';
+
+    var Vector2             = require('../../math/vector2');
+    var VanillaMotionObject = require('../../models/motion-object-vanilla');
+
+    /**
+     * A particle that moves according to the Verlet method
+     */
+    var VanillaParticle = VanillaMotionObject.extend({
+
+        init: function() {
+            VanillaMotionObject.prototype.init.apply(this, arguments);
+
+            this.prevAcceleration = new Vector2();
+        },
+
+        onCreate: function(attributes, options) {
+            VanillaMotionObject.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
+
+        /**
+         * Determines the new state of the body using the Verlet method
+         */
+        update: function(time, deltaTime) {
+            // New position
+            var xNew = this.getX()
+                + deltaTime * this.get('velocity').x
+                + deltaTime * deltaTime * this.get('acceleration').x / 2;
+            var yNew = this.getY()
+                + deltaTime * this.get('velocity').y
+                + deltaTime * deltaTime * this.get('acceleration').y / 2;
+            this.setPosition(xNew, yNew);
+
+            // New velocity
+            var vxNew = this.get('velocity').x + deltaTime * (this.get('acceleration').x + this.prevAcceleration.x) / 2;
+            var vyNew = this.get('velocity').y + deltaTime * (this.get('acceleration').y + this.prevAcceleration.y) / 2;
+            this.setVelocity(vxNew, vyNew);
+
+            // New acceleration
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
+
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y, options) {
+            this.prevAcceleration.set(this.get('acceleration'));
+
+            VanillaMotionObject.prototype.setAcceleration.apply(this, arguments);
+        },
+
+        getSpeed: function() {
+            return this.get('velocity').length();
+        }
+
+    });
+
+    return VanillaParticle;
+});
+define('common/quantum/models/physics-util',['require'],function (require) {
+
+    'use strict';
+
+    /**
+     * Constants
+     */
+
+    // Planck's constant J-s
+    var PLANCK = 6.626E-34;
+    // Speed of light - m/s
+    var LIGHT_SPEED = 2.9979E8;
+    // Electron rest mass - kg
+    var ELECTRON_MASS = 9.109E-31;
+    // Joules per EV, EV per Joule
+    var JOULES_PER_EV = 1.6022E-19;
+    var EV_PER_JOULE = 1 / JOULES_PER_EV;
+    // nanometers per meter
+    var NM_PER_M = 1E9;
+    // Avogadro's number
+    var AVOGADRO = 6.022E23;
+
+
+    /**
+     * A collection of utilities having to do with physical constants and phenomena
+     */
+    var PhysicsUtil = {
+
+        PLANCK: PLANCK,
+        LIGHT_SPEED: LIGHT_SPEED,
+        ELECTRON_MASS: ELECTRON_MASS,
+        JOULES_PER_EV: JOULES_PER_EV,
+        EV_PER_JOULE: EV_PER_JOULE,
+        NM_PER_M: NM_PER_M,
+        AVOGADRO: AVOGADRO,
+
+        /**
+         * Determines the energy, in EV, of radiation with a specified wavelength
+         *
+         * @param wavelength in nm
+         * @return energy in EV
+         */
+        wavelengthToEnergy: function(wavelength) {
+            return PLANCK * LIGHT_SPEED / wavelength / JOULES_PER_EV * NM_PER_M;
+        },
+
+        /**
+         * Determines the wavelength, in nm, of radiation with a specified energy
+         *
+         * @param ev energy of the radiation, in ev
+         * @return wavelength in nm
+         */
+        energyToWavelength: function(ev) {
+            return (PLANCK * LIGHT_SPEED / ev) * EV_PER_JOULE * NM_PER_M;
+        },
+
+        /**
+         * Returns the frequency of EM radiation of a specified wavelength
+         *
+         * @param wavelength Wavelength, in nm
+         * @return frequency in Hz
+         */
+        wavelengthToFrequency: function(wavelength) {
+            return LIGHT_SPEED * NM_PER_M / wavelength;
+        },
+
+        /**
+         * Returns the wavelength, in nm, of EM radiation of a specified
+         * frequency
+         *
+         * @param frequency in Hz
+         * @return wavelength in nm
+         */
+        frequencyToWavelength: function(frequency) {
+            return LIGHT_SPEED * NM_PER_M / frequency;
+        },
+
+        /**
+         * Returns the energy, in EV, of EM radiation of a specified frequency
+         *
+         * @param frequency in Hz
+         * @return energy in EV
+         */
+        frequencyToEnergy: function(frequency) {
+            return this.wavelengthToEnergy(this.frequencyToWavelength(frequency));
+        },
+
+        /**
+         * Returns the frequency, in Hz, of EM radiation of a specified energy
+         *
+         * @param energy
+         * @return frequency in Hz
+         */
+        energyToFrequency: function(energy) {
+            return this.wavelengthToFrequency(this.energyToWavelength(energy));
+        }
+
+    };
+
+    return PhysicsUtil;
+});
+
+define('common/quantum/models/photon-vanilla',['require','underscore','../../math/vector2','../../mechanics/models/particle-vanilla','./physics-util'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2         = require('../../math/vector2');
+    var VanillaParticle = require('../../mechanics/models/particle-vanilla');
+    
+    var PhysicsUtil = require('./physics-util');
+
+    /**
+     * This model represents a photon and includes functionality that was previously
+     *   separated into the CollidableAdapter class in the original PhET sims.
+     */
+    var VanillaPhoton = VanillaParticle.extend({
+
+        collidable: true,
+
+        init: function() {
+            VanillaParticle.prototype.init.apply(this, arguments);
+
+            this.prevPosition = new Vector2();
+            this.prevVelocity = new Vector2();
+        },
+
+        defaults: _.extend({}, VanillaParticle.prototype.defaults, {
+            wavelength: undefined,
+            // If this photon was produced by the stimulation of another, this
+            // is a reference to that photon.
+            parentPhoton: null,
+            // If this photon has stimulated the production of another photon, this
+            // is a reference to that photon
+            childPhoton: null
+        }),
+
+        onCreate: function(attributes, options) {
+            VanillaParticle.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.prevPosition.set(this.get('position'));
+            this.prevVelocity.set(this.get('velocity'));
+
+            this._markedForDestruction = false;
+        },
+
+        /**
+         * Sets a flag for the electron to be destroyed on the next loop
+         */
+        markForDestruction: function() {
+            this._markedForDestruction = true;
+        },
+
+        /**
+         * Returns whether the electron has been marked for destruction
+         */
+        markedForDestruction: function() {
+            return this._markedForDestruction;
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            VanillaParticle.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            VanillaParticle.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        },
+
+        /**
+         * Converts wavelength to energy and returns it.
+         */
+        getEnergy: function() {
+            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+        }
+
+    }, {
+
+        // Defaults
+        DEFAULT_SPEED:          1,
+        RADIUS:                 10,
+
+        // Savelength constants
+        RED:                    680,
+        DEEP_RED:               640,
+        BLUE:                   440,
+        MIN_VISIBLE_WAVELENGTH: 380,
+        MAX_VISIBLE_WAVELENGTH: 710,
+        GRAY:                   5000
+
+    });
+
+    return VanillaPhoton;
+});
 define('common/math/polyfills',['require'],function (require) {
 
     'use strict';
@@ -59130,223 +60668,6 @@ define('common/math/rectangle',['require','./polyfills','./vector2','./line-inte
     return Rectangle;
 });
 
-/**
- * This is just an AMD wrapper for binarysearch by Soldair
- * (https://github.com/soldair/node-binarysearch)
- *
- * If we switch to a non-AMD system or don't need to be able to run off
- *   the raw source for testing, we can get rid of this and just import
- *   it directly from its node_module.
- */
-define('common/binarysearch/binarysearch',['require','exports','module'],function(require, exports, module) {
-
-  module.exports = function(arr,search,comparitor) {
-    if(!arr) return -1;
-    // as long as it has a length i will try and itterate over it.
-    if(arr.length === undefined) return -1;
-    
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
-
-    return bs(arr,search,comparitor);
-  };
-
-  module.exports.first = function(arr,search,comparitor) {
-    return module.exports.closest(arr,search,{exists:true},comparitor);
-  };
-
-  module.exports.last = function(arr,search,comparitor) {
-    return module.exports.closest(arr,search,{exists:true,end:true},comparitor);
-  };
-
-  module.exports.closest = function(arr,search,opts,comparitor) {
-
-    if(typeof opts === 'function') {
-      comparitor = opts;
-      opts = {};
-    }
-
-    if(arr.length === 0) return -1;
-    if(arr.length === 1) return 0;
-
-    opts = opts||{};
-    if(!comparitor) comparitor = this._defaultComparitor();
-    
-    var closest = bsclosest(arr, search, comparitor, opts.end, opts.exists?false:true);
-
-    if(closest > arr.length-1) closest = arr.length-1;
-    else if(closest < 0) closest = 0;
-
-    return closest;
-  };
-
-  // inserts element into the correct sorted spot into the array
-  module.exports.insert = function(arr,search,opts,comparitor){ 
-
-    if(typeof opts === 'function') {
-      comparitor = opts;
-      opts = {};
-    }
-
-    opts = opts||{};
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
-    if(!arr.length) {
-      arr[0] = search;
-      return 0;
-    }
-
-    var closest = module.exports.closest(arr,search,comparitor);
-
-    var cmp = comparitor(arr[closest],search);
-    if(cmp < 0) {//less
-      arr.splice(++closest,0,search);
-    } else if(cmp > 0){ 
-      arr.splice(closest,0,search);
-    } else {
-      if(opts.unique){
-        arr[closest] = search;
-      } else {
-        // im equal. this value should be appended to the list of existing same sorted values.
-        while(comparitor(arr[closest],search) === 0){
-          if(closest >= arr.length-1) break;
-          closest++;
-        }
-
-        arr.splice(closest,0,search);
-      }
-    }
-    return closest;
-  };
-
-  // this method returns the start and end indicies of a range. [start,end]
-  module.exports.range = function(arr,from,to,comparitor) {
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
-
-    var fromi = module.exports.closest(arr,from,comparitor);
-
-    var toi = module.exports.closest(arr,to,{end:true},comparitor);
-
-    // this is a hack. 
-    // i should be able to fix the algorithm and generate a correct range.
-
-    while(fromi <= toi){ 
-      if(comparitor(arr[fromi],from) > -1) break;
-
-      fromi++
-    }
-
-    while(toi >= fromi){ 
-      if(comparitor(arr[toi],to) < 1) break;
-      toi--;
-    }
-
-    return [fromi,toi];
-  };
-
-  // this method returns the values of a range;
-  module.exports.rangeValue = function(arr,from,to,comparitor){
-    var range = module.exports.range(arr,from,to,comparitor);
-    return arr.slice(range[0],range[1]+1);
-  };
-
-  //
-  module.exports.indexObject = function(o,extractor) {
-    var index = [];
-    
-    Object.keys(o).forEach(function(k){
-      index.push({k:k,v:extractor(o[k])});
-    });
-
-    return index.sort(function(o1,o2){
-      return o1.v - o2.v;
-    });
-  };
-
-  module.exports.cmp = function(v1,v2){
-    return v1 - v2;
-  };
-
-  module.exports._defaultComparitor = function() {
-    var indexMode,indexModeSearch;
-    return function(v,search){
-      // support the object format of generated indexes
-      if(indexMode === undefined){
-        if(typeof v === 'object' && v.hasOwnProperty('v')) indexMode = true;
-        if(typeof search === 'object' && search.hasOwnProperty('v')) indexModeSearch = true
-      }
-
-      if(indexMode) v = v.v;
-      if(indexModeSearch) search = search.v;
-
-      return v - search;
-    };
-  };
-
-  module.exports._binarySearch = bs;
-  module.exports._binarySearchClosest = bsclosest;
-
-  function bs(arr, search, comparitor) {
-
-    var max = arr.length-1,min = 0,middle,cmp;
-    // continue searching while key may exist
-    while (max >= min) {
-      middle = mid(min, max);
-
-      cmp = comparitor(arr[middle],search,middle);
-
-      if (cmp < 0) {
-        min = middle + 1;
-      } else if (cmp > 0) {
-        max = middle - 1;
-      } else {
-        return middle;
-      }
-    }
-    // key not found
-    return -1;
-  }
-
-  function bsclosest(arr, search, comparitor, invert, closest) {
-    var mids = {}
-    , min = 0,max = arr.length-1,middle,cmp
-    , sanity = arr.length;
-
-    while (min < max) {
-      middle = midCareful(min, max,mids); 
-      cmp = comparitor(arr[middle],search,middle);
-      if(invert){
-        if (cmp > 0)max = middle - 1;
-        else min = middle;   
-      } else {
-        if (cmp < 0)min = middle + 1;
-        else max = middle;
-      }
-      if(!--sanity) break;
-    }
-     
-    if (max == min && comparitor(arr[min],search) === 0) return min;
-    
-    if(closest) {
-      var match = comparitor(arr[min],search);
-      if(min == arr.length-1 && match < 0) return min;
-      if(min == 0 && match > 0) return 0;
-
-      return closest?(invert?min+1:min-1):-1;
-    } 
-    return -1; 
-  }
-
-  function mid(v1,v2){
-    return v1+Math.floor((v2-v1)/2);
-  }
-
-  function midCareful(v1,v2,mids){
-    var mid = v1+Math.floor((v2-v1)/2);
-    if(mids[mid]) mid = v1+Math.ceil((v2-v1)/2);
-    mids[mid] = 1;
-    return mid;
-  }
-
-});
 define('common/models/positionable-object',['require','backbone','../math/vector2','object-pool'],function (require) {
 
     'use strict';
@@ -59647,56 +60968,1233 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
     return MotionObject;
 });
 
-define('common/math/range',['require'],function (require) {
+define('common/mechanics/models/particle',['require','../../math/vector2','../../models/motion-object'],function (require) {
 
     'use strict';
+
+    var Vector2      = require('../../math/vector2');
+    var MotionObject = require('../../models/motion-object');
 
     /**
-     * A function that takes a range object in the format
-     *   { min: <number>, max: <number> } and adds helper
-     *   functions to it that perform common tasks related
-     *   to ranges.
+     * A particle that moves according to the Verlet method
      */
-    var range = function(rangeObject) {
-        rangeObject.random = function() {
-            return (this.max - this.min) * Math.random() + this.min;
-        };
+    var Particle = MotionObject.extend({
 
-        rangeObject.lerp = function(percent) {
-            return this.length() * percent + this.min;
-        };
+        initialize: function(attributes, options) {
+            MotionObject.prototype.initialize.apply(this, [attributes, options]);
 
-        rangeObject.percent = function(x) {
-            return (x - this.min) / this.length();
-        };
+            this.prevAcceleration = new Vector2(this.get('acceleration'));
+        },
 
-        rangeObject.constrainedPercent = function(x) {
-            return this.percent(Math.max(this.min, Math.min(this.max, x)));
-        };
+        /**
+         * Determines the new state of the body using the Verlet method
+         */
+        update: function(time, deltaTime) {
+            // New position
+            var xNew = this.getX()
+                + deltaTime * this.get('velocity').x
+                + deltaTime * deltaTime * this.get('acceleration').x / 2;
+            var yNew = this.getY()
+                + deltaTime * this.get('velocity').y
+                + deltaTime * deltaTime * this.get('acceleration').y / 2;
+            this.setPosition(xNew, yNew);
 
-        rangeObject.contains = function(x) {
-            return x <= this.max && x >= this.min;
-        };
+            // New velocity
+            var vxNew = this.get('velocity').x + deltaTime * (this.get('acceleration').x + this.prevAcceleration.x) / 2;
+            var vyNew = this.get('velocity').y + deltaTime * (this.get('acceleration').y + this.prevAcceleration.y) / 2;
+            this.setVelocity(vxNew, vyNew);
 
-        rangeObject.length = function() {
-            return this.max - this.min;
-        };
+            // New acceleration
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
 
-        rangeObject.center = function() {
-            return this.min + (this.length() / 2);
-        };
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y, options) {
+            this.prevAcceleration.set(this.get('acceleration'));
 
-        return rangeObject;
-    };
+            MotionObject.prototype.setAcceleration.apply(this, arguments);
+        },
 
-    return range;
+        getSpeed: function() {
+            return this.get('velocity').length();
+        }
 
+    });
+
+    return Particle;
 });
-define('constants',['require','common/math/range'],function (require) {
+define('common/mechanics/models/body',['require','underscore','common/math/vector2','./particle'],function (require) {
 
     'use strict';
 
-    var range = require('common/math/range');
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Particle = require('./particle');
+
+    /**
+     * A body with mass and momentum
+     */
+    var Body = Particle.extend({
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            lastColidedBody: null,
+            theta: 0,
+            omega: 0,
+            alpha: 0,
+            prevAlpha: 0,
+            mass: 0
+        }),
+
+        initialize: function(attributes, options) {
+            Particle.prototype.initialize.apply(this, [attributes, options]);
+
+            this._momentum = new Vector2();
+        },
+
+        /**
+         * 
+         */
+        update: function(deltaTime) {
+            var alpha = this.get('alpha');
+            var omega = this.get('omega');
+            var prevAlpha = this.get('prevAlpha');
+            
+            // New orientation
+            this.set('theta', this.get('theta') + deltaTime * omega + deltaTime * deltaTime * alpha / 2);
+            // New angular velocity
+            this.set('omega', omega + deltaTime * (alpha + prevAlpha) / 2);
+            // Track angular acceleration
+            this.set('prevAlpha', alpha);
+
+            Particle.prototype.update.apply(this, arguments);
+        },
+
+        getCM: function() {
+            throw 'Must be implemented in child class';
+        },
+
+        getMomentOfInertia: function() {
+            throw 'Must be implemented in child class';
+        },
+
+        /**
+         * Returns the total kinetic energy of the body, translational
+         * and rotational
+         *
+         * @return the kinetic energy
+         */
+        getKineticEnergy: function() {
+            return (
+                (this.get('mass') * this.get('velocity').lengthSq() / 2) +
+                (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2)
+            );
+        },
+
+        getMomentum: function() {
+            return this._momentum.set(
+                this.get('velocity').x * this.get('mass'),
+                this.get('velocity').y * this.get('mass')
+            );
+        },
+
+        /**
+         * Function that facilitates setting the momentum vector 
+         *   while still triggering a change event.
+         */
+        setMomentum: function(x, y, options) {
+            if (x instanceof Vector2)
+                this.setVelocity(x.x / this.get('mass'), x.y / this.get('mass'), y);
+            else
+                this.setVelocity(x / this.get('mass'), y / this.get('mass'), options);
+        }
+
+    });
+
+    return Body;
+});
+define('common/mechanics/models/boxlike-body',['require','underscore','common/math/vector2','common/math/rectangle','./body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2   = require('common/math/vector2');
+    var Rectangle = require('common/math/rectangle');
+
+    var Body = require('./body');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var BoxlikeBody = Body.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Body.prototype.defaults, {
+            mass: Number.POSITIVE_INFINITY,
+            minimumWidth: 100,
+            leftWallVx: 0,
+            corner1: undefined,
+            corner2: undefined
+        }),
+
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
+
+            this.set('corner1', new Vector2(this.get('corner1')));
+            this.set('corner2', new Vector2(this.get('corner2')));
+            this.corner1 = this.get('corner1');
+            this.corner2 = this.get('corner2');
+            this.center  = new Vector2();
+
+            this.bounds = new Rectangle();
+
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
+
+            this.setState(this.corner1, this.corner2);
+        },
+
+        getCM: function() {
+            return this.center;
+        },
+
+        getMomentOfInertia: function() {
+            return Number.MAX_VALUE;
+        },
+
+        setBounds: function(minX, minY, maxX, maxY) {
+            this.setState(
+                this.corner1.set(this.minX, this.minY), 
+                this.corner2.set(this.maxX, this.maxY)
+            );
+        },
+
+        getBounds: function() {
+            this.bounds.set(this.minX, this.minY, this.getWidth(), this.getHeight());
+            return this.bounds;
+        },
+
+        setState: function(corner1, corner2) {
+            this.corner1.set(corner1);
+            this.corner2.set(corner2);
+            this.maxX = Math.max(corner1.x, corner2.x);
+            this.maxY = Math.max(corner1.y, corner2.y);
+            this.minX = Math.min(Math.min(corner1.x, corner2.x), this.maxX - this.get('minimumWidth'));
+            this.minY = Math.min(corner1.y, corner2.y);
+            this.center.set(
+                (this.maxX + this.minX) / 2,
+                (this.maxY + this.minY) / 2
+            );
+            this.setPosition(this.minX, this.minY);
+        },
+
+        getCorner1X: function() {
+            return this.corner1.x;
+        },
+
+        getCorner1Y: function() {
+            return this.corner1.y;
+        },
+
+        getCorner2X: function() {
+            return this.corner2.x;
+        },
+
+        getCorner2Y: function() {
+            return this.corner2.y;
+        },
+
+        getCenter: function() {
+            return this.center;
+        },
+
+        getMinX: function() {
+            return this.minX;
+        },
+
+        getMinY: function() {
+            return this.minY;
+        },
+
+        getMaxX: function() {
+            return this.maxX;
+        },
+
+        getMaxY: function() {
+            return this.maxY;
+        },
+
+        getWidth: function() {
+            return Math.abs(this.corner2.x - this.corner1.x);
+        },
+
+        getHeight: function() {
+            return Math.abs(this.corner2.y - this.corner1.y);
+        },
+
+        getContactOffset: function(body) {
+            return 0;
+        },
+
+        getLeftWallVx: function() {
+            return this.get('leftWallVx');
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            Body.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            Body.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        }
+
+    });
+
+    return BoxlikeBody;
+});
+define('common/quantum/models/tube',['require','underscore','common/math/vector2','common/mechanics/models/boxlike-body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var BoxlikeBody = require('common/mechanics/models/boxlike-body');
+
+    /**
+     * 
+     */
+    var Tube = BoxlikeBody.extend({
+
+        defaults: _.extend({}, BoxlikeBody.prototype.defaults, {
+            origin: new Vector2(),
+            width: 0,
+            height: 0
+        }),
+
+        /**
+         * 
+         */
+        initialize: function(attributes, options) {
+            this.set({
+                position: this.get('origin'),
+                corner1: this.get('origin'),
+                corner2: new Vector2(
+                    this.get('origin').x + this.get('width'), 
+                    this.get('origin').y + this.get('height')
+                )
+            });
+
+            BoxlikeBody.prototype.initialize.apply(this, [attributes, options]);
+
+            // Set the initial bounds
+            this.getBounds();
+
+            this.on('change:height', this.heightChanged);
+        },
+
+        heightChanged: function(tube, height) {
+            // Reposition the walls of the cavity
+            var yMiddle = this.get('origin').y + this.previous('height') / 2;
+            this.get('origin').set(
+                this.get('origin').x, 
+                yMiddle - height / 2
+            );
+            this.setBounds(this.getMinX(), this.get('origin').y - height / 2, this.get('width'), height);
+            this.getBounds();
+        }
+
+    });
+
+    return Tube;
+});
+define('common/mechanics/models/spherical-body',['require','underscore','common/math/vector2','./body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Body = require('./body');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var SphericalBody = Body.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Body.prototype.defaults, {
+            radius: 0
+        }),
+
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
+
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
+        },
+
+        getCM: function() {
+            return this.get('position');
+        },
+
+        getMomentOfInertia: function() {
+            return this.get('mass') * this.get('radius') * this.get('radius') * 2 / 5;
+        },
+
+        getCenter: function() {
+            return this.get('position');
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            Body.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            Body.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        }
+
+    });
+
+    return SphericalBody;
+});
+define('common/math/reflection',['require','./vector2'],function (require) {
+
+    'use strict';
+
+    var Vector2 = require('./vector2');
+
+    var _point = new Vector2();
+
+    var Reflection = {
+
+        /**
+         * Reflects a point across a line defined by a point on the line
+         *   and the line's slope given as an angle in radians.
+         */
+        reflectPointAcrossLine: function(point, pointOnLine, lineAngle) {
+            var alpha = lineAngle % (Math.PI * 2);
+            var gamma = Math.atan2((point.y - pointOnLine.y), (point.x - pointOnLine.x)) % (Math.PI * 2);
+            var theta = (2 * alpha - gamma) % (Math.PI * 2);
+            var dist = point.distance(pointOnLine);
+            return _point.set(
+                pointOnLine.x + dist * Math.cos(theta),
+                pointOnLine.y + dist * Math.sin(theta)
+            );
+        }
+
+    };
+
+    return Reflection;
+});
+define('common/mechanics/models/sphere-sphere-collision-expert',['require','./spherical-body','common/math/vector2','common/math/reflection'],function (require) {
+
+    'use strict';
+
+    var SphericalBody = require('./spherical-body');
+
+    var Vector2    = require('common/math/vector2');
+    var Reflection = require('common/math/reflection');
+
+    // Cached objects
+    var _loa           = new Vector2();
+    var _contactPoint  = new Vector2();
+    var _vRel          = new Vector2();
+    var _n             = new Vector2();
+    var _tangentVector = new Vector2();
+    var _linePtA       = new Vector2();
+    var _linePtB       = new Vector2();
+    var _vA            = new Vector2();
+    var _vB            = new Vector2();
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var SphereSphereCollisionExpert = {
+
+        detectAndDoCollision: function(bodyA, bodyB) {
+            if (bodyA instanceof SphericalBody && 
+                bodyB instanceof SphericalBody && 
+                this.spheresTouch(bodyA, bodyB) && 
+                this.tweakCheck(bodyA, bodyB)
+            ) {
+                // Do the collision
+                this.collide(bodyA, bodyB);
+                
+                return true;
+            }
+
+            return false;
+        },
+
+        /**
+         * Returns whether or not two spheres are touching.
+         */
+        spheresTouch: function(sphereA, sphereB) {
+            if (sphereA.get('position').distanceSq(sphereB.get('position')) <= Math.pow(sphereA.get('radius') + sphereB.get('radius'), 2))
+                return true;
+            else
+                return false;
+        },
+
+        /**
+         * This check returns false if the two bodies were in contact during the previous
+         *   time step. Using this check to prevent a collision in such cases makes the
+         *   performance of the collision system much more natural looking.
+         */
+        tweakCheck: function(sphereA, sphereB) {
+            var previousDistanceSq = sphereA.getPreviousPosition().distanceSq(sphereB.getPreviousPosition());
+            return previousDistanceSq > Math.pow(sphereA.get('radius') + sphereB.get('radius'), 2);
+        },
+
+        /**
+         * Calculates and returns the line of action
+         */
+        getLoa: function(particle1, particle2) {
+            _loa
+                .set(particle1.get('position'))
+                .sub(particle2.get('position'));
+            return _loa;
+        },
+
+        collide: function(sphereA, sphereB) {
+            var dist = sphereA.get('position').distance(sphereB.get('position'));
+            var ratio = sphereA.get('radius') / dist;
+            var contactPt = _contactPoint.set(
+                sphereA.getX() + (sphereB.getX() - sphereA.getX()) * ratio,
+                sphereA.getY() + (sphereB.getY() - sphereA.getY()) * ratio
+            );
+            var loa = this.getLoa(sphereA, sphereB);
+
+            this.doCollision(sphereA, sphereB, loa, contactPt);
+        },
+
+        doCollision: function(sphereA, sphereB, loa, contactPt ) {
+            // Get the unit vector along the line of action
+            _n.set(loa);
+            _n.normalize();
+
+            // If the relative velocity shows the points moving apart, then there is no collision.
+            // This is a key check to solve otherwise sticky collision problems
+            _vRel.set(sphereA.get('velocity'));
+            _vRel.sub(sphereB.get('velocity'));
+
+            // Compute correct position of the bodies following the collision
+            _tangentVector.set(loa.y, -loa.x);
+
+            // Determine the proper positions of the bodies following the collision
+            var previousDistance = sphereB.getPreviousPosition().distance(sphereA.getPreviousPosition());
+            var offsetB = previousDistance < sphereA.get('radius') ?
+                -sphereB.get('radius') : 
+                 sphereB.get('radius');
+            var offsetXB = _n.x * offsetB;
+            var offsetYB = _n.y * offsetB;
+            _linePtB
+                .set(contactPt)
+                .sub(offsetXB, offsetYB);
+            var positionB = Reflection.reflectPointAcrossLine(
+                sphereB.get('position'), 
+                _linePtB, 
+                Math.atan2(_tangentVector.y, _tangentVector.x)
+            );
+            sphereB.setPosition(positionB);
+
+            // todo: The determination of the sign of the offset is wrong. It should be based on which side of the contact
+            // tangent the CM was on in its previous position
+            var prevPosA = sphereA.getPreviousPosition();
+            var prevDistA = prevPosA.distance(contactPt);
+            var sA = sphereA.get('radius') / prevDistA;
+            _linePtA.set(
+                contactPt.x - (contactPt.x - prevPosA.x) * sA,
+                contactPt.y - (contactPt.y - prevPosA.y) * sA
+            );
+            var positionA = Reflection.reflectPointAcrossLine(
+                sphereA.get('position'), 
+                _linePtA,
+                Math.atan2(_tangentVector.y, _tangentVector.x)
+            );
+            sphereA.setPosition(positionA);
+
+            // Compute the relative velocities of the contact points
+            var vr = _vRel.dot(_n);
+
+            // Assume the coefficient of restitution is 1
+            var e = 1;
+
+            // Compute the impulse, j
+            var numerator = -vr * (1 + e);
+            var denominator = (1 / sphereA.get('mass') + 1 / sphereB.get('mass'));
+            var j = numerator / denominator;
+
+            // Compute the new linear and angular velocities, based on the impulse
+            _vA.set(_n).scale( j / sphereA.get('mass'));
+            _vB.set(_n).scale(-j / sphereB.get('mass'));
+            sphereA.addVelocity(_vA);
+            sphereB.addVelocity(_vB);
+        }
+
+    };
+
+
+    return SphereSphereCollisionExpert;
+});
+define('common/mechanics/models/sphere-box-collision-expert',['require','./spherical-body','./boxlike-body'],function (require) {
+
+    'use strict';
+
+    var SphericalBody = require('./spherical-body');
+    var BoxlikeBody   = require('./boxlike-body');
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var SphereBoxCollisionExpert = {
+
+        detectAndDoCollision: function(bodyA, bodyB) {
+            if (this.applies(bodyA, bodyB) && 
+                this.inContact(bodyA, bodyB)
+            ) {
+                var box;
+                var sphere;
+
+                // Check that the arguments are valid and assign the box and sphere
+                if (bodyA instanceof BoxlikeBody) {
+                    box = bodyA;
+                    if (bodyB instanceof SphericalBody)
+                        sphere = bodyB;
+                    else
+                        throw 'Bad arguments given in SphereBoxCollisionExpert';
+                }
+                else if (bodyB instanceof BoxlikeBody) {
+                    box = bodyB;
+                    if (bodyA instanceof SphericalBody)
+                        sphere = bodyA;
+                    else
+                        throw 'Bad arguments given in SphereBoxCollisionExpert';
+                }
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+
+                // Do the collision
+                this.collide(sphere, box);
+                
+                return true;
+            }
+
+            return false;
+        },
+
+        applies: function(bodyA, bodyB) {
+            return (
+                (bodyA instanceof SphericalBody && bodyB instanceof BoxlikeBody) || 
+                (bodyA instanceof BoxlikeBody && bodyB instanceof SphericalBody)
+            );
+        },
+
+        /**
+         * Returns whether or not the box and sphere are touching
+         */
+        inContact: function(bodyA, bodyB) {
+            var result = false;
+            var box;
+            var sphere;
+
+            // Check that the arguments are valid
+            if (bodyA instanceof BoxlikeBody) {
+                box = bodyA;
+                if (bodyB instanceof SphericalBody)
+                    sphere = bodyB;
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+            }
+            else if (bodyB instanceof BoxlikeBody) {
+                box = bodyB;
+                if (bodyA instanceof SphericalBody)
+                    sphere = bodyA;
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+            }
+            else
+                throw 'Bad arguments given in SphereBoxCollisionExpert';
+
+            // Hitting left wall?
+            var dx = sphere.getX() - sphere.get('radius') - box.getMinX();
+            if (dx <= 0)
+                result = true;
+
+            // Hitting right wall?
+            dx = sphere.getX() + sphere.get('radius') - box.getMaxX();
+            if (dx >= 0 && sphere.get('velocity').x > 0)
+                result = true;
+
+            // Hitting bottom wall?
+            var dy = sphere.getY() - sphere.get('radius') - box.getMinY();
+            if (dy <= 0 && sphere.get('velocity').y < 0)
+                result = true;
+
+            // Hitting top wall?
+            dy = sphere.getY() + sphere.get('radius') - box.getMaxY();
+            if (dy >= 0 && sphere.get('velocity').y > 0)
+                result = true;
+            
+            return result;
+        },
+
+        collide: function(sphere, box) {
+            var wx;
+            var wy;
+            var dx;
+            var dy;
+            var sx = sphere.getX();
+            var sy = sphere.getY();
+            var r = sphere.get('radius');
+
+            // Collision with left wall?
+            if ((sx - r) <= box.getMinX()) {
+                sphere.setVelocity(-sphere.getVelocity().x, sphere.getVelocity().y);
+                var wx = box.getMinX();
+                var dx = wx - (sx - r);
+                var newX = sx + (dx + 2);
+                sphere.setPosition(newX, sphere.getY());
+
+                // Handle giving particle kinetic energy if the wall is moving
+                var vx0 = sphere.getVelocity().x;
+                var vx1 = vx0 + box.getLeftWallVx();
+                sphere.setVelocity(vx1, sphere.getVelocity().y);
+            }
+
+            // Collision with right wall?
+            if ((sx + r) >= box.getMaxX()) {
+                sphere.setVelocity(-sphere.getVelocity().x, sphere.getVelocity().y);
+                var wx = box.getMaxX();
+                var dx = (sx + r) - wx;
+                var newX = sx - (dx * 2);
+                sphere.setPosition(newX, sphere.getY());
+            }
+
+            // Collision with top wall?
+            if ((sy - r) <= box.getMinY()) {
+                sphere.setVelocity(sphere.getVelocity().x, -sphere.getVelocity().y);
+                var wy = box.getMinY();
+                var dy = wy - (sy - r);
+                var newY = sy + (dy * 2);
+                sphere.setPosition(sphere.getX(), newY);
+            }
+
+            // Collision with bottom wall?
+            if ((sy + r) >= box.getMaxY()) {
+                sphere.setVelocity(sphere.getVelocity().x, -sphere.getVelocity().y);
+                var wy = box.getMaxY();
+                var dy = (sy + r) - wy;
+                var newY = sy - (dy - 2);
+                sphere.setPosition(sphere.getX(), newY);
+            }
+        }
+
+    };
+
+
+    return SphereBoxCollisionExpert;
+});
+define('common/quantum/models/state-lifetime-manager',['require','underscore','common/math/vector2','./photon-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var VanillaPhoton = require('./photon-vanilla');
+
+    /**
+     * An object that manages the lifetime of an AtomicEnergyState.
+     * 
+     * When it is created, it sets a time of death for an atom's current state,
+     *   and when that time comes, causes a photon to be emitted and the atom
+     *   to change to the next appropriate energy state.
+     */
+    var StateLifetimeManager = function() {
+        this.initialize.apply(this, arguments);
+    };
+
+    /**
+     * Instance functions/properties
+     */
+    _.extend(StateLifetimeManager.prototype, {
+
+        /**
+         * Initializes the StateLifetimeManager's properties with provided initial values
+         */
+        initialize: function(atom, emitOnStateChange, simulation) {
+            this.atom = atom;
+            this.emitOnStateChange = emitOnStateChange;
+            this.simulation = simulation;
+
+            // Add this manager to the simulation model so the update function gets called in the sim loop
+            simulation.addModel(this);
+
+            var temp = 0;
+            while (temp === 0)
+                temp = Math.random();
+            
+            this.state = atom.getCurrentState();
+
+            // Get the lifetime for this state
+            if (atom.get('isStateLifetimeFixed')) {
+                // This line gives a fixed death time
+                this.deathTime = this.state.get('meanLifetime');
+            }
+            else {
+                // Assign a deathtime based on an exponential distribution
+                // The square root pushes the distribution toward 1.
+                this.deathTime = Math.pow(-Math.log(temp), 0.5) * this.state.get('meanLifetime');
+            }
+
+            // Initialize the field that tracks the state's lifetime
+            this.lifeTime = 0;
+
+            this.horizontalEmissionLikelihood = 0.10;
+
+            // Cached objects
+            this._position = new Vector2();
+            this._velocity = new Vector2();
+            this._vHat     = new Vector2();
+        },
+
+        /**
+         * Changes the state of the associated atom if the state's lifetime has been exceeded.
+         */
+        update: function(time, deltaTime) {
+            this.lifeTime += deltaTime;
+            if (this.lifeTime >= this.deathTime) {
+                var nextState = this.atom.getEnergyStateAfterEmission();
+
+                if (this.emitOnStateChange) {
+                    var speed = VanillaPhoton.DEFAULT_SPEED * this.simulation.get('photonSpeedScale');
+                    var theta = this.getEmissionDirection();
+                    var x = speed * Math.cos(theta);
+                    var y = speed * Math.sin(theta);
+
+                    if (nextState != this.atom.getCurrentState()) {
+                        var emittedPhoton = VanillaPhoton.create({
+                            wavelength: this.state.determineEmittedPhotonWavelength(nextState),
+                            position: this.atom.get('position'),
+                            velocity: this._velocity.set(x, y)
+                        });
+
+                        // Place the replacement photon beyond the atom, so it doesn't collide again
+                        //   right away
+                        var vHat = this._vHat.set(emittedPhoton.get('velocity')).normalize();
+                        var position = this._position.set(this.atom.get('position'));
+                        position.add(vHat.scale(this.atom.get('radius') + 10));
+                        emittedPhoton.setPosition(position);
+
+                        this.atom.emitPhoton(emittedPhoton);
+                    }
+                }
+
+                // Change state
+                this.atom.set('currentState', nextState);
+
+                // Remove us from the model
+                this.kill();
+            }
+        },
+
+        /**
+         * 
+         */
+        kill: function() {
+            this.simulation.removeModel(this);
+        },
+
+        getEmissionDirection: function() {
+            if (Math.random() <= this.horizontalEmissionLikelihood)
+                return Math.PI * (Math.random() < 0.5 ? 1 : 0);
+            else
+                return Math.random() * Math.PI * 2;
+        }
+
+    });
+
+
+    return StateLifetimeManager;
+});
+define('common/quantum/models/atom',['require','underscore','common/mechanics/models/spherical-body','./state-lifetime-manager','../config'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var SphericalBody = require('common/mechanics/models/spherical-body');
+
+    var StateLifetimeManager = require('./state-lifetime-manager');
+
+    var QuantumConfig = require('../config');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var Atom = SphericalBody.extend({
+
+        defaults: _.extend({}, SphericalBody.prototype.defaults, {
+            radius: QuantumConfig.DEFAULT_ATOM_RADIUS,
+            mass: 1000,
+            currentState: null,
+            isStateLifetimeFixed: false
+        }),
+
+        /**
+         * Required options: {
+         *   simulation: simulation model,
+         *   numStates: number of states    
+         * }
+         */
+        initialize: function(attributes, options) {
+            SphericalBody.prototype.initialize.apply(this, [attributes, options]);
+
+            this.simulation = options.simulation;
+            this.groundState = null;
+            this.highestEnergyState = null;
+
+            this.states = [];
+
+            this.on('change:currentState', this.currentStateChanged);
+
+            this.set('currentState', this.simulation.getGroundState());
+            this.setNumEnergyLevels(options.numStates, this.simulation);
+        },
+
+        getCurrentState: function() {
+            return this.get('currentState');
+        },
+
+        setCurrentState: function(currentState) {
+            this.set('currentState', currentState);
+        },
+
+        getStates: function() {
+            return this.states;
+        },
+
+        getModel: function() {
+            return this.simulation;
+        },
+
+        /**
+         * Returns the number of the atom's current state. This is the index of the state in the
+         *   atom's array of state. The ground state is number 0
+         */
+        getCurrentStateNumber: function() {
+            for (var i = 0; i < this.states.length; i++) {
+                if (this.getCurrentState() == this.states[i])
+                    return i;
+            }
+            return 0;
+        },
+
+        /**
+         * Sets the states that the atom can be in.  Sets the atom's current state to the
+         *   ground state
+         */
+        setStates: function(states) {
+            this.states = states;
+            // Find the minimum and maximum energy states
+            var maxEnergy = -Number.MAX_VALUE;
+            for (var i = 0; i < states.length; i++) {
+                var state = states[i];
+                var energy = state.get('energyLevel');
+                if (energy > maxEnergy) {
+                    maxEnergy = energy;
+                    this.highestEnergyState = state;
+                }
+            }
+
+            this.groundState = this.getLowestEnergyState();
+            this.set('currentState', this.groundState);
+        },
+
+        /**
+         * Populates the list of AtomicStates that this atom can be in, based on the
+         *   specified number of energy levels it can occupy
+         */
+        setNumEnergyLevels: function(numEnergyLevels, simulation) {
+            for (var i = 0; i < numEnergyLevels; i++)
+                this.states[i] = null;
+            this.states[0] = simulation.getGroundState();
+            this.groundState = this.states[0];
+            this.highestEnergyState = this.states[this.states.length - 1];
+        },
+
+        getGroundState: function() {
+            return this.groundState;
+        },
+
+        /**
+         * Returns the atom's state with the lowest energy
+         */
+        getLowestEnergyState: function() {
+            var lowestState = null;
+            var lowestEnergy = Number.MAX_VALUE;
+            for (var i = 0; i < this.states.length; i++) {
+                var state = this.states[i];
+                if (state.get('energyLevel') < lowestEnergy) {
+                    lowestEnergy = state.get('energyLevel');
+                    lowestState = state;
+                }
+            }
+            return lowestState;
+        },
+
+        getHighestEnergyState: function() {
+            return this.highestEnergyState;
+        },
+
+        /**
+         * Returns the state the atom will be in if it emits a photon. By default,
+         *   this is the next lower energy state
+         */
+        getEnergyStateAfterEmission: function() {
+            return this.get('currentState').getNextLowerEnergyState();
+        },
+
+        emitPhoton: function(emittedPhoton) {
+            this.trigger('photon-emitted', this, emittedPhoton);
+        },
+
+        collideWithPhoton: function(photon) {
+            this.get('currentState').collideWithPhoton(this, photon);
+        },
+
+        currentStateChanged: function(atom, currentState) {
+            if (this.stateLifetimeManager)
+                this.stateLifetimeManager.kill();
+
+            if (this.previous('currentState'))
+                this.previous('currentState').leaveState(this);
+            
+            if (currentState)
+                currentState.enterState(this);
+
+            this.stateLifetimeManager = new StateLifetimeManager(this, true, this.simulation);
+        }
+
+    }, {
+
+        DEFAULT_RADIUS: QuantumConfig.DEFAULT_ATOM_RADIUS
+
+    });
+
+    return Atom;
+});
+define('common/quantum/models/photon-atom-collision-expert',['require','./photon-vanilla','./atom'],function (require) {
+
+    'use strict';
+
+    var Photon = require('./photon-vanilla');
+    var Atom   = require('./atom');
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var PhotonAtomCollisionExpert = {
+
+        detectAndDoCollision: function(body1, body2) {
+            var photon;
+            var atom;
+
+            if (body1 instanceof Atom)
+                atom = body1;
+            else if (body1 instanceof Photon)
+                photon = body1;
+
+            if (body2 instanceof Atom)
+                atom = body2;
+            else if (body2 instanceof Photon)
+                photon = body2;
+
+            if (atom && photon) {
+                if (photon.get('position').distanceSq(atom.get('position')) < atom.get('radius') * atom.get('radius'))
+                    atom.collideWithPhoton(photon);
+            }
+
+            return false;
+        }
+
+    };
+
+
+    return PhotonAtomCollisionExpert;
+});
+define('common/mechanics/models/wall',['require','underscore','common/math/vector2','common/math/rectangle','./body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2   = require('common/math/vector2');
+    var Rectangle = require('common/math/rectangle');
+
+    var Body = require('./body');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var Wall = Body.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Body.prototype.defaults, {
+            bounds: null
+        }),
+
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
+
+            this.set('bounds', new Rectangle(this.get('bounds')));
+
+            this._centerOfMass = new Vector2();
+        },
+
+        getCM: function() {
+            return this._centerOfMass.set(
+                this.get('bounds').left()   + this.get('bounds').w / 2,
+                this.get('bounds').bottom() + this.get('bounds').h / 2
+            );
+        },
+
+        getMomentOfInertia: function() {
+            return Number.POSITIVE_INFINITY;
+        },
+
+        getBounds: function() {
+            return this.get('bounds');
+        },
+
+        getPreviousPosition: function() {
+            return null;
+        },
+
+        getPreviousVelocity: function() {
+            return this.get('velocity');
+        }
+
+    });
+
+    return Wall;
+});
+define('lasers/models/mirror',['require','common/mechanics/models/wall','common/math/rectangle'],function (require) {
+
+    'use strict';
+
+    var Wall      = require('common/mechanics/models/wall');
+    var Rectangle = require('common/math/rectangle');
+
+    /**
+     * This class represents various sorts of mirrors. The mirror is conditioned
+     *   by ReflectionStrategies that are added to it that determine whether the
+     *   mirror will reflect a particular photon. A Mirror treats ReflectionStrategies
+     *   conjunctively. I.e., all have to be true for the mirror to reflect a photon.
+     *
+     * Examples of ReflectionStrategies are
+     *   - LeftReflecting
+     *   - RightReflecting
+     *   - BandPass
+     */
+    var Mirror = Wall.extend({
+
+        /**
+         * Initializes the Mirror object
+         */
+        initialize: function(attributes, options) {
+            if (options && options.start && options.end) {
+                this.set('bounds', new Rectangle(
+                    options.start.x,
+                    options.start.y,
+                    options.end.x - options.start.x,
+                    options.end.y - options.start.y
+                ));
+
+                this.set('position', options.start);
+            }
+
+            Wall.prototype.initialize.apply(this, [attributes, options]);
+
+            this.reflectionStrategies = [];
+        },
+
+        addReflectionStrategy: function(strategy) {
+            this.reflectionStrategies.push(strategy);
+        },
+
+        /**
+         * Tells if the mirror reflects a specified photon, based on the mirror's
+         *   ReflectionStrategies. All strategies must return true to their
+         *   reflects(photon) function for the mirror to return true.
+         */
+        reflects: function(photon) {
+            var result = true;
+            for (var i = 0; i < this.reflectionStrategies.length && result; i++)
+                result &= this.reflectionStrategies[i].reflects(photon);
+            return result;
+        }
+
+    });
+
+    return Mirror;
+});
+define('lasers/constants',['require','common/math/vector2'],function (require) {
+
+    'use strict';
+
+    var Vector2 = require('common/math/vector2');
+
+    var DEG_TO_RAD = Math.PI / 180;
 
     var Constants = {};
 
@@ -59706,1318 +62204,2580 @@ define('constants',['require','common/math/range'],function (require) {
      **                                                                     **
      *************************************************************************/
 
-    Constants.MIN_SCENE_DIAMETER = 5; // centimeters
-    Constants.ESTIMATION_SAMPLE_SIZE = 6; // number of samples
+    // Clock parameters
+    Constants.DT = 12;
+    Constants.FPS = 25;
+
+    //----------------------------------------------------------------
+    // Physical configuration
+    //----------------------------------------------------------------
+
+    // Photon speed
+    Constants.ONE_ATOM_PHOTON_SPEED = 0.5;
+    Constants.MULTI_ATOM_PHOTON_SPEED = 0.5;
+
+    // Physical things
+    Constants.ORIGIN = new Vector2(120, 200);
+
+    // Beam parameters
+	Constants.MINIMUM_SEED_PHOTON_RATE    = 0;
+	Constants.MAXIMUM_SEED_PHOTON_RATE    = 30;
+	Constants.MINIMUM_PUMPING_PHOTON_RATE = 0;
+	Constants.MAXIMUM_PUMPING_PHOTON_RATE = 400;
+	Constants.PUMPING_BEAM_FANOUT         = 45 * DEG_TO_RAD;
+	Constants.SEED_BEAM_FANOUT            =  1 * DEG_TO_RAD;
+
+    // Spontaneous emission times, in milliseconds
+	Constants.MAXIMUM_STATE_LIFETIME = 400;
+    // The value for MINIMUM_GROUND_STATE_LIFETIME in the original sim is 200ms, but this was
+    //   real milliseconds and not simulation milliseconds.  I'm converting here to simulation
+    //   milliseconds so it can occur within the simulation instead of going outside the sim
+    //   in a weird, hacky way.
+    var simSecondsPerRealSecond = (Constants.FPS * Constants.DT) / 1000;
+	Constants.MINIMUM_GROUND_STATE_LIFETIME = 200 * simSecondsPerRealSecond;
+
+    // Angle within which a photon is considered to be moving horizontally. This
+    //   is used by the mirrors to "cheat" photons into lasing, and by the wave
+    //   graphic to determine its amplitude
+    Constants.PHOTON_CHEAT_ANGLE = 3 * DEG_TO_RAD;
+
+    // Thickness of the mirror graphics
+    Constants.MIRROR_THICKNESS = 15;
+
+    // Threshold number of horizontal photons that is considered "lasing"
+    Constants.LASING_THRESHOLD = 40;
+
+    // Number of photons in the system that will cause the thing to blow up
+    Constants.KABOOM_THRESHOLD = 300;
+
+    // The period over which the number of atoms in each level is averaged before
+    //   the number of atoms is updated for the energy levels monitor panel
+    Constants.ENERGY_LEVEL_MONITOR_AVERAGING_PERIOD = 0;
+
+    Constants.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+
+    Constants.PHOTON_DISCRETE = 0;
+    Constants.PHOTON_WAVE = 1;
+    Constants.PHOTON_CURTAIN = 2;
 
 
     /*************************************************************************
      **                                                                     **
-     **                             UPDATE MODES                            **
+     **                        BASE LASER SIMULATION                        **
      **                                                                     **
      *************************************************************************/
 
-    Constants.UpdateMode = {
-    	POSITION:     0,
-    	VELOCITY:     1,
-    	ACCELERATION: 2
-    };
+    var BaseLaserSimulation = {};
 
-    Constants.POSITION_COLOR = '#2575BA';
-    Constants.VELOCITY_COLOR = '#CD2520';
-    Constants.ACCELERATION_COLOR = '#349E34';
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                               LADYBUG                               **
-     **                                                                     **
-     *************************************************************************/
-
-    var Ladybug = {};
-
-    Ladybug.DEFAULT_WIDTH  = 0.4; // centimeters
-    Ladybug.DEFAULT_LENGTH = 0.6; // centimeters
-
-    Constants.Ladybug = Ladybug;
-
-
-    var LadybugView = {};
-
-    LadybugView.WING_OPEN_VELOCITY = 2; // centimeters per second
-
-    Constants.LadybugView = LadybugView;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                             LADYBUG MOVER                           **
-     **                                                                     **
-     *************************************************************************/
-
-    var LadybugMover = {};
-
-    LadybugMover.LINEAR_SPEED = 0.8; // centimeters per second
-    LadybugMover.CIRCLE_RADIUS = 2; // centimeters
-    LadybugMover.CIRCLE_SPEED = 0.018; // not centimeters...some arbitrary value
-    LadybugMover.ELLIPSE_A = 2; // centimeters
-    LadybugMover.ELLIPSE_B = 1.4; // centimeters
-
-    Constants.LadybugMover = LadybugMover;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                          LADYBUG TRACE VIEW                         **
-     **                                                                     **
-     *************************************************************************/
-
-    var LadybugTraceView = {};
-
-    LadybugTraceView.NEW_OPACITY = 1;
-    LadybugTraceView.OLD_OPACITY = 0.15;
-    LadybugTraceView.SECONDS_TO_BE_OLD = 2; // seconds
-    LadybugTraceView.NEW_OPACITY_RANGE = range({
-        min: LadybugTraceView.NEW_OPACITY,
-        max: LadybugTraceView.OLD_OPACITY
-    });
-
-    Constants.LadybugTraceView = LadybugTraceView;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                         REMOTE CONTROL VIEW                         **
-     **                                                                     **
-     *************************************************************************/
-
-    var RemoteControlView = {};
-
-    RemoteControlView.RIGHT = 20;
-    RemoteControlView.BOTTOM = 62 + 8 + 20;
-    RemoteControlView.TAB_BG_COLOR = '#fff';
-    RemoteControlView.TAB_BG_ALPHA = 0.2;
-    RemoteControlView.TAB_ACTIVE_BG_COLOR = '#fff';
-    RemoteControlView.TAB_ACTIVE_BG_ALPHA = 0.5;
-    RemoteControlView.TAB_FONT = 'bold 14px Arial';
-    RemoteControlView.TAB_WIDTH = 108;
-    RemoteControlView.TAB_HEIGHT = 36;
-    RemoteControlView.TABS = [{
-        label: 'Position',
-        color: Constants.POSITION_COLOR
-    },{
-        label: 'Velocity',
-        color: Constants.VELOCITY_COLOR
-    },{
-        label: 'Acceleration',
-        color: Constants.ACCELERATION_COLOR
-    }];
-    RemoteControlView.PANEL_PADDING = 10;
-    RemoteControlView.PANEL_WIDTH  = 186; // pixels
-    RemoteControlView.PANEL_HEIGHT = 210; // pixels
-    RemoteControlView.AREA_WIDTH  = RemoteControlView.PANEL_WIDTH - 2 * RemoteControlView.PANEL_PADDING;
-    RemoteControlView.AREA_HEIGHT = RemoteControlView.PANEL_WIDTH - 2 * RemoteControlView.PANEL_PADDING;
-    RemoteControlView.ARROW_AREA_COLOR = '#fff';
-    RemoteControlView.ARROW_AREA_ALPHA = 0.5;
-
-    Constants.RemoteControlView = RemoteControlView;
-
+    Constants.BaseLaserSimulation = BaseLaserSimulation;
 
     return Constants;
 });
 
-define('models/ladybug',['require','underscore','common/models/motion-object','common/math/rectangle','constants'],function (require) {
+define('lasers/models/photon-mirror-collision-expert',['require','common/math/polyfills','common/math/line-intersection','common/quantum/models/photon-vanilla','./mirror','../constants'],function (require) {
 
     'use strict';
 
-    var _ = require('underscore');
+    require('common/math/polyfills');
+    var LineIntersection = require('common/math/line-intersection');
+    var Photon           = require('common/quantum/models/photon-vanilla');
 
+    var Mirror = require('./mirror');
 
-    var MotionObject = require('common/models/motion-object');
-    var Rectangle    = require('common/math/rectangle');
-
-    var Constants = require('constants');
-
-    var Ladybug = MotionObject.extend({
-
-        defaults: _.extend({}, MotionObject.prototype.defaults, {
-            width:  Constants.Ladybug.DEFAULT_WIDTH,
-            length: Constants.Ladybug.DEFAULT_LENGTH,
-            angle: 0
-        }),
-
-        initialize: function(attributes, options) {
-            MotionObject.prototype.initialize.apply(this, [attributes, options]);
-
-            // For internal use to avoid creating and destroying objects
-            this._bounds = new Rectangle();
-        },
-
-        reset: function() {
-            this.setPosition(0, 0);
-            this.setVelocity(0, 0);
-            this.setAcceleration(0, 0);
-            this.set('angle', 0);
-        },
-
-        getBounds: function() {
-            return this._bounds.set(
-                this.get('position').x - this.get('width')  / 2,
-                this.get('position').y - this.get('length') / 2,
-                this.get('width'),
-                this.get('length')
-            );
-        },
-
-        pointInDirectionOfMotion: function() {
-            this.set('angle', this.get('velocity').angle());
-        }
-
-    }, Constants.Ladybug);
-
-    return Ladybug;
-});
-
-define('models/ladybug-mover',['require','underscore','common/math/vector2','constants'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Vector2 = require('common/math/vector2');
-
-    var Constants = require('constants');
+    var Constants = require('../constants');
 
     /**
-     *
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.model.LadybugMotionModel
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
      */
-    var LadybugMover = function(simulation) {
-        this.simulation = simulation;
-        this.motionType = LadybugMover.MOTION_TYPE_MANUAL;
-    };
+    var PhotonMirrorCollisonExpert = {
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(LadybugMover.prototype, {
+        detectAndDoCollision: function(body1, body2) {
+            var photon;
+            var mirror;
 
-        setMotionType: function(motionType) {
-            if (this.motionType !== motionType) {
-                this.motionType = motionType;
-                this.motionType.init(this.simulation);
-            }
-        },
+            if (body1 instanceof Mirror)
+                mirror = body1;
+            else if (body1 instanceof Photon)
+                photon = body1;
 
-        update: function(deltaTime) {
-            this.motionType.update(deltaTime, this.simulation);
-        },
+            if (body2 instanceof Mirror)
+                mirror = body2;
+            else if (body2 instanceof Photon)
+                photon = body2;
 
-        reset: function() {
-            this.setMotionType(LadybugMover.MOTION_TYPE_MANUAL);
-        },
-
-        isInManualMode: function() {
-            return this.motionType === LadybugMover.MOTION_TYPE_MANUAL;
-        }
-
-    });
-
-    /**
-     * Static functions/properties
-     */
-     _.extend(LadybugMover, Constants.LadybugMover);
-
-    LadybugMover.MOTION_TYPE_MANUAL = {
-
-        init: function(simulation) {
-            simulation.initManual();
-        },
-
-        update: function() {}
-
-    };
-
-    LadybugMover.MOTION_TYPE_LINEAR = {
-
-        speed: LadybugMover.LINEAR_SPEED,
-
-        init: function(simulation) {
-            var velocity = Vector2
-                .fromAngle(simulation.ladybug.get('angle'))
-                .scale(this.speed);
-
-            simulation.ladybug.setVelocity(velocity);
-        },
-
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
-
-            var velocity = Vector2
-                .fromAngle(ladybug.get('velocity').angle())
-                .scale(this.speed);
-
-            ladybug.setVelocity(velocity);
-            ladybug.updatePositionFromVelocity(deltaTime);
-
-            var x  = ladybug.get('position').x;
-            var y  = ladybug.get('position').y;
-            var vx = ladybug.get('velocity').x;
-            var vy = ladybug.get('velocity').y;
-            var bounds = simulation.getBounds();
-
-            // Stay within bounds
-            if (x > bounds.right() && vx > 0) {
-                vx = -Math.abs(vx);
-                x = bounds.right();
-            }
-            if (x < bounds.left() && vx < 0) {
-                vx = Math.abs(vx);
-                x = bounds.left();
-            }
-            if (y > bounds.top() && vy > 0) {
-                vy = -Math.abs(vy);
-                y = bounds.top();
-            }
-            if (y < bounds.bottom() && vy < 0) {
-                vy = Math.abs(vy);
-                y = bounds.bottom();
-            }
-
-            ladybug.setPosition(x, y);
-            ladybug.setVelocity(vx, vy);
-            ladybug.setAcceleration(simulation.estimateAcceleration());
-            ladybug.set('angle', ladybug.get('velocity').angle());
-            simulation.setSamplePoint(ladybug.get('position'));
-        }
-
-    };
-
-    LadybugMover.MOTION_TYPE_CIRCULAR = {
-
-        _pos: new Vector2(),
-        _vel: new Vector2(),
-        _acc: new Vector2(),
-
-        init: function(simulation) {
-            simulation.clearSampleHistory();
-            simulation.resetSamplingMotionModel();
-        },
-
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
-            var distanceFromCenter = ladybug.get('position').length();
-            var distanceFromRing = Math.abs(distanceFromCenter - LadybugMover.CIRCLE_RADIUS);
-
-            var dx = LadybugMover.CIRCLE_RADIUS - distanceFromCenter;
-            var speed = LadybugMover.CIRCLE_SPEED;
-            var velocity;
-
-            if (distanceFromRing > speed+ 1E-6) {
-                // We need to move toward the ring
-                var velocity = this._vel
-                    .set(speed, 0)
-                    .rotate(ladybug.get('position').angle())
-                    .scale((dx < 0) ? -1 : 1);
-
-                simulation.startSampling();
-                simulation.setSamplePoint(
-                    ladybug.get('position').x + velocity.x / deltaTime,
-                    ladybug.get('position').y + velocity.y / deltaTime
+            if (mirror && photon) {
+                var photonPathIntersectsMirror = LineIntersection.linesIntersect(
+                    photon.getPreviousPosition().x, photon.getPreviousPosition().y,
+                    photon.getPosition().x, photon.getPosition().y,
+                    mirror.getPosition().x, mirror.getBounds().bottom(),
+                    mirror.getPosition().x, mirror.getBounds().top()
                 );
-                simulation.updatePositionMode(deltaTime);
-            }
-            else {
-                // We are on the ring
-                var angle = ladybug.get('position').angle();
-                var r = LadybugMover.CIRCLE_RADIUS;
 
-                // Approximate a delta theta
-                var deltaTheta = -Math.PI / 64 * 1.3 * deltaTime * 30 * 0.7 * 2 * 0.85 * 0.4;
-                var n = Math.floor(Math.PI * 2 / deltaTheta); // n * deltaTheta = 2 * PI
-                var newAngle = angle + (2 * Math.PI) / n;
-
-                simulation.stopSampling();
-
-                var position = this._pos
-                    .set(1, 0)
-                    .rotate(newAngle)
-                    .scale(r);
-                ladybug.setPosition(position);
-
-                var velocity = this._vel
-                    .set(1, 0)
-                    .rotate(newAngle + Math.PI / 2)
-                    .scale((newAngle - angle) / deltaTime * r);
-                ladybug.setVelocity(velocity);
-                ladybug.set('angle', velocity.angle());
-
-                var acceleration = this._acc
-                    .set(1, 0)
-                    .rotate(newAngle + Math.PI)
-                    .scale(Math.pow(velocity.length(), 2) / r);
-                ladybug.setAcceleration(acceleration);
-
-                simulation.setSamplePoint(ladybug.get('position'));
-            }
-        }
-
-    };
-
-    LadybugMover.MOTION_TYPE_ELLIPTICAL = {
-
-        /**
-         * This is an internal "time" that really has nothing to do with
-         *   actual simulation time. It's just used to determine where
-         *   we are on the elliptical path relative to when we began.
-         */
-        time: 0,
-
-        init: function() {},
-
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
-
-            var a = LadybugMover.ELLIPSE_A;
-            var b = LadybugMover.ELLIPSE_B;
-
-            var n = 79 * deltaTime / 0.015 * 0.7 * 5;
-            this.time += 2 * Math.PI / Math.floor(n);
-            var t = this.time;
-
-            ladybug.setPosition(     a * Math.cos(t),  b * Math.sin(t));
-            ladybug.setVelocity(    -a * Math.sin(t),  b * Math.cos(t));
-            ladybug.setAcceleration(-a * Math.cos(t), -b * Math.sin(t));
-
-            ladybug.set('angle', ladybug.get('velocity').angle());
-        }
-
-    };
-
-
-    LadybugMover.MOTION_TYPES = {
-        'Manual':     LadybugMover.MOTION_TYPE_MANUAL,
-        'Linear':     LadybugMover.MOTION_TYPE_LINEAR,
-        'Circular':   LadybugMover.MOTION_TYPE_CIRCULAR,
-        'Elliptical': LadybugMover.MOTION_TYPE_ELLIPTICAL
-    };
-
-
-
-
-    return LadybugMover;
-});
-
-define('models/ladybug-state-record',['require','underscore','common/math/vector2'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Vector2 = require('common/math/vector2');
-
-    /**
-     * An object that holds a ladybug model's state at a
-     *   given point in time.  It is intended for these
-     *   objects to get recycled.
-     */
-    var LadybugStateRecord = function() {
-        this.time = 0;
-
-        this.position     = new Vector2();
-        this.velocity     = new Vector2();
-        this.acceleration = new Vector2();
-
-        this.angle = 0;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(LadybugStateRecord.prototype, {
-
-        recordState: function(time, ladybug) {
-            this.time = time;
-
-            this.position.set(ladybug.get('position'));
-            this.velocity.set(ladybug.get('velocity'));
-            this.acceleration.set(ladybug.get('acceleration'));
-
-            this.angle = ladybug.get('angle');
-        },
-
-        applyState: function(ladybug) {
-            ladybug.setPosition(this.position);
-            ladybug.setVelocity(this.velocity);
-            ladybug.setAcceleration(this.acceleration);
-
-            ladybug.set('angle', this.angle);
-        },
-
-        getTime: function() {
-            return this.time;
-        }
-
-    });
-
-
-    return LadybugStateRecord;
-});
-
-define('models/sampling-motion-model',['require','underscore','common/math/vector2'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Vector2 = require('common/math/vector2');
-
-    /**
-     * Used internally in SamplingMotionModel to keep track
-     *   of a history of values and derive velocity and
-     *   acceleration from that history.
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.Motion2DModel.Motion2DValue
-     */
-    var SamplingMotionModelValue = function(numPoints, halfWindowSize, numPointsAveraged, initialValue) {
-        this.avgBefore = 0;
-        this.avgMid = 0;
-        this.avgNow = 0;
-        this.values = [];
-        this.averages = [];
-        this.halfWindowSize = halfWindowSize;
-        this.numPointsAveraged = numPointsAveraged;
-        this.numPoints = numPoints;
-
-        this.reset(initialValue);
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(SamplingMotionModelValue.prototype, {
-
-        reset: function(initialValue) {
-            for (var i = 0; i < this.numPoints; i++)
-                this.values[i] = initialValue;
-        },
-
-        addPoint: function(val) {
-            // Put the new value on the end and remove the first
-            this.values.push(val);
-            this.values.shift();
-
-            // Update averages array
-            var averagesLength = this.lengthOfAveragesArray();
-            var halfWindowSize = this.halfWindowSize;
-            for (var i = 0; i < averagesLength; i++) {
-                this.averages[i] = 0;
-                for (var j = -halfWindowSize; j <= halfWindowSize; j++)
-                    this.averages[i] += this.values[i + halfWindowSize + j];
-                this.averages[i] = this.averages[i] / (2 * halfWindowSize + 1);
-            }
-        },
-
-        addPointAndUpdate: function(val) {
-            this.addPoint(val);
-            this.updateAverages();
-        },
-
-        updateAverages: function() {
-            var numPointsAveraged = this.numPointsAveraged;
-            var averagesLength = this.lengthOfAveragesArray();
-
-            var sumXBefore = 0;
-            var sumXMid = 0;
-            var sumXNow = 0;
-
-            var i;
-
-            for (i = 0; i <= (numPointsAveraged - 1); i++)
-                sumXBefore += this.averages[i];
-            this.avgBefore = sumXBefore / numPointsAveraged;
-
-            for (i = (averagesLength - numPointsAveraged) / 2; i <= (averagesLength + numPointsAveraged - 2) / 2; i++)
-                sumXMid += this.averages[i];
-            this.avgMid = sumXMid / numPointsAveraged;
-
-            for (i = (averagesLength - numPointsAveraged); i <= (averagesLength - 1); i++)
-                sumXNow += this.averages[i];
-            this.avgNow = sumXNow / numPointsAveraged;
-        },
-
-        lengthOfAveragesArray: function() {
-            return this.numPoints - 2 * this.halfWindowSize;
-        },
-
-        getVelocity: function() {
-            return this.avgNow - this.avgBefore;
-        },
-
-        getAcceleration: function() {
-            return this.avgNow - 2 * this.avgMid + this.avgBefore;
-        },
-
-        getAverageMid: function() {
-            return this.avgMid;
-        }
-
-    });
-
-
-    /**
-     * Keeps a history of 2D points and derives velocity and
-     *   acceleration from that history.
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.Motion2DModel
-     */
-    var SamplingMotionModel = function(halfWindowSize, numPointsAveraged, x0, y0) {
-        this.x = new SamplingMotionModelValue(3 * numPointsAveraged + 2 * halfWindowSize, halfWindowSize, numPointsAveraged, x0);
-        this.y = new SamplingMotionModelValue(3 * numPointsAveraged + 2 * halfWindowSize, halfWindowSize, numPointsAveraged, y0);
-
-        this.velocity = new Vector2();
-        this.acceleration = new Vector2();
-        this.avgMid = new Vector2();
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(SamplingMotionModel.prototype, {
-
-        addPointAndUpdate: function(xNow, yNow) {
-            if (xNow instanceof Vector2) {
-                yNow = xNow.y;
-                xNow = xNow.x;
-            }
-
-            this.x.addPointAndUpdate(xNow);
-            this.y.addPointAndUpdate(yNow);
-        },
-
-        getVelocity: function() {
-            return this.velocity.set(
-                this.x.getVelocity(),
-                this.y.getVelocity()
-            );
-        },
-
-        getAcceleration: function() {
-            return this.acceleration.set(
-                this.x.getAcceleration(),
-                this.y.getAcceleration()
-            );
-        },
-
-        getAverageMid: function() {
-            return this.avgMid.set(
-                this.x.getAverageMid(),
-                this.y.getAverageMid()
-            );
-        },
-
-        reset: function(x0, y0) {
-            if (x0 instanceof Vector2) {
-                y0 = x0.y;
-                x0 = x0.x;
-            }
-
-            this.x.reset(x0);
-            this.y.reset(y0);
-        }
-
-    });
-
-
-    return SamplingMotionModel;
-});
-
-define('models/simulation',['require','exports','module','underscore','object-pool','common/simulation/simulation','common/math/motion','common/math/vector2','common/math/rectangle','common/binarysearch/binarysearch','models/ladybug','models/ladybug-mover','models/ladybug-state-record','models/sampling-motion-model','constants'],function (require, exports, module) {
-
-    'use strict';
-
-    var _ = require('underscore');
-    var Pool = require('object-pool');
-
-    var Simulation   = require('common/simulation/simulation');
-    var MotionMath   = require('common/math/motion');
-    var Vector2      = require('common/math/vector2');
-    var Rectangle    = require('common/math/rectangle');
-    var binarySearch = require('common/binarysearch/binarysearch');
-
-    var Ladybug             = require('models/ladybug');
-    var LadybugMover        = require('models/ladybug-mover');
-    var LadybugStateRecord  = require('models/ladybug-state-record');
-    var SamplingMotionModel = require('models/sampling-motion-model');
-
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-
-    /**
-     * Object pooling
-     */
-    var penPathEntryPool = Pool({
-        init: function() {
-            return {};
-        },
-        enable: function(point) {
-            point.time = 0;
-            point.x = 0;
-            point.y = 0;
-        }
-    });
-
-    var ladybugStateRecordPool = Pool({
-        init: function() {
-            return new LadybugStateRecord();
-        }
-    });
-
-    /**
-     * The bulk of the logic for the simulation model resides here.
-     */
-    var LadybugMotionSimulation = Simulation.extend({
-
-        defaults: _.extend(Simulation.prototype.defaults, {
-            motionType: 'Manual',
-            updateMode: UpdateMode.POSITION,
-            recording: true,
-            paused: true,
-
-            furthestRecordedTime: 0, // Seconds
-            maxRecordingTime:    20  // Seconds
-        }),
-
-        initialize: function(attributes, options) {
-            // The centerpiece
-            this.ladybug = new Ladybug();
-
-            // Stuff for directing the motion of the ladybug:
-            //   We're pretending there is a virtual pen that is drawing a path
-            //   of where we want the ladybug to go.  It can either be from the
-            //   user dragging the ladybug around the screen or from the remote
-            //   control arrows.
-            this.samplingMotionModel = new SamplingMotionModel(10, 5, 0, 0);
-            this.penPath = []; // Holds the pen positions and the time they were taken
-            this.penDown = false; // Whether or not the "pen" is down--whether we're receiving input
-            this.penPoint = new Vector2(); // Current position of the pen
-            this.ladybugMover = new LadybugMover(this);
-
-            // State history
-            this.stateHistory = [];
-
-            // This version of state history has references to records in
-            //   stateHistory but culls duplicate records in continuous
-            //   blocks of states with unchanged position.
-            this.culledStateHistory = [];
-
-            // For determining appropriate motion in motion presets
-            this.bounds = new Rectangle();
-
-            // Object caches
-            this._lastSamplePoint = new Vector2();
-            this._velocity = new Vector2();
-            this._acceleration = new Vector2();
-
-            this.initEstimationObjects();
-
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
-
-            this.on('change:recording',  this.recordingModeChanged);
-            this.on('change:paused',     this.pausedChanged);
-            this.on('change:updateMode', this.updateModeChanged);
-            this.on('change:motionType', this.motionTypeChanged);
-        },
-
-        /**
-         * We store our derivative-estimation arrays and the
-         *   objects contained therein in order that we might
-         *   reuse them and not cause unnecessary waste each
-         *   frame.  This function sets it all up in the very
-         *   beginning.
-         */
-        initEstimationObjects: function() {
-            this.xTimeSeries = [];
-            this.yTimeSeries = [];
-
-            for (var i = 0; i < Constants.ESTIMATION_SAMPLE_SIZE; i++) {
-                this.xTimeSeries.push({ time: 0, value: 0 });
-                this.yTimeSeries.push({ time: 0, value: 0 });
-            }
-        },
-
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-
-        },
-
-        /**
-         * Overrides simulation's reset function
-         */
-        reset: function() {
-            this.time = 0;
-            this.set('time', 0);
-            this.set(this.startingAttributes);
-            this.clearHistory();
-            this.resetSamplingMotionModel();
-            this.penPoint.set(0, 0);
-            this.stopSampling();
-            this.ladybug.reset();
-        },
-
-        /**
-         * Function called by Simulation.update only when the
-         *   simulation is not paused.  It's just an update
-         *   function that assumes not paused.
-         * Only runs if simulation isn't currently paused.
-         * If we're recording, it saves state
-         */
-        _update: function(time, deltaTime) {
-            // For the time slider and anything else relying on time
-            this.set('time', time);
-
-            if (this.get('recording')) {
-                // Run update and then save state
-                this.ladybugMover.update(deltaTime);
-
-                this.recordCurrentPenPoint();
-                this.trimSampleHistory();
-
-                if (this.ladybugMover.isInManualMode())
-                    this.updateManualMovement(deltaTime);
-
-                this.recordState();
-                this.set('furthestRecordedTime', time);
-            }
-            else {
-                // We're playing back, so apply a saved state instead of updating
-                this.applyPlaybackState();
-
-                // And if we've reached the end of what we've recorded, stop
-                if (time >= this.get('furthestRecordedTime'))
-                    this.pause();
-            }
-        },
-
-        /**
-         * Figures out which update function to run depending
-         *   on whether the user is dragging the ladybug
-         *   directly (penDown) or not and which update mode
-         *   is currently selected.
-         */
-        updateManualMovement: function(deltaTime) {
-            if (this.penDown) {
-                this.updatePositionMode(deltaTime);
-            }
-            else {
-                switch (this.get('updateMode')) {
-                    case UpdateMode.POSITION:
-                        this.updatePositionMode(deltaTime);
-                        break;
-                    case UpdateMode.VELOCITY:
-                        this.updateVelocityMode(deltaTime);
-                        break;
-                    case UpdateMode.ACCELERATION:
-                        this.updateAccelerationMode(deltaTime);
-                        break;
+                if (photonPathIntersectsMirror && mirror.reflects(photon)) {
+                    this.doCollision(photon, mirror);
                 }
-            }
-        },
-
-        /**
-         * The update function for when we are in position mode
-         *   (when the ladybug is driven by its position--or in
-         *   this case driven by the pen points that indirectly
-         *   determine position), this function updates all of
-         *   the ladybug's motion properties according to the
-         *   time (time between steps).
-         */
-        updatePositionMode: function(deltaTime) {
-            if (this.penPath.length > 2) {
-                this.samplingMotionModel.addPointAndUpdate(this.getLastSamplePoint());
-                this.ladybug.setPosition(this.samplingMotionModel.getAverageMid());
-
-                // PhET: added fudge factors for getting the scale right with
-                //   current settings of [samplingMotionModel and] used
-                //   spreadsheet to make sure model v and a are approximately
-                //   correct.
-                var vscale = (1 / deltaTime) / 10;
-                var ascale = vscale * vscale * 3.835;
-                this.ladybug.setVelocity(this.samplingMotionModel.getVelocity().scale(vscale));
-                this.ladybug.setAcceleration(this.samplingMotionModel.getAcceleration().scale(ascale));
-            }
-            else {
-                this.ladybug.setVelocity(0, 0);
-                this.ladybug.setAcceleration(0, 0);
-            }
-
-            this.pointInDirectionOfMotion();
-        },
-
-        /**
-         * The update function for when we are in velocity mode
-         *   (when the ladybug is driven by its velocity), this
-         *   function updates all of the ladybug's motion
-         *   properties according to the delta time (time
-         *   between steps).
-         */
-        updateVelocityMode: function(deltaTime) {
-            if (this.penPath.length > 0)
-                this.samplingMotionModel.addPointAndUpdate(this.getLastSamplePoint());
-
-            this.ladybug.updatePositionFromVelocity(deltaTime);
-            this.ladybug.setAcceleration(this.estimateAcceleration());
-
-            this.pointInDirectionOfMotion();
-        },
-
-        /**
-         * The update function for when we are in acceleration
-         *   mode (when the ladybug is driven by its
-         *   acceleration), this function updates all of the
-         *   ladybug's motion properties according to the
-         *   delta time (time between steps).
-         */
-        updateAccelerationMode: function(deltaTime) {
-            this.ladybug.updatePositionFromVelocity(deltaTime);
-            this.ladybug.updateVelocity(deltaTime);
-            this.pointInDirectionOfMotion();
-        },
-
-        /**
-         * Sets the motion type on the ladybug mover
-         */
-        motionTypeChanged: function(simulation, motionTypeKey) {
-            this.ladybugMover.setMotionType(LadybugMover.MOTION_TYPES[motionTypeKey]);
-        },
-
-        /**
-         * Called when we're entering manual mode and just
-         *   came from one of the automated motion types.
-         */
-        initManual: function() {
-            this.resetSamplingMotionModel();
-            this.clearSampleHistory();
-        },
-
-        /**
-         * Called when we're starting to add sample points.
-         *   Sets penDown to true.
-         */
-        startSampling: function() {
-            this.penDown = true;
-        },
-
-        /**
-         * Called when we're finished adding sample points.
-         *   Sets penDown to false.
-         */
-        stopSampling: function() {
-            this.penDown = false;
-        },
-
-        /**
-         * Returns whether or not we're taking input samples
-         *   (penDown is true).
-         */
-        sampling: function() {
-            return this.penDown;
-        },
-
-        /**
-         * Takes the current pen point, which is stored in
-         *   the property this.penPoint, and creates a pen
-         *   path entry out of it (attaching the current
-         *   time) and then appends it to the pen path.
-         */
-        recordCurrentPenPoint: function() {
-            var pathEntry = penPathEntryPool.create();
-            pathEntry.time = this.get('time');
-            pathEntry.x = this.penPoint.x;
-            pathEntry.y = this.penPoint.y;
-            this.penPath.push(pathEntry);
-        },
-
-        /**
-         * Finds the last sample point (pen path entry) and
-         *   returns it as a Vector2.
-         */
-        getLastSamplePoint: function() {
-            return this._lastSamplePoint.set(
-                this.penPath[this.penPath.length - 1].x,
-                this.penPath[this.penPath.length - 1].y
-            );
-        },
-
-        /**
-         * Sets the current sample point (this.penPoint) to
-         *   the specified x and y values.  Also takes a
-         *   single Vector2 object instead.
-         */
-        setSamplePoint: function(x, y) {
-            if (x instanceof Vector2) {
-                y = x.y;
-                x = x.x;
-            }
-
-            this.penPoint.x = x;
-            this.penPoint.y = y;
-        },
-
-        /**
-         * Keeps the pen path under a certain length
-         */
-        trimSampleHistory: function() {
-            while (this.penPath.length > 100)
-                this.shiftSampleHistory();
-        },
-
-        /**
-         * Shifts the first sample off the front of the pen
-         *   path array in a way that is safe for the object
-         *   pool.
-         */
-        shiftSampleHistory: function() {
-            penPathEntryPool.remove(this.penPath.shift());
-        },
-
-        /**
-         * Clears pen path (sample) history in a way that is
-         *   safe for the object pool.
-         */
-        clearSampleHistory: function() {
-            for (var i = 0; i < this.penPath.length; i++)
-                penPathEntryPool.remove(this.penPath[i]);
-            this.penPath.splice(0, this.penPath.length);
-            this.penPoint.set(0, 0);
-        },
-
-        /**
-         * Clears state and sample history.
-         */
-        clearHistory: function() {
-            this.stateHistory.splice(0, this.stateHistory.length);
-            this.culledStateHistory.splice(0, this.culledStateHistory.length);
-            this.clearSampleHistory();
-            this.trigger('history-removed');
-        },
-
-        /**
-         * Clears all history after a specified time.
-         */
-        clearHistoryAfter: function(time) {
-            // Remove records beyond a certain time
-            var i;
-            for (i = this.stateHistory.length - 1; i >= 0; i--) {
-                if (this.stateHistory[i].time >= time)
-                    this.stateHistory.splice(i, 1);
-            }
-            for (i = this.culledStateHistory.length - 1; i >= 0; i--) {
-                if (this.culledStateHistory[i].time >= time)
-                    this.culledStateHistory.splice(i, 1);
-            }
-
-            this._historyTimes = null;
-
-            this.set('furthestRecordedTime', time);
-
-            /* If we were previously dragging the position of the ladybug
-             *   and we seek to a certain position in history and want to
-             *   write over it and we start dragging again, it will think
-             *   we're starting at the last dragged position instead of
-             *   at the desired position in history if we fail to clear
-             *   the sampling data, and it looks very unnatural when that
-             *   happens.
-             */
-            if (this.penDown) {
-                this.clearSampleHistory();
-                this.resetSamplingMotionModel();
-            }
-
-            this.trigger('history-removed');
-        },
-
-        getCulledStateHistory: function() {
-            return this.culledStateHistory;
-        },
-
-        /**
-         * Resets the sampling motion model.
-         */
-        resetSamplingMotionModel: function() {
-            this.samplingMotionModel.reset(this.ladybug.get('position'));
-        },
-
-        /**
-         * Records the current state in the model history.
-         */
-        recordState: function() {
-            var stateRecord = ladybugStateRecordPool.create();
-            stateRecord.recordState(this.get('time'), this.ladybug);
-
-            // Check if we want to add it to the culled history
-            if (!this.stateMatchesPrevious(stateRecord))
-                this.culledStateHistory.push(stateRecord);
-
-            this.stateHistory.push(stateRecord);
-
-            this.trigger('history-added');
-        },
-
-        /**
-         * Returns whether or not the given state matches the
-         *   previously recorded state.  If no previous state
-         *   exists, it returns false.
-         */
-        stateMatchesPrevious: function(state) {
-            if (this.stateHistory.length > 1 &&
-                this.stateHistory[this.stateHistory.length - 1].position.equals(state.position)) {
-                return true;
             }
 
             return false;
         },
 
         /**
-         * Applies the appropriate saved state for this moment
-         *   in history.
+         * This collision implementation "cheats" to make photons reflect horizontally if they
+         *   are close to horizontal
+         *
+         * @param photon
+         * @param mirror
          */
-        applyPlaybackState: function() {
-            var stateRecord = this.findStateWithClosestTime(this.time);
-            if (stateRecord)
-                stateRecord.applyState(this.ladybug);
-        },
+        doCollision: function(photon, mirror) {
+            var cheatFactor = Constants.PHOTON_CHEAT_ANGLE;
+            var dx = photon.getX() - mirror.getX();
+            photon.setPosition(mirror.getX() - dx, photon.getY());
 
-        /**
-         * Performs a binary search to find the state whose time
-         *   is closest to the specified time.
-         */
-        findStateWithClosestTime: function(time) {
-            if (!this._historyTimes)
-                return null;
-
-            var stateIndex = binarySearch.closest(this._historyTimes, time);
-            return this.stateHistory[stateIndex];
-        },
-
-        /**
-         * Listens for changes in the paused state of the sim.
-         *   We need to set up some stuff before we can play back,
-         *   and when we start recording at a new position, we
-         *   need to make sure we clear history beyond that point.
-         */
-        pausedChanged: function(simulation, paused) {
-            if (paused) {
-                this.prepareForPlayback();
+            var vx;
+            var vy;
+            if (Math.abs(photon.getVelocity().angle() % Math.PI) < cheatFactor) {
+                vx = -photon.getVelocity().length() * Math.sign(photon.getVelocity().x);
+                vy = 0;
             }
             else {
-                if (!this.get('recording'))
-                    this.prepareForPlayback();
-                else
-                    this.clearHistoryAfter(this.get('time'));
+                vx = -photon.getVelocity().x;
+                vy =  photon.getVelocity().y;
             }
+
+            photon.setVelocity(vx, vy);
+        }
+
+    };
+
+
+    return PhotonMirrorCollisonExpert;
+});
+define('common/quantum/models/stimulated-photon-vanilla',['require','common/math/rectangle','./photon-vanilla'],function (require) {
+
+    'use strict';
+
+    var Rectangle = require('common/math/rectangle');
+
+    var VanillaPhoton = require('./photon-vanilla');
+
+    /**
+     * Extends photon to add static functions to produce photons due to stimulated emission.
+     */
+    var StimulatedVanillaPhoton = VanillaPhoton.extend({}, {
+
+        separation: 9,
+
+        // The bounds within which a stimulated photon must be created. This keeps them
+        //   inside the laser cavity
+        stimulationBounds: new Rectangle(),
+
+        setStimulationBounds: function(stimulationBounds) {
+            StimulatedVanillaPhoton.stimulationBounds = stimulationBounds;
         },
 
-        /**
-         * Clears history without changing current state of the
-         *   ladybug.
-         */
-        clear: function() {
-            var paused = this.get('paused');
-            this.pause();
-
-            this.time = 0;
-            this.set('time', 0);
-            this.set('furthestRecordedTime', 0);
-            this.clearHistory();
-
-            if (!paused)
-                this.play();
+        getSeparation: function() {
+            return StimulatedVanillaPhoton.separation;
         },
 
-        /**
-         * Rewinds to the beginning.
-         */
-        rewind: function() {
-            this.time = 0;
-            this.set('time', 0);
-
-            this.applyPlaybackState();
-
-            if (this.get('recording'))
-                this.clearHistory();
+        setSeparation: function(separation) {
+            StimulatedVanillaPhoton.separation = separation;
         },
 
-        /**
-         * Sets the sim time to the specified second and applies
-         *   the current playback state so the user can see
-         *   what happened at that point in time.
-         */
-        setTime: function(time) {
-            this.time = time;
-            this.set('time', time);
-
-            this.applyPlaybackState();
-        },
-
-        updateModeChanged: function(simulation, updateMode) {
-            if (updateMode === UpdateMode.POSITION) {
-                this.clearSampleHistory();
-                this.resetSamplingMotionModel();
-            }
-        },
-
-        /**
-         * We need to prepare for playback before we can re-apply
-         *   any saved states, so we need to catch those cases
-         *   when we are in danger of applying a state.
-         */
-        recordingModeChanged: function(simulation, recording) {
-            if (!recording)
-                this.prepareForPlayback();
-        },
-
-        /**
-         * Called before switching to playback (non-recording) mode
-         *   to get ready to read stored states in order. It sorts
-         *   the array of historical states by time and then plucks
-         *   just the times out into a separate array for faster
-         *   random access.
-         */
-        prepareForPlayback: function() {
-            // Sort the historical states by time ascending
-            _.sortBy(this.stateHistory, function(state) {
-                return state.time;
+        createStimulated: function(stimulatingPhoton, location, atom) {
+            var newPhoton = VanillaPhoton.create({
+                wavelength: stimulatingPhoton.get('wavelength'), 
+                position: location,
+                velocity: stimulatingPhoton.get('velocity')
             });
 
-            /* Store just the times in a parallel array so we
-             *   can do a binary search.
-             */
-            this._historyTimes = _.pluck(this.stateHistory, 'time');
-        },
+            var idx = 1;
+            var yOffset = StimulatedVanillaPhoton.separation;
+            var sign = idx % 2 === 0 ? 1 : -1;
+            var dy = yOffset *  sign * (stimulatingPhoton.get('velocity').x / stimulatingPhoton.get('velocity').length());
+            var dx = yOffset * -sign * (stimulatingPhoton.get('velocity').y / stimulatingPhoton.get('velocity').length());
+            var newY = stimulatingPhoton.getY() + dy;
+            var newX = stimulatingPhoton.getX() + dx;
 
-        /**
-         * Rotates the ladybug model to the estimated direction
-         *   of motion only if it is moving.
-         */
-        pointInDirectionOfMotion: function() {
-            if (this.estimateVelocity().length() > 1E-6)
-                this.ladybug.set('angle', this.estimateAngle());
-        },
-
-        /**
-         * Returns an estimated angle in radians that is derived
-         *   from the estimated velocity vector.
-         */
-        estimateAngle: function() {
-            return this.estimateVelocity().angle();
-        },
-
-        /**
-         * Estimates velocity from historical positions.
-         * Note: The original version has an index parameter,
-         *   but they must have refactored the function at
-         *   some point and didn't update the references to
-         *   it, so I've gone through and changed all the
-         *   calls because it seemed to be ignoring the index
-         *   parameter anyway.
-         */
-        estimateVelocity: function() {
-            var xTimeSeries = this.xTimeSeries;
-            var yTimeSeries = this.yTimeSeries;
-
-            var historySample = this.stateHistory.slice(this.stateHistory.length - Constants.ESTIMATION_SAMPLE_SIZE, this.stateHistory.length);
-            var diff = Constants.ESTIMATION_SAMPLE_SIZE - historySample.length;
-            for (var i = 0; i < historySample.length; i++) {
-                xTimeSeries[i + diff].time  = historySample[i].time;
-                xTimeSeries[i + diff].value = historySample[i].position.x;
-
-                yTimeSeries[i + diff].time  = historySample[i].time;
-                yTimeSeries[i + diff].value = historySample[i].position.y;
-            }
-            for (var j = 0; j < diff; j++) {
-                xTimeSeries[j].time  = 0;
-                xTimeSeries[j].value = 0;
-                yTimeSeries[j].time  = 0;
-                yTimeSeries[j].value = 0;
+            // Keep the photon inside the cavity.
+            var minY = StimulatedVanillaPhoton.stimulationBounds.bottom() + VanillaPhoton.RADIUS;
+            var maxY = StimulatedVanillaPhoton.stimulationBounds.top();
+            if (newY < minY || newY > maxY) {
+                newY = atom.getY();
+                newX = atom.getX() - VanillaPhoton.RADIUS;
             }
 
-            var vx = MotionMath.estimateDerivative(xTimeSeries);
-            var vy = MotionMath.estimateDerivative(yTimeSeries);
+            newPhoton.setPosition(newX, newY);
 
-            return this._velocity.set(vx, vy);
+            return newPhoton;
+        }
+
+        
+    });
+
+    return StimulatedVanillaPhoton;
+});
+define('common/quantum/models/atomic-state',['require','underscore','backbone','common/math/vector2','../config','./photon-vanilla','./stimulated-photon-vanilla','./physics-util'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var Vector2 = require('common/math/vector2');
+
+    var QuantumConfig = require('../config');
+
+    var VanillaPhoton           = require('./photon-vanilla');
+    var VanillaStimulatedPhoton = require('./stimulated-photon-vanilla');
+    var PhysicsUtil             = require('./physics-util');
+
+
+    var constants = {};
+    constants.minWavelength = VanillaPhoton.BLUE - 20;
+    constants.maxWavelength = VanillaPhoton.GRAY;
+    constants.minEnergy = PhysicsUtil.wavelengthToEnergy(constants.maxWavelength);
+    constants.maxEnergy = PhysicsUtil.wavelengthToEnergy(constants.minWavelength);
+    constants.STIMULATION_LIKELIHOOD = QuantumConfig.STIMULATION_LIKELIHOOD;
+    constants.wavelengthTolerance = 10;
+
+
+    /**
+     * Represents an object in 2D space and provides some helper functions
+     *   for changing a position vector in a way that leverages Backbone's
+     *   event system.
+     */
+    var AtomicState = Backbone.Model.extend({
+
+        defaults: {
+            energyLevel: undefined,
+            // The lifetime of the state--this is based on the energy level;
+            //   the higher the energy, the shorter the lifetime.
+            meanLifetime: Number.POSITIVE_INFINITY,
+            nextHigherState: undefined,
+            nextLowerState: undefined
+        },
+        
+        initialize: function(attributes, options) {
+            // Cached objects
+            this._vHat = new Vector2();
+            this._photonPosition = new Vector2();
+        },
+
+        clone: function() {
+            var atomicState = new AtomicState();
+
+            atomicState.set('energyLevel',     this.get('energyLevel'));
+            atomicState.set('meanLifetime',    this.get('meanLifetime'));
+            atomicState.set('nextHigherState', this.get('nextHigherState'));
+            atomicState.set('nextLowerState',  this.get('nextLowerState'));
+            
+            return atomicState;
+        },
+
+        enterState: function(atom) {},
+
+        leaveState: function(atom) {},
+
+        /**
+         * Returns the wavelength of a photon that would be emitted if the atom dropped to
+         *   the next lower energy state
+         *
+         * @return wavelength of emitted photon
+         */
+        determineEmittedPhotonWavelength: function(nextState) {
+            if (nextState === undefined)
+                nextState = this.get('nextLowerState');
+
+            var energy1 = PhysicsUtil.wavelengthToEnergy(this.getWavelength());
+            var energy2 = PhysicsUtil.wavelengthToEnergy(nextState.getWavelength());
+            var emittedWavelength = Math.min(
+                PhysicsUtil.energyToWavelength(energy1 - energy2),
+                AtomicState.maxWavelength
+            );
+
+            return emittedWavelength;
         },
 
         /**
-         * Estimates acceleration from historical velocities.
-         * Note: The original version has an index parameter,
-         *   but they must have refactored the function at
-         *   some point and didn't update the references to
-         *   it, so I've gone through and changed all the
-         *   calls because it seemed to be ignoring the index
-         *   parameter anyway.
+         * Tells if a photon will be emitted from this state if the atom is struck by a
+         *   specified photon. This is true if the energy of the specified photon is equal,
+         *   within a tolerance, of the difference in energy between this state and the
+         *   next lowest energy state.
+         *
+         * @param photon
+         * @return true if the photon makes the atom go to a higher state
          */
-        estimateAcceleration: function() {
-            var xTimeSeries = this.xTimeSeries;
-            var yTimeSeries = this.yTimeSeries;
+        isStimulatedBy: function(photon, atom) {
+            var result = false;
+            var states = atom.getStates();
+            var stimulatedPhotonEnergy;
 
-            var historySample = this.stateHistory.slice(this.stateHistory.length - Constants.ESTIMATION_SAMPLE_SIZE, this.stateHistory.length);
-            for (var i = 0; i < historySample.length; i++) {
-                xTimeSeries[i].time  = historySample[i].time;
-                xTimeSeries[i].value = historySample[i].velocity.x;
-
-                yTimeSeries[i].time  = historySample[i].time;
-                yTimeSeries[i].value = historySample[i].velocity.y;
+            if (QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS) {
+                for (var i = 0; i < states.length && !states[i].equals(this) && result === false; i++) {
+                    var state = states[i];
+                    if (state.get('energyLevel') < this.get('energyLevel') ) {
+                        stimulatedPhotonEnergy = this.get('energyLevel') - state.get('energyLevel');
+                        result = (
+                            Math.abs(photon.getEnergy() - stimulatedPhotonEnergy) <= QuantumConfig.ENERGY_TOLERANCE && 
+                            Math.random() < AtomicState.STIMULATION_LIKELIHOOD
+                        );
+                    }
+                }
+            }
+            else {
+                stimulatedPhotonEnergy = this.get('energyLevel') - this.getNextLowerEnergyState().get('energyLevel');
+                result = (
+                    Math.abs(photon.getEnergy() - stimulatedPhotonEnergy) <= QuantumConfig.ENERGY_TOLERANCE && 
+                    Math.random() < AtomicState.STIMULATION_LIKELIHOOD
+                );
             }
 
-            var ax = MotionMath.estimateDerivative(xTimeSeries);
-            var ay = MotionMath.estimateDerivative(yTimeSeries);
-
-            return this._acceleration.set(ax, ay);
+            return result;
         },
 
         /**
-         * Sets a bounding box around the scene from the min
-         *   and max x and y values.  It's easier to give
-         *   these values because one can simply reverse the
-         *   model-view-transform with screen coordinates.
+         * Handles the collision of an atom with a photon
          */
-        setBounds: function(minX, minY, maxX, maxY) {
-            var width = maxX - minX;
-            var height = maxY - minY;
-            this.bounds.set(minX, minY, width, height);
+        collideWithPhoton: function(atom, photon) {
+
+            // See if the photon knocks the atom to a higher state
+            var newState = this.getElevatedState(atom, photon, this.get('energyLevel'));
+            if (newState) {
+                photon.markForDestruction();
+                atom.setCurrentState(newState);
+                return;
+            }
+
+            // If the photon has the same energy as the difference
+            //   between this level and a lower state, then emit a
+            //   photon of that energy
+            if (this.isStimulatedBy(photon, atom)) {
+                // Place the replacement photon beyond the atom, so it doesn't
+                //   collide again right away
+                var vHat = this._vHat.set(photon.get('velocity')).normalize();
+                vHat.scale(atom.get('radius'));
+                var position = this._photonPosition.set(
+                    atom.getX() + vHat.x,
+                    atom.getY() + vHat.y
+                );
+                photon.setPosition(position);
+
+                var emittedPhoton = VanillaStimulatedPhoton.createStimulated(photon, position, atom);
+                atom.emitPhoton(emittedPhoton);
+
+                // Change state
+                atom.setCurrentState(atom.getLowestEnergyState());
+            }
         },
 
         /**
-         * Returns a bounding rectangle of the scene.
+         * Tests only the energy level and wavelength. Cannot test the nextHigherState and nextLowerState
+         * because that results in stack overflows.
+         *
+         * @param obj
+         * @return true if equal
          */
-        getBounds: function() {
-            return this.bounds;
+        equals: function(obj) {
+            if (obj instanceof AtomicState && obj)
+                return this.get('energyLevel') === obj.get('energyLevel');
+            
+            return false;
         },
 
         /**
-         * Returns the ladybug to the center.
+         * Returns a string that can be used to identify this state
          */
-        returnLadybug: function() {
-            this.ladybug.setPosition(0, 0);
-            this.ladybug.setVelocity(0, 0);
-            this.clearSampleHistory();
-            this.setSamplePoint(this.ladybug.get('position'));
-            this.resetSamplingMotionModel();
+        hashCode: function() {
+            return '' + this.get('energyLevel') + this.get('meanLifetime');
         },
 
-        ladybugOutOfBounds: function() {
-            return !this.bounds.contains(this.ladybug.get('position'));
+        /**
+         * Searches through the states of a specified atom for one whose energy differential
+         *   between it and a specified energy matches the energy in a specified photon. The
+         *   reason the energy needs to be specified as a parameter is that the GroundState
+         *   has to pretend it has energy of 0 for the colors and such to work right, but
+         *   other states can use their actual energies.
+         *
+         * @param atom
+         * @param photon
+         * @param energy
+         * @return the state that the atom can be in that is the specified energy above its current state
+         */
+        getElevatedState: function(atom, photon, energy) {
+            var result = null;
+            var states = atom.getStates();
+            for (var stateIdx = states.length - 1; stateIdx >= 0 && !states[stateIdx].equals(this) && result === null; stateIdx--) {
+                var de = photon.getEnergy() - (states[stateIdx].get('energyLevel') - energy);
+                if (Math.abs(de) <= QuantumConfig.ENERGY_TOLERANCE)
+                    result = states[stateIdx];
+            }
+            return result;
+        },
+
+        /**
+         * Converts the energy level into a wavelength and returns it.
+         */
+        getWavelength: function() {
+            return PhysicsUtil.energyToWavelength(this.get('energyLevel'));
+        },
+
+        getNextLowerEnergyState: function() {
+            return this.get('nextLowerState');
+        },
+
+        getNextHigherEnergyState: function() {
+            return this.get('nextHigherState');
+        },
+
+        getEnergyLevel: function() {
+            return this.get('energyLevel');
+        }
+
+    }, _.extend({}, constants, {
+        
+        /**
+         * Sets the next-higher and next-lower attributes for an array of AtomicStates
+         *
+         * @param states
+         */
+        linkStates: function(states) {
+            for (var i = 1; i < states.length; i++) {
+                states[i ].set('nextLowerState', states[i - 1]);
+                states[i - 1].set('nextHigherState', states[i]);
+            }
+
+            states[states.length - 1].set('nextHigherState', AtomicState.MaxEnergyState.instance());
+        }
+
+    }));
+
+
+    /**
+     * Energy state with maximum energy
+     */
+    var MaxEnergyState = AtomicState.extend({
+
+        collideWithPhoton: function(atom, photon) {},
+
+        getWavelength: function() {
+            // The hard-coded number here is a hack so the energy level graphic can be
+            //   adjusted up to the top of the window. This is not great programming
+            return MaxEnergyState.minWavelength - 80;
+        }
+
+    }, {
+
+        instance: function() {
+            if (!this._instance)
+                this._instance = new MaxEnergyState();
+            return this._instance;
         }
 
     });
 
-    return LadybugMotionSimulation;
+
+    /**
+     * Energy state with minimum energy
+     */
+    var MinEnergyState = AtomicState.extend({
+
+        initialize: function(attributes, options) {
+            AtomicState.prototype.initialize.apply(this, arguments);
+
+            this.set('energyLevel', MinEnergyState.minEnergy);
+        },
+
+        collideWithPhoton: function(atom, photon) {}
+
+    }, {
+
+        instance: function() {
+            if (!this._instance)
+                this._instance = new MinEnergyState();
+            return this._instance;
+        }
+
+    });
+
+
+    AtomicState.MaxEnergyState = MaxEnergyState;
+    AtomicState.MinEnergyState = MinEnergyState;
+
+
+    return AtomicState;
+});
+
+define('common/quantum/models/photon',['require','underscore','common/math/vector2','common/mechanics/models/particle','./physics-util'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2  = require('common/math/vector2');
+    var Particle = require('common/mechanics/models/particle');
+    
+    var PhysicsUtil = require('./physics-util');
+
+    /**
+     * This model represents a photon and includes functionality that was previously
+     *   separated into the CollidableAdapter class in the original PhET sims.
+     */
+    var Photon = Particle.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            wavelength: undefined,
+            // If this photon was produced by the stimulation of another, this
+            // is a reference to that photon.
+            parentPhoton: null,
+            // If this photon has stimulated the production of another photon, this
+            // is a reference to that photon
+            childPhoton: null
+        }),
+
+        initialize: function(attributes, options) {
+            Particle.prototype.initialize.apply(this, [attributes, options]);
+
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            Particle.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            Particle.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        },
+
+        /**
+         * Converts wavelength to energy and returns it.
+         */
+        getEnergy: function() {
+            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+        }
+
+    }, {
+
+        // Defaults
+        DEFAULT_SPEED:          1,
+        RADIUS:                 10,
+
+        // Savelength constants
+        RED:                    680,
+        DEEP_RED:               640,
+        BLUE:                   440,
+        MIN_VISIBLE_WAVELENGTH: 380,
+        MAX_VISIBLE_WAVELENGTH: 710,
+        GRAY:                   5000
+
+    });
+
+    return Photon;
+});
+define('common/quantum/models/energy-emission-strategy',['require','underscore','backbone'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+    
+    /**
+     * Strategy for atoms emitting energy
+     */
+    var EnergyEmissionStrategy = function() {};
+
+    _.extend(EnergyEmissionStrategy.prototype, {
+
+        emitEnergy: function(atom) {}
+
+    });
+
+    EnergyEmissionStrategy.extend = Backbone.Model.extend;
+
+    return EnergyEmissionStrategy;
+});
+
+define('common/quantum/models/ground-state',['require','underscore','./atomic-state'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+    
+    var AtomicState = require('./atomic-state');
+
+    /**
+     * The ground state for an atom
+     */
+    var GroundState = AtomicState.extend({
+
+        defaults: _.extend({}, AtomicState.prototype.defaults, {
+            energyLevel: 0,
+            meanLifetime: Number.POSITIVE_INFINITY
+        }),
+
+        getNextLowerEnergyState: function() {
+            return AtomicState.MinEnergyState.instance();
+        }
+
+    });
+
+
+    return GroundState;
+});
+
+define('common/quantum/models/element-properties',['require','underscore','backbone','./atomic-state','./ground-state'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var AtomicState = require('./atomic-state');
+    var GroundState = require('./ground-state');
+
+    /**
+     * A place to store element properties
+     */
+    var ElementProperties = Backbone.Model.extend({
+
+        defaults: {
+            name: '',
+            energyLevels: [],
+            levelsMovable: false,
+            energyEmissionStrategy: null,
+            meanStateLifetime: 0,
+            workFunction: 0
+        },
+        
+        initialize: function(attributes, options) {
+            this.states = [];
+            this.set('energyLevels', _.toArray(this.get('energyLevels')));
+
+            this.initStates();
+
+            this.on('change:energyLevels', this.energyLevelsChanged);
+        },
+
+        getGroundState: function() {
+            return this.states[0];
+        },
+
+        getMeanStateLifetime: function() {
+            return this.get('meanStateLifetime');
+        },
+
+        setMeanStateLifetime: function(meanStateLifetime) {
+            this.set('meanStateLifetime', meanStateLifetime);
+        },
+
+        getEnergyEmissionStrategy: function() {
+            return this.get('energyEmissionStrategy');
+        },
+
+        getEnergyLevels: function() {
+            return this.get('energyLevels');
+        },
+
+        setWorkFunction: function(workFunction) {
+            this.set('workFunction', workFunction);
+        },
+
+        getWorkFunction: function() {
+            return this.get('workFunction');
+        },
+
+        isLevelsMovable: function() {
+            return this.get('levelsMovable');
+        },
+
+        setLevelsMovable: function(levelsMovable) {
+            this.set('levelsMovable', levelsMovable);
+        },
+
+        getStates: function() {
+            return this.states;
+        },
+
+        initStates: function() {
+            var energyLevels = this.get('energyLevels');
+            this.states[0] = new GroundState();
+            this.states[0].set('energyLevel', energyLevels[0]);
+
+            for (var i = 1; i < energyLevels.length; i++) {
+                this.states[i] = new AtomicState();
+                this.states[i].set('energyLevel', 0);
+            }
+
+            AtomicState.linkStates(this.states);
+
+            this.updateStates();
+        },
+
+        updateStates: function() {
+            var i;
+
+            // Copy the energies into a new array, sort and normalize them
+            var energyLevels = this.get('energyLevels');
+            var energies = [];
+            for (i = 0; i < energyLevels.length; i++)
+                energies[i] = energyLevels[i];
+            
+            energies.sort(function(a, b) {
+                return a - b;
+            });
+
+            this.states[0].set('energyLevel', energies[0]);
+            for (i = 1; i < this.states.length; i++) {
+                this.states[i].set('energyLevel', energies[i]);
+                this.states[i].set('meanLifetime', this.get('meanStateLifetime'));
+            }
+        },
+
+        energyLevelsChanged: function(model, energyLevels) {
+            if (energyLevels.length !== this.states.length)
+                this.initStates();
+            else
+                this.updateStates();
+        }
+
+    });
+
+
+    return ElementProperties;
+});
+
+define('lasers/models/laser-element-properties',['require','common/quantum/models/element-properties','../constants'],function (require) {
+
+    'use strict';
+
+    var ElementProperties = require('common/quantum/models/element-properties');
+
+    var Constants = require('../constants');
+
+    /**
+     * A place to store element properties in the laser simulation
+     */
+    var LaserElementProperties = ElementProperties.extend({
+
+        initialize: function(attributes, options) {
+            ElementProperties.prototype.initialize.apply(this, [attributes, options]);
+
+            // Set the mean lifetimes of the states
+            var states = this.states;
+            for (var i = 1; i < states.length; i++)
+                states[i].set('meanLifetime', Constants.MAXIMUM_STATE_LIFETIME / 2);
+        },
+
+        getMiddleEnergyState: function() {
+            return this.states[1];
+        },
+
+        getHighEnergyState: function() {
+            throw 'Function must be implemented in child class.';
+        }
+
+    });
+
+
+    return LaserElementProperties;
+});
+
+define('lasers/models/element-properties/two-level',['require','underscore','common/quantum/models/atomic-state','common/quantum/models/physics-util','common/quantum/models/photon','common/quantum/models/energy-emission-strategy','../laser-element-properties','../../constants'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var AtomicState            = require('common/quantum/models/atomic-state');
+    var PhysicsUtil            = require('common/quantum/models/physics-util');
+    var Photon                 = require('common/quantum/models/photon');
+    var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
+
+    var LaserElementProperties = require('../laser-element-properties');
+
+    var Constants = require('../../constants');
+    var groundStateEnergy = -13.6;
+
+    /**
+     * Emission strategy just for this
+     */
+    var EmissionStrategy = EnergyEmissionStrategy.extend({
+
+        emitEnergy: function(atom) {
+            return atom.getCurrentState().getNextLowerEnergyState();
+        }
+
+    });
+
+    /**
+     * ElementProperties for the 2 level atom in the laser simulation
+     */
+    var TwoLevelElementProperties = LaserElementProperties.extend({
+
+        defaults: _.extend({}, LaserElementProperties.prototype.defaults, {
+            name: 'Laser Atom',
+            meanStateLifetime: (Constants.DT / Constants.FPS) * 100,
+            energyLevels: [
+                groundStateEnergy, // Ground-state energy
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.RED)
+            ],
+            energyEmissionStrategy: new EmissionStrategy()
+        }),
+
+        // Because of the origianl poor design of the Lasers simulation, we're saddled
+        //   with needing a third, high energy state, even though we shouldn't have one.
+        dummyHighEnergyState: new AtomicState(),
+
+        getHighEnergyState: function() {
+            return this.dummyHighEnergyState;
+        }
+
+    });
+
+
+    return TwoLevelElementProperties;
+});
+
+define('lasers/models/element-properties/three-level',['require','underscore','common/quantum/models/physics-util','common/quantum/models/photon','common/quantum/models/energy-emission-strategy','../laser-element-properties','../../constants'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var PhysicsUtil            = require('common/quantum/models/physics-util');
+    var Photon                 = require('common/quantum/models/photon');
+    var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
+
+    var LaserElementProperties = require('../laser-element-properties');
+
+    var Constants = require('../../constants');
+    var groundStateEnergy = -13.6;
+
+    /**
+     * Emission strategy just for this
+     */
+    var EmissionStrategy = EnergyEmissionStrategy.extend({
+
+        emitEnergy: function(atom) {
+            return atom.getCurrentState().getNextLowerEnergyState();
+        }
+
+    });
+
+    /**
+     * ElementProperties for the 2 level atom in the laser simulation
+     */
+    var ThreeLevelElementProperties = LaserElementProperties.extend({
+
+        defaults: _.extend({}, LaserElementProperties.prototype.defaults, {
+            name: 'Laser Atom',
+            meanStateLifetime: (Constants.DT / Constants.FPS) * 100,
+            energyLevels: [
+                groundStateEnergy,
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.RED),
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.BLUE)
+            ],
+            energyEmissionStrategy: new EmissionStrategy()
+        }),
+
+        getHighEnergyState: function() {
+            return this.states[2];
+        }
+
+    });
+
+
+    return ThreeLevelElementProperties;
+});
+
+define('lasers/models/simulation',['require','exports','module','underscore','backbone','common/collections/vanilla','common/quantum/config','common/quantum/models/simulation','common/quantum/models/photon-vanilla','common/quantum/models/tube','common/quantum/models/physics-util','common/math/rectangle','common/mechanics/models/sphere-sphere-collision-expert','common/mechanics/models/sphere-box-collision-expert','common/quantum/models/photon-atom-collision-expert','./photon-mirror-collision-expert','./element-properties/two-level','./element-properties/three-level','./mirror','../constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var VanillaCollection = require('common/collections/vanilla');
+    var QuantumConfig     = require('common/quantum/config');
+    var QuantumSimulation = require('common/quantum/models/simulation');
+    var Photon            = require('common/quantum/models/photon-vanilla');
+    var Tube              = require('common/quantum/models/tube');
+    var PhysicsUtil       = require('common/quantum/models/physics-util');
+    var Rectangle         = require('common/math/rectangle');
+
+    var SphereSphereExpert         = require('common/mechanics/models/sphere-sphere-collision-expert');
+    var SphereBoxExpert            = require('common/mechanics/models/sphere-box-collision-expert');
+    var PhotonAtomCollisonExpert   = require('common/quantum/models/photon-atom-collision-expert');
+    var PhotonMirrorCollisonExpert = require('./photon-mirror-collision-expert');
+
+    // Local dependencies need to be referenced by relative paths
+    //   so we can use this in other projects.
+    var TwoLevelElementProperties   = require('./element-properties/two-level');
+    var ThreeLevelElementProperties = require('./element-properties/three-level');
+    var Mirror                      = require('./mirror');
+
+    /**
+     * Constants
+     */
+    var Constants = require('../constants');
+
+    /**
+     *
+     */
+    var LasersSimulation = QuantumSimulation.extend({
+
+        defaults: _.extend({}, QuantumSimulation.prototype.defaults, {
+
+        }),
+
+        initialize: function(attributes, options) {
+            options = _.extend({
+                framesPerSecond: Constants.FPS,
+                deltaTimePerFrame: Constants.DT
+            }, options);
+
+            // Properties for two and three level atoms
+            this.twoLevelProperties   = new TwoLevelElementProperties();
+            this.threeLevelProperties = new ThreeLevelElementProperties();
+
+            // We want this to make it into the startingAttributes object
+            this.set('elementProperties', this.twoLevelProperties);
+
+            QuantumSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+            // Cached objects
+            this._matchObject = {};
+        },
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            QuantumSimulation.prototype.initComponents.apply(this, arguments);
+
+            var width = 800;
+            var height = 800;
+            var minX = Math.floor(Constants.ORIGIN.x - 50);
+            var minY = Math.floor(Constants.ORIGIN.y - height / 2);
+            this.boundingRectangle = new Rectangle(minX, minY, width, height);
+
+            this.models = [];
+
+            this.seedBeam = null;
+            this.pumpingBeam = null;
+            this.tube = null;
+
+            this.photons = new VanillaCollection();
+            this.lasingPhotons = new VanillaCollection();
+            this.atoms = new Backbone.Collection();
+            this.mirrors = [];
+
+            // Set up the system of collision experts
+            this.collisionExperts = [];
+            this.collisionExperts.push(SphereSphereExpert);
+            this.collisionExperts.push(PhotonAtomCollisonExpert);
+            this.collisionExperts.push(SphereBoxExpert);
+            this.collisionExperts.push(PhotonMirrorCollisonExpert);
+
+            this.angleWindow = Constants.PHOTON_CHEAT_ANGLE;
+
+            this.numPhotons = 0;
+
+            this.set('elementProperties', this.twoLevelProperties);
+        },
+
+        resetComponents: function() {
+            // QuantumSimulation.prototype.resetComponents.apply(this, arguments);
+            this.twoLevelProperties   = new TwoLevelElementProperties();
+            this.threeLevelProperties = new ThreeLevelElementProperties();
+
+            this.getPumpingBeam().set('photonsPerSecond', 0);
+            this.getSeedBeam().set('photonsPerSecond', 0);
+
+            // Reset atoms to the ground state
+            var groundState = this.getGroundState();
+            for (var i = 0; i < this.atoms.length; i++)
+                this.atoms.at(i).setCurrentState(groundState);
+
+            // Clear all photons
+            for (var k = this.photons.length - 1; k >= 0; k--)
+                this.photons.at(k).destroy();
+
+            this.numPhotons = 0;
+        },
+
+        _update: function(time, deltaTime) {
+            QuantumSimulation.prototype._update.apply(this, arguments);
+
+            // Update all the models in the system
+            this.updateModels(time, deltaTime);
+
+            // Check to see if any photons need to be taken out of the system
+            this.numPhotons = 0;
+            for (var i = this.photons.length - 1; i >= 0; i--) {
+                var photon = this.photons.at(i);
+                this.numPhotons++;
+                if (!this.boundingRectangle.contains(photon.getPosition())) {
+                    // Old PhET note: We don't need to remove the element right now. The photon will
+                    //   fire an event that we will catch
+                    // Patrick: I've changed it to just destroy it now
+                    photon.destroy();
+                }
+            }
+
+            // Handle collisions between bodies
+            this.checkCollisions(deltaTime);
+        },
+
+        updateModels: function(time, deltaTime) {
+            var i;
+            for (i = 0; i < this.models.length; i++)
+                this.models[i].update(time, deltaTime);
+
+            for (i = 0; i < this.photons.length; i++)
+                this.photons.at(i).update(time, deltaTime);
+
+            for (i = 0; i < this.atoms.length; i++)
+                this.atoms.at(i).update(time, deltaTime);
+        },
+
+        addModel: function(model) {
+            this.models.push(model);
+
+            if (model instanceof Mirror)
+                this.mirrors.push(model);
+
+            if (model instanceof Tube)
+                this.tube = model;
+        },
+
+        removeModel: function(model) {
+            var index = this.models.indexOf(model);
+            if (index !== -1) {
+                this.models.splice(index, 1);
+
+                if (model instanceof Mirror) {
+                    index = this.mirrors.indexOf(model);
+                    if (index !== -1)
+                        this.mirrors.splice(index, 1);
+                }
+
+                if (model instanceof Tube && this.tube === model)
+                    this.tube = null;
+
+                return true;
+            }
+            return false;
+        },
+
+        addPhoton: function(photon) {
+            this.photons.add(photon);
+
+            // If the photon is moving nearly horizontally and is equal in energy to the
+            //   transition between the middle and ground states, consider it to be lasing
+            if (this.isLasingPhoton(photon))
+                this.lasingPhotons.add(photon);
+        },
+
+        addAtom: function(atom) {
+            this.atoms.add(atom);
+        },
+
+        setNumEnergyLevels: function(numLevels) {
+            var i;
+
+            // Set the element properties
+            switch (numLevels) {
+                case 2:
+                    this.setCurrentElementProperties(this.twoLevelProperties);
+                    this.getPumpingBeam().set('enabled', false);
+                    break;
+                case 3:
+                    this.setCurrentElementProperties(this.threeLevelProperties);
+                    this.getPumpingBeam().set('enabled', true);
+                    break;
+                default:
+                    throw 'Invalid number of levels';
+            }
+
+            // Set the available states of all the atoms
+            for (i = 0; i < this.atoms.length; i++) {
+                this.atoms.at(i).setStates(this.getCurrentElementProperties().getStates());
+            }
+
+            this.trigger('atomic-states-changed', this);
+        },
+
+        getResonatingCavity: function() {
+            return this.tube;
+        },
+
+        setResonatingCavity: function(tube) {
+            this.tube = tube;
+        },
+
+        getSeedBeam: function() {
+            return this.seedBeam;
+        },
+
+        setSeedBeam: function(seedBeam) {
+            this.setStimulatingBeam(seedBeam);
+        },
+
+        setStimulatingBeam: function(seedBeam) {
+            if (this.seedBeam)
+                this.removeModel(this.seedBeam);
+
+            this.addModel(seedBeam);
+            this.seedBeam = seedBeam;
+        },
+
+        getPumpingBeam: function() {
+            return this.pumpingBeam;
+        },
+
+        setPumpingBeam: function(pumpingBeam) {
+            if (this.pumpingBeam)
+                this.removeModel(this.pumpingBeam);
+
+            this.addModel(pumpingBeam);
+            this.pumpingBeam = pumpingBeam;
+        },
+
+        setHighEnergyMeanLifetime: function(time) {
+            this.getHighEnergyState().set('meanLifetime', time);
+        },
+
+        setMiddleEnergyMeanLifetime: function(time) {
+            this.getMiddleEnergyState().set('meanLifetime', time);
+        },
+
+        getNumGroundStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getGroundState());
+        },
+
+        getNumMiddleStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getMiddleEnergyState());
+        },
+
+        getNumHighStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getHighEnergyState());
+        },
+
+        getNumAtomsWithState: function(state) {
+            var count = 0;
+
+            for (var i = 0; i < this.atoms.length; i++) {
+                if (this.atoms.at(i).getCurrentState().equals(state))
+                    count++;
+            }
+
+            return count;
+        },
+
+        setBounds: function(bounds) {
+            this.boundingRectangle.set(bounds);
+        },
+
+        getNumPhotons: function() {
+            return this.numPhotons;
+        },
+
+        getMiddleEnergyState: function() {
+            return this.getCurrentElementProperties().getStates()[1];
+        },
+
+        getHighEnergyState: function() {
+            return this.getCurrentElementProperties().getHighEnergyState();
+        },
+
+        getStates: function() {
+            return this.getCurrentElementProperties().getStates();
+        },
+
+        getNumLasingPhotons: function() {
+            return this.lasingPhotons.length;
+        },
+
+        /**
+         * Returns the first match, or null if none.
+         */
+        getMatch: function(beam) {
+            var states = this.getStates();
+            for (var i = 0; i < states.length; i++) {
+                var state = states[i];
+                var e0 = this.getGroundState().get('energyLevel');
+                var transitionEnergy = state.get('energyLevel') - e0;
+                var beamEnergy = PhysicsUtil.wavelengthToEnergy(beam.getWavelength());
+
+                if (beam.get('enabled') &&
+                    beam.get('photonsPerSecond') > 0 &&
+                    Math.abs(beamEnergy - transitionEnergy) < QuantumConfig.ENERGY_TOLERANCE
+                ) {
+                    var match = this._matchObject;
+                    match.time = this.get('time');
+                    match.matchingEnergy = beamEnergy + e0;
+                    match.e0 = e0;
+                    match.transitionEnergy = transitionEnergy;
+                    match.beamEnergy = beamEnergy;
+
+                    return match;
+                }
+            }
+            return null;
+        },
+
+        checkCollisions: function(deltaTime) {
+            this.checkPhotonAtomCollisions();
+            this.checkCollisionsBetweenTwoLists(this.photons.models, this.mirrors);
+            this.checkCollisionsBetweenListAndBody(this.atoms.models, this.tube);
+
+            for (var i = this.photons.length - 1; i >= 0; i--) {
+                if (this.photons.at(i).markedForDestruction())
+                    this.photons.at(i).destroy();
+            }
+        },
+
+        checkPhotonAtomCollisions: function() {
+            // Test each photon against the atoms in the section the photon is in
+            for (var i = 0; i < this.photons.length; i++) {
+                var photon = this.photons.at(i);
+                if (this.tube.getBounds().contains(photon.getPosition()) ||
+                    this.tube.getBounds().contains(photon.getPreviousPosition())
+                ) {
+                    for (var j = 0; j < this.atoms.length; j++) {
+                        var atom = this.atoms.at(j);
+                        var s1 = atom.getCurrentState();
+                        PhotonAtomCollisonExpert.detectAndDoCollision(photon, atom);
+                        var s2 = atom.getCurrentState();
+                        if (s1 != s2)
+                            break;
+                    }
+                }
+            }
+        },
+
+        /*
+         * Detects and computes collisions between the items in two lists of collidable objects
+         */
+        checkCollisionsBetweenTwoLists: function(collidablesA, collidablesB) {
+            for (var i = 0; i < collidablesA.length; i++) {
+                var collidable1 = collidablesA[i];
+                if (!(collidable1 instanceof Photon)
+                    || this.tube.getBounds().contains(collidable1.getPosition())
+                    || this.tube.getBounds().contains(collidable1.getPreviousPosition())
+                ) {
+                    for (var j = 0; j < collidablesB.length; j++) {
+                        var collidable2 = collidablesB[j];
+                        if (collidable1 != collidable2
+                            && (
+                                !(collidable2 instanceof Photon)
+                                || this.tube.getBounds().contains(collidable2.getPosition())
+                            )
+                        ) {
+                            for (var k = 0; k < this.collisionExperts.length; k++) {
+                                this.collisionExperts[k].detectAndDoCollision(collidable1, collidable2);
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        /*
+         * Detects and computes collisions between the items in a list of collidables and a specified
+         * collidable.
+         */
+        checkCollisionsBetweenListAndBody: function(collidablesA, body) {
+            for (var i = 0; i < collidablesA.length; i++) {
+                var collidable = collidablesA[i];
+                if (body.getBounds().contains(collidable.getPosition()) ||
+                    body.getBounds().contains(collidable.getPreviousPosition())
+                ) {
+                    for (var k = 0; k < this.collisionExperts.length; k++) {
+                        this.collisionExperts[k].detectAndDoCollision(collidable, body);
+                    }
+                }
+            }
+        },
+
+        isLasingPhoton: function(photon) {
+            var middleToGroundEnergyDiff = this.getMiddleEnergyState().get('energyLevel') - this.getGroundState().get('energyLevel');
+            return (
+                Math.abs(photon.getVelocity().angle() % Math.PI) < this.angleWindow &&
+                Math.abs(photon.getEnergy() - middleToGroundEnergyDiff) <= QuantumConfig.ENERGY_TOLERANCE
+            );
+        }
+
+    }, Constants.LasersSimulation);
+
+    return LasersSimulation;
+});
+
+define('common/quantum/models/electron-sink',['require','backbone','common/math/vector2','common/math/line-intersection','common/collections/vanilla'],function (require) {
+
+    'use strict';
+
+    var Backbone = require('backbone');
+
+    var Vector2           = require('common/math/vector2');
+    var LineIntersection  = require('common/math/line-intersection');
+    var VanillaCollection = require('common/collections/vanilla');
+
+    /**
+     * Absorbs electrons along a line between two points
+     */
+    var ElectronSink = Backbone.Model.extend({
+
+        defaults: {
+            simulation: undefined,
+            point1: undefined,
+            point2: undefined
+        },
+        
+        initialize: function(attributes, options) {
+            this.set('point1', new Vector2(this.get('point1')));
+            this.set('point2', new Vector2(this.get('point2')));
+
+            this.electrons = new VanillaCollection();
+        },
+
+        /**
+         * Removes electrons that have crossed the line defined by the electron sink
+         */
+        update: function(time, deltaTime) {
+            var x1 = this.get('point1').x;
+            var y1 = this.get('point1').y;
+            var x2 = this.get('point2').x;
+            var y2 = this.get('point2').y;
+
+            // Look for electrons that should be absorbed
+            for (var i = this.electrons.length - 1; i >= 0; i--) {
+                var electron = this.electrons.at(i);
+
+                var hits = LineIntersection.linesIntersect(
+                    x1, y1, 
+                    x2, y2,
+                    electron.getX(), electron.getY(), 
+                    electron.getPreviousPosition().x, electron.getPreviousPosition().y
+                );
+                
+                if (hits) {
+                    this.trigger('electron-absorbed', this, electron);
+                    electron.markForDestruction();
+                }
+            }
+        },
+
+        addElectron: function(electron) {
+            this.electrons.add(electron);
+        },
+
+        removeElectron: function(electron) {
+            this.electrons.remove(electron);
+        }
+
+    });
+
+
+    return ElectronSink;
+});
+
+define('common/mechanics/models/body-vanilla',['require','underscore','common/math/vector2','./particle-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var VanillaParticle = require('./particle-vanilla');
+
+    /**
+     * A body with mass and momentum
+     */
+    var VanillaBody = VanillaParticle.extend({
+
+        defaults: _.extend({}, VanillaParticle.prototype.defaults, {
+            lastColidedBody: null,
+            theta: 0,
+            omega: 0,
+            alpha: 0,
+            prevAlpha: 0,
+            mass: 0
+        }),
+
+        init: function() {
+            VanillaParticle.prototype.init.apply(this, arguments);
+
+            this._momentum = new Vector2();
+        },
+
+        /**
+         * 
+         */
+        update: function(deltaTime) {
+            var alpha = this.get('alpha');
+            var omega = this.get('omega');
+            var prevAlpha = this.get('prevAlpha');
+            
+            // New orientation
+            this.set('theta', this.get('theta') + deltaTime * omega + deltaTime * deltaTime * alpha / 2);
+            // New angular velocity
+            this.set('omega', omega + deltaTime * (alpha + prevAlpha) / 2);
+            // Track angular acceleration
+            this.set('prevAlpha', alpha);
+
+            VanillaParticle.prototype.update.apply(this, arguments);
+        },
+
+        getCM: function() {
+            throw 'Must be implemented in child class';
+        },
+
+        getMomentOfInertia: function() {
+            throw 'Must be implemented in child class';
+        },
+
+        /**
+         * Returns the total kinetic energy of the body, translational
+         * and rotational
+         *
+         * @return the kinetic energy
+         */
+        getKineticEnergy: function() {
+            return (
+                (this.get('mass') * this.get('velocity').lengthSq() / 2) +
+                (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2)
+            );
+        },
+
+        getMomentum: function() {
+            return this._momentum.set(
+                this.get('velocity').x * this.get('mass'),
+                this.get('velocity').y * this.get('mass')
+            );
+        },
+
+        /**
+         * Function that facilitates setting the momentum vector 
+         *   while still triggering a change event.
+         */
+        setMomentum: function(x, y) {
+            if (x instanceof Vector2)
+                this.setVelocity(x.x / this.get('mass'), x.y / this.get('mass'));
+            else
+                this.setVelocity(x / this.get('mass'), y / this.get('mass'));
+        }
+
+    });
+
+    return VanillaBody;
+});
+define('common/mechanics/models/spherical-body-vanilla',['require','underscore','common/math/vector2','./body-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var VanillaBody = require('./body-vanilla');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var VanillaSphericalBody = VanillaBody.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, VanillaBody.prototype.defaults, {
+            radius: 0
+        }),
+
+        init: function() {
+            VanillaBody.prototype.init.apply(this, arguments);
+
+            this.prevPosition = new Vector2();
+            this.prevVelocity = new Vector2();
+        },
+
+        onCreate: function(attributes, options) {
+            VanillaBody.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.prevPosition.set(this.get('position'));
+            this.prevVelocity.set(this.get('velocity'));
+        },
+
+        getCM: function() {
+            return this.get('position');
+        },
+
+        getMomentOfInertia: function() {
+            return this.get('mass') * this.get('radius') * this.get('radius') * 2 / 5;
+        },
+
+        getCenter: function() {
+            return this.get('position');
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            VanillaBody.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            VanillaBody.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        }
+
+    });
+
+    return VanillaSphericalBody;
+});
+define('common/quantum/models/electron-vanilla',['require','underscore','common/math/vector2','common/mechanics/models/spherical-body-vanilla','./physics-util','../config'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2              = require('common/math/vector2');
+    var VanillaSphericalBody = require('common/mechanics/models/spherical-body-vanilla');
+    
+    var PhysicsUtil   = require('./physics-util');
+    var QuantumConfig = require('../config');
+
+    /**
+     * Represents an electron
+     */
+    var VanillaElectron = VanillaSphericalBody.extend({
+
+        defaults: _.extend({}, VanillaSphericalBody.prototype.defaults, {
+            // Radius of an electron. An arbitrary dimension based on how it looks on the screen
+            radius: 2,
+            mass: PhysicsUtil.ELECTRON_MASS
+        }),
+
+        init: function() {
+            VanillaSphericalBody.prototype.init.apply(this, arguments);
+
+            // Cached objects
+            this._velocity = new Vector2();
+        },
+
+        onCreate: function(attributes, options) {
+            VanillaSphericalBody.prototype.onCreate.apply(this, [attributes, options]);
+
+            this._markedForDestruction = false;
+        },
+
+        /**
+         * Sets a flag for the electron to be destroyed on the next loop
+         */
+        markForDestruction: function() {
+            this._markedForDestruction = true;
+        },
+
+        /**
+         * Returns whether the electron has been marked for destruction
+         */
+        markedForDestruction: function() {
+            return this._markedForDestruction;
+        },
+
+        /**
+         * Returns the the energy of the electron in Joules
+         *
+         * @return
+         */
+        getEnergy: function() {
+            var ke = QuantumConfig.PIXELS_PER_NM * QuantumConfig.PIXELS_PER_NM * this.get('velocity').lengthSq() * this.get('mass') / 2;
+            var ev = ke * PhysicsUtil.EV_PER_JOULE;
+            return ev;
+        },
+
+        /**
+         * Sets the energy of the electron, in EV
+         */
+        setEnergy: function(e) {
+            var ke = e * PhysicsUtil.JOULES_PER_EV;
+
+            // compute the speed of the electron
+            var sNew = Math.sqrt(2 * ke / this.get('mass'));
+            var sCurr = this.get('velocity').length();
+            this.setVelocity(this._velocity.set(this.get('velocity')).scale(sNew / sCurr / QuantumConfig.PIXELS_PER_NM));
+        }
+
+    });
+
+    return VanillaElectron;
+});
+define('common/quantum/models/electron-source',['require','backbone','common/math/vector2','./electron-vanilla'],function (require) {
+
+    'use strict';
+
+    var Backbone = require('backbone');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Electron = require('./electron-vanilla');
+
+    /**
+     * Emits electrons along a line between two points
+     */
+    var ElectronSource = Backbone.Model.extend({
+
+        defaults: {
+            electronsPerSecond: undefined,
+            electromotiveForce: undefined,
+            point1: undefined,
+            point2: undefined,
+            plate: undefined,
+            electronProductionMode: 0
+        },
+        
+        initialize: function(attributes, options) {
+            this.set('point1', new Vector2(this.get('point1')));
+            this.set('point2', new Vector2(this.get('point2')));
+            
+            this.timeSincelastElectronEmitted = 0;
+
+            // Cached objects
+            this._direction = new Vector2();  
+        },
+
+        update: function(time, deltaTime) {
+            this.timeSincelastElectronEmitted += deltaTime;
+
+            // Note that we only produce one electron at a time. Otherwise, we get a bunch of
+            // electrons produced if the electronsPerSecond is suddently increased, especially
+            // if it had been 0.
+            var period = 1 / this.get('electronsPerSecond');
+            if (this.timeSincelastElectronEmitted > period && this.get('electronProductionMode') === ElectronSource.CONTINUOUS_MODE) {
+                this.timeSincelastElectronEmitted = 0;
+                this.produceElectron();
+            }
+        },
+
+        /**
+         * Produce a single electron, and notify all listeners that it has happened.
+         * 
+         * When an electron is produced, its initial position must be away from the source,
+         *   so it is not immediately captured if the source is part or a composite object
+         *   that includes a sink.
+         */
+        produceElectron: function() {
+            var electron = null;
+
+            if (this.get('plate').get('potential') > 0) {
+                electron = Electron.create();
+
+                // Determine where the electron will be emitted from
+                var x = Math.random() * (this.get('point2').x - this.get('point1').x) + this.get('point1').x;
+                var y = Math.random() * (this.get('point2').y - this.get('point1').y) + this.get('point1').y;
+
+                var direction = this._direction.set(this.get('electromotiveForce').getElectronAcceleration());
+                if (direction.length() > 0)
+                    direction.normalize().scale(Electron.ELECTRON_RADIUS);
+                
+                electron.setPosition(x + direction.x, y + direction.y);
+                this.trigger('electron-produced', this, electron);
+            }
+
+            return electron;
+        },
+
+        setCurrent: function(current) {
+            this.set('electronsPerSecond', current);
+        },
+
+        /**
+         * Sets the length of the electrode. Fields p1 and p2 are modified
+         */
+        setLength: function(newLength) {
+            var x0 = (this.get('point1').x + this.get('point2').x) / 2;
+            var y0 = (this.get('point1').y + this.get('point2').y) / 2;
+
+            var currLength = this.get('point1').distance(this.get('point2'));
+            var ratio = newLength / currLength;
+
+            this.get('point1').set(x0 + (this.get('point1').x - x0) * ratio, y0 + (this.get('point1').y - y0) * ratio);
+            this.get('point2').set(x0 + (this.get('point2').x - x0) * ratio, y0 + (this.get('point2').y - y0) * ratio);
+        }
+
+    }, {
+
+        SINGLE_SHOT_MODE: 1,
+        CONTINUOUS_MODE:  2
+
+    });
+
+
+    return ElectronSource;
+});
+
+define('common/quantum/models/electron',['require','underscore','common/math/vector2','common/mechanics/models/spherical-body','./physics-util','../config'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2       = require('common/math/vector2');
+    var SphericalBody = require('common/mechanics/models/spherical-body');
+    
+    var PhysicsUtil   = require('./physics-util');
+    var QuantumConfig = require('../config');
+
+    /**
+     * Represents an electron
+     */
+    var Electron = SphericalBody.extend({
+
+        defaults: _.extend({}, SphericalBody.prototype.defaults, {
+            // Radius of an electron. An arbitrary dimension based on how it looks on the screen
+            radius: 2,
+            mass: PhysicsUtil.ELECTRON_MASS
+        }),
+
+        /**
+         * 
+         */
+        initialize: function(attributes, options) {
+            SphericalBody.prototype.initialize.apply(this, [attributes, options]);
+
+            // Cached objects
+            this._velocity = new Vector2();
+        },
+
+        /**
+         * Sets a flag for the electron to be destroyed on the next loop
+         */
+        markForDestruction: function() {
+            this._markedForDestruction = true;
+        },
+
+        /**
+         * Returns whether the electron has been marked for destruction
+         */
+        markedForDestruction: function() {
+            return this._markedForDestruction;
+        },
+
+        /**
+         * Returns the the energy of the electron in Joules
+         *
+         * @return
+         */
+        getEnergy: function() {
+            var ke = QuantumConfig.PIXELS_PER_NM * QuantumConfig.PIXELS_PER_NM * this.get('velocity').lengthSq() * this.get('mass') / 2;
+            var ev = ke * PhysicsUtil.EV_PER_JOULE;
+            return ev;
+        },
+
+        /**
+         * Sets the energy of the electron, in EV
+         */
+        setEnergy: function(e) {
+            var ke = e * PhysicsUtil.JOULES_PER_EV;
+
+            // compute the speed of the electron
+            var sNew = Math.sqrt(2 * ke / this.get('mass'));
+            var sCurr = this.get('velocity').length();
+            this.setVelocity(this._velocity.set(this.get('velocity')).scale(sNew / sCurr / QuantumConfig.PIXELS_PER_NM));
+        }
+
+    });
+
+    return Electron;
+});
+define('common/quantum/models/electron-atom-collision-expert',['require','common/math/rectangle','./atom','./electron'],function (require) {
+
+    'use strict';
+
+    var Rectangle = require('common/math/rectangle');
+
+    var Atom     = require('./atom');
+    var Electron = require('./electron');
+
+    // Cached objects
+    var electronPath = new Rectangle();
+
+    /**
+     * Detects and handles collisions between two bodies if one is an electron and one is an atom
+     */
+    var ElectronAtomCollisionExpert = {
+
+        detectAndDoCollision: function(body1, body2) {
+            var electron;
+            var atom;
+
+            if (body1 instanceof Atom)
+                atom = body1;
+            else if (body1 instanceof Electron)
+                electron = body1;
+
+            if (body2 instanceof Atom)
+                atom = body2;
+            else if (body2 instanceof Electron)
+                electron = body2;
+
+            if (atom && electron) {
+                // Do simple check
+                var prevDistSq = electron.getPreviousPosition().distanceSq(atom.get('position'));
+                var atomRadSq = Math.pow(atom.get('radius') + electron.get('radius'), 2);
+                var distSq = electron.get('position').distanceSq(atom.get('position'));
+                if (distSq <= atomRadSq && prevDistSq > atomRadSq) {
+                    atom.collideWithElectron( electron );
+                    return false;
+                }
+
+                // Do more complicated check that will detect if the electron passed through the atom during
+                // the time step, but isn't currently within the atom
+                electronPath.set(
+                    electron.getPreviousPosition().x,
+                    electron.getPreviousPosition().y,
+                    electron.getX() - electron.getPreviousPosition().x,
+                    1
+                );
+
+                var x = atom.getX() - atom.get('radius');
+                var y = atom.getY() - atom.get('radius');
+                var r = atom.get('radius') * 2;
+
+                if (electronPath.overlapsCircle(x, y, r)) {
+                    atom.collideWithElectron(electron);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+    };
+
+
+    return ElectronAtomCollisionExpert;
+});
+define('common/quantum/models/electrode',['require','underscore','common/math/vector2','common/mechanics/models/particle'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Particle = require('common/mechanics/models/particle');
+
+    /**
+     * An electrode is a line between two endpoints. Its location is considered to be
+     *   the midpoint between the two endpoints.
+     * 
+     * An electrode has potential and can notify listeners when its potential changes.
+     */
+    var Electrode = Particle.extend({
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            potential: 0,
+            point1: undefined,
+            point2: undefined
+        }),
+
+        initialize: function(attributes, options) {
+            Particle.prototype.initialize.apply(this, [attributes, options]);
+
+            this.set('point1', new Vector2(this.get('point1')));
+            this.set('point2', new Vector2(this.get('point2')));
+
+            this.on('change:point1 change:point2', this.endpointsChanged);
+            this.endpointsChanged();
+        },
+
+        endpointsChanged: function(electrode, point) {
+            this.setPosition(
+                (this.get('point1').x + this.get('point2').x) / 2, 
+                (this.get('point1').y + this.get('point2').y) / 2
+            );
+        },
+
+        getPotential: function() {
+            return this.get('potential');
+        }
+
+    });
+
+    return Electrode;
+});
+define('common/quantum/models/plate',['require','underscore','./electrode','./electron-source','./electron-sink'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Electrode      = require('./electrode');
+    var ElectronSource = require('./electron-source');
+    var ElectronSink   = require('./electron-sink');
+
+    /**
+     * A composite Electrode that comprises an ElectronSource and an ElectronSink
+     */
+    var Plate = Electrode.extend({
+
+        defaults: _.extend({}, Electrode.prototype.defaults, {
+            simulation: undefined,
+            electromotiveForce: undefined
+        }),
+
+        /**
+         * Initializes the Plate
+         */
+        initialize: function(attributes, options) {
+            Electrode.prototype.initialize.apply(this, [attributes, options]);
+
+            this.source = new ElectronSource({
+                electromotiveForce: this.get('electromotiveForce'), 
+                point1: this.get('point1'), 
+                point2: this.get('point2'), 
+                plate: this
+            });
+            
+            this.sink = new ElectronSink({
+                simulation: this.get('simulation'), 
+                point1: this.get('point1'), 
+                point2: this.get('point2')
+            });
+
+            this.get('simulation').addModel(this.source);
+            this.get('simulation').addModel(this.sink);
+
+            this.listenTo(this.sink, 'electron-absorbed', function(model, electron) {
+                this.trigger('electron-absorbed', model, electron);
+            });
+        },
+
+        setCurrent: function(current) {
+            this.source.setCurrent(current);
+        },
+
+        getSource: function() {
+            return this.source;
+        },
+
+        setEmittingLength: function(length) {
+            this.source.setLength(length);
+        },
+
+        produceElectron: function() {
+            return this.source.produceElectron();
+        },
+
+        destroy: function() {
+            Electrode.prototype.destroy.apply(this, arguments);
+
+            this.stopListening(this.source);
+            this.stopListening(this.sink);
+
+            this.get('simulation').removeModel(this.source);
+            this.get('simulation').removeModel(this.sink);
+
+            this.source.destroy();
+            this.sink.destroy();
+        }
+
+    });
+
+    return Plate;
+});
+define('models/spectrometer',['require','underscore','backbone'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    /**
+     * Counts photons according to their wavelengths
+     */
+    var Spectrometer = Backbone.Model.extend({
+
+        defaults: {
+            running: false
+        },
+
+        initialize: function(attributes, options) {
+
+            this.wavelengthToPhotonNumberMap = {};
+
+        },
+
+        getCountAtWavelength: function(wavelength) {
+            var count = this.wavelengthToPhotonNumberMap['' + wavelength];
+            return (count ? count : 0);
+        },
+
+        start: function() {
+            this.set('running', true);
+        },
+
+        stop: function() {
+            this.set('running', false);
+        },
+
+        reset: function() {
+            this.wavelengthToPhotonNumberMap = {};
+        },
+
+        /**
+         * Bumps the count of photons that have the wavelength of the emitted photon
+         */
+        photonEmitted: function(model, photon) {
+            if (this.get('running')) {
+                var wavelength = photon.getWavelength();
+                var photonCount = this.getCountAtWavelength(wavelength);
+                var cnt = 0;
+                if (_.isNumber(photonCount))
+                    cnt = photonCount;
+
+                cnt++;
+                this.wavelengthToPhotonNumberMap['' + wavelength] = cnt;
+            }
+        }
+
+    });
+
+
+    return Spectrometer;
+});
+
+define('constants',['require','common/math/vector2'],function (require) {
+
+    'use strict';
+
+    var Vector2 = require('common/math/vector2');
+
+    var Constants = {};
+
+    /*************************************************************************
+     **                                                                     **
+     **                         UNIVERSAL CONSTANTS                         **
+     **                                                                     **
+     *************************************************************************/
+
+    Constants.NUM_ENERGY_LEVELS = 2;
+    Constants.MAX_NUM_ENERGY_LEVELS = 6;
+    // Max energy is 0, in all cases (requested by Sam M., 10/24/06
+    Constants.MAX_ENERGY_LEVEL = 0.0;
+
+    // Object locations and dimensions. Everything is keyed off the location of the cathode
+    Constants.ELECTRODE_Y_LOCATION = 275;
+    Constants.ELECTRODE_LENGTH = 200;
+
+    Constants.CATHODE_X_LOCATION = 130;
+    Constants.CATHODE_LOCATION = new Vector2(Constants.CATHODE_X_LOCATION, Constants.ELECTRODE_Y_LOCATION);
+    Constants.CATHODE_LENGTH = Constants.ELECTRODE_LENGTH;
+    Constants.CATHODE_START = new Vector2(
+		Constants.CATHODE_LOCATION.x,
+		Constants.CATHODE_LOCATION.y - Constants.CATHODE_LENGTH / 2
+    );
+    Constants.CATHODE_END = new Vector2(
+		Constants.CATHODE_LOCATION.x,
+		Constants.CATHODE_LOCATION.y + Constants.CATHODE_LENGTH / 2
+    );
+
+    Constants.ANODE_X_LOCATION = 430 + Constants.CATHODE_X_LOCATION;
+    Constants.ANODE_LOCATION = new Vector2(Constants.ANODE_X_LOCATION, Constants.ELECTRODE_Y_LOCATION);
+    Constants.ANODE_LENGTH = Constants.ELECTRODE_LENGTH;
+    Constants.ANODE_START = new Vector2(
+		Constants.ANODE_LOCATION.x,
+		Constants.ANODE_LOCATION.y - Constants.ANODE_LENGTH / 2
+    );
+    Constants.ANODE_END = new Vector2(
+		Constants.ANODE_LOCATION.x,
+		Constants.ANODE_LOCATION.y + Constants.ANODE_LENGTH / 2
+    );
+
+	Constants.ELECTRODE_TOP    = 15;
+	Constants.ELECTRODE_LEFT   = 30;
+	Constants.ELECTRODE_BOTTOM = 15;
+	Constants.ELECTRODE_RIGHT  = 30;
+
+    Constants.BEAM_CONTROL_CENTER_PT = new Vector2(
+    	(Constants.CATHODE_X_LOCATION + Constants.ANODE_X_LOCATION) / 2,
+		195
+	);
+
+    // Clock specification
+    Constants.DT = 12;
+    Constants.FPS = 25;
+
+    // Scale factors
+    Constants.MODEL_TO_VIEW_DIST_FACTOR = 1E12;
+    // Factor that scales pixels to real dimensional units
+    Constants.PIXELS_PER_NM = 1E6;
+    // Factor that converts volts on the control panel slider to real volts
+    Constants.VOLTAGE_CALIBRATION_FACTOR = 1;
+    // Factor that makes the electron acceleration come out right for the potential between the plates
+    Constants.ELECTRON_ACCELERATION_CALIBRATION_FACTOR = 1 / 5.55;
+
+    // Simulation time for which EnergySquiggles remain on the screen
+    Constants.ENERGY_SQUIGGLE_PERSISTENCE = 50;
+
+
+    /*************************************************************************
+     **                                                                     **
+     **                             SIMULATION                              **
+     **                                                                     **
+     *************************************************************************/
+
+    var DischargeLampsSimulation = {};
+
+    DischargeLampsSimulation.MAX_VOLTAGE = 30;
+    DischargeLampsSimulation.MAX_STATES = 6;
+
+    Constants.DischargeLampsSimulation = DischargeLampsSimulation;
+
+
+
+    return Constants;
+});
+
+define('models/battery',['require','backbone','../constants'],function (require) {
+
+    'use strict';
+
+    var Backbone = require('backbone');
+
+    var Constants = require('../constants');
+
+    /**
+     * Counts photons according to their wavelengths
+     */
+    var Battery = Backbone.Model.extend({
+
+        defaults: {
+            enabled: true,
+            voltage: 0,
+            minVoltage: 0,
+            maxVoltage: 0
+        },
+
+        initialize: function(attributes, options) {
+
+            this.on('change:voltage', this.voltageChanged);
+        },
+
+
+        voltageChanged: function(battery, voltage) {
+            if (voltage === 0)
+                this.set('voltage', 0.004 * Constants.VOLTAGE_CALIBRATION_FACTOR);
+        }
+
+    });
+
+
+    return Battery;
+});
+
+define('models/heating-element',['require','underscore','common/mechanics/models/particle'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Particle = require('common/mechanics/models/particle');
+
+    /**
+     * A heating element
+     */
+    var HeatingElement = Particle.extend({
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            enabled: true,
+            temperature: 0
+        })
+
+    });
+
+
+    return HeatingElement;
+});
+
+define('models/simulation',['require','exports','module','underscore','backbone','lasers/models/simulation','common/collections/vanilla','common/math/vector2','common/quantum/models/tube','common/quantum/models/electron-sink','common/quantum/models/electron-source','common/quantum/models/electron-atom-collision-expert','common/quantum/models/plate','./spectrometer','./battery','./heating-element','../constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var LasersSimulation = require('lasers/models/simulation');
+
+    var VanillaCollection           = require('common/collections/vanilla');
+    var Vector2                     = require('common/math/vector2');
+    var Tube                        = require('common/quantum/models/tube');
+    var ElectronSink                = require('common/quantum/models/electron-sink');
+    var ElectronSource              = require('common/quantum/models/electron-source');
+    var ElectronAtomCollisionExpert = require('common/quantum/models/electron-atom-collision-expert');
+    var Plate                       = require('common/quantum/models/plate');
+
+    // Local dependencies need to be referenced by relative paths
+    //   so we can use this in other projects.
+    var Spectrometer   = require('./spectrometer');
+    var Battery        = require('./battery');
+    var HeatingElement = require('./heating-element');
+
+    /**
+     * Constants
+     */
+    var Constants = require('../constants');
+
+
+    /**
+     * Wraps the update function in
+     */
+    var DischargeLampsSimulation = LasersSimulation.extend({
+
+        defaults: _.extend(LasersSimulation.prototype.defaults, {
+            current: 0,
+            maxCurrent: 0
+        }),
+
+        initialize: function(attributes, options) {
+            options = _.extend({
+                framesPerSecond: Constants.FPS,
+                deltaTimePerFrame: Constants.DT
+            }, options);
+
+            LasersSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+            this.on('change:elementProperties', this.elementPropertiesChanged);
+        },
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            LasersSimulation.prototype.initComponents.apply(this, arguments);
+
+            this.electrons = new VanillaCollection();
+            this.electronSources = new Backbone.Collection();
+            this.electronSinks = new Backbone.Collection();
+            this.electronAcceleration = new Vector2();
+
+            this.listenTo(this.electrons, 'remove', this.removeModel);
+            this.listenTo(this.electronSources, 'electron-produced', this.electronProducedFromSource);
+
+            this.spectrometer = new Spectrometer();
+            this.spectrometer.listenTo(this.photons, 'add', this.spectrometer.photonEmitted);
+
+            // Make the battery
+            this.battery = new Battery({
+                maxVoltage: -DischargeLampsSimulation.MAX_VOLTAGE,
+                minVoltage:  DischargeLampsSimulation.MAX_VOLTAGE
+            });
+            this.listenTo(this.battery, 'change:voltage', this.batteryVoltageChanged);
+
+            // Make the plates
+            this.setLeftHandPlate(new Plate({
+                simulation: this,
+                electromotiveForce: this,
+                point1: Constants.CATHODE_START,
+                point2: Constants.CATHODE_END
+            }));
+
+            this.setRightHandPlate(new Plate({
+                simulation: this,
+                electromotiveForce: this,
+                point1: Constants.ANODE_START,
+                point2: Constants.ANODE_END
+            }));
+
+            // Make the heating elements
+            this.leftHandHeatingElement = new HeatingElement({
+                position: Constants.CATHODE_LOCATION
+            });
+
+            this.rightHandHeatingElement = new HeatingElement({
+                position: Constants.ANODE_LOCATION
+            });
+
+            // Make the discharge tube
+            var x = Constants.CATHODE_LOCATION.x - Constants.ELECTRODE_LEFT;
+            var y = Constants.CATHODE_LOCATION.y - Constants.CATHODE_LENGTH / 2 - Constants.ELECTRODE_TOP;
+            var length = Constants.ANODE_LOCATION.x - Constants.CATHODE_LOCATION.x + Constants.ELECTRODE_LEFT + Constants.ELECTRODE_RIGHT;
+            var height = Constants.CATHODE_LENGTH + Constants.ELECTRODE_TOP + Constants.ELECTRODE_BOTTOM;
+            this.tube = new Tube({
+                origin: new Vector2(x, y),
+                width: length,
+                height: height
+            });
+            this.addModel(this.tube);
+        },
+
+        updateModels: function(time, deltaTime) {
+            // First, destroy any electrons that have been marked for destruction
+            this.removeDeadElectrons();
+
+            LasersSimulation.prototype.updateModels.apply(this, arguments);
+
+            for (var i = 0; i < this.electrons.length; i++)
+                this.electrons.at(i).update(time, deltaTime);
+        },
+
+        removeDeadElectrons: function() {
+            for (var i = this.electrons.length - 1; i >= 0; i--) {
+                if (this.electrons.at(i).markedForDestruction())
+                    this.electrons.at(i).destroy();
+            }
+        },
+
+        checkCollisions: function(deltaTime) {
+            LasersSimulation.prototype.checkCollisions.apply(this, arguments);
+
+            this.checkElectronAtomCollisions();
+
+            this.removeDeadElectrons();
+        },
+
+        checkElectronAtomCollisions: function() {
+            // Check for collisions between electrons and atoms
+            for (var i = 0; i < this.atoms.length; i++) {
+                var atom = this.atoms.at(i);
+                for (var j = 0; j < this.electrons.length; j++) {
+                    var electron = this.electrons.at(j);
+                    ElectronAtomCollisionExpert.detectAndDoCollision(atom, electron);
+                }
+            }
+        },
+
+        addModel: function(model) {
+            LasersSimulation.prototype.addModel.apply(this, arguments);
+
+            if (model instanceof ElectronSink)
+                this.electronSinks.add(model);
+
+            if (model instanceof ElectronSource)
+                this.electronSources.add(model);
+        },
+
+        removeModel: function(model) {
+            LasersSimulation.prototype.removeModel.apply(this, arguments);
+
+            if (model instanceof ElectronSink)
+                this.electronSinks.remove(model);
+
+            if (model instanceof ElectronSource)
+                this.electronSources.remove(model);
+        },
+
+        addElectron: function(electron) {
+            electron.setAcceleration(this.electronAcceleration);
+            this.electrons.add(electron);
+        },
+
+        setVoltage: function(voltage) {
+            // Set the potential of the plates
+            if (voltage > 0) {
+                this.leftHandPlate.set('potential', voltage);
+                this.rightHandPlate.set('potential', 0);
+            }
+            else {
+                this.leftHandPlate.set('potential', 0);
+                this.rightHandPlate.set('potential', -voltage);
+            }
+
+            this.trigger('voltage-changed', this, voltage);
+        },
+
+        getVoltage: function() {
+            return this.leftHandPlate.getPotential() - this.rightHandPlate.getPotential();
+        },
+
+        getTube: function() {
+            return this.tube;
+        },
+
+        getSpectrometer: function() {
+            return this.spectrometer;
+        },
+
+        getBattery: function() {
+            return this.battery;
+        },
+
+        setLeftHandPlate: function(plate) {
+            if (this.leftHandPlate) {
+                this.stopListening(this.leftHandPlate);
+                this.leftHandPlate.destroy();
+            }
+            this.leftHandPlate = plate;
+            this.listenTo(this.leftHandPlate, 'change', this.potentialChanged);
+        },
+
+        getLeftHandPlate: function() {
+            return this.leftHandPlate;
+        },
+
+        setRightHandPlate: function(plate) {
+            if (this.rightHandPlate) {
+                this.stopListening(this.rightHandPlate);
+                this.rightHandPlate.destroy();
+            }
+            this.rightHandPlate = plate;
+            this.listenTo(this.rightHandPlate, 'change', this.potentialChanged);
+        },
+
+        getRightHandPlate: function() {
+            return this.rightHandPlate;
+        },
+
+        getLeftHandHeatingElement: function() {
+            return this.leftHandHeatingElement;
+        },
+
+        getRightHandHeatingElement: function() {
+            return this.rightHandHeatingElement;
+        },
+
+        setHeatingElementsEnabled: function(heatingElementsEnabled) {
+            this.leftHandHeatingElement.set('enabled', heatingElementsEnabled);
+            this.rightHandHeatingElement.set('enabled', heatingElementsEnabled);
+        },
+
+        /**
+         * Sets the electron production mode to continuous or single-shot. Also enables/disables
+         * the heating elements.
+         */
+        setElectronProductionMode: function(electronProductionMode ) {
+            for (var i = 0; i < this.electronSources.length; i++)
+                this.electronSources.at(i).set('electronProductionMode', electronProductionMode);
+
+            this.setHeatingElementsEnabled(electronProductionMode === ElectronSource.CONTINUOUS_MODE);
+        },
+
+        setElectronAcceleration: function(potentialDiff, plateSeparation) {
+            this.electronAcceleration.set(potentialDiff / plateSeparation, 0);
+        },
+
+        setElementProperties: function(elementProperties) {
+            this.set('elementProperties', elementProperties);
+        },
+
+        getElementProperties: function() {
+            return this.get('elementProperties');
+        },
+
+        getAtomicStates: function() {
+            return this.getElementProperties().getStates();
+        },
+
+        setMaxCurrent: function(maxCurrent) {
+            this.set('maxCurrent', maxCurrent);
+        },
+
+        setCurrent: function(value, factor) {
+            if (factor !== undefined)
+                this.set('current', value * factor);
+            else
+                this.set('current', value);
+        },
+
+        getCurrent: function() {
+            return this.get('current');
+        },
+
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            for (var i = 0; i < this.atoms.length; i++)
+                this.atoms.at(i).setElementProperties(elementProperties);
+
+            this.trigger('energy-levels-changed', this);
+        },
+
+        batteryVoltageChanged: function(battery, voltage) {
+            this.setVoltage(voltage);
+        },
+
+        potentialChanged: function() {
+            var potentialDiff = this.leftHandPlate.getPotential() - this.rightHandPlate.getPotential();
+
+            // Determine the acceleration that electrons will experience
+            this.setElectronAcceleration(
+                potentialDiff * Constants.ELECTRON_ACCELERATION_CALIBRATION_FACTOR,
+                this.leftHandPlate.getPosition().distance(this.rightHandPlate.getPosition())
+            );
+
+            for (var i = 0; i < this.electrons.length; i++)
+                this.electrons.at(i).setAcceleration(this.electronAcceleration);
+
+            // Calling setCurrent() ensures that the current flows in the correct direction
+            this.setCurrent(this.get('current'));
+        },
+
+        currentChanged: function(simulation, current) {
+            // Compute the temperature of the heating element. The max temperature, corresponding to
+            //   the maxCurrent, is 255. This is because it's used in a filter for the graphic image.
+            this.leftHandHeatingElement.setTemperature(0);
+            this.rightHandHeatingElement.setTemperature(0);
+            var temperature = 255 * current * 1000 / this.get('maxCurrent');
+            // Original PhET Note: The 1000 here works, but I haven't dug into
+            //   exactly why it's needed.
+
+            // Set the current of the appropriate plate and the temperature of the appropriate heating element
+            if (this.leftHandPlate.getPotential() > this.rightHandPlate.getPotential()) {
+                this.leftHandPlate.setCurrent(current);
+                this.rightHandPlate.setCurrent(0);
+                this.leftHandHeatingElement.set('temperature', temperature);
+            }
+            else {
+                this.rightHandPlate.setCurrent(current);
+                this.leftHandPlate.setCurrent(0);
+                this.rightHandHeatingElement.set('temperature', temperature);
+            }
+        },
+
+        electronProducedFromSource: function(source, electron) {
+            this.addElectron(electron);
+            for (var i = 0; i < this.electronSinks.length; i++)
+                this.electronSinks.at(i).addElectron(electron);
+        },
+
+    }, Constants.DischargeLampsSimulation);
+
+    return DischargeLampsSimulation;
 });
 
 define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','pixi'],function(require) {
@@ -61211,3814 +64971,17 @@ define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','
     return PixiSceneView;
 });
 
-define('common/math/solve-cubic-equation',['require'],function (require) {
-
-    'use strict';
-
-    function solveQuadratic(a, b, c) {
-        if (a === 0) return b === 0 ? [] : [-c / b];
-        var d = b * b - 4 * a * c;
-        if (d < 0) return [];
-        if (d === 0) return [-b / (2 * a)];
-        var sq = Math.sqrt(d);
-        return [(-b + sq) / (2 * a), (-b - sq) / (2 * a)];
-    }
-
-    /**
-     * Modeled after the source for java.awt.geom.CubicCurve2D.solveCubic
-     *   (http://developer.classpath.org/doc/java/awt/geom/CubicCurve2D-source.html).
-     *   It is almost verbatim except that I return the array instead of
-     *   the number of roots.
-     *
-     * @param equation an array with the coefficients of the equation.
-     *
-     * @return the number of non-complex solutions. A rootsult of 0
-     *   indicates that the equation has no non-complex solutions. A
-     *   rootsult of -1 indicates that the equation is constant (i.e.,
-     *   always or never zero).
-     */
-    return function(equation, roots) {
-        var a;
-        var b;
-        var c;
-        var q;
-        var r;
-        var Q;
-        var R;
-        var c3;
-        var Q3;
-        var R2;
-        var CR2;
-        var CQ3;
-        var sqrtQ;
-
-        if (roots === undefined)
-            roots = [];
-
-        // If the cubic coefficient is zero, we have a quadratic equation.
-        c3 = equation[3];
-        if (c3 === 0) {
-            var rootsults = solveQuadratic(equation[0], equation[1], equation[2]);
-            for (var i = 0; i < rootsults.length; i++)
-                roots[i] = rootsults[i];
-            return roots;
-        }
-        
-        // Divide the equation by the cubic coefficient.
-        c = equation[0] / c3;
-        b = equation[1] / c3;
-        a = equation[2] / c3;
-        
-        // We now need to solve x^3 + ax^2 + bx + c = 0.
-        q = a * a - 3 * b;
-        r = 2 * a * a * a - 9 * a * b + 27 * c;
-        
-        Q = q / 9;
-        R = r / 54;
-        
-        Q3 = Q * Q * Q;
-        R2 = R * R;
-        
-        CR2 = 729 * r * r;
-        CQ3 = 2916 * q * q * q;
-        
-        if (R === 0 && Q === 0) {
-            // The GNU Scientific Library would return three identical
-            // solutions in this case.
-            roots[0] = -a / 3;
-            return roots;
-        }
-        
-        if (CR2 === CQ3) {
-            /* this test is actually R2 == Q3, written in a form suitable
-            for exact computation with integers */
-            /* Due to finite precision some double roots may be missed, and
-            considered to be a pair of complex roots z = x +/- epsilon i
-            close to the real axis. */
-            sqrtQ = Math.sqrt(Q);
-
-            if (R > 0) {
-                roots[0] = -2 * sqrtQ - a / 3;
-                roots[1] = sqrtQ - a / 3;
-            }
-            else {
-                roots[0] = -sqrtQ - a / 3;
-                roots[1] = 2 * sqrtQ - a / 3;
-            }
-            return roots;
-        }
-        
-        if (CR2 < CQ3) { /* equivalent to R2 < Q3 */
-            sqrtQ = Math.sqrt(Q);
-            var sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
-            var theta = Math.acos(R / sqrtQ3);
-            var norm = -2 * sqrtQ;
-            roots[0] = norm * Math.cos(theta / 3) - a / 3;
-            roots[1] = norm * Math.cos((theta + 2.0 * Math.PI) / 3) - a / 3;
-            roots[2] = norm * Math.cos((theta - 2.0 * Math.PI) / 3) - a / 3;
-
-            // The GNU Scientific Library sorts the rootsults. We don't.
-            return roots;
-        }
-        
-        var sgnR = (R >= 0 ? 1 : -1);
-        var A = -sgnR * Math.pow(Math.abs(R) + Math.sqrt(R2 - Q3), 1.0 / 3.0);
-        var B = Q / A;
-        roots[0] = A + B - a / 3;
-        return roots;
-    };
-});
-
-define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equation','./line-intersection','./rectangle','./vector2'],function (require) {
-
-    'use strict';
-
-    var _              = require('underscore');
-    function solveQuadratic(a, b, c) {
-        if (a === 0) return b === 0 ? [] : [-c / b];
-        var d = b * b - 4 * a * c;
-        if (d < 0) return [];
-        if (d === 0) return [-b / (2 * a)];
-        var sq = Math.sqrt(d);
-        return [(-b + sq) / (2 * a), (-b - sq) / (2 * a)];
-    }
-    var solveCubic     = require('./solve-cubic-equation');
-    var lineIntersect  = require('./line-intersection');
-    var Rectangle      = require('./rectangle');
-    var Vector2        = require('./vector2');
-
-    /**
-     * The purpose of this class is to store paths of points and wathis.yPoints in
-     *   the case of curved connections.  This is not a piecewise linear curve
-     *   because each connection between two points can have one of several
-     *   this.types of algorithms (linear, quadratic, and cubic). 
-     *
-     * This class is modeled after Java AWT's GeneralPath and includes sections of
-     *   almost verbatim code.  Java.awt.geom.GeneralPath is distributed under the
-     *   GNU General Public License.
-     */
-    var PiecewiseCurve = function() {
-        this.types   = [];
-        this.xPoints = [];
-        this.yPoints = [];
-
-        this.index    = 0; // The index of the next point to be created
-        this.subcurve = 0; // The index of the last moveTo point
-
-        // Cached translation matrix array
-        this._translation = [
-            1, 0, 0,
-            0, 1, 0
-        ];
-
-        // Cached rotation matrix array
-        this._rotation = [
-            1, 0, 0,
-            0, 1, 0
-        ];
-
-        // Cached scale matrix array
-        this._scale = [
-            1, 0, 0,
-            0, 1, 0
-        ];
-
-        // Cached bounds rectangle
-        this._bounds = new Rectangle();
-        this._point  = new Vector2();
-    };
-
-    /**
-     * Constants
-     */
-    PiecewiseCurve.SEG_MOVETO  = 0;
-    PiecewiseCurve.SEG_LINETO  = 1;
-    PiecewiseCurve.SEG_QUADTO  = 2;
-    PiecewiseCurve.SEG_CUBICTO = 3;
-    PiecewiseCurve.SEG_CLOSE   = 4;
-
-    // Java docs: "A big number, but not so big it can't survive a few float operations"
-    PiecewiseCurve.BIG_VALUE = Number.MAX_VALUE / 1000;
-
-    /**
-     * Static Functions
-     */
-    _.extend(PiecewiseCurve, {
-
-        fromPoints: function(points, closeSubcurve) {
-            var curve = new PiecewiseCurve();
-            curve.addPoints(points, closeSubcurve);
-            return curve;
-        },
-
-        fromPointArrays: function(pointArrays) {
-            var curve = new PiecewiseCurve();
-            for (var i = 0; i < pointArrays.length; i++)
-                curve.addPoints(pointArrays[i]);
-            return curve;
-        },
-
-        createEllipse: function(x, y, w, h) {
-            return new PiecewiseCurve()
-                .moveTo(x, y + h / 2)
-                .curveTo(x, y + h, x + w, y + h, x + w, y + h / 2)
-                .curveTo(x + w, y, x, y, x, y + h / 2)
-                .close();
-        }
-
-    });
-
-    /**
-     * Instance Functions
-     */
-    _.extend(PiecewiseCurve.prototype, {
-
-        clone: function() {
-            var clone = new PiecewiseCurve();
-            clone.index = this.index;
-            clone.subcurve = this.subcurve;
-            clone.types = _.clone(this.types);
-            clone.yPoints = _.clone(this.yPoints);
-            clone.xPoints = _.clone(this.xPoints);
-            clone._translation = _.clone(this._translation);
-            clone._rotation = _.clone(this._rotation);
-            clone._scale = _.clone(this._scale);
-            clone._bounds = new Rectangle();
-            return clone;
-        },
-
-        size: function() {
-            return this.index;
-        },
-
-        addPoints: function(points, closeSubcurve) {
-            if (points.length === 0)
-                return;
-
-            this.moveTo(points[0].x, points[0].y);
-            for (var i = 1; i < points.length; i++)
-                this.lineTo(points[i].x, points[i].y);
-
-            if (closeSubcurve || closeSubcurve === undefined)
-                this.close();
-        },
-
-        /**
-         * Simply appends another curve to this one. Note that
-         *   this is not the same as a union operation.
-         */
-        add: function(otherCurve, returnNew) {
-            var curve = this;
-            if (returnNew) {
-                curve = new PiecewiseCurve();
-                curve.add(this);
-            }
-
-            // The current subcurve index is whatever the subcurve
-            //   index of the other curve was but offset by the
-            //   length of this one (before adding the other curve)
-            curve.subcurve = curve.index + otherCurve.subcurve;
-
-            // Copy all the information stored in arrays
-            for (var t = 0; t < otherCurve.types.length; t++) {
-                curve.types.push(otherCurve.types[t]);
-            }
-            for (var i = 0; i < otherCurve.xPoints.length; i++) {
-                curve.xPoints.push(otherCurve.xPoints[i]);
-                curve.yPoints.push(otherCurve.yPoints[i]);
-            }
-
-            curve.index += otherCurve.index;
-
-            return curve;
-        },
-
-        /**
-         * This deviates from the GeneralPath code in that our
-         *   transformMatrix goes down the rows instead of the
-         *   columns because that seems to be the more popular
-         *   way of flattening a 3x3 matrix.  (If cells are
-         *   normally referenced like m[r][c], it would be
-         *   flattened by any sane algorithm to go down the
-         *   rows.)
-         */
-        transform: function(transformMatrix) {
-            var newX;
-            var newY;
-            var tm = transformMatrix;
-            var xPoints = this.xPoints;
-            var yPoints = this.yPoints;
-            for (var i = 0; i < this.index; i++) {
-                newX = tm[0] * xPoints[i] + tm[1] * yPoints[i] + tm[2];
-                newY = tm[3] * xPoints[i] + tm[4] * yPoints[i] + tm[5];
-                xPoints[i] = newX;
-                yPoints[i] = newY;
-            }
-            return this;
-        },
-
-        /**
-         * Creates a 2D translation matrix and calls transform.
-         */
-        translate: function(dx, dy) {
-            if (dx instanceof Vector2) {
-                dy = dx.y;
-                dx = dx.x;
-            }
-            this._translation[2] = dx;
-            this._translation[5] = dy;
-            this.transform(this._translation);
-            return this;
-        },
-
-        /**
-         * Creates a 2D rotation matrix and calls transform.
-         */
-        rotate: function(theta) {
-            var cos = Math.cos(theta);
-            var sin = Math.sin(theta);
-            this._rotation[0] = cos;
-            this._rotation[1] = -sin;
-            this._rotation[3] = sin;
-            this._rotation[4] = cos;
-            this.transform(this._rotation);
-            return this;
-        },
-
-        scale: function(x, y) {
-            this._scale[0] = x;
-            this._scale[4] = y !== undefined ? y : x;
-            this.transform(this._scale);
-            return this;
-        },
-
-        length: function() {
-            return this.index;
-        },
-
-        at: function(index) {
-            return this._point.set(
-                this.xPoints[index],
-                this.yPoints[index]
-            );
-        },
-
-        /**
-         * Returns a rectangle representing a minimal bounding box.
-         */
-        getBounds: function() {
-            var xPoints = this.xPoints;
-            var yPoints = this.yPoints;
-
-            var minX;
-            var minY;
-            var maxX;
-            var maxY;
-
-            if (this.index > 0) {
-                minX = maxX = xPoints[0];
-                minY = maxY = yPoints[0];
-            }
-            else {
-                minX = maxX = minY = maxY = 0;
-            }
-
-            for (var i = 0; i < this.index; i++) {
-                minX = Math.min(xPoints[i], minX);
-                minY = Math.min(yPoints[i], minY);
-                maxX = Math.max(xPoints[i], maxX);
-                maxY = Math.max(yPoints[i], maxY);
-            }
-
-            return this._bounds.set(
-                minX,
-                minY,
-                maxX - minX,
-                maxY - minY
-            );
-        },
-
-        /**
-         * Adds a new point to a path.
-         * 
-         * @param x  the x-coordinate.
-         * @param y  the y-coordinate.
-         */
-        moveTo: function(x, y) {
-            if (x instanceof Vector2) {
-                y = x.y;
-                x = x.x;
-            }
-            this.subcurve = this.index;
-            this.types[this.index] = PiecewiseCurve.SEG_MOVETO;
-            this.xPoints[this.index]   = x;
-            this.yPoints[this.index++] = y;
-            return this;
-        },
-
-        /**
-         * Adds a new point to a path.
-         * 
-         * @param dx  the relative x-coordinate.
-         * @param dy  the relative y-coordinate.
-         */
-        moveToRelative: function(dx, dy) {
-            if (dx instanceof Vector2) {
-                dy = dx.y;
-                dx = dx.x;
-            }
-            
-            var lastX = 0;
-            var lastY = 0;
-            if (this.index > 0) {
-                lastX = this.xPoints[this.index - 1];
-                lastY = this.yPoints[this.index - 1];
-            }
-
-            return this.moveTo(lastX + dx, lastY + dy);
-        },
-        
-        /**
-         * Appends a straight line to the current path.
-         *
-         * @param x x coordinate of the line endpoint.
-         * @param y y coordinate of the line endpoint.
-         */
-        lineTo: function(x, y) {
-            if (x instanceof Vector2) {
-                y = x.y;
-                x = x.x;
-            }
-            this.types[this.index] = PiecewiseCurve.SEG_LINETO;
-            this.xPoints[this.index]   = x;
-            this.yPoints[this.index++] = y;
-            return this;
-        },
-
-        /**
-         * Appends a straight line to the current path.
-         * 
-         * @param dx  the relative x-coordinate.
-         * @param dy  the relative y-coordinate.
-         */
-        lineToRelative: function(dx, dy) {
-            if (dx instanceof Vector2) {
-                dy = dx.y;
-                dx = dx.x;
-            }
-
-            var lastX = 0;
-            var lastY = 0;
-            if (this.index > 0) {
-                lastX = this.xPoints[this.index - 1];
-                lastY = this.yPoints[this.index - 1];
-            }
-
-            return this.lineTo(lastX + dx, lastY + dy);
-        },
-        
-        /**
-         * Appends a quadratic Bezier curve to the current path.
-         *
-         * @param x1 x coordinate of the control point
-         * @param y1 y coordinate of the control point
-         * @param x2 x coordinate of the curve endpoint.
-         * @param y2 y coordinate of the curve endpoint.
-         */
-        quadTo: function(x1, y1, x2, y2) {
-            if (x1 instanceof Vector2) {
-                y2 = y1.y;
-                x2 = y1.x;
-                y1 = x1.y;
-                x1 = x1.x;
-            }
-            this.types[this.index] = PiecewiseCurve.SEG_QUADTO;
-            this.xPoints[this.index]   = x1;
-            this.yPoints[this.index++] = y1;
-            this.xPoints[this.index]   = x2;
-            this.yPoints[this.index++] = y2;
-            return this;
-        },
-        
-        /**
-         * Appends a cubic Bezier curve to the current path.
-         * @param x1 x coordinate of the first control point
-         * @param y1 y coordinate of the first control point
-         * @param x2 x coordinate of the second control point
-         * @param y2 y coordinate of the second control point
-         * @param x3 x coordinate of the curve endpoint.
-         * @param y3 y coordinate of the curve endpoint.
-         */
-        curveTo: function(x1, y1, x2, y2, x3, y3) {
-            if (x1 instanceof Vector2) {
-                var cp1 = x1;
-                var cp2 = y1;
-                var end = x2;
-
-                if (!(cp2 instanceof Vector2 && end instanceof Vector2))
-                    throw 'Cannot mix and match vectors and numbers.';
-
-                y1 = cp1.y;
-                x1 = cp1.x;
-                y2 = cp2.y;
-                x2 = cp2.x;
-                y3 = end.y;
-                x3 = end.x;
-            }
-            this.types[this.index] = PiecewiseCurve.SEG_CUBICTO;
-            this.xPoints[this.index]   = x1;
-            this.yPoints[this.index++] = y1;
-            this.xPoints[this.index]   = x2;
-            this.yPoints[this.index++] = y2;
-            this.xPoints[this.index]   = x3;
-            this.yPoints[this.index++] = y3;
-            return this;
-        },
-        
-        /**
-         * Closes the current subcurve by drawing a line
-         * back to the point of the last moveTo, unless the path is already closed.
-         */
-        close: function() {
-            if (this.index >= 1 && this.types[this.index - 1] == PiecewiseCurve.SEG_CLOSE)
-                return;
-            this.types[this.index] = PiecewiseCurve.SEG_CLOSE;
-            this.xPoints[this.index]   = this.xPoints[this.subcurve];
-            this.yPoints[this.index++] = this.yPoints[this.subcurve];
-            return this;
-        },
-
-        /**
-         * Evaluates if a rectangle intersects a path.
-         */
-        intersects: function(x, y, w, h) {
-            if (x instanceof Rectangle) {
-                h = x.h;
-                w = x.w;
-                y = x.y;
-                x = x.x;
-            }
-
-            // Does any edge intersect?
-            if (this.getAxisIntersections(x, y,     false, w) !== 0 || 
-                this.getAxisIntersections(x, y + h, false, w) !== 0 || 
-                this.getAxisIntersections(x + w, y, true,  h) !== 0 || 
-                this.getAxisIntersections(x, y,     true,  h) !== 0) {
-                return true;
-            }
-
-            // No intersections, is any point inside?
-            if (this.getWindingNumber(x, y) !== 0)
-                return true;
-
-            return false;
-        },
-
-        /**
-         * Determine whether a point is contained within the bounds of the
-         *   closed curve.
-         * Can take an object with x and y values or plain x and y values.
-         */
-        contains: function(x, y) {
-            if (_.isObject(x)) {
-                y = x.y;
-                x = x.x;
-            }
-
-            return this.getWindingNumber(x, y) !== 0;
-        },
-
-        /**
-         * Helper method - Get the total number of intersections from (x,y) along 
-         * a given axis, within a given distance.
-         */
-        getAxisIntersections: function(x, y, useYAxis, distance) {
-            return this.evaluateCrossings(x, y, false, useYAxis, distance);
-        },
-
-        getWindingNumber: function(x, y) {
-            /* Evaluate the crossings from x,y to infinity on the y axis (arbitrary 
-             *   choice). Note that we don't actually use Double.INFINITY, since that's 
-             *   slower, and may cause problems. 
-             */
-            return this.evaluateCrossings(x, y, true, true, PiecewiseCurve.BIG_VALUE);
-        },
-
-        /**
-         * Evaluates the number of intersections on an axis from 
-         *   the point (x,y) to the point (x,y+distance) or (x+distance,y).
-         *
-         * Here is a gist explanation of this algorithm: 
-         *   https://gist.github.com/pwolfert/134d6dda882309bf2c5f
-         *
-         * @param x x coordinate.
-         * @param y y coordinate.
-         * @param neg True if opposite-directed intersections should cancel, false to sum all intersections.
-         * @param useYaxis Use the Y axis, false uses the X axis.
-         * @param distance Interval from (x,y) on the selected axis to find intersections.
-         */
-        evaluateCrossings: function(x, y, neg, useYAxis, distance) {
-            var cx = 0;
-            var cy = 0;
-            var firstx = 0;
-            var firsty = 0;
-
-            var negative = (neg) ? -1 : 1;
-
-            var x0;
-            var x1;
-            var x2;
-            var x3;
-
-            var y0;
-            var y1;
-            var y2;
-            var y3;
-
-            var equation = [];
-            var roots;
-            var a;
-            var b;
-            var c;
-            var t;
-            var i;
-            var crossing;
-            var epsilon = 0.0;
-            var pos = 0;
-            var windingNumber = 0;
-            var pathStarted = false;
-
-            var xPoints = this.xPoints;
-            var yPoints = this.yPoints;
-            var types   = this.types;
-
-            if (this.index === 0)
-                return 0;
-
-            if (useYAxis) {
-                // Trade axes
-                xPoints = this.yPoints;
-                yPoints = this.xPoints;
-                var swap = y;
-                y = x;
-                x = swap;
-            }
-
-            /* Get a value which is hopefully small but not insignificant relative the path. */
-            epsilon = yPoints[0] * 1E-7;
-            
-            if (epsilon === 0) 
-                epsilon = 1E-7;
-            
-            pos = 0;
-            while (pos < this.index) {
-                switch (types[pos]) {
-                    case PiecewiseCurve.SEG_MOVETO:
-                        if (pathStarted) { // close old path
-                            x0 = cx;
-                            y0 = cy;
-                            x1 = firstx;
-                            y1 = firsty;
-
-                            if (y0 === 0)
-                                y0 -= epsilon;
-                            if (y1 === 0)
-                                y1 -= epsilon;
-                            if (lineIntersect.linesIntersect(x0, y0, x1, y1, epsilon, 0, distance, 0))
-                                windingNumber += (y1 < y0) ? 1 : negative;
-
-                            cx = firstx;
-                            cy = firsty;
-                        }
-                        cx = firstx = xPoints[pos]   - x;
-                        cy = firsty = yPoints[pos++] - y;
-                        pathStarted = true;
-                        break;
-                    case PiecewiseCurve.SEG_CLOSE:
-                        x0 = cx;
-                        y0 = cy;
-                        x1 = firstx;
-                        y1 = firsty;
-
-                        if (y0 === 0)
-                            y0 -= epsilon;
-                        if (y1 === 0)
-                            y1 -= epsilon;
-                        if (lineIntersect.linesIntersect(x0, y0, x1, y1, epsilon, 0, distance, 0))
-                            windingNumber += (y1 < y0) ? 1 : negative;
-
-                        cx = firstx;
-                        cy = firsty;
-                        pos++;
-                        pathStarted = false;
-                        break;
-                    case PiecewiseCurve.SEG_LINETO:
-                        x0 = cx;
-                        y0 = cy;
-                        x1 = xPoints[pos]   - x;
-                        y1 = yPoints[pos++] - y;
-
-                        if (y0 === 0)
-                            y0 -= epsilon;
-                        if (y1 === 0)
-                            y1 -= epsilon;
-                        if (lineIntersect.linesIntersect(x0, y0, x1, y1, epsilon, 0, distance, 0))
-                            windingNumber += (y1 < y0) ? 1 : negative;
-
-                        cx = xPoints[pos - 1] - x;
-                        cy = yPoints[pos - 1] - y;
-                        break;
-                    case PiecewiseCurve.SEG_QUADTO:
-                        x0 = cx;
-                        y0 = cy;
-                        x1 = xPoints[pos]   - x;
-                        y1 = yPoints[pos++] - y;
-                        x2 = xPoints[pos]   - x;
-                        y2 = yPoints[pos++] - y;
-
-                        /* check if curve may intersect X+ axis. */
-                        if ((x0 > 0 || x1 > 0 || x2 > 0) && (y0 * y1 <= 0 || y1 * y2 <= 0)) {
-                            if (y0 === 0)
-                                y0 -= epsilon;
-                            if (y2 === 0)
-                                y2 -= epsilon;
-
-                            a = y0;
-                            b = 2 * (y1 - y0);
-                            c = (y2 - 2 * y1 + y0);
-
-                            /* degenerate roots (=tangent points) do not
-                            contribute to the winding number. */
-                            roots = solveQuadratic(a, b, c);
-                            if (roots.length === 2) {
-                                for (i = 0; i < roots.length; i++) {
-                                    t = roots[i];
-                                    if (t > 0 && t < 1) {
-                                        crossing = t * t * (x2 - 2 * x1 + x0) + 2 * t * (x1 - x0) + x0;
-                                        if (crossing >= 0.0 && crossing <= distance)
-                                            windingNumber += (2 * t * (y2 - 2 * y1 + y0) + 2 * (y1 - y0) < 0) ? 1 : negative;
-                                    }
-                                }
-                            }
-                        }
-
-                        cx = xPoints[pos - 1] - x;
-                        cy = yPoints[pos - 1] - y;
-                        break;
-                    case PiecewiseCurve.SEG_CUBICTO:
-                        x0 = cx;
-                        y0 = cy;
-                        x1 = xPoints[pos]   - x;
-                        y1 = yPoints[pos++] - y;
-                        x2 = xPoints[pos]   - x;
-                        y2 = yPoints[pos++] - y;
-                        x3 = xPoints[pos]   - x;
-                        y3 = yPoints[pos++] - y;
-
-                        /* check if curve may intersect X+ axis. */
-                        if ((x0 > 0 || x1 > 0 || x2 > 0 || x3 > 0) && (y0 * y1 <= 0 || y1 * y2 <= 0 || y2 * y3 <= 0)) {
-                            if (y0 === 0)
-                                y0 -= epsilon;
-                            if (y3 === 0)
-                                y3 -= epsilon;
-
-                            equation[0] = y0;
-                            equation[1] = 3 * (y1 - y0);
-                            equation[2] = 3 * (y2 + y0 - 2 * y1);
-                            equation[3] = y3 - 3 * y2 + 3 * y1 - y0;
-
-                            roots = solveCubic(equation);
-                            if (roots.length !== 0) {
-                                for (i = 0; i < roots.length; i++) {
-                                    t = roots[i];
-                                    if (t > 0.0 && t < 1.0) {
-                                        crossing = -(t * t * t) * (x0 - 3 * x1 + 3 * x2 - x3)
-                                                     + 3 * t * t * (x0 - 2 * x1 + x2)
-                                                     + 3 * t * (x1 - x0) + x0;
-                                        if (crossing >= 0 && crossing <= distance) {
-                                            windingNumber += (3 * t * t * (y3 + 3 * y1 - 3 * y2 - y0)
-                                                            + 6 * t * (y0 - 2 * y1 + y2)
-                                                            + 3 * (y1 - y0) < 0) ? 1 : negative;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        cx = xPoints[pos - 1] - x;
-                        cy = yPoints[pos - 1] - y;
-                        break;
-                }
-            }
-            
-            return windingNumber;
-        }
-
-    });
-
-    return PiecewiseCurve;
-});
-
-
-define('common/math/model-view-transform',['require','underscore','./rectangle','./vector2','./piecewise-curve'],function (require) {
-
-    'use strict';
-
-    var _         = require('underscore');
-    var Rectangle = require('./rectangle');
-    var Vector2   = require('./vector2');
-    var PiecewiseCurve = require('./piecewise-curve');
-
-    /**
-     * | m00 m01 m02 |
-     * | m10 m11 m12 | = m00 * m11 - m01 * m10
-     * |  0   0   1  |
-     */
-    var determinant = function(matrix) {
-        return matrix[0] * matrix[4] - matrix[1] * matrix[3];
-    };
-
-    /**
-     * From the source of java.awt.geom.AffineTransform
-     */
-    var inverse = function(matrix) {
-        var a = matrix;
-        var m00 = a[0], m01 = a[1], m02 = a[2],
-            m10 = a[3], m11 = a[4], m12 = a[5];
-
-        var det = determinant(matrix);
-        if (det === 0) 
-            throw 'Cannot invert this transformation matrix--zero determinant';
-
-        var inv00, inv01, inv02,
-            inv10, inv11, inv12;
-
-        inv00 = m11 / det;
-        inv10 = -m10 / det;
-        inv01 = -m01 / det;
-        inv11 = m00 / det;
-        inv02 = (m01 * m12 - m02 * m11) / det;
-        inv12 = (-m00 * m12 + m10 * m02) / det;
-
-        return [
-            inv00, inv01, inv02,
-            inv10, inv11, inv12
-        ];
-    };
-
-    /**
-     *  Returns an array of straight integer components where
-     *    the arguments can be any mix of integers and objects
-     *    that have properties for x and y.
-     */
-    // Don't need it right now
-    // var componentsFromArguments = function(args, numRequired, defaultValue) {
-    //     var i;
-    //     var components = [];
-    //     for (i = 0; i < args.length; i++) {
-    //         if (i === args.length) {
-    //             throw 'Invalid arguments given: ' + args;
-    //         }
-    //         else if (_.isObject(args[i])) {
-    //             if ('x' in args[i] && 'y' in args[i]) {
-    //                 components.push(args[i].x);
-    //                 components.push(args[i].y);
-    //                 i++;
-    //             }
-    //             else {
-    //                 throw 'Invalid arguments given: ' + args;
-    //             }
-    //         }
-    //         else {
-    //             components.push(args[i]);
-    //         }
-    //     }
-        
-    //     if (components.length < numRequired && defaultValue !== undefined) {
-    //         i = components.length - 1;
-    //         while (i < numRequired) {
-    //             components[i] = defaultValue;
-    //             i++;
-    //         }
-    //     }
-        
-    //     return components;
-    // };
-
-    /**
-     * This is the equivalent of PhET's 
-     *   phetcommon.view.graphics.transforms.ModelViewTransform,
-     *   which stores a transformation for model coordinates to
-     *   view coordinates and provides helper functions to
-     *   perform some of those transformations.
-     */
-    var ModelViewTransform = function(transformationMatrix) {
-
-        this.transformMatrix = transformationMatrix || [
-            1, 0, 0,
-            0, 1, 0
-        ];
-
-        this.generateDerivedTransformMatrices();
-
-        // Cached objects for recycling
-        this._point = new Vector2();
-        this._rect  = new Rectangle();
-        this._point1 = new Vector2();
-        this._point2 = new Vector2();
-        this._point3 = new Vector2();
-        this._point4 = new Vector2();
-        this._scale = new Vector2();
-    };
-
-    /**
-     * Static functions
-     */
-    _.extend(ModelViewTransform, {
-
-        /**
-         * Creates a ModelViewTransform that just has a scale, such that
-         *   view = model * scale
-         *
-         * @param xScale the scale to map model to view in the x-dimension
-         * @param yScale the scale to map model to view in the y-dimension
-         */
-        createScaleMapping: function(xScale, yScale) {
-            if (yScale === undefined)
-                yScale = xScale;
-
-            return new ModelViewTransform([
-                xScale, 0,      0,
-                0,      yScale, 0
-            ]);
-        },
-
-        /**
-         * Creates a ModelViewTransform that has the specified scale 
-         *   and offset such that
-         *   view = model * scale + offset
-         *
-         * @param offset the offset in view coordinates
-         * @param xScale the scale to map model to view in the x-dimension
-         * @param yScale the scale to map model to view in the y-dimension
-         */
-        createOffsetScaleMapping: function(offset, xScale, yScale) {
-            if (yScale === undefined)
-                yScale = xScale;
-
-            return new ModelViewTransform([
-                xScale, 0,      offset.x,
-                0,      yScale, offset.y
-            ]);
-        },
-
-        /**
-         * Creates a shearless ModelViewTransform that maps the 
-         *   specified model point to the specified view point, 
-         *   with the given x and y scales.
-         *
-         * @param modelPoint the reference point in the model which maps to the specified view point
-         * @param viewPoint  the reference point in the view
-         * @param xScale     the amount to scale in the x direction
-         * @param yScale     the amount to scale in the y direction
-         * @return the resultant ModelViewTransform
-         */
-        createSinglePointScaleMapping: function(modelPoint, viewPoint, xScale, yScale) {
-            if (yScale === undefined)
-                yScale = xScale;
-
-            var xOffset = viewPoint.x - modelPoint.x * xScale;
-            var yOffset = viewPoint.y - modelPoint.y * yScale;
-
-            return ModelViewTransform.createOffsetScaleMapping(new Vector2(xOffset, yOffset), xScale, yScale);
-        },
-
-        /**
-         * Creates a shearless ModelViewTransform that maps the 
-         *   specified model point to the specified view point, 
-         *   with the given scale factor for both x and y 
-         *   dimensions, but inverting the y axis so that +y in 
-         *   the model corresponds to -y in the view. Inverting 
-         *   the y axis is commonly necessary since +y is usually 
-         *   up in textbooks and -y is down in pixel coordinates.
-         *
-         * @param modelPoint the reference point in the model which maps to the specified view point
-         * @param viewPoint  the reference point in the view
-         * @param scale      the amount to scale in the x and y directions
-         * @return the resultant ModelViewTransform
-         */
-        createSinglePointScaleInvertedYMapping: function(modelPoint, viewPoint, scale) {
-            return ModelViewTransform.createSinglePointScaleMapping(modelPoint, viewPoint, scale, -scale);
-        },
-
-        /**
-         * Creates a shearless ModelViewTransform that maps the specified rectangle in the model to the specified rectangle in the view,
-         * so that any point x% of the way across and y% down in the model rectangle will be mapped to the corresponding point x% across and y% down in the view rectangle.
-         * Linear extrapolation is performed outside of the rectangle bounds.
-         *
-         * @param modelBounds the reference rectangle in the model, must have area > 0
-         * @param viewBounds  the reference rectangle in the view, must have area > 0
-         * @return the resultant ModelViewTransform
-         */
-        createRectangleMapping: function(modelBounds, viewBounds) {
-            var m00 = viewBounds.w / modelBounds.w;
-            var m02 = viewBounds.x - m00 * modelBounds.x;
-            var m11 = viewBounds.h / modelBounds.h;
-            var m12 = viewBounds.y - m11 * modelBounds.y;
-
-            return new ModelViewTransform([
-                m00, 0, m02,
-                0, m11, m12
-            ]);
-        }
-
-    });
-
-    /**
-     * Instance functions
-     */
-    _.extend(ModelViewTransform.prototype, {
-
-        generateDerivedTransformMatrices: function() {
-            // Delta transform just takes out the translation
-            this.deltaTransformMatrix = _.clone(this.transformMatrix);
-            this.deltaTransformMatrix[2] = 0;
-            this.deltaTransformMatrix[5] = 0;
-
-            // Get the inverse of the transform matrix and store it
-            this.inverseTransformMatrix = inverse(this.transformMatrix);
-
-            // Delta transform just takes out the translation
-            this.deltaInverseTransformMatrix = _.clone(this.inverseTransformMatrix);
-            this.deltaInverseTransformMatrix[2] = 0;
-            this.deltaInverseTransformMatrix[5] = 0;
-        },
-
-        /*************************************************************************
-         **                                                                     **
-         **                            Model to View                            **
-         **                                                                     **
-         *************************************************************************/
-
-        modelToView: function(coordinates) {
-            return this.transform(this.transformMatrix, coordinates);
-        },
-
-        /**
-         * Delta transform just doesn't include any translation
-         */
-        modelToViewDelta: function(coordinates) {
-            return this.transform(this.deltaTransformMatrix, coordinates);
-        },
-
-        /**
-         * For things like bounds that we want to only transform
-         *   by the scale. Works the same as modelToViewDelta but
-         *   has a different name so its function is clearer.
-         */
-        modelToViewScale: function(coordinates) {
-            return this.modelToViewDelta(coordinates);
-        },
-
-        modelToViewX: function(x) {
-            return this.transformPoint(this.transformMatrix, this._point1.set(x, 0)).x;
-        },
-
-        modelToViewY: function(y) {
-            return this.transformPoint(this.transformMatrix, this._point1.set(0, y)).y;
-        },
-
-        modelToViewDeltaX: function(x) {
-            return this.transformPoint(this.deltaTransformMatrix, this._point1.set(x, 0)).x;
-        },
-
-        modelToViewDeltaY: function(y) {
-            return this.transformPoint(this.deltaTransformMatrix, this._point1.set(0, y)).y;
-        },
-
-        /*************************************************************************
-         **                                                                     **
-         **                            View to Model                            **
-         **                                                                     **
-         *************************************************************************/
-
-        viewToModel: function(coordinates) {
-            return this.transform(this.inverseTransformMatrix, coordinates);
-        },
-
-        viewToModelDelta: function(coordinates) {
-            return this.transform(this.deltaInverseTransformMatrix, coordinates);
-        },
-
-        viewToModelScale: function(coordinates) {
-            return this.viewToModelDelta(coordinates);
-        },
-
-        viewToModelX: function(x) {
-            return this.transformPoint(this.inverseTransformMatrix, this._point1.set(x, 0)).x;
-        },
-
-        viewToModelY: function(y) {
-            return this.transformPoint(this.inverseTransformMatrix, this._point1.set(0, y)).y;
-        },
-
-        viewToModelDeltaX: function(x) {
-            return this.transformPoint(this.deltaInverseTransformMatrix, this._point1.set(x, 0)).x;
-        },
-
-        viewToModelDeltaY: function(y) {
-            return this.transformPoint(this.deltaInverseTransformMatrix, this._point1.set(0, y)).y;
-        },
-
-        /*************************************************************************
-         **                                                                     **
-         **                           Transformations                           **
-         **                                                                     **
-         *************************************************************************/
-
-        transform: function(tm, coordinates) {
-            if (coordinates instanceof Rectangle)
-                return this.transformRectangle(tm, coordinates);
-            else if (coordinates instanceof Vector2 || ('x' in coordinates && 'y' in coordinates))
-                return this.transformPoint(tm, coordinates);
-            else if (coordinates instanceof PiecewiseCurve)
-                return this.transformPiecewiseCurve(tm, coordinates);
-        },
-
-        transformPoint: function(tm, point) {
-            this._point.x = tm[0] * point.x + tm[1] * point.y + tm[2];
-            this._point.y = tm[3] * point.x + tm[4] * point.y + tm[5];
-            return this._point;
-        },
-
-        transformRectangle: function(tm, rectangle) {
-            // Create points for the rectangle's points and transform them
-            var corner1 = this._point1;
-            var corner2 = this._point2;
-
-            corner1.set(rectangle.x, rectangle.y);
-            corner2.set(rectangle.x + rectangle.w, rectangle.y + rectangle.h);
-
-            corner1.set(this.transformPoint(tm, corner1));
-            corner2.set(this.transformPoint(tm, corner2));
-
-            return this._rect.set(
-                corner1.x,
-                corner1.y,
-                Math.abs(corner2.x - corner1.x),
-                Math.abs(corner2.y - corner1.y)
-            );
-        },
-
-        transformPiecewiseCurve: function(tm, curve) {
-            var clone = curve.clone();
-            clone.transform(tm);
-            return clone;
-        },
-
-        scale: function(scaleX, scaleY) {
-            if (scaleX === undefined) {
-                return this._scale.set(
-                    this.transformMatrix[0],
-                    this.transformMatrix[4]
-                );
-            }
-            else {
-                if (scaleY === undefined)
-                    scaleY = scaleX;
-                this.transformMatrix[0] = scaleX;
-                this.transformMatrix[4] = scaleY;
-                this.generateDerivedTransformMatrices();
-            }
-        },
-
-        scaleX: function(scaleX) {
-            if (scaleX === undefined)
-                return this.transformMatrix[0];
-            else 
-                this.scale(scaleX, this.scaleY());
-        },
-
-        scaleY: function(scaleY) {
-            if (scaleY === undefined)
-                return this.transformMatrix[4];
-            else 
-                this.scale(this.scaleX(), scaleY);
-        },
-
-        getXScale: function() {
-            return this.transformMatrix[0];
-        },
-
-        getYScale: function() {
-            return this.transformMatrix[4];
-        }
-
-    });
-
-    return ModelViewTransform;
-});
-
-
-define('common/v3/pixi/view',['require','underscore','backbone','pixi'],function(require) {
-
-    'use strict';
-
-    var _        = require('underscore');
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var version = (PIXI.VERSION || '').replace(/^v/i, '');
-    var majorVersion = parseInt(version.split('.')[0], 10);
-
-    var parseLegacyFontString = function(fontString) {
-        if (typeof fontString !== 'string')
-            return null;
-
-        var sizeMatch = fontString.match(/(\d+(?:\.\d+)?)px/);
-        if (!sizeMatch)
-            return null;
-
-        var fontSize = parseFloat(sizeMatch[1]);
-        var sizeToken = sizeMatch[0];
-        var sizeIndex = fontString.indexOf(sizeToken);
-        var familyStart = sizeIndex + sizeToken.length;
-        var fontFamily = fontString.slice(familyStart).trim();
-        if (!fontFamily)
-            fontFamily = 'Arial';
-
-        var fontStyle = /\b(italic|oblique)\b/i.exec(fontString);
-        var fontWeight = /\b(bold|bolder|lighter|[1-9]00)\b/i.exec(fontString);
-
-        return {
-            fontSize: fontSize,
-            fontFamily: fontFamily,
-            fontStyle: fontStyle ? fontStyle[1] : 'normal',
-            fontWeight: fontWeight ? fontWeight[1] : 'normal'
-        };
-    };
-
-    if (PIXI.Text && !PIXI.Text.__legacyFontCompatibilityPatched) {
-        var OriginalPixiText = PIXI.Text;
-        var PatchedPixiText = function(text, style, canvas) {
-            if (style && style.font && style.fontSize === undefined && style.fontFamily === undefined) {
-                var normalized = parseLegacyFontString(style.font);
-                if (normalized)
-                    style = _.extend({}, style, normalized);
-            }
-            return new OriginalPixiText(text, style, canvas);
-        };
-
-        PatchedPixiText.prototype = OriginalPixiText.prototype;
-        _.extend(PatchedPixiText, OriginalPixiText);
-        PatchedPixiText.__legacyFontCompatibilityPatched = true;
-        PIXI.Text = PatchedPixiText;
-    }
-
-    var viewOptions = ['model', 'id', 'displayObject', 'events'];
-
-    var delegateEventSplitter = /^(\S+)\s*\.(\S*)$/;
-    var legacyToPointerEventMap = {
-        touchstart: 'pointerdown',
-        mousedown: 'pointerdown',
-        touchmove: 'pointermove',
-        mousemove: 'pointermove',
-        touchend: 'pointerup',
-        mouseup: 'pointerup',
-        touchendoutside: 'pointerupoutside',
-        mouseupoutside: 'pointerupoutside'
-    };
-    var shouldUsePointerEvents = !isNaN(majorVersion) && majorVersion >= 5;
-
-    /**
-     * A View class that acts like the Backbone.View class, complete
-     *   with Backbone Events, but it's for a Pixi.js DisplayObject
-     *   instead of an HTML element.
-     */
-    var PixiView = function(options) {
-        // Next few lines modeled after Backbone.View's constructor
-        if (!options)
-            options = {};
-        _.extend(this, _.pick(options, viewOptions));
-        this._ensureDisplayObject();
-        this.initialize.apply(this, arguments);
-        this.delegateEvents();
-    };
-
-    /**
-     * Let the prototype get extended by the Backbone.Events object
-     *   so we have all that nice event functionality.
-     */
-    _.extend(PixiView.prototype, Backbone.Events, {
-
-        /**
-         * Field variables
-         */
-        displayObject: null,
-        model: null,
-
-        /**
-         * Initialization code for new PixiView objects
-         */
-        initialize: function(options) {},
-
-        /**
-         * This function should contain all the necessary code for
-         *   updating the displayObject before the next frame renders.
-         */
-        update: function(time, delta) {
-
-        },
-
-        /**
-         * Makes sure there's a displayObject specified.  If there
-         *   is no displayObject instance given, it creates one.
-         */
-        _ensureDisplayObject: function() {
-            if (!this.displayObject) {
-                /* Could try to store class names and build an actual
-                 *   Pixi DisplayObject off of a name with something
-                 *   like "new PIXI[className]", but then I'd have to
-                 *   specify different kinds of parameters for their
-                 *   constructors and stuff.  But it could be an
-                 *   option in the future.
-                 */
-                this.initializeDisplayObject();
-            }
-        },
-
-        /**
-         * Initializes a new DisplayObjectContainer as the view's
-         *   displayObject, which should work for general purposes.
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Container();
-        },
-
-        /**
-         * Modeled after Backbone.View.prototype.delegateEvents, this
-         *   function takes a map of event bindings that looks like:
-         *
-         *     {
-         *       'touchstart .displayObject': 'dragStart'
-         *     }
-         *
-         *   and binds functions to them like this:
-         *
-         *     this.displayObject.touchstart = this.dragStart;
-         */
-        delegateEvents: function(events) {
-            this.undelegateEvents();
-
-            if (!(events || (events = _.result(this, 'events')))) 
-                return this;
-
-            this._delegatedPixiEvents = [];
-
-            for (var key in events) {
-                if (events.hasOwnProperty(key)) {
-                    var method = events[key];
-                    if (!_.isFunction(method))
-                        method = this[events[key]];
-                    if (!method)
-                        continue;
-
-                    var match = key.match(delegateEventSplitter);
-                    var eventName = match[1];
-                    var displayObject = this[match[2]];
-                    var normalizedEventName = shouldUsePointerEvents ?
-                        (legacyToPointerEventMap[eventName] || eventName) :
-                        eventName;
-
-                    if (!(displayObject instanceof PIXI.DisplayObject))
-                        throw 'PixiView: this.' + match[2] + ' must be a DisplayObject to bind events on it.';
-
-                    // if (displayObject.hasOwnProperty(eventName))
-                    //     throw 'PixiView: ' + eventName + ' is not a valid event.';
-
-                    var boundMethod = _.bind(method, this);
-                    displayObject.on(normalizedEventName, boundMethod);
-                    displayObject.interactive = true;
-                    this._delegatedPixiEvents.push({
-                        displayObject: displayObject,
-                        eventName: normalizedEventName,
-                        listener: boundMethod
-                    });
-                }
-            }
-
-            return this;
-        },
-
-        undelegateEvents: function() {
-            if (this._delegatedPixiEvents) {
-                _.each(this._delegatedPixiEvents, function(binding) {
-                    binding.displayObject.off(binding.eventName, binding.listener);
-                });
-            }
-            this._delegatedPixiEvents = [];
-            return this;
-        },
-
-        /** 
-         * Removes the displayObject from its parent and unbinds
-         *   event listeners for the model.
-         */
-        removeFrom: function(parentDisplayObject) {
-            if (parentDisplayObject !== undefined)
-                parentDisplayObject.removeChild(this.displayObject);
-            if (this.model)
-                this.stopListening(this.model);
-        },
-
-        detach: function() {
-            if (this.displayObject.parent)
-                this.displayObject.parent.removeChild(this.displayObject);
-        },
-
-        remove: function() {
-            this.undelegateEvents();
-            this.detach();
-            if (this.model)
-                this.stopListening(this.model);
-        },
-
-        getResolution: function() {
-            return window.devicePixelRatio ? window.devicePixelRatio : 1;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
-        }
-
-    });
-
-    /**
-     * If you read the annotated source for Backbone, in the helpers
-     *   section, all the Backbone classes (Model, Collection, View,
-     *   etc.) have .extend that references the same function:
-     *
-     *     Model.extend = Collection.extend = ... = extend;
-     * 
-     *   This function isn't directly exposed if I require Backbone,
-     *   but I could just cheat and grab it off of any old Backbone
-     *   object prototype, so I will :)
-     */
-    PixiView.extend = Backbone.View.extend;
-
-
-    return PixiView;
-});
-define('common/v3/pixi/view/hybrid',['require','underscore','backbone','pixi','../view'],function(require) {
-
-    'use strict';
-
-    var _        = require('underscore');
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var PixiView = require('../view');
-
-    /**
-     * Hybrid view also has an $el/el property that behaves
-     *   like the Backbone.View.  Events can be defined for
-     *   the element and its decendents with the htmlEvents
-     *   property.
-     */
-    var HybridView = PixiView.extend({
-
-        htmlEvents: {},
-
-        tagName: Backbone.View.prototype.tagName,
-
-        constructor: function() {
-            this.cid = _.uniqueId('view');
-            this._ensureElement();
-            this.delegateHtmlEvents();
-
-            PixiView.apply(this, arguments);
-        },
-
-        _createElement: Backbone.View.prototype._createElement,
-        _setElement:    Backbone.View.prototype._setElement,
-        _setAttributes: Backbone.View.prototype._setAttributes,
-        _ensureElement: Backbone.View.prototype._ensureElement,
-
-        delegateHtmlEvents: function() {
-            Backbone.View.prototype.delegateEvents.apply(this, [ this.htmlEvents ]);
-        },
-
-        delegate:         Backbone.View.prototype.delegate,
-        undelegateEvents: Backbone.View.prototype.undelegateEvents,
-
-        // Backbone >= 1.2 setElement calls delegateEvents(), which fires PixiView's
-        // Pixi event binding before initialize() has created the display objects.
-        // We strip that call out here; Pixi events are delegated by PixiView's
-        // constructor after initialize(), and HTML events by delegateHtmlEvents().
-        setElement: function(element) {
-            this._setElement(element);
-            return this;
-        }
-
-    });
-
-    return HybridView;
-});
-
-
-define('common/colors/colors',['require'],function (require) {
-
-	'use strict';
-
-	// Regex from http://stackoverflow.com/a/5624139, http://stackoverflow.com/a/5624139
-	var hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
-	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-	var _replaceShorthandFunction = function(m, r, g, b) {
-		return r + r + g + g + b + b;
-	};
-
-	/**
-	 * Expands shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-	 */
-	var replaceShorthand = function(hex) {
-		return hex.replace(shorthandRegex, _replaceShorthandFunction);
-	};
-
-
-	var Colors = {
-
-		/**
-		 * 
-		 */
-		parseHex: function(string) {
-			// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-			var fullHex = replaceShorthand(string);
-
-			// Remove the hash sign on the front
-			var numbers = fullHex.replace('#', '');
-
-			// Now we can parse it as hex
-			return parseInt(numbers, 16);
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		rgbToHex: function(r, g, b) {
-			if (typeof r === 'object') {
-				b = r.b;
-				g = r.g;
-				r = r.r;
-			}
-			return '#' + this.rgbToHexInteger(r, g, b).toString(16).slice(1);
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		rgbToHexInteger: function(r, g, b) {
-			if (typeof r === 'object') {
-				b = r.b;
-				g = r.g;
-				r = r.r;
-			}
-			return (1 << 24) + (r << 16) + (g << 8) + b;
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		hexToRgb: function(hex) {
-			hex = replaceShorthand(hex);
-
-			var result = hexRegex.exec(hex);
-			return result ? {
-				r: parseInt(result[1], 16),
-				g: parseInt(result[2], 16),
-				b: parseInt(result[3], 16)
-			} : null;
-		},
-
-		/**
-		 * 
-		 */
-		hexToValue: function(hex) {
-			hex = replaceShorthand(hex);
-
-			var result = hexRegex.exec(hex);
-			return parseInt(result[1], 16) + parseInt(result[2], 16) + parseInt(result[3], 16);
-		},
-
-		/**
-		 * Parses an rgb/rgba string into its component parts and returns them as an object.
-		 */
-		parseRgba: function(rgbString) {
-			var result = /^rgba?\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\s*(?:,\s*([\d\.]+))?\)$/.exec(rgbString);
-			if (result) {
-				if (result[4] !== undefined) {
-					return {
-						r: parseInt(result[1]),
-						g: parseInt(result[2]),
-						b: parseInt(result[3]),
-						a: parseFloat(result[4])
-					};
-				}
-				else {
-					return {
-						r: parseInt(result[1]),
-						g: parseInt(result[2]),
-						b: parseInt(result[3])
-					};
-				}
-			}
-			else
-				return null;
-		},
-
-		/**
-		 * Takes either hex or rgba format and converts it into an rgba string with alpha.
-		 * If alpha isn't specified, defaults to 1.  If alpha is a boolean, it takes the
-		 *   place of return Object.
-		 */
-		toRgba: function(sourceColor, alpha, returnObject) {
-			var rgb = this.hexToRgb(sourceColor);
-
-			if (!rgb)
-				rgb = this.parseRgba(sourceColor);
-
-			if (rgb) {
-				if (alpha !== undefined && alpha !== false && alpha !== true)
-					rgb.a = alpha;
-				if (rgb.a === undefined)
-					rgb.a = 1;
-
-				if (returnObject || alpha === true)
-					return rgb;
-				else
-					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
-			} 
-			else
-				return null;	
-		},
-
-		/**
-		 * Algorithm from http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-		 */
-		darkenRgba: function(rgba, percent) {
-			var type = typeof rgba;
-			if (type !== 'object')
-				rgba = this.toRgba(rgba);
-			var amount = Math.round(255 * percent);
-			rgba.r -= amount;
-			rgba.g -= amount;
-			rgba.b -= amount;
-			if      (rgba.r > 255) rgba.r = 255;
-			else if (rgba.r < 0)   rgba.r = 0;
-			if      (rgba.g > 255) rgba.g = 255;
-			else if (rgba.g < 0)   rgba.g = 0;
-			if      (rgba.b > 255) rgba.b = 255;
-			else if (rgba.b < 0)   rgba.b = 0;
-
-			if (type === 'object')
-				return rgba;
-			else
-				return 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')';
-		},
-
-		darkenHex: function(colorString, percent) {
-			var rgba = this.toRgba(colorString, true);
-			this.darkenRgba(rgba, percent);
-			return this.rgbToHex(rgba.r, rgba.g, rgba.b);
-		},
-
-		lightenRgba: function(rgba, percent) {
-			return this.darkenRgba(rgba, -percent);
-		},
-
-		lightenHex: function(colorString, percent) {
-			return this.darkenHex(colorString, -percent);
-		},
-
-		interpolateRgba: function(rgba1, rgba2, t, rgba) {
-			if (!rgba)
-				rgba = {};
-
-			rgba.r = Math.round((rgba1.r * t) + (rgba2.r * (1 - t)));
-			rgba.g = Math.round((rgba1.g * t) + (rgba2.g * (1 - t)));
-			rgba.b = Math.round((rgba1.b * t) + (rgba2.b * (1 - t)));
-			if (rgba1.a !== undefined && rgba2.a !== undefined)
-				rgba.a = Math.round((rgba1.a * t) + (rgba2.a * (1 - t)));
-
-			return rgba;
-		},
-
-		interpolateHex: function(hex1, hex2, t) {
-			var rgba = this.interpolateRgba(this.hexToRgb(hex1), this.hexToRgb(hex2), t);
-			return this.rgbToHex(rgba);
-		},
-
-		interpolateHexInteger: function(int1, int2, t) {
-			var b1 =  int1 & 255;
-			var g1 = (int1 >> 8) & 255;
-			var r1 = (int1 >> 16) & 255;
-
-			var b2 =  int2 & 255;
-			var g2 = (int2 >> 8) & 255;
-			var r2 = (int2 >> 16) & 255;
-
-			var r = Math.round((r1 * t) + (r2 * (1 - t)));
-			var g = Math.round((g1 * t) + (g2 * (1 - t)));
-			var b = Math.round((b1 * t) + (b2 * (1 - t)));
-
-			return (1 << 24) + (r << 16) + (g << 8) + b;
-		}
-	};
-
-	return Colors;
-});
-
-define('common/v3/pixi/view/arrow',['require','underscore','backbone','pixi','../view','common/colors/colors','common/math/vector2'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var PixiView = require('../view');
-
-    var Colors    = require('common/colors/colors');
-    var Vector2   = require('common/math/vector2');
-
-
-    var ArrowViewModel = Backbone.Model.extend({
-        defaults: {
-            originX: 0,
-            originY: 0,
-
-            targetX: 50,
-            targetY: 0,
-
-            minLength: 25,
-            maxLength: null,
-            length: 0
-        },
-
-        initialize: function() {
-            this._settings = {};
-        },
-
-        translate: function(x, y) {
-            this._settings.originX = this.get('originX') + x;
-            this._settings.originY = this.get('originY') + y;
-            this._settings.targetX = this.get('targetX') + x;
-            this._settings.targetY = this.get('targetY') + y;
-            this.set(this._settings);
-        },
-
-        moveTo: function(x, y) {
-            this._settings.originX = x;
-            this._settings.originY = y;
-            this._settings.targetX = x + (this.get('targetX') - this.get('originX'));
-            this._settings.targetY = y + (this.get('targetY') - this.get('originY'));
-            this.set(this._settings);
-        }
-    });
-
-
-    var ArrowView = PixiView.extend({
-
-        initialize: function(options) {
-            options = _.extend({
-                tailWidth: 8,
-
-                headWidth: 20,
-                headLength: 20,
-
-                fillColor: '#ff0000',
-                fillAlpha: 1
-            }, options);
-
-            this.tailWidth = options.tailWidth;
-
-            this.headWidth = options.headWidth;
-            this.headLength = options.headLength;
-
-            this.fillColor = Colors.parseHex(options.fillColor);
-            this.fillAlpha = options.fillAlpha;
-
-            this._originVector = new Vector2();
-            this._targetVector = new Vector2();
-            this._direction    = new Vector2();
-
-            this.initGraphics();
-
-            this.listenTo(this.model, 'change:originX change:originY change:targetX change:targetY', this.drawArrow);
-        },
-
-        initGraphics: function() {
-            this.tailGraphics = new PIXI.Graphics();
-            this.headGraphics = new PIXI.Graphics();
-
-            this.transformFrame = new PIXI.Container();
-            this.transformFrame.addChild(this.tailGraphics);
-            this.transformFrame.addChild(this.headGraphics);
-
-            this.displayObject.addChild(this.transformFrame);
-
-            this.drawArrow();
-        },
-
-        drawArrow: function() {
-            var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-            var target = this._targetVector.set(this.model.get('targetX'), this.model.get('targetY'));
-
-            var angle  = this._direction.set(target).sub(origin).angle();
-            var scale  = 1;
-            var length = origin.distance(target);
-            if (length < this.headLength) {
-                scale = length / this.headLength;
-                length = this.headLength;
-            }
-
-            this.model.set('length', length);
-
-            var tail = this.tailGraphics;
-            var head = this.headGraphics;
-
-            // Draw it pointing straight to the right and then rotate it.
-            tail.clear();
-            head.clear();
-
-            tail.beginFill(this.fillColor, this.fillAlpha);
-            tail.drawRect(0, -this.tailWidth / 2, length - this.headLength, this.tailWidth);
-            tail.endFill();
-
-            head.beginFill(this.fillColor, this.fillAlpha);
-            head.moveTo(length, 0);
-            head.lineTo(length - this.headLength,  this.headWidth / 2);
-            head.lineTo(length - this.headLength, -this.headWidth / 2);
-            head.endFill();
-
-            this.displayObject.x = origin.x;
-            this.displayObject.y = origin.y;
-            this.transformFrame.rotation = angle;
-            this.transformFrame.scale.x = scale;
-            this.transformFrame.scale.y = scale;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
-        },
-
-        getRotation: function() {
-            return this.transformFrame.rotation;
-        }
-
-    }, {
-
-        ArrowViewModel: ArrowViewModel
-
-    });
-
-    return ArrowView;
-});
-
-define('common/v3/pixi/assets',['require','underscore','pixi'],function (require) {
-
-    'use strict';
-
-    var _    = require('underscore');
-    var PIXI = require('pixi');
-
-    var getLoader = function() {
-        if (PIXI.Loader && PIXI.Loader.shared)
-            return PIXI.Loader.shared;
-        return PIXI.loader;
-    };
-
-    var textureFromFrameName = function(frameName) {
-        if (PIXI.Texture.from)
-            return PIXI.Texture.from(frameName);
-        return PIXI.Texture.fromFrame(frameName);
-    };
-
-    var resolveTextureFromSpriteSheetResources = function(resources, filename, pathPrefixedFilename) {
-        var texture = null;
-
-        _.find(resources, function(resource) {
-            if (!resource || !resource.textures)
-                return false;
-
-            if (resource.textures[filename]) {
-                texture = resource.textures[filename];
-                return true;
-            }
-            if (resource.textures[pathPrefixedFilename]) {
-                texture = resource.textures[pathPrefixedFilename];
-                return true;
-            }
-
-            var matchingKey = _.find(_.keys(resource.textures), function(key) {
-                return key === filename ||
-                    key === pathPrefixedFilename ||
-                    key.slice(-filename.length) === filename;
-            });
-            if (matchingKey) {
-                texture = resource.textures[matchingKey];
-                return true;
-            }
-
-            return false;
-        });
-
-        return texture;
-    };
-
-    var resolveDirectResource = function(resources, filename, pathPrefixedFilename) {
-        if (resources[filename])
-            return resources[filename];
-        if (resources[pathPrefixedFilename])
-            return resources[pathPrefixedFilename];
-
-        var keys = _.keys(resources);
-        var matchingKey = _.find(keys, function(key) {
-            if (key === filename || key === pathPrefixedFilename)
-                return true;
-            if (key.length >= filename.length && key.slice(-filename.length) === filename)
-                return true;
-            if (key.length >= pathPrefixedFilename.length && key.slice(-pathPrefixedFilename.length) === pathPrefixedFilename)
-                return true;
-            return false;
-        });
-
-        if (matchingKey)
-            return resources[matchingKey];
-
-        var matchingByUrl = _.find(resources, function(resource) {
-            if (!resource || !resource.url)
-                return false;
-            var url = resource.url;
-            return url === filename ||
-                url === pathPrefixedFilename ||
-                (url.length >= filename.length && url.slice(-filename.length) === filename) ||
-                (url.length >= pathPrefixedFilename.length && url.slice(-pathPrefixedFilename.length) === pathPrefixedFilename);
-        });
-
-        return matchingByUrl || null;
-    };
-
-    var getBaseTextureSource = function(baseTexture) {
-        if (!baseTexture)
-            return null;
-        if (baseTexture.resource && baseTexture.resource.source)
-            return baseTexture.resource.source;
-        return baseTexture.source || null;
-    };
-
-    /**
-     * There should really only be one Assets object per app, so
-     *   to customize the Assets object to fit the needs of a 
-     *   particular app, just use assign new values to the
-     *   default properties.  There are three properties that
-     *   should be set when customizing the Assets object for a
-     *   new app:
-     *
-     * 1) Path:         Path is an optional string and is used to
-     *                  make it faster to list out lots of images
-     *                  and is prepended to every filename when
-     *                  loading.  It is intended for this to be a
-     *                  parent directory for all the images.
-     *                  Note, however, that if images are stored
-     *                  in multiple directories, this will have
-     *                  to be a common parent for all files or
-     *                  be left blank.
-     *
-     * 2) Images:       This is a json object containing refer-
-     *                  ences to every image used in the appli-
-     *                  cation.  The standard naming convention
-     *                  should be that all keys on this object
-     *                  are in all caps with underscores instead
-     *                  of spaces.
-     *
-     * 3) SpriteSheets: Spritesheet is also a json object, but
-     *                  the keys here are actually the names of
-     *                  the sprite sheet files to be loaded, and
-     *                  each value is an array of keys in the 
-     *                  Images object for each of the images
-     *                  contained in the sprite sheet.
-     * 
-     * Example usage:
-     *
-     *   Assets.Path = 'img/phet/optimized/';
-     *
-     *   Assets.Images = {
-     *       BACK_LEG_01: 'back_leg_01.png',
-     *       BACK_LEG_02: 'back_leg_02.png',
-     *       BACK_LEG_03: 'back_leg_03.png',
-     *       BACK_LEG_04: 'back_leg_04.png'
-     *   };
-     *
-     *   Assets.SpriteSheets = {
-     *       'leg-spritesheet.json': [
-     *           Assets.Images.BACK_LEG_01,
-     *           Assets.Images.BACK_LEG_02,
-     *           Assets.Images.BACK_LEG_03,
-     *           Assets.Images.BACK_LEG_04
-     *       ]
-     *   };
-     */
-    var Assets = {
-        Path: '',
-        Images: {},
-        SpriteSheets: {}
-    };
-
-    Assets.getAssetList = function(regenerate) {
-        if (!regenerate && this.assetList)
-            return this.assetList;
-
-        this.assetList = [];
-
-        // Add all the spritesheet files first
-        _.each(this.SpriteSheets, function(list, filename) {
-            this.assetList.push(this.Path + filename);
-        }, this);
-
-        // Then add all the images that are on their own, not in a sprite sheet
-        var spriteSheetImages = _.flatten(_.values(this.SpriteSheets));
-        var leftoverImages = _.filter(this.Images, function(image) {
-            return !_.contains(spriteSheetImages, image);
-        });
-        _.each(leftoverImages, function(filename) {
-            this.assetList.push(this.Path + filename);
-        }, this);
-
-        return this.assetList;
-    };
-
-    /**
-     * A function that returns the full relative path of an
-     *   image file by prepending the path
-     */
-    Assets.Image = function(filename) {
-        return this.Path + filename;
-    };
-
-    /**
-     * This function returns a PIXI texture based on the file
-     *   name, taking into account whether that filename is 
-     *   part of a sprite sheet.
-     */
-    Assets.Texture = function(filename) {
-        var loader = getLoader();
-        var resources = loader && loader.resources ? loader.resources : {};
-        var pathPrefixedFilename = this.Path + filename;
-        var directResource = resolveDirectResource(resources, filename, pathPrefixedFilename);
-        if (directResource && directResource.texture)
-            return directResource.texture;
-
-        var textureFromSheets = resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename);
-        if (textureFromSheets)
-            return textureFromSheets;
-
-        var spriteSheet;
-        _.each(this.SpriteSheets, function(images, key) {
-            _.each(images, function(image) {
-                if (image === filename) {
-                    spriteSheet = key;
-                    return false;
-                }
-            }, this);
-            if (spriteSheet)
-                return false;
-        }, this);
-
-        if (spriteSheet)
-            return resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename) || textureFromFrameName(filename);
-        else
-            return directResource && directResource.texture ? directResource.texture : null;
-    };
-
-    /**
-     * Returns a PIXI Sprite made with the texture of the
-     *   specified image file.
-     */
-    Assets.createSprite = function(textureFileName) {
-        return new PIXI.Sprite(this.Texture(textureFileName));
-    };
-
-    /**
-     * Returns the HTML for displaying a texture as a styled
-     *   element instead of in PIXI.  This is a convenience
-     *   function that allows us to use the same Assets
-     *   references to make HTML or PIXI DisplayObjects.
-     */
-    Assets.createIcon = function(filename, attrs, iconWidth, iconHeight) {
-        if (!_.isObject(attrs)) {
-            iconHeight = iconWidth;
-            iconWidth = attrs;
-        }
-
-        var texture = this.Texture(filename);
-        if (!texture)
-            throw 'Texture not found for ' + filename;
-
-        var frame = texture.frame || texture.crop;
-        var x = frame.x;
-        var y = frame.y;
-        var source = getBaseTextureSource(texture.baseTexture);
-        if (!source || !source.src)
-            throw 'Texture source not found for ' + filename;
-        var scale = 1;
-
-        if (iconWidth !== undefined) {
-            if (iconHeight === undefined)
-                iconHeight = iconWidth;
-
-            var textureRatio = texture.width / texture.height;
-            var iconRatio    = iconWidth / iconHeight;
-            
-            scale = (iconRatio > textureRatio) ? iconHeight / texture.height : iconWidth / texture.width;
-        }
-
-        var iconStyle = [
-            'position: absolute',
-            'left: 50%',
-            'top:  50%',
-            'margin-left: -' + (texture.width / 2)  + 'px',
-            'margin-top:  -' + (texture.height / 2) + 'px',
-            'background-image: url(' + source.src + ')',
-            'background-position: -' + x + 'px -' + y + 'px',
-            'transform: scale(' + scale + ', ' + scale + ')',
-            'width: ' + texture.width  + 'px',
-            'height: '+ texture.height + 'px'
-        ].join(';');
-
-        var iconHtml = '<div style="' + iconStyle + '"></div>';
-
-        var attrsHtml = _.map(attrs, function(value, name) {
-            return name + '="' + value + '"';
-        }).join(' ');
-
-        var wrapperStyle = [
-            'position: relative',
-            'width: ' + iconWidth  + 'px',
-            'height: '+ iconHeight + 'px'
-        ].join(';');
-
-        var wrapperHtml = '<div ' + attrsHtml + ' style="' + wrapperStyle + '">' + iconHtml + '</div>';
-
-        return wrapperHtml;
-    };
-
-    /**
-     * Returns information about a texture like its source
-     *   and the bounds of the portion of the file used.
-     */
-    Assets.getFrameData = function(filename) {
-        var texture = this.Texture(filename);
-        if (!texture)
-            throw 'Texture not found for ' + filename;
-
-        var source = getBaseTextureSource(texture.baseTexture);
-        if (!source || !source.src)
-            throw 'Texture source not found for ' + filename;
-
-        return {
-            src: source.src,
-            bounds: texture.frame || texture.crop
-        };
-    };
-
-
-    return Assets;
-});
-
-define('assets',['require','common/v3/pixi/assets'],function (require) {
-
-    'use strict';
-
-    var Assets = require('common/v3/pixi/assets');
-
-    Assets.Path = 'img/';
-
-    Assets.Images = {
-        LADYBUG: 'ladybug',
-        LADYBUG_OPEN_WINGS: 'ladybug-open-wings'
-    };
-
-    Assets.SpriteSheets = {
-        'ladybug.json': [
-            Assets.Images.LADYBUG,
-            Assets.Images.LADYBUG_OPEN_WINGS,
-        ]
-    };
-
-    return Assets;
-});
-
-define('views/ladybug',['require','pixi','common/v3/pixi/view/hybrid','common/v3/pixi/view/arrow','assets','constants'],function(require) {
-
-    'use strict';
-
-    var PIXI = require('pixi');
-
-    var HybridView = require('common/v3/pixi/view/hybrid');
-    var ArrowView  = require('common/v3/pixi/view/arrow');
-
-
-    var Assets = require('assets');
-
-    var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-
-    /**
-     * A view that represents the player particle
-     */
-    var LadybugView = HybridView.extend({
-
-        events: {
-            'touchstart      .ladybug': 'dragStart',
-            'mousedown       .ladybug': 'dragStart',
-            'touchmove       .ladybug': 'drag',
-            'mousemove       .ladybug': 'drag',
-            'touchend        .ladybug': 'dragEnd',
-            'mouseup         .ladybug': 'dragEnd',
-            'touchendoutside .ladybug': 'dragEnd',
-            'mouseupoutside  .ladybug': 'dragEnd',
-        },
-
-        tagName: 'button',
-        className: 'btn btn-secondary return-ladybug-btn',
-
-        htmlEvents: {
-            'click': 'returnButtonClicked'
-        },
-
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
-
-            // Object caches
-            this._dragOffset = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-
-            this.initGraphics();
-
-            this.ladybug.buttonMode = true;
-            this.ladybug.cursor = 'pointer';
-
-            this.listenTo(this.model, 'change:position',     this.updatePosition);
-            this.listenTo(this.model, 'change:velocity',     this.velocityChanged);
-            this.listenTo(this.model, 'change:acceleration', this.accelerationChanged);
-            this.listenTo(this.model, 'change:angle',        this.angleChanged);
-
-            this.$el.html('Return Ladybug');
-            this.$el.hide();
-            this.returnButtonHidden = true;
-        },
-
-        initGraphics: function() {
-            this.initArrows();
-            this.initSprites();
-
-            this.updateMVT(this.mvt);
-            this.angleChanged(this.model, this.model.get('angle'));
-        },
-
-        initSprites: function() {
-            var ladybug = Assets.createSprite(Assets.Images.LADYBUG);
-            ladybug.anchor.x = 0.5;
-            ladybug.anchor.y = 0.5;
-            this.ladybugSprite = ladybug;
-
-            var ladybugOpenWings = Assets.createSprite(Assets.Images.LADYBUG_OPEN_WINGS);
-            ladybugOpenWings.anchor.x = 0.5;
-            ladybugOpenWings.anchor.y = 0.5;
-
-            this.ladybug = new PIXI.Container();
-            this.idleWings = new PIXI.Container();
-            this.openWings = new PIXI.Container();
-
-            this.idleWings.addChild(ladybug);
-            this.openWings.addChild(ladybugOpenWings);
-            this.openWings.visible = false;
-
-            this.ladybug.addChild(this.idleWings);
-            this.ladybug.addChild(this.openWings);
-            this.displayObject.addChild(this.ladybug);
-        },
-
-        initArrows: function() {
-            this.velocityArrowModel = new ArrowView.ArrowViewModel({
-                targetX: 0,
-                targetY: 0
-            });
-
-            this.velocityArrowView = new ArrowView({
-                model: this.velocityArrowModel,
-                fillColor: Constants.VELOCITY_COLOR
-            });
-
-            this.accelerationArrowModel = new ArrowView.ArrowViewModel({
-                targetX: 0,
-                targetY: 0
-            });
-
-            this.accelerationArrowView = new ArrowView({
-                model: this.accelerationArrowModel,
-                fillColor: Constants.ACCELERATION_COLOR
-            });
-
-            this.displayObject.addChild(this.velocityArrowView.displayObject);
-            this.displayObject.addChild(this.accelerationArrowView.displayObject);
-        },
-
-        updatePosition: function(model, position) {
-            var viewPos = this.mvt.modelToView(position);
-            this.displayObject.x = viewPos.x;
-            this.displayObject.y = viewPos.y;
-
-            if (this.simulation.ladybugOutOfBounds())
-                this.showReturnButton();
-            else
-                this.hideReturnButton();
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.ladybug.scale.x = this.ladybug.scale.y = this.calculateScale();
-
-            this.updatePosition(this.model, this.model.get('position'));
-        },
-
-        calculateScale: function() {
-            var targetSpriteHeight = this.mvt.modelToViewDeltaY(this.model.get('length')); // in pixels
-            return targetSpriteHeight / this.ladybugSprite.height;
-        },
-
-        dragStart: function(event) {
-            this.simulation.startSampling();
-
-            if (!this.simulation.get('recording'))
-                this.simulation.set('recording', true);
-
-            if (this.simulation.get('paused'))
-                this.simulation.play();
-
-            this.simulation.set('motionType', 'Manual');
-            this.simulation.set('updateMode', UpdateMode.POSITION);
-
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-
-                var x = this.mvt.viewToModelX(local.x);
-                var y = this.mvt.viewToModelY(local.y);
-
-                this.simulation.setSamplePoint(x, y);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-
-            this.simulation.stopSampling();
-        },
-
-        update: function(time, deltaTime, paused) {
-
-        },
-
-        velocityChanged: function(model, velocity) {
-            if (velocity.length() >= LadybugView.WING_OPEN_VELOCITY) {
-                this.openWings.visible = true;
-                this.idleWings.visible = false;
-            }
-            else {
-                this.idleWings.visible = true;
-                this.openWings.visible = false;
-            }
-
-            this.velocityArrowModel.set('targetX', this.mvt.modelToViewDeltaX(velocity.x));
-            this.velocityArrowModel.set('targetY', this.mvt.modelToViewDeltaY(velocity.y));
-        },
-
-        accelerationChanged: function(model, acceleration) {
-            this.accelerationArrowModel.set('targetX', this.mvt.modelToViewDeltaX(acceleration.x));
-            this.accelerationArrowModel.set('targetY', this.mvt.modelToViewDeltaY(acceleration.y));
-        },
-
-        angleChanged: function(model, angle) {
-            this.ladybug.rotation = angle + Math.PI / 2;
-        },
-
-        returnButtonClicked: function(event) {
-            this.simulation.returnLadybug();
-        },
-
-        hideReturnButton: function() {
-            if (!this.returnButtonHidden) {
-                this.$el.hide();
-                this.returnButtonHidden = true;
-            }
-        },
-
-        showReturnButton: function() {
-            if (this.returnButtonHidden) {
-                this.$el.show();
-                this.returnButtonHidden = false;
-            }
-        },
-
-        reset: function() {
-            this.updateMVT(this.mvt);
-            this.angleChanged(this.model, this.model.get('angle'));
-        },
-
-        showVelocityArrow: function() {
-            this.velocityArrowView.displayObject.visible = true;
-        },
-
-        hideVelocityArrow: function() {
-            this.velocityArrowView.displayObject.visible = false;
-        },
-
-        showAccelerationArrow: function() {
-            this.accelerationArrowView.displayObject.visible = true;
-        },
-
-        hideAccelerationArrow: function() {
-            this.accelerationArrowView.displayObject.visible = false;
-        }
-
-    }, Constants.LadybugView);
-
-    return LadybugView;
-});
-
-define('common/v3/pixi/extensions',['require','underscore','pixi','common/math/piecewise-curve','common/colors/colors'],function(require) {
-
-    'use strict';
-
-    var _    = require('underscore');
-    var PIXI = require('pixi');
-
-    var PiecewiseCurve = require('common/math/piecewise-curve');
-    var Colors = require('common/colors/colors');
-
-    var textureFromCanvas = function(canvas) {
-        if (PIXI.Texture.from)
-            return PIXI.Texture.from(canvas);
-        return PIXI.Texture.fromCanvas(canvas);
-    };
-
-
-    var doNothing = function() {};
-    var beginPath = function(graphics) {
-        graphics.beginPath();
-    };
-    var closePath = function(graphics) {
-        graphics.closePath();
-    };
-    var strokeAndFill = function(graphics, stroke, fill) {
-        if (fill)
-            graphics.fill();
-        if (stroke)
-            graphics.stroke();
-    };
-
-    /**
-     * Draws a piecewise curve onto a Context2D, filling and stroking if asked
-     */
-    PIXI.drawPiecewiseCurve = function(ctx, curve, xShift, yShift, fill, stroke) {
-        drawPiecewiseCurve(ctx, curve, xShift, yShift, fill, stroke, beginPath, strokeAndFill, closePath);
-    };
-
-    PIXI.Graphics.prototype.drawPiecewiseCurve = function(curve, xShift, yShift) {
-        if (xShift === undefined)
-            xShift = 0;
-        if (yShift === undefined)
-            yShift = 0;
-        drawPiecewiseCurve(this, curve, xShift, yShift, false, false, doNothing, doNothing, doNothing);
-    };
-
-    var drawPiecewiseCurve = function(graphics, curve, xShift, yShift, fill, stroke, beginPath, strokeAndFill, closePath) {
-        var x, y;
-        var cp1x, cp1y;
-        var cp2x, cp2y;
-        var pathStarted = false;
-        var pos = 0;
-        while (pos < curve.index) {
-            switch (curve.types[pos]) {
-                case PiecewiseCurve.SEG_MOVETO:
-                    if (pathStarted) { 
-                        // Draw and close old path
-                        strokeAndFill(graphics, stroke, fill);
-                        closePath(graphics);
-                    }
-                    x = curve.xPoints[pos]   + xShift;
-                    y = curve.yPoints[pos++] + yShift;
-                    pathStarted = true;
-
-                    beginPath(graphics);
-                    graphics.moveTo(x, y);
-                    break;
-                case PiecewiseCurve.SEG_CLOSE:
-                    pos++;
-                    pathStarted = false;
-
-                    closePath(graphics);
-                    strokeAndFill(graphics, stroke, fill);
-                    break;
-                case PiecewiseCurve.SEG_LINETO:
-                    x = curve.xPoints[pos]   + xShift;
-                    y = curve.yPoints[pos++] + yShift;
-
-                    graphics.lineTo(x, y);
-                    break;
-                case PiecewiseCurve.SEG_QUADTO:
-                    cp1x = curve.xPoints[pos]   + xShift;
-                    cp1y = curve.yPoints[pos++] + yShift;
-                    x    = curve.xPoints[pos]   + xShift;
-                    y    = curve.yPoints[pos++] + yShift;
-
-                    graphics.quadraticCurveTo(cp1x, cp1y, x, y);
-                    break;
-                case PiecewiseCurve.SEG_CUBICTO:
-                    cp1x = curve.xPoints[pos]   + xShift;
-                    cp1y = curve.yPoints[pos++] + yShift;
-                    cp2x = curve.xPoints[pos]   + xShift;
-                    cp2y = curve.yPoints[pos++] + yShift;
-                    x    = curve.xPoints[pos]   + xShift;
-                    y    = curve.yPoints[pos++] + yShift;
-
-                    graphics.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-                    break;
-            }
-        }
-
-        if (pathStarted) {
-            // It was opened but never closed, so draw it
-            strokeAndFill(graphics, stroke, fill);
-        }
-    };
-
-
-    /**
-     * Creates a textured Sprite and masks it according to the polygon
-     *   created by the specified masking points. Returns a containing
-     *   DisplayObjectContainer that holds the sprite and the mask.
-     */
-    PIXI.createTexturedPolygonFromPoints = function(maskingPoints, texture) {
-        /*
-         * The masking points are not necessarily within the bounds of 
-         *   the texture, so we need to calculate the bounding box for
-         *   the masking points, scale the texture to fit those bounds,
-         *   create a masking shape with the points, and then shift 
-         *   the sprite that holds the texture to the origin of the 
-         *   bounding box of the masking points to place it in its 
-         *   rightful location.
-         */
-
-        // Calculate the bounding box for the masking points
-        var curve = PiecewiseCurve.fromPoints(maskingPoints);
-        var bounds = curve.getBounds();
-
-        // Ratio for scaling the texture to the size of the bounds
-        var xScale = bounds.w / texture.width;
-        var yScale = bounds.h / texture.height;
-
-        // Create the mask shape
-        var mask = new PIXI.Graphics();
-        mask.lineStyle(0);
-        mask.beginFill(0x000000, 1);
-        
-
-        // Draw the masking points shifted
-        mask.moveTo(maskingPoints[0].x, maskingPoints[0].y);
-        for (var i = 1; i < maskingPoints.length; i++)
-            mask.lineTo(maskingPoints[i].x, maskingPoints[i].y);
-
-        // Create a sprite with the texture, scaled to the size of the bounds
-        var sprite = new PIXI.Sprite(texture);
-        sprite.scale.x = xScale;
-        sprite.scale.y = yScale;
-
-        // Apply the mask
-        sprite.mask = mask;
-
-        // Shift the sprite back to where the masking points are supposed to be
-        sprite.x = bounds.x;
-        sprite.y = bounds.y;
-
-        // Put them both in a wrapping DisplayObjectContainer
-        var wrapper = new PIXI.Container();
-        wrapper.addChild(sprite);
-        wrapper.addChild(mask);
-
-        return wrapper;
-    };
-
-
-    /**
-     * Creates a Sprite that has a polygon created by connecting the 
-     *   specified points filled in with the specified color.
-     */
-    PIXI.createColoredPolygonFromPoints = function(points, color, alpha) {
-        var style = {
-            fillStyle: color,
-            fillAlpha: alpha
-        };
-
-        var curve = PiecewiseCurve.fromPoints(points);
-
-        return PIXI.Sprite.fromPiecewiseCurve(curve, style);
-    };
-
-
-    /**
-     * Creates a sprite from a PiecewiseCurve object and styling
-     *   information.  Determines the bounds of the curve, makes
-     *   a canvas that will fit the curve, shifts the points so
-     *   they are positioned inside the canvas, paints the curve
-     *   onto the canvas with the styling info specified, makes
-     *   a texture from the canvas, applies it to a sprite, and
-     *   finally shifts the sprite's anchor to undo the shift
-     *   performed on the points and returns the sprite.
-     */
-    PIXI.Sprite.fromPiecewiseCurve = function(curve, style) {
-        if (curve.size() === 0)
-            return new PIXI.Container();
-
-        style = _.extend({
-            lineWidth: 1,
-            lineJoin: 'miter',
-            fillAlpha: 1,
-            shadowBlur: 0,
-            shadowColor: '#000'
-        }, style);
-
-        // Determine the bounds for all the points
-        var bounds = curve.getBounds();
-
-        // Determine if we need to shift the points to fit within the bounds
-        var xShift = 0 - bounds.x;
-        var yShift = 0 - bounds.y;
-
-        xShift += style.lineWidth;
-        yShift += style.lineWidth;
-
-        // Draw it on a canvas
-        var canvas = document.createElement('canvas');
-        canvas.width  = bounds.w + (2 * style.lineWidth);
-        canvas.height = bounds.h + (2 * style.lineWidth);
-
-        var ctx = canvas.getContext('2d');
-
-        var stroke = false;
-        if (style.strokeStyle !== undefined) {
-            ctx.lineWidth   = style.lineWidth;
-            ctx.strokeStyle = style.strokeStyle;
-            ctx.lineJoin    = style.lineJoin;
-            stroke = true;
-        }
-
-        var fill = false;
-        if (typeof style.fillStyle == 'function') {
-            style.fillStyle(ctx, canvas.width, canvas.height);
-            ctx.globalAlpha = style.fillAlpha;
-            fill = true;
-        }
-        else if (style.fillStyle !== undefined) {
-            ctx.fillStyle   = style.fillStyle;
-            ctx.globalAlpha = style.fillAlpha;
-            fill = true;
-        }
-
-        ctx.shadowBlur = style.shadowBlur;
-        ctx.shadowColor = style.shadowColor;
-        
-        PIXI.drawPiecewiseCurve(ctx, curve, xShift, yShift, fill, stroke);
-
-        // Create the sprite and shift the anchor proportionally to the shift
-        var sprite = new PIXI.Sprite(textureFromCanvas(canvas));
-        sprite.anchor.x = xShift / sprite.width;
-        sprite.anchor.y = yShift / sprite.height;
-
-        return sprite;
-    };
-
-    
-    /**
-     * Creates a PiecewiseCurve from an array of point arrays and
-     *   calls PIXI.Sprite.fromPiecewiseCurve to return a sprite.
-     */
-    PIXI.Sprite.fromPointArrays = function(pointArrays, style) {
-        if (pointArrays.length === 0)
-            return new PIXI.Container();
-
-        if (!_.isArray(pointArrays[0]))
-            pointArrays = [ pointArrays ];
-
-        var curve = PiecewiseCurve.fromPointArrays(pointArrays);
-        return PIXI.Sprite.fromPiecewiseCurve(curve, style);
-    };
-
-
-    /**
-     * Recursive function that should calculate the position of
-     *   the display object relative to the stage by applying all
-     *   transforms through the hierarchy.
-     */
-    if (!PIXI.DisplayObject.prototype.getGlobalPosition) {
-        PIXI.DisplayObject.prototype.getGlobalPosition = function() {
-            if (this.parent && !this.parent.parent)
-                return this.position;
-            else
-                return this.toGlobal(this.parent.getGlobalPosition());
-        };
-    }
-
-    /**
-     * Creates a texture of a circle with a radial gradient.  The
-     *   first radius (r1) is the radius of the solid part of the
-     *   particle.  (If the desired effect is a particle whose 
-     *   color fades from the center linearly until it becomes
-     *   transparent at the outer edge, r1 should be 0.)  The
-     *   second radius (r2) is the outer extend of the gradient--
-     *   the point at which the color will be transparent.
-     */
-    PIXI.Texture.generateRoundParticleTexture = function(r1, r2, color, outsideColor) {
-        if (outsideColor === undefined)
-            outsideColor = color;
-
-        var rgba1 = Colors.toRgba(color, true);
-        var rgba2 = Colors.toRgba(outsideColor, true);
-
-        var color1 = 'rgba(' + rgba1.r + ',' + rgba1.g + ',' + rgba1.b + ',1)';
-        var color2 = 'rgba(' + rgba2.r + ',' + rgba2.g + ',' + rgba2.b + ',0)';
-
-        return PIXI.Texture.generateCircleTexture(r2, r1, r2, color1, color2);
-    };
-
-    /**
-     * Generates a texture of a circle with a radial gradient and
-     *   optionally an outline.  The first radius (radius) is the
-     *   radius of the circle texture and the radius at which the
-     *   optional outline is painted. The first color fills the
-     *   circle solidly from the center to the gradient's inner
-     *   radius (r1) and then blends into the second color until
-     *   it reaches the gradient's outer radius (r2), after which
-     *   the second color will be solid until the edge of the
-     *   circle is reached (radius). The parameters r1 and r2 are
-     *   optional.  If they are not specified, the texture will
-     *   be simply a solid circle of one color.
-     *
-     * @params radius, r1, r2, color1, color2, outlineWidth, outlineColor
-     * @params radius, color, outlineWidth, outlineColor
-     */
-    PIXI.Texture.generateCircleTexture = function(radius, r1, r2, color1, color2, outlineWidth, outlineColor) {
-        if (radius <= 0)
-            throw 'Outer radius cannot be zero or a negative value.';
-
-        if (_.isString(r1)) {
-            // They have specified [radius, color, outlineWidth, outlineColor]
-            outlineColor = color1;
-            outlineWidth = r2;
-            color1 = r1;
-            r1 = undefined;
-            r2 = undefined;
-        }
-
-        if (outlineWidth === undefined)
-            outlineWidth = 0;
-
-        // We need to offset everything by half of the outline width
-        //   because we need to make the canvas big enough to paint
-        //   the outline.
-        var how = outlineWidth / 2; // half outline width
-
-        // Draw on a canvas and then use it as a texture for our particles
-        var canvas = document.createElement('canvas');
-        canvas.width  = Math.ceil(radius) * 2 + outlineWidth * 2;
-        canvas.height = Math.ceil(radius) * 2 + outlineWidth * 2;
-
-        var ctx = canvas.getContext('2d');
-
-        if (r1 !== undefined && r2 !== undefined) {
-            var gradient = ctx.createRadialGradient(radius + how, radius + how, r1, radius + how, radius + how, r2);
-            gradient.addColorStop(0, color1);
-            gradient.addColorStop(1, color2);
-
-            ctx.fillStyle = gradient;    
-        }
-        else {
-            ctx.fillStyle = color1;
-        }
-        
-        ctx.beginPath();
-        ctx.arc(radius + how, radius + how, radius, 0, 2 * Math.PI, false);
-        ctx.fill();
-
-        if (outlineWidth) {
-            if (outlineColor === undefined)
-                outlineColor = '#000';
-
-            ctx.strokeStyle = outlineColor;
-            ctx.lineWidth = outlineWidth;
-
-            
-            ctx.stroke();
-        }
-
-        return textureFromCanvas(canvas);
-    };
-
-    /**
-     * Creates a texture that is a rectangle with the specified 
-     *   width and height, filled with a gradient in the direction
-     *   of (x0, y0) to (x1, y1). Color stops are specified as an
-     *   array of arrays, where each stop is an array with the
-     *   first element the offset and the second the color as a
-     *   string, like so:
-     *
-     *   colorStops = [
-     *       [ 0, '#000000' ],
-     *       [ 1, '#ffffff' ]
-     *   ]
-     */
-    PIXI.Texture.generateRectangularGradientTexture = function(width, height, x0, y0, x1, y1, colorStops) {
-        var canvas = document.createElement('canvas');
-        canvas.width  = width;
-        canvas.height = height;
-        var ctx = canvas.getContext('2d');
-
-        var gradient = ctx.createLinearGradient(x0, y0, x1, y1);
-        for (var i = 0; i < colorStops.length; i++)
-            gradient.addColorStop(colorStops[i][0], colorStops[i][1]);
-        
-        ctx.fillStyle = gradient;
-        ctx.rect(0, 0, width, height);
-        ctx.fill();
-
-        return textureFromCanvas(canvas);
-    };
-
-    var _colorStops = [[],[]];
-
-    /**
-     * Creates a texture that is a rectangle with the specified
-     *   width and height, filled with a vertical gradient. The
-     *   offsets are optional.
-     */
-    PIXI.Texture.generateVerticalGradientTexture = function(width, height, topColor, topColorOffset, bottomColor, bottomColorOffset) {
-        if (bottomColor === undefined) {
-            // We allow only the colors to be specified instead of the offsets,
-            //   so remap everything in this case.
-            bottomColor = topColorOffset;
-            topColorOffset = 0;
-            bottomColorOffset = 1;
-        }
-
-        _colorStops[0][0] = topColorOffset;
-        _colorStops[0][1] = topColor;
-        _colorStops[1][0] = bottomColorOffset;
-        _colorStops[1][1] = bottomColor;
-
-        return PIXI.Texture.generateRectangularGradientTexture(width, height, 0, 0, 0, height, _colorStops);
-    };
-
-    /**
-     * Creates a texture that is a rectangle with the specified
-     *   width and height, filled with a horizontal gradient.
-     *   The offsets are optional.
-     */
-    PIXI.Texture.generateHorizontalGradientTexture = function(width, height, leftColor, leftColorOffset, rightColor, rightColorOffset) {
-        if (rightColor === undefined) {
-            // We allow only the colors to be specified instead of the offsets,
-            //   so remap everything in this case.
-            rightColor = leftColorOffset;
-            leftColorOffset = 0;
-            rightColorOffset = 1;
-        }
-
-        _colorStops[0][0] = leftColorOffset;
-        _colorStops[0][1] = leftColor;
-        _colorStops[1][0] = rightColorOffset;
-        _colorStops[1][1] = rightColor;
-
-        return PIXI.Texture.generateRectangularGradientTexture(width, height, 0, 0, width, 0, _colorStops);
-    };
-
-    return PIXI;
-});
-define('views/ladybug-trace',['require','underscore','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/colors','constants'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-
-    var Constants = require('constants');
-
-    /**
-     * A view that represents the player particle
-     */
-    var LadybugTraceView = PixiView.extend({
-
-        initialize: function(options) {
-            options = _.extend({
-                color: '#000',
-                lineWidth: 3
-            }, options);
-
-            this.lineWidth = options.lineWidth;
-            this.color = options.color;
-            this.colorHex = Colors.parseHex(options.color);
-            this.mvt = options.mvt;
-            this.dotsMode = false;
-            this.points = [];
-
-            this.initGraphics();
-
-            this.listenTo(this.model, 'history-added', this.historyAdded);
-            this.listenTo(this.model, 'history-removed', this.historyRemoved);
-        },
-
-        initGraphics: function() {
-            this.lines = new PIXI.Graphics();
-            this.displayObject.addChild(this.lines);
-
-            this.dotTexture = PIXI.Texture.generateCircleTexture(this.lineWidth, this.color);
-            this.dots = new PIXI.Container();
-            this.dots.visible = false;
-            this.displayObject.addChild(this.dots);
-            this.lastDotTime = 0;
-
-            this.updateMVT(this.mvt);
-        },
-
-        drawPoints: function() {
-            var time = this.model.get('time');
-            var history = this.model.culledStateHistory;
-            var start = 0;
-            var end = history.length - 1;
-            var point;
-
-            if (history.length > 0) {
-                if (this.dotsMode) {
-                    var dots = this.dots;
-                    var dot;
-                    var dotTexture = this.dotTexture;
-
-                    // Add new dots
-                    for (var i = start; i <= end; i += 4) {
-                        if (history[i].time > this.lastDotTime) {
-                            this.lastDotTime = history[i].time;
-
-                            point = this.mvt.modelToView(history[i].position);
-                            dot = new PIXI.Sprite(dotTexture);
-                            dot.anchor.x = dot.anchor.y = 0.5;
-                            dot.x = point.x;
-                            dot.y = point.y;
-                            dot.time = history[i].time;
-                            dots.addChild(dot);
-                        }
-                    }
-
-                    // Update the alpha of each dot
-                    var children = dots.children;
-                    for (var c = 0; c < children.length; c++) {
-                        children[c].alpha = this.calculateOpacityForState(time, children[c].time);
-                    }
-                }
-                else {
-                    var lines = this.lines;
-                    lines.clear();
-                    point = this.mvt.modelToView(history[start].position);
-                    lines.moveTo(point.x, point.y);
-
-                    for (var i = start; i <= end; i++) {
-                        point = this.mvt.modelToView(history[i].position);
-
-                        lines.lineStyle(this.lineWidth, this.colorHex, this.calculateOpacityForState(time, history[i].time));
-                        lines.lineTo(point.x, point.y);
-                    }
-                }
-            }
-        },
-
-        calculateOpacityForState: function(time, stateTime) {
-            var age = time - stateTime;
-            if (age >= LadybugTraceView.SECONDS_TO_BE_OLD)
-                return LadybugTraceView.OLD_OPACITY;
-            else
-                return LadybugTraceView.NEW_OPACITY_RANGE.lerp(age / LadybugTraceView.SECONDS_TO_BE_OLD);
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            if (this.displayObject.visible)
-                this.drawPoints();
-        },
-
-        update: function(time, deltaTime, paused) {},
-
-        historyAdded: function() {
-            if (this.displayObject.visible)
-                this.drawPoints();
-        },
-
-        historyRemoved: function() {
-            this.clearTraces();
-            this.lastDotTime = 0;
-        },
-
-        showDots: function() {
-            this.dotsMode = true;
-            this.dots.visible = true;
-            this.lines.visible = false;
-            this.drawPoints();
-        },
-
-        showLines: function() {
-            this.dotsMode = false;
-            this.lines.visible = true;
-            this.dots.visible = false;
-            this.drawPoints();
-        },
-
-        hide: function() {
-            this.dots.visible = false;
-            this.lines.visible = false;
-        },
-
-        clearTraces: function() {
-            this.lines.clear();
-            this.dots.removeChildren();
-        }
-
-    }, Constants.LadybugTraceView);
-
-    return LadybugTraceView;
-});
-define('common/locks/input',['require'],function (require) {
-
-    'use strict';
-
-	/**
-	 * Helper function for setting properties on a view object without 
-	 *   causing a loop of updates between the model and the view
-	 */
-    var inputLock = function(callback) {
-	    if (this.updatingProperty)
-	        return;
-
-	    this.inputtingProperty = true;
-	    callback.apply(this);
-	    this.inputtingProperty = false;
-	};
-
-	return inputLock;
-
-});
-define('common/locks/update',['require'],function (require) {
-
-    'use strict';
-
-	/**
-	 * Helper function for updating a view's inputs from a model's 
-	 *   attributes without causing a loop of updates between the 
-	 *   model and the view
-	 */
-	var updateLock = function(callback) {
-	    if (this.inputtingProperty)
-	        return;
-
-	    this.updatingProperty = true;
-	    callback.apply(this);
-	    this.updatingProperty = false;
-	};
-
-	return updateLock;
-
-});
-define('common/locks/define-locks',['require','./input','./update'],function (require) {
-
-    'use strict';
-
-    var inputLock = require('./input');
-	var updateLock = require('./update');
-
-    /**
-     * Function that adds the two functions to a constructor's prototype.
-     */
-    var defineInputUpdateLocks = function(constructor) {
-		constructor.prototype.inputLock = inputLock;
-		constructor.prototype.updateLock = updateLock;
-    };
-
-	return defineInputUpdateLocks;
-
-});
-define('common/v3/pixi/view/arrow-draggable',['require','underscore','backbone','pixi','./arrow','common/colors/colors','common/math/vector2'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-
-    var ArrowView = require('./arrow');
-
-    var Colors  = require('common/colors/colors');
-    var Vector2 = require('common/math/vector2');
-
-    // Default snapping function just snaps to nearest 10 pixels
-    var defaultSnappingFunction = function(coordinateComponent) {
-        return Math.round(coordinateComponent / 10) * 10;
-    };
-
-
-    var DraggableArrowView = ArrowView.extend({
-
-        events: {
-            'touchstart      .tailGraphics': 'dragBodyStart',
-            'mousedown       .tailGraphics': 'dragBodyStart',
-            'touchmove       .tailGraphics': 'dragBody',
-            'mousemove       .tailGraphics': 'dragBody',
-            'touchend        .tailGraphics': 'dragBodyEnd',
-            'mouseup         .tailGraphics': 'dragBodyEnd',
-            'touchendoutside .tailGraphics': 'dragBodyEnd',
-            'mouseupoutside  .tailGraphics': 'dragBodyEnd',
-
-            'touchstart      .headGraphics': 'dragHeadStart',
-            'mousedown       .headGraphics': 'dragHeadStart',
-            'touchmove       .headGraphics': 'dragHead',
-            'mousemove       .headGraphics': 'dragHead',
-            'touchend        .headGraphics': 'dragHeadEnd',
-            'mouseup         .headGraphics': 'dragHeadEnd',
-            'touchendoutside .headGraphics': 'dragHeadEnd',
-            'mouseupoutside  .headGraphics': 'dragHeadEnd',
-
-            'touchstart      .smallDot': 'dragHeadStart',
-            'mousedown       .smallDot': 'dragHeadStart',
-            'touchmove       .smallDot': 'dragHead',
-            'mousemove       .smallDot': 'dragHead',
-            'touchend        .smallDot': 'dragHeadEnd',
-            'mouseup         .smallDot': 'dragHeadEnd',
-            'touchendoutside .smallDot': 'dragHeadEnd',
-            'mouseupoutside  .smallDot': 'dragHeadEnd'
-        },
-
-        initialize: function(options) {
-            options = _.extend({
-                dragFillColor: undefined,
-                dragFillAlpha: undefined,
-
-                bodyDraggingEnabled: true,
-                headDraggingEnabled: true,
-
-                snappingEnabled: false,
-                snappingXFunction: defaultSnappingFunction,
-                snappingYFunction: defaultSnappingFunction,
-
-                useDotWhenSmall: false
-            }, options);
-
-            ArrowView.prototype.initialize.apply(this, [options]);
-
-            this.bodyDraggingEnabled = options.bodyDraggingEnabled;
-            this.headDraggingEnabled = options.headDraggingEnabled;
-
-            this.dragFillColor = options.dragFillColor !== undefined ? Colors.parseHex(options.dragFillColor) : this.fillColor;
-            this.dragFillAlpha = options.dragFillAlpha !== undefined ? options.dragFillAlpha : this.fillAlpha;
-            this.normalFillColor = this.fillColor;
-            this.normalFillAlpha = this.fillAlpha;
-
-            this.snappingEnabled = options.snappingEnabled;
-            this.snappingXFunction = options.snappingXFunction;
-            this.snappingYFunction = options.snappingYFunction;
-
-            this.useDotWhenSmall = options.useDotWhenSmall;
-            this.initSmallDot();
-
-            this._attributes = {};
-            this._dragOffset = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._tipRelativeDragOffset = new PIXI.Point();
-
-            // Has to be done after the graphics get drawn once
-            if (this.bodyDraggingEnabled)
-                this.tailGraphics.buttonMode = true;
-            if (this.headDraggingEnabled)
-                this.headGraphics.buttonMode = true;
-
-            this.tailGraphics.defaultCursor = 'move';
-            this.headGraphics.defaultCursor = 'pointer';
-        },
-
-        initSmallDot: function() {
-            this.smallDot = new PIXI.Graphics();
-            this.smallDot.beginFill(this.fillColor, this.fillAlpha * 0.5);
-            this.smallDot.drawCircle(0, 0, this.headLength / 2);
-            this.smallDot.endFill();
-            this.smallDot.visible = false;
-
-            this.displayObject.addChild(this.smallDot);
-
-            this.listenTo(this.model, 'change', this.modelChanged);
-        },
-
-        dragBodyStart: function(event) {
-            if (!this.bodyDraggingEnabled)
-                return;
-
-            this.setDraggingFill();
-
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.draggingBody = true;
-
-            this.trigger('drag-body-start');
-        },
-
-        dragBody: function(event) {
-            if (this.draggingBody) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                var dx = local.x - this.displayObject.x - this.dragOffset.x;
-                var dy = local.y - this.displayObject.y - this.dragOffset.y;
-
-                if (this.snappingEnabled) {
-                    this._attributes.originX = this.snappingXFunction(this.model.get('originX') + dx);
-                    this._attributes.originY = this.snappingYFunction(this.model.get('originY') + dy);
-                    this._attributes.targetX = this.snappingXFunction(this.model.get('targetX') + dx);
-                    this._attributes.targetY = this.snappingYFunction(this.model.get('targetY') + dy);
-                }
-                else {
-                    this._attributes.originX = this.model.get('originX') + dx;
-                    this._attributes.originY = this.model.get('originY') + dy;
-                    this._attributes.targetX = this.model.get('targetX') + dx;
-                    this._attributes.targetY = this.model.get('targetY') + dy;
-                }
-
-                this.model.set(this._attributes);
-            }
-        },
-
-        dragBodyEnd: function(event) {
-            this.draggingBody = false;
-            this.setNormalFill();
-            this.drawArrow();
-            this.trigger('drag-body-end');
-        },
-
-        dragHeadStart: function(event) {
-            if (!this.headDraggingEnabled)
-                return;
-
-            this.setDraggingFill();
-
-            var pointRelativeToObjectOrigin = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            var pointRelativeToArrowTip = this._tipRelativeDragOffset;
-            pointRelativeToArrowTip.x = pointRelativeToObjectOrigin.x + this.model.get('originX') - this.model.get('targetX');
-            pointRelativeToArrowTip.y = pointRelativeToObjectOrigin.y + this.model.get('originY') - this.model.get('targetY');
-
-            this.dragOffset = pointRelativeToArrowTip;
-            this.draggingHead = true;
-
-            this.trigger('drag-head-start');
-        },
-
-        dragHead: function(event) {
-            if (this.draggingHead) {
-                var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
-                var x = this.model.get('originX') + local.x - this.dragOffset.x;
-                var y = this.model.get('originY') + local.y - this.dragOffset.y;
-
-                delete this._attributes.originX;
-                delete this._attributes.originY;
-                if (this.snappingEnabled) {
-                    this._attributes.targetX = this.snappingXFunction(x);
-                    this._attributes.targetY = this.snappingYFunction(y);
-                }
-                else {
-                    this._attributes.targetX = x;
-                    this._attributes.targetY = y;
-                }
-
-                // Constrain with min and max lengths
-                var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-                var target = this._targetVector.set(this._attributes.targetX, this._attributes.targetY);
-                var length = origin.distance(target);
-
-                if ((this.model.get('minLength') === null || this.model.get('minLength') === undefined || length >= this.model.get('minLength')) &&
-                    (this.model.get('maxLength') === null || this.model.get('maxLength') === undefined || length <= this.model.get('maxLength'))
-                ) {
-                    this.model.set(this._attributes);
-                }
-                else if (!this.snappingEnabled) {
-                    // We will need to scale our desired target offset
-                    var direction = this._direction.set(target).sub(origin);
-
-                    var targetLength;
-                    if (this.model.get('minLength') !== null && this.model.get('minLength') !== undefined && length < this.model.get('minLength'))
-                        targetLength = this.model.get('minLength');
-                    else if (this.model.get('maxLength') !== null && this.model.get('maxLength') !== undefined && length > this.model.get('maxLength'))
-                        targetLength = this.model.get('maxLength');
-
-                    direction.normalize().scale(targetLength);
-
-                    this._attributes.targetX = this.model.get('originX') + direction.x;
-                    this._attributes.targetY = this.model.get('originY') + direction.y;
-                    this.model.set(this._attributes);
-                }
-            }
-        },
-
-        dragHeadEnd: function(event) {
-            this.draggingHead = false;
-            this.setNormalFill();
-            this.drawArrow();
-
-            if (this.useDotWhenSmall && this.smallDotEnabled) {
-                this.smallDot.visible = true;
-            }
-
-            this.trigger('drag-head-end');
-        },
-
-        setDraggingFill: function() {
-            this.fillColor = this.dragFillColor;
-            this.fillAlpha = this.dragFillAlpha;
-        },
-
-        setNormalFill: function() {
-            this.fillColor = this.normalFillColor;
-            this.fillAlpha = this.normalFillAlpha;
-        },
-
-        modelChanged: function() {
-            var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-            var target = this._targetVector.set(this.model.get('targetX'), this.model.get('targetY'));
-            var length = origin.distance(target);
-
-            if (this.useDotWhenSmall && length < this.headLength) {
-                this.smallDot.x = target.x - origin.x;
-                this.smallDot.y = target.y - origin.y;
-
-                this.smallDot.visible = true;
-            }
-            else {
-                this.smallDot.visible = false;
-            }
-        },
-
-        disableBodyDragging: function() {
-            this.bodyDraggingEnabled = false;
-            this.tailGraphics.buttonMode = false;
-        },
-
-        enableBodyDragging: function() {
-            this.bodyDraggingEnabled = true;
-            this.tailGraphics.buttonMode = true;
-        },
-
-        disableHeadDragging: function() {
-            this.headDraggingEnabled = false;
-            this.headGraphics.buttonMode = false;
-        },
-
-        enableHeadDragging: function() {
-            this.headDraggingEnabled = true;
-            this.headGraphics.buttonMode = true;
-        }
-
-    });
-
-    return DraggableArrowView;
-});
-
-define('views/remote-control',['require','underscore','pixi','common/locks/define-locks','common/v3/pixi/view/hybrid','common/colors/colors','common/v3/pixi/view/arrow-draggable','constants'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-
-    var HybridView         = require('common/v3/pixi/view/hybrid');
-    var Colors             = require('common/colors/colors');
-    var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
-
-    var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-    var TAB_BG_COLOR        = Colors.parseHex(Constants.RemoteControlView.TAB_BG_COLOR);
-    var TAB_ACTIVE_BG_COLOR = Colors.parseHex(Constants.RemoteControlView.TAB_ACTIVE_BG_COLOR);
-    var ARROW_AREA_COLOR    = Colors.parseHex(Constants.RemoteControlView.ARROW_AREA_COLOR);
-
-    /**
-     * A tool that allows the user to interact with the ladybug
-     *   indirectly by manipulating and arrow that represents
-     *   its position, velocity, or acceleration.
-     *
-     * Positioning is relative to its lower right corner.
-     */
-    var RemoteControlView = HybridView.extend({
-
-        events: {
-            'click .positionTab'     : 'positionSelected',
-            'click .velocityTab'     : 'velocitySelected',
-            'click .accelerationTab' : 'accelerationSelected',
-        },
-
-        tagName: 'div',
-        className: 'remote-control-view-header sim-controls',
-
-        initialize: function(options) {
-            this.simulation = options.simulation;
-
-            this.selectedIndex = 0;
-
-            this.initGraphics();
-
-            this.$el.html('<h2>Remote Control</h2>');
-
-            this.listenTo(this.model, 'change:position',     this.updatePositionArrow);
-            this.listenTo(this.model, 'change:velocity',     this.updateVelocityArrow);
-            this.listenTo(this.model, 'change:acceleration', this.updateAccelerationArrow);
-        },
-
-        initGraphics: function() {
-            this.initTabbedPanels();
-            this.initArrows();
-
-            this.selectTab(this.selectedIndex);
-        },
-
-        initTabbedPanels: function() {
-            this.tabs = new PIXI.Container();
-            this.panels = new PIXI.Container();
-            this.areaMask = new PIXI.Graphics();
-
-            // Create the objects necessary for each tabbed panel
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                // Create the tab container
-                var tab = new PIXI.Container();
-
-                // Create the background Graphics object
-                tab.background = new PIXI.Graphics();
-                tab.activeBackground = new PIXI.Graphics();
-                tab.addChild(tab.background);
-                tab.addChild(tab.activeBackground);
-
-                // Create the label text
-                tab.label = new PIXI.Text(RemoteControlView.TABS[i].label, {
-                    font: RemoteControlView.TAB_FONT,
-                    fill: RemoteControlView.TABS[i].color
-                });
-                tab.label.resolution = this.getResolution();
-                tab.addChild(tab.label);
-
-                // Add the tab
-                this.tabs.addChild(tab);
-
-                // Create and panel
-                var panel = new PIXI.Container();
-
-                // Create panel background
-                panel.background = new PIXI.Graphics();
-                panel.addChild(panel.background);
-
-                panel.controlArea = new PIXI.Graphics();
-                panel.controlArea.touchstart      = _.bind(this.dragStart, this);
-                panel.controlArea.mousedown       = _.bind(this.dragStart, this);
-                panel.controlArea.touchend        = _.bind(this.dragEnd, this);
-                panel.controlArea.mouseup         = _.bind(this.dragEnd, this);
-                panel.controlArea.touchendoutside = _.bind(this.dragEnd, this);
-                panel.controlArea.mouseupoutside  = _.bind(this.dragEnd, this);
-                panel.controlArea.interactive = true;
-                panel.addChild(panel.controlArea);
-
-                this.panels.addChild(panel);
-            }
-
-            this.positionTab     = this.tabs.getChildAt(0).background;
-            this.velocityTab     = this.tabs.getChildAt(1).background;
-            this.accelerationTab = this.tabs.getChildAt(2).background;
-
-            // Draw the backgrounds and position everything
-            this.drawTabbedPanels();
-
-            this.displayObject.addChild(this.tabs);
-            this.displayObject.addChild(this.panels);
-            this.displayObject.addChild(this.areaMask);
-        },
-
-        drawTabbedPanels: function() {
-            var pw = RemoteControlView.PANEL_WIDTH;
-            var ph = RemoteControlView.PANEL_HEIGHT;
-            var aw = RemoteControlView.AREA_WIDTH;
-            var ah = RemoteControlView.AREA_HEIGHT;
-            var tw = RemoteControlView.TAB_WIDTH;
-            var th = RemoteControlView.TAB_HEIGHT;
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                var panel = this.panels.getChildAt(i);
-
-                panel.background.clear();
-                panel.background.beginFill(TAB_ACTIVE_BG_COLOR, RemoteControlView.TAB_ACTIVE_BG_ALPHA);
-                panel.background.drawRect(-pw, -ph, pw, ph);
-                panel.background.endFill();
-
-                panel.controlArea.clear();
-                panel.controlArea.x = -RemoteControlView.AREA_WIDTH  - RemoteControlView.PANEL_PADDING;
-                panel.controlArea.y = -RemoteControlView.AREA_HEIGHT - RemoteControlView.PANEL_PADDING;
-                panel.controlArea.beginFill(ARROW_AREA_COLOR, RemoteControlView.ARROW_AREA_ALPHA);
-                panel.controlArea.drawRect(0, 0, aw, ah);
-                panel.controlArea.endFill();
-
-                var tab = this.tabs.getChildAt(i);
-                tab.x = -pw;
-                tab.y = (i + 1) * -th;
-
-                tab.background.buttonMode = true;
-                tab.background.defaultCursor = 'pointer';
-                tab.background.clear();
-                tab.background.beginFill(TAB_BG_COLOR, RemoteControlView.TAB_BG_ALPHA);
-                tab.background.drawRect(-tw, 0, tw, th);
-                tab.background.endFill();
-
-                tab.activeBackground.clear();
-                tab.activeBackground.beginFill(TAB_ACTIVE_BG_COLOR, RemoteControlView.TAB_ACTIVE_BG_ALPHA);
-                tab.activeBackground.drawRect(-tw, 0, tw, th);
-                tab.activeBackground.endFill();
-
-                tab.label.anchor.x = 1;
-                tab.label.anchor.y = 0.5;
-                tab.label.x = -10;
-                tab.label.y = Math.round(th / 2) + 3;
-            }
-
-            this.areaMask.clear();
-            this.areaMask.x = -RemoteControlView.AREA_WIDTH  - RemoteControlView.PANEL_PADDING;
-            this.areaMask.y = -RemoteControlView.AREA_HEIGHT - RemoteControlView.PANEL_PADDING;
-            this.areaMask.beginFill(0, 1);
-            this.areaMask.drawRect(0, 0, aw, ah);
-            this.areaMask.endFill();
-        },
-
-        initArrows: function() {
-            var models = [];
-            var views = [];
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                var arrowModel = new DraggableArrowView.ArrowViewModel({
-                    originX: 0,
-                    originY: 0,
-                    targetX: 0,
-                    targetY: 0,
-                    minLength: null
-                });
-
-                var arrowView = new DraggableArrowView({
-                    model: arrowModel,
-                    fillColor: RemoteControlView.TABS[i].color,
-                    bodyDraggingEnabled: false,
-                    useDotWhenSmall: true
-                });
-                arrowView.displayObject.mask = this.areaMask;
-                this.panels.getChildAt(i).addChild(arrowView.displayObject);
-
-                models.push(arrowModel);
-                views.push(arrowView);
-            }
-
-            this.arrowModels = models;
-            this.arrowViews = views;
-
-            this.repositionArrows();
-
-            // Listen for position changes
-            this.listenTo(views[0], 'drag-head-start', this.positionDragStart);
-            this.listenTo(views[0], 'drag-head-end',   this.positionDragEnd);
-            this.listenTo(models[0], 'change:targetX change:targetY', this.positionChanged);
-            this.listenTo(models[1], 'change:targetX change:targetY', this.velocityChanged);
-            this.listenTo(models[2], 'change:targetX change:targetY', this.accelerationChanged);
-        },
-
-        repositionArrows: function(maintainTargetPosition) {
-            this.updateLock(function() {
-                var models = this.arrowModels;
-
-                // Make sure origins are at center
-                for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                    models[i].set('originX', -RemoteControlView.PANEL_WIDTH  / 2);
-                    models[i].set('originY', -RemoteControlView.PANEL_HEIGHT / 2);
-                }
-            });
-
-            this.updatePositionArrow();
-            this.updateVelocityArrow();
-            this.updateAccelerationArrow();
-        },
-
-        updatePositionArrow: function() {
-            if (this.dragging)
-                return;
-
-            this.updateLock(function() {
-                var bounds = this.simulation.getBounds();
-                var xPercent = this.model.get('position').x / bounds.w;
-                var yPercent = this.model.get('position').y / bounds.h;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[0].set('targetX', this.arrowModels[0].get('originX') + x);
-                this.arrowModels[0].set('targetY', this.arrowModels[0].get('originY') + y);
-            });
-        },
-
-        updateVelocityArrow: function() {
-            this.updateLock(function() {
-                var xPercent = this.model.get('velocity').x;
-                var yPercent = this.model.get('velocity').y;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[1].set('targetX', this.arrowModels[1].get('originX') + x);
-                this.arrowModels[1].set('targetY', this.arrowModels[1].get('originY') + y);
-            });
-        },
-
-        updateAccelerationArrow: function() {
-            this.updateLock(function() {
-                var xPercent = this.model.get('acceleration').x;
-                var yPercent = this.model.get('acceleration').y;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[2].set('targetX', this.arrowModels[2].get('originX') + x);
-                this.arrowModels[2].set('targetY', this.arrowModels[2].get('originY') + y);
-            });
-        },
-
-        reset: function() {
-            this.selectTab(0);
-        },
-
-        positionSelected: function(data) {
-            this.selectTab(0);
-        },
-
-        velocitySelected: function(data) {
-            this.selectTab(1);
-        },
-
-        accelerationSelected: function(data) {
-            this.selectTab(2);
-        },
-
-        selectTab: function(index) {
-            this.repositionArrows();
-
-            this.selectedIndex = index;
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                this.tabs.getChildAt(i).background.visible = true;
-                this.tabs.getChildAt(i).activeBackground.visible = false;
-                this.panels.getChildAt(i).visible = false;
-            }
-
-            this.tabs.getChildAt(index).background.visible = false;
-            this.tabs.getChildAt(index).activeBackground.visible = true;
-            this.panels.getChildAt(index).visible = true;
-        },
-
-        dragStart: function(event) {
-            var index = this.getControlAreaTabIndex(event.target);
-            if (!this.arrowViews[index].draggingHead) {
-                var localPoint = event.data.getLocalPosition(event.target.parent, this._dragOffset);
-
-                this.arrowModels[index].set('targetX', localPoint.x);
-                this.arrowModels[index].set('targetY', localPoint.y);
-
-                this.arrowViews[index].dragHeadStart(event);
-            }
-        },
-
-        dragEnd: function(event) {
-            var index = this.getControlAreaTabIndex(event.target);
-            this.arrowViews[index].dragHeadEnd(event);
-        },
-
-        getControlAreaTabIndex: function(controlArea) {
-            for (var i = 0; i < this.panels.children.length; i++) {
-                if (this.panels.children[i].controlArea === controlArea)
-                    return i;
-            }
-        },
-
-        positionDragStart: function() {
-            this.dragging = true;
-            this.simulation.startSampling();
-        },
-
-        positionDragEnd: function() {
-            this.simulation.stopSampling();
-            this.dragging = false;
-        },
-
-        positionChanged: function(arrowModel) {
-            this.inputLock(function() {
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.POSITION);
-                this.simulation.play();
-
-                var dx = arrowModel.get('targetX') - arrowModel.get('originX');
-                var dy = arrowModel.get('targetY') - arrowModel.get('originY');
-
-                var smallestDimensionValue = Math.min(this.simulation.getBounds().w, this.simulation.getBounds().h);
-                var x = (dx / RemoteControlView.AREA_WIDTH)  * smallestDimensionValue;
-                var y = (dy / RemoteControlView.AREA_HEIGHT) * smallestDimensionValue;
-
-                this.simulation.setSamplePoint(x, y);
-            });
-
-        },
-
-        velocityChanged: function(arrowModel) {
-            this.inputLock(function(){
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.VELOCITY);
-                this.simulation.play();
-
-                var xPercent = (arrowModel.get('targetX') - arrowModel.get('originX')) / RemoteControlView.AREA_WIDTH;
-                var yPercent = (arrowModel.get('targetY') - arrowModel.get('originY')) / RemoteControlView.AREA_HEIGHT;
-
-                this.model.setVelocity(xPercent, yPercent);
-            });
-        },
-
-        accelerationChanged: function(arrowModel) {
-            this.inputLock(function(){
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.ACCELERATION);
-                this.simulation.play();
-
-                var xPercent = (arrowModel.get('targetX') - arrowModel.get('originX')) / RemoteControlView.AREA_WIDTH;
-                var yPercent = (arrowModel.get('targetY') - arrowModel.get('originY')) / RemoteControlView.AREA_HEIGHT;
-
-                this.model.setAcceleration(xPercent, yPercent);
-            });
-        }
-
-    }, Constants.RemoteControlView);
-
-    defineInputUpdateLocks(RemoteControlView);
-
-    return RemoteControlView;
-});
 
 define('less/less!styles/scene',[],function(){});
-define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app','common/math/model-view-transform','common/math/vector2','views/ladybug','views/ladybug-trace','views/remote-control','constants','less!styles/scene'],function(require) {
+define('views/scene',['require','common/v3/pixi/view/scene','less!styles/scene'],function(require) {
 
     'use strict';
 
 
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var AppView            = require('common/v3/app/app');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
-
-    var LadybugView       = require('views/ladybug');
-    var LadybugTraceView  = require('views/ladybug-trace');
-    var RemoteControlView = require('views/remote-control');
+    var PixiSceneView = require('common/v3/pixi/view/scene');
 
 
     // Constants
-    var Constants = require('constants');
 
     // CSS
     require('less!styles/scene');
@@ -65026,7 +64989,7 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
     /**
      *
      */
-    var LadybugMotionSceneView = PixiSceneView.extend({
+    var DischargeLampsSceneView = PixiSceneView.extend({
 
         events: {
 
@@ -65042,87 +65005,6 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
 
         initGraphics: function() {
             PixiSceneView.prototype.initGraphics.apply(this, arguments);
-
-            this.initMVT();
-            this.initLadybugTraceView();
-            this.initLadybugView();
-            this.initRemoteControlView();
-        },
-
-        initMVT: function() {
-            // Use whichever dimension is smaller
-            var usableWidth = this.width - RemoteControlView.PANEL_WIDTH - RemoteControlView.RIGHT;
-            var usableHeight = this.height - 62 - 8;
-
-            if (AppView.windowIsShort())
-                usableWidth -= RemoteControlView.PANEL_WIDTH + RemoteControlView.RIGHT;
-
-            var scale;
-            if (usableWidth < usableHeight)
-                scale = usableWidth / Constants.MIN_SCENE_DIAMETER;
-            else
-                scale = usableHeight / Constants.MIN_SCENE_DIAMETER;
-
-            if (AppView.windowIsShort()) {
-                // Center between the two columns
-                this.viewOriginX = Math.round(this.width / 2);
-                this.viewOriginY = Math.round(usableHeight / 2);
-            }
-            else {
-                // Center in the usable area on the left
-                this.viewOriginX = Math.round(usableWidth / 2);
-                this.viewOriginY = Math.round(usableHeight / 2);
-            }
-
-            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-
-            this.simulation.setBounds(
-                this.mvt.viewToModelX(this.viewOriginX - usableWidth  / 2),
-                this.mvt.viewToModelY(this.viewOriginY - usableHeight / 2),
-                this.mvt.viewToModelX(this.viewOriginX + usableWidth  / 2),
-                this.mvt.viewToModelY(this.viewOriginY + usableHeight / 2)
-            );
-        },
-
-        initLadybugView: function() {
-            this.ladybugView = new LadybugView({
-                model: this.simulation.ladybug,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-            this.stage.addChild(this.ladybugView.displayObject);
-            this.$ui.append(this.ladybugView.el);
-        },
-
-        initLadybugTraceView: function() {
-            this.ladybugTraceView = new LadybugTraceView({
-                model: this.simulation,
-                mvt: this.mvt
-            });
-            this.stage.addChild(this.ladybugTraceView.displayObject);
-        },
-
-        initRemoteControlView: function() {
-            this.remoteControlView = new RemoteControlView({
-                model: this.simulation.ladybug,
-                simulation: this.simulation
-            });
-            this.remoteControlView.displayObject.x = this.width  - RemoteControlView.RIGHT;
-            this.remoteControlView.displayObject.y = this.height - RemoteControlView.BOTTOM;
-            this.stage.addChild(this.remoteControlView.displayObject);
-            this.$ui.append(this.remoteControlView.el);
-            this.remoteControlView.$el.css({
-                'top': (this.height - RemoteControlView.BOTTOM - RemoteControlView.PANEL_HEIGHT) + 'px'
-            });
-        },
-
-        reset: function() {
-            this.ladybugTraceView.clearTraces();
-            this.ladybugView.reset();
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
@@ -65131,204 +65013,7 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
 
     });
 
-    return LadybugMotionSceneView;
-});
-
-
-define('less/less!styles/seek-bar',[],function(){});
-
-define('text!templates/seek-bar.html',[],function () { return '<div class="seek-bar-progress">\r\n\t<div class="seek-bar-overwritten"></div>\r\n\t<div class="seek-bar-handle"></div>\r\n</div>';});
-
-define('views/seek-bar',['require','jquery','underscore','backbone','common/locks/define-locks','less!styles/seek-bar','text!templates/seek-bar.html'],function(require) {
-
-    'use strict';
-
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone'); Backbone.$ = $;
-
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-
-    require('less!styles/seek-bar');
-
-    var html = require('text!templates/seek-bar.html');
-
-    /**
-     *
-     */
-    var SeekBarView = Backbone.View.extend({
-
-        className: 'seek-bar-view',
-
-        events: {
-            'mousedown' : 'dragStart',
-            'touchstart' : 'dragStart',
-        },
-
-        initialize: function(options) {
-            $('body')
-                .bind('mousemove touchmove', _.bind(this.drag,    this))
-                .bind('mouseup touchend',    _.bind(this.dragEnd, this));
-
-            this.listenTo(this.model, 'change:time',                 this.timeChanged);
-            this.listenTo(this.model, 'change:furthestRecordedTime', this.furthestRecordedTimeChanged);
-            this.listenTo(this.model, 'change:paused',               this.pausedChanged);
-            this.listenTo(this.model, 'change:recording',            this.recordingChanged);
-        },
-
-        /**
-         * Renders the contents of the view
-         */
-        render: function() {
-            this.$el.html(html);
-            this.$progress = this.$('.seek-bar-progress');
-            this.$handle   = this.$('.seek-bar-handle');
-            this.$overwritten = this.$('.seek-bar-overwritten');
-
-            this.determineHandleVisibility();
-            this.timeChanged(this.model, this.model.get('time'));
-            this.furthestRecordedTimeChanged(this.model, this.model.get('furthestRecordedTime'));
-            this.setInitialOverwrittenWidth();
-
-            return this;
-        },
-
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.resize();
-        },
-
-        resize: function() {
-            this.barOffset = this.$el.offset();
-            this.barWidth = this.$el.width();
-            this.handleWidth = this.$handle.width();
-        },
-
-        dragStart: function(event) {
-            // Don't let the user drag the seek bar while it's recording
-            if (!this.model.get('paused') && this.model.get('recording'))
-                return;
-
-            event.preventDefault();
-            this.fixTouchEvents(event);
-
-            if (event.currentTarget === this.$handle[0]) {
-                this.draggingOffsetX = event.pageX - this.$handle.offset().left - this.handleWidth / 2;
-
-                this.dragging = true;
-            }
-            else {
-                // They just clicked somewhere on the bar, so move the slider
-                this.draggingOffsetX = 0;
-                this.dragging = true;
-
-                var x = event.pageX - this.barOffset.left;
-                this.seekToX(x);
-            }
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                this.fixTouchEvents(event);
-
-                // The x location of the handle relative to the seek bar
-                var x = event.pageX - this.barOffset.left - this.draggingOffsetX;
-                this.seekToX(x);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-        fixTouchEvents: function(event) {
-            if (event.pageX === undefined) {
-                event.pageX = event.originalEvent.touches[0].pageX;
-                event.pageY = event.originalEvent.touches[0].pageY;
-            }
-        },
-
-        seekToX: function(x) {
-            // Keep it within bounds
-            var progressWidth = this.$progress.width();
-            x = Math.max(0, Math.min(progressWidth, x));
-
-            this.inputLock(function() {
-                var percent = x / this.barWidth;
-                this.model.setTime(percent * this.getMaxTime());
-            });
-
-            var percent = x / progressWidth;
-            this.$handle.css('left', (percent * 100) + '%');
-
-            var overwrittenWidth = progressWidth - x;
-            this.$overwritten.width(overwrittenWidth);
-        },
-
-        getMaxTime: function() {
-            return Math.max(this.model.get('furthestRecordedTime'), this.model.get('maxRecordingTime'));
-        },
-
-        timeChanged: function(simulation, time) {
-            var percent = Math.min(1, (time / simulation.get('furthestRecordedTime')));
-            this.$handle.css('left', (percent * 100) + '%');
-        },
-
-        furthestRecordedTimeChanged: function(simulation, furthestRecordedTime) {
-            var percent = Math.min(1, (furthestRecordedTime / this.getMaxTime()));
-            this.$progress.css('width', (percent * 100) + '%');
-        },
-
-        pausedChanged: function(simulation, paused) {
-            if (!paused)
-                this.$overwritten.width(0).hide();
-            else
-                this.setInitialOverwrittenWidth();
-
-            this.determineHandleVisibility();
-            this.determineOverwrittenVisibility();
-        },
-
-        recordingChanged: function(simulation, recording) {
-            this.determineHandleVisibility();
-            this.determineOverwrittenVisibility();
-        },
-
-        determineHandleVisibility: function() {
-            if (this.model.get('paused') || !this.model.get('recording'))
-                this.$handle.show();
-            else
-                this.$handle.hide();
-        },
-
-        determineOverwrittenVisibility: function() {
-            if (this.model.get('paused') && this.model.get('recording'))
-                this.$overwritten.show();
-            else
-                this.$overwritten.hide();
-        },
-
-        setInitialOverwrittenWidth: function() {
-            if (this.model.get('time') < this.model.get('furthestRecordedTime')) {
-                var percent = 1 - (this.model.get('time')  / this.model.get('furthestRecordedTime'));
-                this.$overwritten.css('width', (percent * 100) + '%');
-            }
-        },
-
-        update: function() {
-            this.setInitialOverwrittenWidth();
-        }
-
-    });
-
-
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(SeekBarView);
-
-    return SeekBarView;
+    return DischargeLampsSceneView;
 });
 
 /*! noUiSlider - 7.0.10 - 2014-12-27 14:50:47 */
@@ -68570,33 +68255,24 @@ define("bootstrap-select", ["jquery"], function(){});
 
 define('less/less!styles/sim',[],function(){});
 
-define('less/less!styles/playback-controls',[],function(){});
-
 define('less/less!common/styles/slider',[],function(){});
 
 define('less/less!common/styles/radio',[],function(){});
 
 define('less/less!bootstrap-select-less',[],function(){});
 
-define('text!templates/sim.html',[],function () { return '\r\n<span class="scene-view-placeholder"></span>\r\n\r\n<div class="sim-controls-column">\r\n    <div class="sim-controls">\r\n        <h2>Vectors</h2>\r\n\r\n        <ul class="checkbox">\r\n            <li>\r\n                <input type="checkbox" id="show-velocity-check">\r\n                <label for="show-velocity-check">Show Velocity</label>\r\n            </li>\r\n            <li>\r\n                <input type="checkbox" id="show-acceleration-check">\r\n                <label for="show-acceleration-check">Show Acceleration</label>\r\n            </li>\r\n        </ul>\r\n\r\n        <h2>Motion</h2>\r\n\r\n        <ul class="radio">\r\n        <% _.each(motions, function(option, index){ %>\r\n            <li>\r\n                <input type="radio" name="motion" value="<%= option %>" class="motion-type" id="motion-<%= index %>" <% if (index === 0) { %>checked<% } %>>\r\n                <label  for="motion-<%= index %>"><%= option %></label>\r\n            </li>\r\n        <% }); %>\r\n        </ul>\r\n\r\n        <h2>Trace</h2>\r\n\r\n        <ul class="radio">\r\n            <li>\r\n                <input type="radio" name="trace" value="line" id="trace-line" checked>\r\n                <label for="trace-line">Line</label>\r\n            </li>\r\n            <li>\r\n                <input type="radio" name="trace" value="dots" id="trace-dots">\r\n                <label for="trace-dots">Dots</label>\r\n            </li>\r\n            <li>\r\n                <input type="radio" name="trace" value="off" id="trace-off">\r\n                <label for="trace-off">Off</label>\r\n            </li>\r\n        </ul>\r\n        \r\n    </div>\r\n</div>';});
+define('text!templates/sim.html',[],function () { return '\r\n<span class="scene-view-placeholder"></span>\r\n\r\n<div class="sound-btn-wrapper">\r\n    <button class="sound-btn sound-btn-mute" title="Mute effect volume (click to raise)"><span class="fa fa-volume-off"></span></button>\r\n    <button class="sound-btn sound-btn-low"  title="Low effect volume (click to raise)"><span class="fa fa-volume-down"></span></button>\r\n    <button class="sound-btn sound-btn-high" title="High effect volume (click to mute)"><span class="fa fa-volume-up"></span></button>\r\n</div>\r\n\r\n<div class="hello-world">Hello World.</div>';});
 
-
-define('text!templates/playback-controls.html',[],function () { return '<div class="playback-controls-wrapper">\r\n    <button class="btn btn-normal clear-btn" title="Clear history">Clear</button>\r\n\r\n    <div class="btn-group playback-mode-wrapper" data-toggle="buttons">\r\n        <label class="btn active">\r\n            <input type="radio" name="options" id="record-mode" autocomplete="off" checked> Record\r\n        </label>\r\n        <label class="btn">\r\n            <input type="radio" name="options" id="playback-mode" autocomplete="off"> Playback\r\n        </label>\r\n    </div>\r\n    \r\n    <div class="playback-center-buttons-wrapper">\r\n        <button class="playback-btn rewind-btn" title="Rewind to last change"><span class="fa fa-fast-backward"></span></button>\r\n        <button class="playback-btn play-btn"   title="Resume"><span class="fa fa-play"></span></button>\r\n        <button class="playback-btn record-btn" title="Record"><span class="fa fa-circle"></span></button>\r\n        <button class="playback-btn pause-btn"  title="Pause"><span class="fa fa-pause"></span></button>\r\n        <button class="playback-btn step-btn"   title="Step"><span class="fa fa-step-forward"></span></button>\r\n    </div>\r\n    \r\n    <button class="btn btn-normal reset-btn" title="Reset All">Reset All</button>\r\n</div>';});
-
-define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/simulation','models/ladybug-mover','views/scene','views/seek-bar','constants','nouislider','bootstrap','bootstrap-select','less!styles/sim','less!styles/playback-controls','less!common/styles/slider','less!common/styles/radio','less!bootstrap-select-less','text!templates/sim.html','text!templates/playback-controls.html'],function (require) {
+define('views/sim',['require','underscore','common/v3/app/sim','models/simulation','views/scene','constants','nouislider','bootstrap','bootstrap-select','less!styles/sim','less!common/styles/slider','less!common/styles/radio','less!bootstrap-select-less','text!templates/sim.html'],function (require) {
 
     'use strict';
 
-    var $ = require('jquery');
     var _ = require('underscore');
 
     var SimView = require('common/v3/app/sim');
 
-    var LadybugMotionSimulation = require('models/simulation');
-    var LadybugMover            = require('models/ladybug-mover');
-
-    var LadybugMotionSceneView = require('views/scene');
-    var SeekBarView            = require('views/seek-bar');
+    var DischargeLampsSimulation = require('models/simulation');
+    var DischargeLampsSceneView  = require('views/scene');
 
     var Constants = require('constants');
 
@@ -68606,27 +68282,25 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
     // CSS
     require('less!styles/sim');
-    require('less!styles/playback-controls');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
     require('less!bootstrap-select-less');
 
     // HTML
-    var simHtml              = require('text!templates/sim.html');
-    var playbackControlsHtml = require('text!templates/playback-controls.html');
+    var simHtml = require('text!templates/sim.html');
 
     /**
-     * A view that determines the contents of the one and only tab
+     * This is the umbrella view for everything in a simulation tab.
+     *   It will be extended by both the Intro module and the Charts
+     *   and contains all the common functionality between the two.
      */
-    var LadybugMotionSimView = SimView.extend({
-
-        runUpdateOnReset: true,
+    var DischargeLampsSimView = SimView.extend({
 
         /**
          * Root element properties
          */
         tagName:   'section',
-        className: 'sim-view record-mode',
+        className: 'sim-view',
 
         /**
          * Template for rendering the basic scaffolding
@@ -68637,25 +68311,7 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          * Dom event listeners
          */
         events: {
-            'click .play-btn'   : 'play',
-            'click .record-btn' : 'play',
-            'click .pause-btn'  : 'pause',
-            'click .step-btn'   : 'step',
-            'click .rewind-btn' : 'rewind',
-            'click .reset-btn'  : 'reset',
-            'click .clear-btn'  : 'clear',
 
-            'change #record-mode'   : 'recordModeClicked',
-            'change #playback-mode' : 'playbackModeClicked',
-
-            'click .motion-type' : 'motionTypeClicked',
-
-            'click #trace-line' : 'traceLineClicked',
-            'click #trace-dots' : 'traceDotsClicked',
-            'click #trace-off'  : 'traceOffClicked',
-
-            'click #show-velocity-check'     : 'showVelocityClicked',
-            'click #show-acceleration-check' : 'showAccelerationClicked'
         },
 
         /**
@@ -68665,41 +68321,28 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          */
         initialize: function(options) {
             options = _.extend({
-                title: 'Ladybug Motion',
-                name: 'ladybug-motion',
-                link: 'ladybug-motion-2d'
+                title: 'Neon Lights and other Discharge Lamps',
+                name: 'discharge-lamps',
             }, options);
 
             SimView.prototype.initialize.apply(this, [options]);
 
             this.initSceneView();
-            this.initSeekBarView();
-
-            this.listenTo(this.simulation, 'change:motionType', this.motionTypeChanged);
-            this.listenTo(this.simulation, 'change:recording', this.recordingChanged);
-            this.listenTo(this.simulation, 'change:paused',    this.pausedChanged);
-            this.pausedChanged(this.simulation, this.simulation.get('paused'));
         },
 
         /**
          * Initializes the Simulation.
          */
         initSimulation: function() {
-            this.simulation = new LadybugMotionSimulation();
+            this.simulation = new DischargeLampsSimulation();
         },
 
         /**
          * Initializes the SceneView.
          */
         initSceneView: function() {
-            this.sceneView = new LadybugMotionSceneView({
+            this.sceneView = new DischargeLampsSceneView({
                 simulation: this.simulation
-            });
-        },
-
-        initSeekBarView: function() {
-            this.seekBarView = new SeekBarView({
-                model: this.simulation
             });
         },
 
@@ -68711,7 +68354,6 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
             this.renderScaffolding();
             this.renderSceneView();
-            this.renderSeekBarView();
 
             return this;
         },
@@ -68722,13 +68364,9 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
         renderScaffolding: function() {
             var data = {
                 Constants: Constants,
-                simulation: this.simulation,
-                motions: _.keys(LadybugMover.MOTION_TYPES)
+                simulation: this.simulation
             };
             this.$el.html(this.template(data));
-
-            this.$el.append(playbackControlsHtml);
-
             this.$('select').selectpicker();
         },
 
@@ -68738,12 +68376,6 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
         renderSceneView: function() {
             this.sceneView.render();
             this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-            this.$el.append(this.sceneView.ui);
-        },
-
-        renderSeekBarView: function() {
-            this.seekBarView.render();
-            this.$('.playback-controls-wrapper').append(this.seekBarView.el);
         },
 
         /**
@@ -68752,45 +68384,14 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          */
         postRender: function() {
             this.sceneView.postRender();
-            this.seekBarView.postRender();
-            this.sceneView.ladybugView.hideVelocityArrow();
-            this.sceneView.ladybugView.hideAccelerationArrow();
         },
 
         /**
-         * Overrides so that we don't rerender on a reset.
+         * Resets all the components of the view.
          */
-        rerender: function() {
-            this.sceneView.reset();
-        },
-
-        /**
-         * Overrides to remove the confirmation dialog because it's
-         *   not important in this sim.
-         */
-        reset: function() {
-            this.resetSimulation();
-            this.simulation.pause();
-            this.$('#trace-line').click();
-            this.$('#show-velocity-check').prop('checked', true);
-            this.$('#show-acceleration-check').prop('checked', true);
-        },
-
-        /**
-         * Rewinds the simulation.
-         */
-        rewind: function() {
-            this.pause();
-            this.simulation.rewind();
-            this.seekBarView.update();
-        },
-
-        /**
-         * Clears the sim's history.
-         */
-        clear: function() {
-            this.simulation.clear();
-            this.seekBarView.update();
+        resetComponents: function() {
+            SimView.prototype.resetComponents.apply(this);
+            this.initSceneView();
         },
 
         /**
@@ -68808,103 +68409,337 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
             this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
         },
 
-        /**
-         * Sets sim to record mode
-         */
-        recordModeClicked: function() {
-            this.inputLock(function() {
-                this.simulation.set('recording', true);
-            });
-        },
-
-        /**
-         * Sets sim to playback mode
-         */
-        playbackModeClicked: function() {
-            this.inputLock(function() {
-                this.simulation.set('recording', false);
-            });
-        },
-
-        /**
-         * The simulation changed its recording state.
-         */
-        recordingChanged: function() {
-            if (this.simulation.get('recording')) {
-                this.$el.addClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#record-mode').click();
-                });
-            }
-            else {
-                this.$el.removeClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#playback-mode').click();
-                });
-            }
-        },
-
-        /**
-         * The simulation changed its paused state.
-         */
-        pausedChanged: function() {
-            if (this.simulation.get('paused'))
-                this.$el.removeClass('playing');
-            else
-                this.$el.addClass('playing');
-        },
-
-        /**
-         * Sets the simulation's automated motion type
-         */
-        motionTypeClicked: function(event) {
-            var key = $(event.target).val();
-            this.inputLock(function() {
-                this.simulation.set('motionType', key);
-            });
-        },
-
-        /**
-         * Responds to changes in simulation's automated motion type
-         */
-        motionTypeChanged: function(simulation, motionTypeKey) {
-            this.updateLock(function() {
-                this.$('.motion-type').each(function() {
-                    if ($(this).val() === motionTypeKey)
-                        $(this).click();
-                })
-            });
-        },
-
-        traceLineClicked: function() {
-            this.sceneView.ladybugTraceView.showLines();
-        },
-
-        traceDotsClicked: function() {
-            this.sceneView.ladybugTraceView.showDots();
-        },
-
-        traceOffClicked: function() {
-            this.sceneView.ladybugTraceView.hide();
-        },
-
-        showVelocityClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showVelocityArrow();
-            else
-                this.sceneView.ladybugView.hideVelocityArrow();
-        },
-
-        showAccelerationClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showAccelerationArrow();
-            else
-                this.sceneView.ladybugView.hideAccelerationArrow();
-        }
-
     });
 
-    return LadybugMotionSimView;
+    return DischargeLampsSimView;
+});
+
+define('common/v3/pixi/assets',['require','underscore','pixi'],function (require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+    var getLoader = function() {
+        if (PIXI.Loader && PIXI.Loader.shared)
+            return PIXI.Loader.shared;
+        return PIXI.loader;
+    };
+
+    var textureFromFrameName = function(frameName) {
+        if (PIXI.Texture.from)
+            return PIXI.Texture.from(frameName);
+        return PIXI.Texture.fromFrame(frameName);
+    };
+
+    var resolveTextureFromSpriteSheetResources = function(resources, filename, pathPrefixedFilename) {
+        var texture = null;
+
+        _.find(resources, function(resource) {
+            if (!resource || !resource.textures)
+                return false;
+
+            if (resource.textures[filename]) {
+                texture = resource.textures[filename];
+                return true;
+            }
+            if (resource.textures[pathPrefixedFilename]) {
+                texture = resource.textures[pathPrefixedFilename];
+                return true;
+            }
+
+            var matchingKey = _.find(_.keys(resource.textures), function(key) {
+                return key === filename ||
+                    key === pathPrefixedFilename ||
+                    key.slice(-filename.length) === filename;
+            });
+            if (matchingKey) {
+                texture = resource.textures[matchingKey];
+                return true;
+            }
+
+            return false;
+        });
+
+        return texture;
+    };
+
+    var resolveDirectResource = function(resources, filename, pathPrefixedFilename) {
+        if (resources[filename])
+            return resources[filename];
+        if (resources[pathPrefixedFilename])
+            return resources[pathPrefixedFilename];
+
+        var keys = _.keys(resources);
+        var matchingKey = _.find(keys, function(key) {
+            if (key === filename || key === pathPrefixedFilename)
+                return true;
+            if (key.length >= filename.length && key.slice(-filename.length) === filename)
+                return true;
+            if (key.length >= pathPrefixedFilename.length && key.slice(-pathPrefixedFilename.length) === pathPrefixedFilename)
+                return true;
+            return false;
+        });
+
+        if (matchingKey)
+            return resources[matchingKey];
+
+        var matchingByUrl = _.find(resources, function(resource) {
+            if (!resource || !resource.url)
+                return false;
+            var url = resource.url;
+            return url === filename ||
+                url === pathPrefixedFilename ||
+                (url.length >= filename.length && url.slice(-filename.length) === filename) ||
+                (url.length >= pathPrefixedFilename.length && url.slice(-pathPrefixedFilename.length) === pathPrefixedFilename);
+        });
+
+        return matchingByUrl || null;
+    };
+
+    var getBaseTextureSource = function(baseTexture) {
+        if (!baseTexture)
+            return null;
+        if (baseTexture.resource && baseTexture.resource.source)
+            return baseTexture.resource.source;
+        return baseTexture.source || null;
+    };
+
+    /**
+     * There should really only be one Assets object per app, so
+     *   to customize the Assets object to fit the needs of a 
+     *   particular app, just use assign new values to the
+     *   default properties.  There are three properties that
+     *   should be set when customizing the Assets object for a
+     *   new app:
+     *
+     * 1) Path:         Path is an optional string and is used to
+     *                  make it faster to list out lots of images
+     *                  and is prepended to every filename when
+     *                  loading.  It is intended for this to be a
+     *                  parent directory for all the images.
+     *                  Note, however, that if images are stored
+     *                  in multiple directories, this will have
+     *                  to be a common parent for all files or
+     *                  be left blank.
+     *
+     * 2) Images:       This is a json object containing refer-
+     *                  ences to every image used in the appli-
+     *                  cation.  The standard naming convention
+     *                  should be that all keys on this object
+     *                  are in all caps with underscores instead
+     *                  of spaces.
+     *
+     * 3) SpriteSheets: Spritesheet is also a json object, but
+     *                  the keys here are actually the names of
+     *                  the sprite sheet files to be loaded, and
+     *                  each value is an array of keys in the 
+     *                  Images object for each of the images
+     *                  contained in the sprite sheet.
+     * 
+     * Example usage:
+     *
+     *   Assets.Path = 'img/phet/optimized/';
+     *
+     *   Assets.Images = {
+     *       BACK_LEG_01: 'back_leg_01.png',
+     *       BACK_LEG_02: 'back_leg_02.png',
+     *       BACK_LEG_03: 'back_leg_03.png',
+     *       BACK_LEG_04: 'back_leg_04.png'
+     *   };
+     *
+     *   Assets.SpriteSheets = {
+     *       'leg-spritesheet.json': [
+     *           Assets.Images.BACK_LEG_01,
+     *           Assets.Images.BACK_LEG_02,
+     *           Assets.Images.BACK_LEG_03,
+     *           Assets.Images.BACK_LEG_04
+     *       ]
+     *   };
+     */
+    var Assets = {
+        Path: '',
+        Images: {},
+        SpriteSheets: {}
+    };
+
+    Assets.getAssetList = function(regenerate) {
+        if (!regenerate && this.assetList)
+            return this.assetList;
+
+        this.assetList = [];
+
+        // Add all the spritesheet files first
+        _.each(this.SpriteSheets, function(list, filename) {
+            this.assetList.push(this.Path + filename);
+        }, this);
+
+        // Then add all the images that are on their own, not in a sprite sheet
+        var spriteSheetImages = _.flatten(_.values(this.SpriteSheets));
+        var leftoverImages = _.filter(this.Images, function(image) {
+            return !_.contains(spriteSheetImages, image);
+        });
+        _.each(leftoverImages, function(filename) {
+            this.assetList.push(this.Path + filename);
+        }, this);
+
+        return this.assetList;
+    };
+
+    /**
+     * A function that returns the full relative path of an
+     *   image file by prepending the path
+     */
+    Assets.Image = function(filename) {
+        return this.Path + filename;
+    };
+
+    /**
+     * This function returns a PIXI texture based on the file
+     *   name, taking into account whether that filename is 
+     *   part of a sprite sheet.
+     */
+    Assets.Texture = function(filename) {
+        var loader = getLoader();
+        var resources = loader && loader.resources ? loader.resources : {};
+        var pathPrefixedFilename = this.Path + filename;
+        var directResource = resolveDirectResource(resources, filename, pathPrefixedFilename);
+        if (directResource && directResource.texture)
+            return directResource.texture;
+
+        var textureFromSheets = resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename);
+        if (textureFromSheets)
+            return textureFromSheets;
+
+        var spriteSheet;
+        _.each(this.SpriteSheets, function(images, key) {
+            _.each(images, function(image) {
+                if (image === filename) {
+                    spriteSheet = key;
+                    return false;
+                }
+            }, this);
+            if (spriteSheet)
+                return false;
+        }, this);
+
+        if (spriteSheet)
+            return resolveTextureFromSpriteSheetResources(resources, filename, pathPrefixedFilename) || textureFromFrameName(filename);
+        else
+            return directResource && directResource.texture ? directResource.texture : null;
+    };
+
+    /**
+     * Returns a PIXI Sprite made with the texture of the
+     *   specified image file.
+     */
+    Assets.createSprite = function(textureFileName) {
+        return new PIXI.Sprite(this.Texture(textureFileName));
+    };
+
+    /**
+     * Returns the HTML for displaying a texture as a styled
+     *   element instead of in PIXI.  This is a convenience
+     *   function that allows us to use the same Assets
+     *   references to make HTML or PIXI DisplayObjects.
+     */
+    Assets.createIcon = function(filename, attrs, iconWidth, iconHeight) {
+        if (!_.isObject(attrs)) {
+            iconHeight = iconWidth;
+            iconWidth = attrs;
+        }
+
+        var texture = this.Texture(filename);
+        if (!texture)
+            throw 'Texture not found for ' + filename;
+
+        var frame = texture.frame || texture.crop;
+        var x = frame.x;
+        var y = frame.y;
+        var source = getBaseTextureSource(texture.baseTexture);
+        if (!source || !source.src)
+            throw 'Texture source not found for ' + filename;
+        var scale = 1;
+
+        if (iconWidth !== undefined) {
+            if (iconHeight === undefined)
+                iconHeight = iconWidth;
+
+            var textureRatio = texture.width / texture.height;
+            var iconRatio    = iconWidth / iconHeight;
+            
+            scale = (iconRatio > textureRatio) ? iconHeight / texture.height : iconWidth / texture.width;
+        }
+
+        var iconStyle = [
+            'position: absolute',
+            'left: 50%',
+            'top:  50%',
+            'margin-left: -' + (texture.width / 2)  + 'px',
+            'margin-top:  -' + (texture.height / 2) + 'px',
+            'background-image: url(' + source.src + ')',
+            'background-position: -' + x + 'px -' + y + 'px',
+            'transform: scale(' + scale + ', ' + scale + ')',
+            'width: ' + texture.width  + 'px',
+            'height: '+ texture.height + 'px'
+        ].join(';');
+
+        var iconHtml = '<div style="' + iconStyle + '"></div>';
+
+        var attrsHtml = _.map(attrs, function(value, name) {
+            return name + '="' + value + '"';
+        }).join(' ');
+
+        var wrapperStyle = [
+            'position: relative',
+            'width: ' + iconWidth  + 'px',
+            'height: '+ iconHeight + 'px'
+        ].join(';');
+
+        var wrapperHtml = '<div ' + attrsHtml + ' style="' + wrapperStyle + '">' + iconHtml + '</div>';
+
+        return wrapperHtml;
+    };
+
+    /**
+     * Returns information about a texture like its source
+     *   and the bounds of the portion of the file used.
+     */
+    Assets.getFrameData = function(filename) {
+        var texture = this.Texture(filename);
+        if (!texture)
+            throw 'Texture not found for ' + filename;
+
+        var source = getBaseTextureSource(texture.baseTexture);
+        if (!source || !source.src)
+            throw 'Texture source not found for ' + filename;
+
+        return {
+            src: source.src,
+            bounds: texture.frame || texture.crop
+        };
+    };
+
+
+    return Assets;
+});
+
+define('assets',['require','common/v3/pixi/assets'],function (require) {
+
+    'use strict';
+
+    var Assets = require('common/v3/pixi/assets');
+
+    Assets.Path = 'img/';
+
+    Assets.Images = {
+        // THE_IMAGE: 'the-image.png'
+    };
+
+    Assets.SpriteSheets = {};
+
+    return Assets;
 });
 
 
@@ -68915,23 +68750,23 @@ define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','le
 
     var PixiAppView = require('common/v3/pixi/view/app');
 
-    var LadybugMotionSimView = require('views/sim');
+    var DischargeLampsSimView = require('views/sim');
 
     var Assets = require('assets');
 
     require('less!styles/font-awesome');
 
-    var LadybugMotionAppView = PixiAppView.extend({
+    var DischargeLampsAppView = PixiAppView.extend({
 
         assets: Assets.getAssetList(),
 
         simViewConstructors: [
-            LadybugMotionSimView
+            DischargeLampsSimView
         ]
 
     });
 
-    return LadybugMotionAppView;
+    return DischargeLampsAppView;
 });
 
 (function () {
@@ -68939,10 +68774,10 @@ define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','le
 
     // Load the config
     require(['config'], function () {
-        require(['jquery', 'views/app'], function($, LadybugMotionAppView) {
+        require(['jquery', 'views/app'], function($, DischargeLampsAppView) {
 
             $(function(){
-                var appView = new LadybugMotionAppView();
+                var appView = new DischargeLampsAppView();
 
                 // Append to body
                 $('body').append(appView.el);
@@ -68960,4 +68795,4 @@ define("main", function(){});
 
 
 (function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})
-('/*!\n * Bootstrap v3.4.1 (https://getbootstrap.com/)\n * Copyright 2011-2019 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:none;text-decoration:underline dotted}b,strong{font-weight:700}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-.5em}sub{bottom:-.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=checkbox],input[type=radio]{box-sizing:border-box;padding:0}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{height:auto}input[type=search]{-webkit-appearance:textfield;box-sizing:content-box}input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{border:0}textarea{overflow:auto}optgroup{font-weight:700}table{border-collapse:collapse;border-spacing:0}legend,td,th{padding:0}\n/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */\n@-webkit-keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-moz-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-o-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-moz-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-o-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-webkit-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-moz-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-o-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-webkit-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-moz-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-o-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-webkit-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-moz-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-o-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes bs-notify-fadeOut{0%{opacity:.9}to{opacity:0}}@media print{*,:after,:before{color:#000!important;text-shadow:none!important;background:0 0!important;box-shadow:none!important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\"attr(href)\")\"}abbr[title]:after{content:\" (\"attr(title)\")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}blockquote,pre{border:1px solid #999}thead{display:table-header-group}blockquote,img,pre,tr{page-break-inside:avoid}img{max-width:100%!important}h2,h3,p{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000!important}.label{border:1px solid #000}.table{border-collapse:collapse!important}.table td,.table th{background-color:#fff!important}.table-bordered td,.table-bordered th{border:1px solid #ddd!important}}@font-face{font-family:\"Glyphicons Halflings\";src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot);src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot?#iefix)format(\"embedded-opentype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff2)format(\"woff2\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff)format(\"woff\"),url(../../common/v3/fonts/glyphicons-halflings-regular.ttf)format(\"truetype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular)format(\"svg\")}.glyphicon{position:relative;top:1px;display:inline-block;font-family:\"Glyphicons Halflings\";font-style:normal;font-weight:400;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.glyphicon-asterisk:before{content:\"*\"}.glyphicon-plus:before{content:\"+\"}.glyphicon-eur:before,.glyphicon-euro:before{content:\"€\"}.glyphicon-minus:before,.sim-tabs>ul>li>a.active>.tab-title::after{content:\"−\"}.glyphicon-cloud:before{content:\"☁\"}.glyphicon-envelope:before{content:\"✉\"}.glyphicon-pencil:before{content:\"✏\"}.glyphicon-glass:before{content:\"\"}.glyphicon-music:before{content:\"\"}.glyphicon-search:before{content:\"\"}.glyphicon-heart:before{content:\"\"}.glyphicon-star:before{content:\"\"}.glyphicon-star-empty:before{content:\"\"}.glyphicon-user:before{content:\"\"}.glyphicon-film:before{content:\"\"}.glyphicon-th-large:before{content:\"\"}.glyphicon-th:before{content:\"\"}.glyphicon-th-list:before{content:\"\"}.glyphicon-ok:before{content:\"\"}.glyphicon-remove:before{content:\"\"}.glyphicon-zoom-in:before{content:\"\"}.glyphicon-zoom-out:before{content:\"\"}.glyphicon-off:before{content:\"\"}.glyphicon-signal:before{content:\"\"}.glyphicon-cog:before{content:\"\"}.glyphicon-trash:before{content:\"\"}.glyphicon-home:before{content:\"\"}.glyphicon-file:before{content:\"\"}.glyphicon-time:before{content:\"\"}.glyphicon-road:before{content:\"\"}.glyphicon-download-alt:before{content:\"\"}.glyphicon-download:before{content:\"\"}.glyphicon-upload:before{content:\"\"}.glyphicon-inbox:before{content:\"\"}.glyphicon-play-circle:before{content:\"\"}.glyphicon-repeat:before{content:\"\"}.glyphicon-refresh:before{content:\"\"}.glyphicon-list-alt:before{content:\"\"}.glyphicon-lock:before{content:\"\"}.glyphicon-flag:before{content:\"\"}.glyphicon-headphones:before{content:\"\"}.glyphicon-volume-off:before{content:\"\"}.glyphicon-volume-down:before{content:\"\"}.glyphicon-volume-up:before{content:\"\"}.glyphicon-qrcode:before{content:\"\"}.glyphicon-barcode:before{content:\"\"}.glyphicon-tag:before{content:\"\"}.glyphicon-tags:before{content:\"\"}.glyphicon-book:before{content:\"\"}.glyphicon-bookmark:before{content:\"\"}.glyphicon-print:before{content:\"\"}.glyphicon-camera:before{content:\"\"}.glyphicon-font:before{content:\"\"}.glyphicon-bold:before{content:\"\"}.glyphicon-italic:before{content:\"\"}.glyphicon-text-height:before{content:\"\"}.glyphicon-text-width:before{content:\"\"}.glyphicon-align-left:before{content:\"\"}.glyphicon-align-center:before{content:\"\"}.glyphicon-align-right:before{content:\"\"}.glyphicon-align-justify:before{content:\"\"}.glyphicon-list:before{content:\"\"}.glyphicon-indent-left:before{content:\"\"}.glyphicon-indent-right:before{content:\"\"}.glyphicon-facetime-video:before{content:\"\"}.glyphicon-picture:before{content:\"\"}.glyphicon-map-marker:before{content:\"\"}.glyphicon-adjust:before{content:\"\"}.glyphicon-tint:before{content:\"\"}.glyphicon-edit:before{content:\"\"}.glyphicon-share:before{content:\"\"}.glyphicon-check:before{content:\"\"}.glyphicon-move:before{content:\"\"}.glyphicon-step-backward:before{content:\"\"}.glyphicon-fast-backward:before{content:\"\"}.glyphicon-backward:before{content:\"\"}.glyphicon-play:before{content:\"\"}.glyphicon-pause:before{content:\"\"}.glyphicon-stop:before{content:\"\"}.glyphicon-forward:before{content:\"\"}.glyphicon-fast-forward:before{content:\"\"}.glyphicon-step-forward:before{content:\"\"}.glyphicon-eject:before{content:\"\"}.glyphicon-chevron-left:before{content:\"\"}.glyphicon-chevron-right:before{content:\"\"}.glyphicon-plus-sign:before{content:\"\"}.glyphicon-minus-sign:before{content:\"\"}.glyphicon-remove-sign:before{content:\"\"}.glyphicon-ok-sign:before{content:\"\"}.glyphicon-question-sign:before{content:\"\"}.glyphicon-info-sign:before{content:\"\"}.glyphicon-screenshot:before{content:\"\"}.glyphicon-remove-circle:before{content:\"\"}.glyphicon-ok-circle:before{content:\"\"}.glyphicon-ban-circle:before{content:\"\"}.glyphicon-arrow-left:before{content:\"\"}.glyphicon-arrow-right:before{content:\"\"}.glyphicon-arrow-up:before{content:\"\"}.glyphicon-arrow-down:before{content:\"\"}.glyphicon-share-alt:before{content:\"\"}.glyphicon-resize-full:before{content:\"\"}.glyphicon-resize-small:before{content:\"\"}.glyphicon-exclamation-sign:before{content:\"\"}.glyphicon-gift:before{content:\"\"}.glyphicon-leaf:before{content:\"\"}.glyphicon-fire:before{content:\"\"}.glyphicon-eye-open:before{content:\"\"}.glyphicon-eye-close:before{content:\"\"}.glyphicon-warning-sign:before{content:\"\"}.glyphicon-plane:before{content:\"\"}.glyphicon-calendar:before{content:\"\"}.glyphicon-random:before{content:\"\"}.glyphicon-comment:before{content:\"\"}.glyphicon-magnet:before{content:\"\"}.glyphicon-chevron-up:before{content:\"\"}.glyphicon-chevron-down:before{content:\"\"}.glyphicon-retweet:before{content:\"\"}.glyphicon-shopping-cart:before{content:\"\"}.glyphicon-folder-close:before{content:\"\"}.glyphicon-folder-open:before{content:\"\"}.glyphicon-resize-vertical:before{content:\"\"}.glyphicon-resize-horizontal:before{content:\"\"}.glyphicon-hdd:before{content:\"\"}.glyphicon-bullhorn:before{content:\"\"}.glyphicon-bell:before{content:\"\"}.glyphicon-certificate:before{content:\"\"}.glyphicon-thumbs-up:before{content:\"\"}.glyphicon-thumbs-down:before{content:\"\"}.glyphicon-hand-right:before{content:\"\"}.glyphicon-hand-left:before{content:\"\"}.glyphicon-hand-up:before{content:\"\"}.glyphicon-hand-down:before{content:\"\"}.glyphicon-circle-arrow-right:before{content:\"\"}.glyphicon-circle-arrow-left:before{content:\"\"}.glyphicon-circle-arrow-up:before{content:\"\"}.glyphicon-circle-arrow-down:before{content:\"\"}.glyphicon-globe:before{content:\"\"}.glyphicon-wrench:before{content:\"\"}.glyphicon-tasks:before{content:\"\"}.glyphicon-filter:before{content:\"\"}.glyphicon-briefcase:before{content:\"\"}.glyphicon-fullscreen:before{content:\"\"}.glyphicon-dashboard:before{content:\"\"}.glyphicon-paperclip:before{content:\"\"}.glyphicon-heart-empty:before{content:\"\"}.glyphicon-link:before{content:\"\"}.glyphicon-phone:before{content:\"\"}.glyphicon-pushpin:before{content:\"\"}.glyphicon-usd:before{content:\"\"}.glyphicon-gbp:before{content:\"\"}.glyphicon-sort:before{content:\"\"}.glyphicon-sort-by-alphabet:before{content:\"\"}.glyphicon-sort-by-alphabet-alt:before{content:\"\"}.glyphicon-sort-by-order:before{content:\"\"}.glyphicon-sort-by-order-alt:before{content:\"\"}.glyphicon-sort-by-attributes:before{content:\"\"}.glyphicon-sort-by-attributes-alt:before{content:\"\"}.glyphicon-unchecked:before{content:\"\"}.glyphicon-expand:before{content:\"\"}.glyphicon-collapse-down:before{content:\"\"}.glyphicon-collapse-up:before{content:\"\"}.glyphicon-log-in:before{content:\"\"}.glyphicon-flash:before{content:\"\"}.glyphicon-log-out:before{content:\"\"}.glyphicon-new-window:before{content:\"\"}.glyphicon-record:before{content:\"\"}.glyphicon-save:before{content:\"\"}.glyphicon-open:before{content:\"\"}.glyphicon-saved:before{content:\"\"}.glyphicon-import:before{content:\"\"}.glyphicon-export:before{content:\"\"}.glyphicon-send:before{content:\"\"}.glyphicon-floppy-disk:before{content:\"\"}.glyphicon-floppy-saved:before{content:\"\"}.glyphicon-floppy-remove:before{content:\"\"}.glyphicon-floppy-save:before{content:\"\"}.glyphicon-floppy-open:before{content:\"\"}.glyphicon-credit-card:before{content:\"\"}.glyphicon-transfer:before{content:\"\"}.glyphicon-cutlery:before{content:\"\"}.glyphicon-header:before{content:\"\"}.glyphicon-compressed:before{content:\"\"}.glyphicon-earphone:before{content:\"\"}.glyphicon-phone-alt:before{content:\"\"}.glyphicon-tower:before{content:\"\"}.glyphicon-stats:before{content:\"\"}.glyphicon-sd-video:before{content:\"\"}.glyphicon-hd-video:before{content:\"\"}.glyphicon-subtitles:before{content:\"\"}.glyphicon-sound-stereo:before{content:\"\"}.glyphicon-sound-dolby:before{content:\"\"}.glyphicon-sound-5-1:before{content:\"\"}.glyphicon-sound-6-1:before{content:\"\"}.glyphicon-sound-7-1:before{content:\"\"}.glyphicon-copyright-mark:before{content:\"\"}.glyphicon-registration-mark:before{content:\"\"}.glyphicon-cloud-download:before{content:\"\"}.glyphicon-cloud-upload:before{content:\"\"}.glyphicon-tree-conifer:before{content:\"\"}.glyphicon-tree-deciduous:before{content:\"\"}.glyphicon-cd:before{content:\"\"}.glyphicon-save-file:before{content:\"\"}.glyphicon-open-file:before{content:\"\"}.glyphicon-level-up:before{content:\"\"}.glyphicon-copy:before{content:\"\"}.glyphicon-paste:before{content:\"\"}.glyphicon-alert:before{content:\"\"}.glyphicon-equalizer:before{content:\"\"}.glyphicon-king:before{content:\"\"}.glyphicon-queen:before{content:\"\"}.glyphicon-pawn:before{content:\"\"}.glyphicon-bishop:before{content:\"\"}.glyphicon-knight:before{content:\"\"}.glyphicon-baby-formula:before{content:\"\"}.glyphicon-tent:before{content:\"⛺\"}.glyphicon-blackboard:before{content:\"\"}.glyphicon-bed:before{content:\"\"}.glyphicon-apple:before{content:\"\"}.glyphicon-erase:before{content:\"\"}.glyphicon-hourglass:before{content:\"⌛\"}.glyphicon-lamp:before{content:\"\"}.glyphicon-duplicate:before{content:\"\"}.glyphicon-piggy-bank:before{content:\"\"}.glyphicon-scissors:before{content:\"\"}.glyphicon-bitcoin:before,.glyphicon-btc:before,.glyphicon-xbt:before{content:\"\"}.glyphicon-jpy:before,.glyphicon-yen:before{content:\"¥\"}.glyphicon-rub:before,.glyphicon-ruble:before{content:\"₽\"}.glyphicon-scale:before{content:\"\"}.glyphicon-ice-lolly:before{content:\"\"}.glyphicon-ice-lolly-tasted:before{content:\"\"}.glyphicon-education:before{content:\"\"}.glyphicon-option-horizontal:before{content:\"\"}.glyphicon-option-vertical:before{content:\"\"}.glyphicon-menu-hamburger:before{content:\"\"}.glyphicon-modal-window:before{content:\"\"}.glyphicon-oil:before{content:\"\"}.glyphicon-grain:before{content:\"\"}.glyphicon-sunglasses:before{content:\"\"}.glyphicon-text-size:before{content:\"\"}.glyphicon-text-color:before{content:\"\"}.glyphicon-text-background:before{content:\"\"}.glyphicon-object-align-top:before{content:\"\"}.glyphicon-object-align-bottom:before{content:\"\"}.glyphicon-object-align-horizontal:before{content:\"\"}.glyphicon-object-align-left:before{content:\"\"}.glyphicon-object-align-vertical:before{content:\"\"}.glyphicon-object-align-right:before{content:\"\"}.glyphicon-triangle-right:before{content:\"\"}.glyphicon-triangle-left:before{content:\"\"}.glyphicon-triangle-bottom:before{content:\"\"}.glyphicon-triangle-top:before{content:\"\"}.glyphicon-console:before{content:\"\"}.glyphicon-superscript:before{content:\"\"}.glyphicon-subscript:before{content:\"\"}.glyphicon-menu-left:before{content:\"\"}.glyphicon-menu-right:before{content:\"\"}.glyphicon-menu-down:before{content:\"\"}.glyphicon-menu-up:before{content:\"\"}*,:after,:before{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:transparent}body{font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#21366b;text-decoration:none}a:focus,a:hover{color:#0f1831;text-decoration:underline}a:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.carousel-inner>.item>a>img,.carousel-inner>.item>img,.img-responsive,.thumbnail a>img,.thumbnail>img{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #dcdcdc}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=button]{cursor:pointer}.h1,.h2,.h3,.h4,.h5,.h6,h1,h2,h3,h4,h5,h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-weight:400;line-height:1;color:#cdcdcd}.h1,.h2,.h3,h1,h2,h3{margin-top:20px;margin-bottom:10px}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small{font-size:65%}.h4,.h5,.h6,h4,h5,h6{margin-top:10px;margin-bottom:10px}.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-size:75%}.h1,h1{font-size:36px}.h2,h2{font-size:30px}.h3,h3{font-size:24px}.h4,h4{font-size:18px}.h5,h5{font-size:14px}.h6,h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}.small,small{font-size:85%}.mark,mark{padding:.2em;background-color:#fcf8e3}.text-left,th{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#cdcdcd}.text-primary{color:#21366b}a.text-primary:focus,a.text-primary:hover{color:#152244}.text-success{color:#3c763d}a.text-success:focus,a.text-success:hover{color:#2b542c}.text-info{color:#31708f}a.text-info:focus,a.text-info:hover{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:focus,a.text-warning:hover{color:#66512c}.text-danger{color:#a94442}a.text-danger:focus,a.text-danger:hover{color:#843534}.bg-primary{color:#fff;background-color:#21366b}a.bg-primary:focus,a.bg-primary:hover{background-color:#152244}.bg-success{background-color:#dff0d8}a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #dcdcdc}dl,ol,ul{margin-top:0;margin-bottom:10px}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}.list-inline,.list-unstyled{padding-left:0;list-style:none}.list-inline{margin-left:-5px}.list-inline>li{display:inline-block;padding-right:5px;padding-left:5px}dl{margin-bottom:20px}dd,dt{line-height:1.42857143}dt{font-weight:700}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[data-original-title],abbr[title]{cursor:help}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #dcdcdc}blockquote ol:last-child,blockquote p:last-child,blockquote ul:last-child{margin-bottom:0}blockquote .small,blockquote footer,blockquote small{display:block;font-size:80%;line-height:1.42857143;color:#cdcdcd}blockquote .small:before,blockquote footer:before,blockquote small:before{content:\"— \"}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;text-align:right;border-right:5px solid #dcdcdc;border-left:0}.blockquote-reverse .small:before,.blockquote-reverse footer:before,.blockquote-reverse small:before,.sim-tabs>ul>li>a.singleton.active>.tab-title::after,.sim-tabs>ul>li>a.singleton>.tab-title::after,blockquote.pull-right .small:before,blockquote.pull-right footer:before,blockquote.pull-right small:before{content:\"\"}.blockquote-reverse .small:after,.blockquote-reverse footer:after,.blockquote-reverse small:after,blockquote.pull-right .small:after,blockquote.pull-right footer:after,blockquote.pull-right small:after{content:\" —\"}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}code,kbd,pre,samp{font-family:Menlo,Monaco,Consolas,\"Courier New\",monospace}code,kbd,pre{padding:2px 4px;font-size:90%;color:#c7254e;background-color:#f9f2f4;border-radius:4px}kbd{color:#fff;background-color:#333;border-radius:3px;box-shadow:inset 0-1px 0 rgba(0,0,0,.25)}kbd kbd{padding:0;font-size:100%;font-weight:700;box-shadow:none}pre{display:block;padding:9.5px;margin:0 0 10px;font-size:13px;line-height:1.42857143;color:#333;word-break:break-all;word-wrap:break-word;background-color:#f5f5f5;border:1px solid #ccc}pre code{padding:0;font-size:inherit;color:inherit;white-space:pre-wrap;border-radius:0}.pre-scrollable{max-height:340px;overflow-y:scroll}.container{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}@media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}@media (min-width:1200px){.container{width:1170px}}.container-fluid{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}.row{margin-right:-15px;margin-left:-15px}.row-no-gutters{margin-right:0;margin-left:0}.row-no-gutters [class*=col-]{padding-right:0;padding-left:0}.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{position:relative;min-height:1px;padding-right:15px;padding-left:15px}.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{float:left}.col-xs-12{width:100%}.col-xs-11{width:91.66666667%}.col-xs-10{width:83.33333333%}.col-xs-9{width:75%}.col-xs-8{width:66.66666667%}.col-xs-7{width:58.33333333%}.col-xs-6{width:50%}.col-xs-5{width:41.66666667%}.col-xs-4{width:33.33333333%}.col-xs-3{width:25%}.col-xs-2{width:16.66666667%}.col-xs-1{width:8.33333333%}.col-xs-pull-12{right:100%}.col-xs-pull-11{right:91.66666667%}.col-xs-pull-10{right:83.33333333%}.col-xs-pull-9{right:75%}.col-xs-pull-8{right:66.66666667%}.col-xs-pull-7{right:58.33333333%}.col-xs-pull-6{right:50%}.col-xs-pull-5{right:41.66666667%}.col-xs-pull-4{right:33.33333333%}.col-xs-pull-3{right:25%}.col-xs-pull-2{right:16.66666667%}.col-xs-pull-1{right:8.33333333%}.col-xs-pull-0{right:auto}.col-xs-push-12{left:100%}.col-xs-push-11{left:91.66666667%}.col-xs-push-10{left:83.33333333%}.col-xs-push-9{left:75%}.col-xs-push-8{left:66.66666667%}.col-xs-push-7{left:58.33333333%}.col-xs-push-6{left:50%}.col-xs-push-5{left:41.66666667%}.col-xs-push-4{left:33.33333333%}.col-xs-push-3{left:25%}.col-xs-push-2{left:16.66666667%}.col-xs-push-1{left:8.33333333%}.col-xs-push-0{left:auto}.col-xs-offset-12{margin-left:100%}.col-xs-offset-11{margin-left:91.66666667%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-0{margin-left:0}@media (min-width:768px){.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9{float:left}.col-sm-12{width:100%}.col-sm-11{width:91.66666667%}.col-sm-10{width:83.33333333%}.col-sm-9{width:75%}.col-sm-8{width:66.66666667%}.col-sm-7{width:58.33333333%}.col-sm-6{width:50%}.col-sm-5{width:41.66666667%}.col-sm-4{width:33.33333333%}.col-sm-3{width:25%}.col-sm-2{width:16.66666667%}.col-sm-1{width:8.33333333%}.col-sm-pull-12{right:100%}.col-sm-pull-11{right:91.66666667%}.col-sm-pull-10{right:83.33333333%}.col-sm-pull-9{right:75%}.col-sm-pull-8{right:66.66666667%}.col-sm-pull-7{right:58.33333333%}.col-sm-pull-6{right:50%}.col-sm-pull-5{right:41.66666667%}.col-sm-pull-4{right:33.33333333%}.col-sm-pull-3{right:25%}.col-sm-pull-2{right:16.66666667%}.col-sm-pull-1{right:8.33333333%}.col-sm-pull-0{right:auto}.col-sm-push-12{left:100%}.col-sm-push-11{left:91.66666667%}.col-sm-push-10{left:83.33333333%}.col-sm-push-9{left:75%}.col-sm-push-8{left:66.66666667%}.col-sm-push-7{left:58.33333333%}.col-sm-push-6{left:50%}.col-sm-push-5{left:41.66666667%}.col-sm-push-4{left:33.33333333%}.col-sm-push-3{left:25%}.col-sm-push-2{left:16.66666667%}.col-sm-push-1{left:8.33333333%}.col-sm-push-0{left:auto}.col-sm-offset-12{margin-left:100%}.col-sm-offset-11{margin-left:91.66666667%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-0{margin-left:0}}@media (min-width:992px){.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9{float:left}.col-md-12{width:100%}.col-md-11{width:91.66666667%}.col-md-10{width:83.33333333%}.col-md-9{width:75%}.col-md-8{width:66.66666667%}.col-md-7{width:58.33333333%}.col-md-6{width:50%}.col-md-5{width:41.66666667%}.col-md-4{width:33.33333333%}.col-md-3{width:25%}.col-md-2{width:16.66666667%}.col-md-1{width:8.33333333%}.col-md-pull-12{right:100%}.col-md-pull-11{right:91.66666667%}.col-md-pull-10{right:83.33333333%}.col-md-pull-9{right:75%}.col-md-pull-8{right:66.66666667%}.col-md-pull-7{right:58.33333333%}.col-md-pull-6{right:50%}.col-md-pull-5{right:41.66666667%}.col-md-pull-4{right:33.33333333%}.col-md-pull-3{right:25%}.col-md-pull-2{right:16.66666667%}.col-md-pull-1{right:8.33333333%}.col-md-pull-0{right:auto}.col-md-push-12{left:100%}.col-md-push-11{left:91.66666667%}.col-md-push-10{left:83.33333333%}.col-md-push-9{left:75%}.col-md-push-8{left:66.66666667%}.col-md-push-7{left:58.33333333%}.col-md-push-6{left:50%}.col-md-push-5{left:41.66666667%}.col-md-push-4{left:33.33333333%}.col-md-push-3{left:25%}.col-md-push-2{left:16.66666667%}.col-md-push-1{left:8.33333333%}.col-md-push-0{left:auto}.col-md-offset-12{margin-left:100%}.col-md-offset-11{margin-left:91.66666667%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-9{margin-left:75%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-6{margin-left:50%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-3{margin-left:25%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-0{margin-left:0}}@media (min-width:1200px){.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9{float:left}.col-lg-12{width:100%}.col-lg-11{width:91.66666667%}.col-lg-10{width:83.33333333%}.col-lg-9{width:75%}.col-lg-8{width:66.66666667%}.col-lg-7{width:58.33333333%}.col-lg-6{width:50%}.col-lg-5{width:41.66666667%}.col-lg-4{width:33.33333333%}.col-lg-3{width:25%}.col-lg-2{width:16.66666667%}.col-lg-1{width:8.33333333%}.col-lg-pull-12{right:100%}.col-lg-pull-11{right:91.66666667%}.col-lg-pull-10{right:83.33333333%}.col-lg-pull-9{right:75%}.col-lg-pull-8{right:66.66666667%}.col-lg-pull-7{right:58.33333333%}.col-lg-pull-6{right:50%}.col-lg-pull-5{right:41.66666667%}.col-lg-pull-4{right:33.33333333%}.col-lg-pull-3{right:25%}.col-lg-pull-2{right:16.66666667%}.col-lg-pull-1{right:8.33333333%}.col-lg-pull-0{right:auto}.col-lg-push-12{left:100%}.col-lg-push-11{left:91.66666667%}.col-lg-push-10{left:83.33333333%}.col-lg-push-9{left:75%}.col-lg-push-8{left:66.66666667%}.col-lg-push-7{left:58.33333333%}.col-lg-push-6{left:50%}.col-lg-push-5{left:41.66666667%}.col-lg-push-4{left:33.33333333%}.col-lg-push-3{left:25%}.col-lg-push-2{left:16.66666667%}.col-lg-push-1{left:8.33333333%}.col-lg-push-0{left:auto}.col-lg-offset-12{margin-left:100%}.col-lg-offset-11{margin-left:91.66666667%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-0{margin-left:0}}pre code,table{background-color:transparent}table col[class*=col-]{position:static;display:table-column;float:none}table td[class*=col-],table th[class*=col-]{position:static;display:table-cell;float:none}caption{padding-top:8px;padding-bottom:8px;color:#cdcdcd;text-align:left}.table{width:100%;max-width:100%;margin-bottom:20px}.table>thead>tr>th{padding:8px;line-height:1.42857143;border-top:1px solid #ddd}.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}.panel>.table>tbody:first-child>tr:first-child td,.panel>.table>tbody:first-child>tr:first-child th,.table>caption+thead>tr:first-child>td,.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>td,.table>thead:first-child>tr:first-child>th{border-top:0}.table>tbody+tbody{border-top:2px solid #ddd}.table .table{background-color:#fff}.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:5px}.table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}.table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}.table-hover>tbody>tr:hover,.table>tbody>tr.active>td,.table>tbody>tr.active>th,.table>tbody>tr>td.active,.table>tbody>tr>th.active,.table>tfoot>tr.active>td,.table>tfoot>tr.active>th,.table>tfoot>tr>td.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>thead>tr.active>th,.table>thead>tr>td.active,.table>thead>tr>th.active{background-color:#f5f5f5}.table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr.active:hover>th,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover{background-color:#e8e8e8}.table>tbody>tr.success>td,.table>tbody>tr.success>th,.table>tbody>tr>td.success,.table>tbody>tr>th.success,.table>tfoot>tr.success>td,.table>tfoot>tr.success>th,.table>tfoot>tr>td.success,.table>tfoot>tr>th.success,.table>thead>tr.success>td,.table>thead>tr.success>th,.table>thead>tr>td.success,.table>thead>tr>th.success{background-color:#dff0d8}.table-hover>tbody>tr.success:hover>td,.table-hover>tbody>tr.success:hover>th,.table-hover>tbody>tr:hover>.success,.table-hover>tbody>tr>td.success:hover,.table-hover>tbody>tr>th.success:hover{background-color:#d0e9c6}.table>tbody>tr.info>td,.table>tbody>tr.info>th,.table>tbody>tr>td.info,.table>tbody>tr>th.info,.table>tfoot>tr.info>td,.table>tfoot>tr.info>th,.table>tfoot>tr>td.info,.table>tfoot>tr>th.info,.table>thead>tr.info>td,.table>thead>tr.info>th,.table>thead>tr>td.info,.table>thead>tr>th.info{background-color:#d9edf7}.table-hover>tbody>tr.info:hover>td,.table-hover>tbody>tr.info:hover>th,.table-hover>tbody>tr:hover>.info,.table-hover>tbody>tr>td.info:hover,.table-hover>tbody>tr>th.info:hover{background-color:#c4e3f3}.table>tbody>tr.warning>td,.table>tbody>tr.warning>th,.table>tbody>tr>td.warning,.table>tbody>tr>th.warning,.table>tfoot>tr.warning>td,.table>tfoot>tr.warning>th,.table>tfoot>tr>td.warning,.table>tfoot>tr>th.warning,.table>thead>tr.warning>td,.table>thead>tr.warning>th,.table>thead>tr>td.warning,.table>thead>tr>th.warning{background-color:#fcf8e3}.table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr.warning:hover>th,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover{background-color:#faf2cc}.table>tbody>tr.danger>td,.table>tbody>tr.danger>th,.table>tbody>tr>td.danger,.table>tbody>tr>th.danger,.table>tfoot>tr.danger>td,.table>tfoot>tr.danger>th,.table>tfoot>tr>td.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>thead>tr.danger>th,.table>thead>tr>td.danger,.table>thead>tr>th.danger{background-color:#f2dede}.table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr.danger:hover>th,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover{background-color:#ebcccc}.table-responsive{min-height:.01%;overflow-x:auto}@media screen and (max-width:767px){.table-responsive{width:100%;margin-bottom:15px;overflow-y:hidden;-ms-overflow-style:-ms-autohiding-scrollbar;border:1px solid #ddd}.table-responsive>.table{margin-bottom:0}.table-responsive>.table>tbody>tr>td,.table-responsive>.table>tbody>tr>th,.table-responsive>.table>tfoot>tr>td,.table-responsive>.table>tfoot>tr>th,.table-responsive>.table>thead>tr>td,.table-responsive>.table>thead>tr>th{white-space:nowrap}.table-responsive>.table-bordered{border:0}.table-responsive>.table-bordered>tbody>tr>td:first-child,.table-responsive>.table-bordered>tbody>tr>th:first-child,.table-responsive>.table-bordered>tfoot>tr>td:first-child,.table-responsive>.table-bordered>tfoot>tr>th:first-child,.table-responsive>.table-bordered>thead>tr>td:first-child,.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.table-responsive>.table-bordered>tbody>tr>td:last-child,.table-responsive>.table-bordered>tbody>tr>th:last-child,.table-responsive>.table-bordered>tfoot>tr>td:last-child,.table-responsive>.table-bordered>tfoot>tr>th:last-child,.table-responsive>.table-bordered>thead>tr>td:last-child,.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.table-responsive>.table-bordered>tbody>tr:last-child>td,.table-responsive>.table-bordered>tbody>tr:last-child>th,.table-responsive>.table-bordered>tfoot>tr:last-child>td,.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}}fieldset,legend{padding:0;border:0}fieldset{min-width:0;margin:0}legend{display:block;width:100%;margin-bottom:20px;font-size:21px;line-height:inherit;color:#333;border-bottom:1px solid #e5e5e5}label{display:inline-block;max-width:100%;margin-bottom:5px;font-weight:700}input[type=search]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-appearance:none;appearance:none}input[type=checkbox],input[type=radio]{margin:4px 0 0;margin-top:1px \\9;line-height:normal}fieldset[disabled] input[type=checkbox],fieldset[disabled] input[type=radio],input[type=checkbox].disabled,input[type=checkbox][disabled],input[type=radio].disabled,input[type=radio][disabled]{cursor:not-allowed}input[type=file]{display:block}input[type=range]{display:block;width:100%}.form-group-sm select[multiple].form-control,.form-group-sm textarea.form-control,select[multiple],select[multiple].input-sm,select[size],textarea.form-control,textarea.input-sm{height:auto}input[type=checkbox]:focus,input[type=file]:focus,input[type=radio]:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.form-control,output{display:block;font-size:14px;line-height:1.42857143;color:#555}output{padding-top:7px}.form-control{width:100%;height:34px;padding:6px 12px;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075);-webkit-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}.form-control:focus{border-color:#66afe9;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)}.form-control::-moz-placeholder{color:#999;opacity:1}.form-control:-ms-input-placeholder{color:#999}.form-control::-webkit-input-placeholder{color:#999}.form-control::-ms-expand{background-color:transparent;border:0}.form-control[disabled],.form-control[readonly],fieldset[disabled] .form-control{background-color:#dcdcdc;opacity:1}.checkbox.disabled label,.form-control[disabled],.radio.disabled label,fieldset[disabled] .checkbox label,fieldset[disabled] .form-control,fieldset[disabled] .radio label{cursor:not-allowed}@media screen and (-webkit-min-device-pixel-ratio:0){input[type=date].form-control,input[type=datetime-local].form-control,input[type=month].form-control,input[type=time].form-control{line-height:34px}.input-group-sm input[type=date],.input-group-sm input[type=datetime-local],.input-group-sm input[type=month],.input-group-sm input[type=time],input[type=date].input-sm,input[type=datetime-local].input-sm,input[type=month].input-sm,input[type=time].input-sm{line-height:30px}.input-group-lg input[type=date],.input-group-lg input[type=datetime-local],.input-group-lg input[type=month],.input-group-lg input[type=time],input[type=date].input-lg,input[type=datetime-local].input-lg,input[type=month].input-lg,input[type=time].input-lg{line-height:46px}}.form-group{margin-bottom:15px}.checkbox,.radio{position:relative;display:block;margin-top:10px;margin-bottom:10px}.checkbox label,.checkbox-inline,.radio label,.radio-inline{padding-left:20px;margin-bottom:0;font-weight:400;cursor:pointer}.checkbox label,.radio label{min-height:20px}.checkbox input[type=checkbox],.checkbox-inline input[type=checkbox],.radio input[type=radio],.radio-inline input[type=radio]{position:absolute;margin-top:4px \\9;margin-left:-20px}.checkbox+.checkbox,.radio+.radio{margin-top:-5px}.checkbox-inline,.radio-inline{position:relative;display:inline-block;vertical-align:middle}.checkbox-inline.disabled,.radio-inline.disabled,fieldset[disabled] .checkbox-inline,fieldset[disabled] .radio-inline{cursor:not-allowed}.checkbox-inline+.checkbox-inline,.radio-inline+.radio-inline{margin-top:0;margin-left:10px}.form-control-static{min-height:34px;padding-top:7px;padding-bottom:7px;margin-bottom:0}.form-control-static.input-lg,.form-control-static.input-sm{padding-right:0;padding-left:0}.form-group-sm .form-control,.input-sm{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.form-group-sm select.form-control,select.input-sm{height:30px;line-height:30px}.form-group-sm .form-control-static{height:30px;min-height:32px;padding:6px 10px;font-size:12px;line-height:1.5}.form-group-lg .form-control,.input-lg{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.form-group-lg select[multiple].form-control,.form-group-lg textarea.form-control,select[multiple].input-lg,textarea.input-lg{height:auto}.form-group-lg select.form-control,select.input-lg{height:46px;line-height:46px}.form-group-lg .form-control-static{height:46px;min-height:38px;padding:11px 16px;font-size:18px;line-height:1.3333333}.has-feedback{position:relative}.has-feedback .form-control{padding-right:42.5px}.form-control-feedback{position:absolute;top:0;right:0;z-index:2;display:block;width:34px;height:34px;line-height:34px;text-align:center;pointer-events:none}.form-group-lg .form-control+.form-control-feedback,.input-group-lg+.form-control-feedback,.input-lg+.form-control-feedback{width:46px;height:46px;line-height:46px}.form-group-sm .form-control+.form-control-feedback,.input-group-sm+.form-control-feedback,.input-sm+.form-control-feedback{width:30px;height:30px;line-height:30px}.has-success .checkbox,.has-success .checkbox-inline,.has-success .control-label,.has-success .help-block,.has-success .radio,.has-success .radio-inline,.has-success.checkbox label,.has-success.checkbox-inline label,.has-success.radio label,.has-success.radio-inline label{color:#3c763d}.has-success .form-control{border-color:#3c763d;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-success .form-control:focus{border-color:#2b542c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168}.has-success .input-group-addon{color:#3c763d;background-color:#dff0d8;border-color:#3c763d}.has-success .form-control-feedback{color:#3c763d}.has-warning .checkbox,.has-warning .checkbox-inline,.has-warning .control-label,.has-warning .help-block,.has-warning .radio,.has-warning .radio-inline,.has-warning.checkbox label,.has-warning.checkbox-inline label,.has-warning.radio label,.has-warning.radio-inline label{color:#8a6d3b}.has-warning .form-control{border-color:#8a6d3b;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-warning .form-control:focus{border-color:#66512c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b}.has-warning .input-group-addon{color:#8a6d3b;background-color:#fcf8e3;border-color:#8a6d3b}.has-warning .form-control-feedback{color:#8a6d3b}.has-error .checkbox,.has-error .checkbox-inline,.has-error .control-label,.has-error .help-block,.has-error .radio,.has-error .radio-inline,.has-error.checkbox label,.has-error.checkbox-inline label,.has-error.radio label,.has-error.radio-inline label{color:#a94442}.has-error .form-control{border-color:#a94442;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-error .form-control:focus{border-color:#843534;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483}.has-error .input-group-addon{color:#a94442;background-color:#f2dede;border-color:#a94442}.has-error .form-control-feedback{color:#a94442}.has-feedback label~.form-control-feedback{top:25px}.has-feedback label.sr-only~.form-control-feedback{top:0}.help-block{display:block;margin-top:5px;margin-bottom:10px;color:#737373}@media (min-width:768px){.form-inline .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.form-inline .form-control{display:inline-block;width:auto;vertical-align:middle}.form-inline .form-control-static{display:inline-block}.form-inline .input-group{display:inline-table;vertical-align:middle}.form-inline .input-group .form-control,.form-inline .input-group .input-group-addon,.form-inline .input-group .input-group-btn{width:auto}.form-inline .input-group>.form-control{width:100%}.form-inline .control-label{margin-bottom:0;vertical-align:middle}.form-inline .checkbox,.form-inline .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.form-inline .checkbox label,.form-inline .radio label{padding-left:0}.form-inline .checkbox input[type=checkbox],.form-inline .radio input[type=radio]{position:relative;margin-left:0}.form-inline .has-feedback .form-control-feedback{top:0}}.form-horizontal .checkbox,.form-horizontal .checkbox-inline,.form-horizontal .radio,.form-horizontal .radio-inline{padding-top:7px;margin-top:0;margin-bottom:0}.form-horizontal .checkbox,.form-horizontal .radio{min-height:27px}.form-horizontal .form-group{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.form-horizontal .control-label{padding-top:7px;margin-bottom:0;text-align:right}}.form-horizontal .has-feedback .form-control-feedback{right:15px}@media (min-width:768px){.form-horizontal .form-group-lg .control-label{padding-top:11px;font-size:18px}.form-horizontal .form-group-sm .control-label{padding-top:6px;font-size:12px}}.btn{display:inline-block;margin-bottom:0;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;touch-action:manipulation;cursor:pointer;background-image:none;border:1px solid transparent;padding:6px 12px;font-size:14px;line-height:1.42857143;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.btn.active.focus,.btn.active:focus,.btn.focus,.btn:active.focus,.btn:active:focus,.btn:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.btn.focus,.btn:focus,.btn:hover{color:#333;text-decoration:none}.btn.active,.btn:active{background-image:none;outline:0;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn.disabled,.btn[disabled],fieldset[disabled] .btn{cursor:not-allowed;filter:alpha(opacity=65);opacity:.65;-webkit-box-shadow:none;box-shadow:none}a.btn.disabled,fieldset[disabled] a.btn{pointer-events:none}.btn-default{color:#333;background-color:#fff;border-color:#ccc}.btn-default.focus,.btn-default:focus{color:#333;background-color:#e6e6e6;border-color:#8c8c8c}.btn-default:hover{color:#333;background-color:#e6e6e6;border-color:#adadad}.btn-default.active,.btn-default:active,.open>.dropdown-toggle.btn-default{color:#333;background-color:#e6e6e6;background-image:none;border-color:#adadad}.btn-default.active.focus,.btn-default.active:focus,.btn-default.active:hover,.btn-default:active.focus,.btn-default:active:focus,.btn-default:active:hover,.open>.dropdown-toggle.btn-default.focus,.open>.dropdown-toggle.btn-default:focus,.open>.dropdown-toggle.btn-default:hover{color:#333;background-color:#d4d4d4;border-color:#8c8c8c}.btn-default.disabled.focus,.btn-default.disabled:focus,.btn-default.disabled:hover,.btn-default[disabled].focus,.btn-default[disabled]:focus,.btn-default[disabled]:hover,fieldset[disabled] .btn-default.focus,fieldset[disabled] .btn-default:focus,fieldset[disabled] .btn-default:hover{background-color:#fff;border-color:#ccc}.btn-default .badge{color:#fff;background-color:#333}.btn-primary{color:#fff;background-color:#21366b;border-color:#1b2c58}.btn-primary.focus,.btn-primary:focus{color:#fff;background-color:#152244;border-color:#000}.btn-primary:hover{color:#fff;background-color:#152244;border-color:#0d1529}.btn-primary.active,.btn-primary:active,.open>.dropdown-toggle.btn-primary{color:#fff;background-color:#152244;background-image:none;border-color:#0d1529}.btn-primary.active.focus,.btn-primary.active:focus,.btn-primary.active:hover,.btn-primary:active.focus,.btn-primary:active:focus,.btn-primary:active:hover,.open>.dropdown-toggle.btn-primary.focus,.open>.dropdown-toggle.btn-primary:focus,.open>.dropdown-toggle.btn-primary:hover{color:#fff;background-color:#0d1529;border-color:#000}.btn-primary.disabled.focus,.btn-primary.disabled:focus,.btn-primary.disabled:hover,.btn-primary[disabled].focus,.btn-primary[disabled]:focus,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary.focus,fieldset[disabled] .btn-primary:focus,fieldset[disabled] .btn-primary:hover{background-color:#21366b;border-color:#1b2c58}.btn-primary .badge{color:#21366b;background-color:#fff}.btn-success{color:#fff;background-color:#5cb85c;border-color:#4cae4c}.btn-success.focus,.btn-success:focus{color:#fff;background-color:#449d44;border-color:#255625}.btn-success:hover{color:#fff;background-color:#449d44;border-color:#398439}.btn-success.active,.btn-success:active,.open>.dropdown-toggle.btn-success{color:#fff;background-color:#449d44;background-image:none;border-color:#398439}.btn-success.active.focus,.btn-success.active:focus,.btn-success.active:hover,.btn-success:active.focus,.btn-success:active:focus,.btn-success:active:hover,.open>.dropdown-toggle.btn-success.focus,.open>.dropdown-toggle.btn-success:focus,.open>.dropdown-toggle.btn-success:hover{color:#fff;background-color:#398439;border-color:#255625}.btn-success.disabled.focus,.btn-success.disabled:focus,.btn-success.disabled:hover,.btn-success[disabled].focus,.btn-success[disabled]:focus,.btn-success[disabled]:hover,fieldset[disabled] .btn-success.focus,fieldset[disabled] .btn-success:focus,fieldset[disabled] .btn-success:hover{background-color:#5cb85c;border-color:#4cae4c}.btn-success .badge{color:#5cb85c;background-color:#fff}.btn-info{color:#fff;background-color:#5bc0de;border-color:#46b8da}.btn-info.focus,.btn-info:focus{color:#fff;background-color:#31b0d5;border-color:#1b6d85}.btn-info:hover{color:#fff;background-color:#31b0d5;border-color:#269abc}.btn-info.active,.btn-info:active,.open>.dropdown-toggle.btn-info{color:#fff;background-color:#31b0d5;background-image:none;border-color:#269abc}.btn-info.active.focus,.btn-info.active:focus,.btn-info.active:hover,.btn-info:active.focus,.btn-info:active:focus,.btn-info:active:hover,.open>.dropdown-toggle.btn-info.focus,.open>.dropdown-toggle.btn-info:focus,.open>.dropdown-toggle.btn-info:hover{color:#fff;background-color:#269abc;border-color:#1b6d85}.btn-info.disabled.focus,.btn-info.disabled:focus,.btn-info.disabled:hover,.btn-info[disabled].focus,.btn-info[disabled]:focus,.btn-info[disabled]:hover,fieldset[disabled] .btn-info.focus,fieldset[disabled] .btn-info:focus,fieldset[disabled] .btn-info:hover{background-color:#5bc0de;border-color:#46b8da}.btn-info .badge{color:#5bc0de;background-color:#fff}.btn-warning{color:#fff;background-color:#f0ad4e;border-color:#eea236}.btn-warning.focus,.btn-warning:focus{color:#fff;background-color:#ec971f;border-color:#985f0d}.btn-warning:hover{color:#fff;background-color:#ec971f;border-color:#d58512}.btn-warning.active,.btn-warning:active,.open>.dropdown-toggle.btn-warning{color:#fff;background-color:#ec971f;background-image:none;border-color:#d58512}.btn-warning.active.focus,.btn-warning.active:focus,.btn-warning.active:hover,.btn-warning:active.focus,.btn-warning:active:focus,.btn-warning:active:hover,.open>.dropdown-toggle.btn-warning.focus,.open>.dropdown-toggle.btn-warning:focus,.open>.dropdown-toggle.btn-warning:hover{color:#fff;background-color:#d58512;border-color:#985f0d}.btn-warning.disabled.focus,.btn-warning.disabled:focus,.btn-warning.disabled:hover,.btn-warning[disabled].focus,.btn-warning[disabled]:focus,.btn-warning[disabled]:hover,fieldset[disabled] .btn-warning.focus,fieldset[disabled] .btn-warning:focus,fieldset[disabled] .btn-warning:hover{background-color:#f0ad4e;border-color:#eea236}.btn-warning .badge{color:#f0ad4e;background-color:#fff}.btn-danger{color:#fff;background-color:#d9534f;border-color:#d43f3a}.btn-danger.focus,.btn-danger:focus{color:#fff;background-color:#c9302c;border-color:#761c19}.btn-danger:hover{color:#fff;background-color:#c9302c;border-color:#ac2925}.btn-danger.active,.btn-danger:active,.open>.dropdown-toggle.btn-danger{color:#fff;background-color:#c9302c;background-image:none;border-color:#ac2925}.btn-danger.active.focus,.btn-danger.active:focus,.btn-danger.active:hover,.btn-danger:active.focus,.btn-danger:active:focus,.btn-danger:active:hover,.open>.dropdown-toggle.btn-danger.focus,.open>.dropdown-toggle.btn-danger:focus,.open>.dropdown-toggle.btn-danger:hover{color:#fff;background-color:#ac2925;border-color:#761c19}.btn-danger.disabled.focus,.btn-danger.disabled:focus,.btn-danger.disabled:hover,.btn-danger[disabled].focus,.btn-danger[disabled]:focus,.btn-danger[disabled]:hover,fieldset[disabled] .btn-danger.focus,fieldset[disabled] .btn-danger:focus,fieldset[disabled] .btn-danger:hover{background-color:#d9534f;border-color:#d43f3a}.btn-danger .badge{color:#d9534f;background-color:#fff}.btn-link{font-weight:400;color:#21366b;border-radius:0}.btn-link,.btn-link.active,.btn-link:active,.btn-link[disabled],fieldset[disabled] .btn-link{background-color:transparent;-webkit-box-shadow:none;box-shadow:none}.btn-link,.btn-link:active,.btn-link:focus,.btn-link:hover{border-color:transparent}.btn-link:focus,.btn-link:hover{color:#0f1831;text-decoration:underline;background-color:transparent}.btn-link[disabled]:focus,.btn-link[disabled]:hover,fieldset[disabled] .btn-link:focus,fieldset[disabled] .btn-link:hover{color:#cdcdcd;text-decoration:none}.btn-group-lg>.btn,.btn-lg{padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.btn-group-sm>.btn,.btn-group-xs>.btn,.btn-sm,.btn-xs{padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.btn-group-xs>.btn,.btn-xs{padding:1px 5px}.btn-block{display:block;width:100%}.alert>p+p,.btn-block+.btn-block{margin-top:5px}input[type=button].btn-block,input[type=reset].btn-block,input[type=submit].btn-block{width:100%}.fade{opacity:0;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear}.fade.in{opacity:1}.collapse{display:none}.collapse.in{display:block}tr.collapse.in{display:table-row}tbody.collapse.in{display:table-row-group}.collapsing{position:relative;height:0;overflow:hidden;-webkit-transition-property:height,visibility;transition-property:height,visibility;-webkit-transition-duration:.35s;transition-duration:.35s;-webkit-transition-timing-function:ease;transition-timing-function:ease}.caret{display:inline-block;width:0;height:0;margin-left:2px;vertical-align:middle;border-top:4px dashed;border-top:4px solid \\9;border-right:4px solid transparent;border-left:4px solid transparent}.dropdown,.dropup{position:relative}.dropdown-toggle:focus{outline:0}.dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;font-size:14px;text-align:left;list-style:none;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175)}.dropdown-menu-right,.dropdown-menu.pull-right{right:0;left:auto}.dropdown-menu .divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.dropdown-menu>li>a{display:block;padding:3px 20px;clear:both;font-weight:400;line-height:1.42857143;color:#333;white-space:nowrap}.dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{color:#262626;text-decoration:none;background-color:#f5f5f5}.dropdown-menu>.active>a,.dropdown-menu>.active>a:focus,.dropdown-menu>.active>a:hover{color:#fff;text-decoration:none;background-color:#21366b;outline:0}.dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{color:#cdcdcd}.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{text-decoration:none;cursor:not-allowed;background-color:transparent;background-image:none;filter:progid:DXImageTransform.Microsoft.gradient(enabled = false)}.open>.dropdown-menu{display:block}.open>a{outline:0}.dropdown-menu-left{right:auto;left:0}.dropdown-header{display:block;padding:3px 20px;font-size:12px;line-height:1.42857143;color:#cdcdcd;white-space:nowrap}.dropdown-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:990}.pull-right>.dropdown-menu{right:0;left:auto}.dropup .caret,.navbar-fixed-bottom .dropdown .caret{content:\"\";border-top:0;border-bottom:4px dashed;border-bottom:4px solid \\9}.dropup .dropdown-menu,.navbar-fixed-bottom .dropdown .dropdown-menu{top:auto;bottom:100%;margin-bottom:2px}@media (min-width:768px){.navbar-right .dropdown-menu{right:0;left:auto}.navbar-right .dropdown-menu-left{right:auto;left:0}}.btn-group,.btn-group-vertical{position:relative;display:inline-block;vertical-align:middle}.btn-group>.btn{float:left}.btn-group-vertical>.btn,.btn-group>.btn{position:relative}.btn-group-vertical>.btn.active,.btn-group-vertical>.btn:active,.btn-group-vertical>.btn:focus,.btn-group-vertical>.btn:hover,.btn-group>.btn.active,.btn-group>.btn:active,.btn-group>.btn:focus,.btn-group>.btn:hover{z-index:2}.btn-group .btn+.btn,.btn-group .btn+.btn-group,.btn-group .btn-group+.btn,.btn-group .btn-group+.btn-group{margin-left:-1px}.btn-toolbar{margin-left:-5px}.btn-toolbar .btn,.btn-toolbar .btn-group,.btn-toolbar .input-group{float:left}.btn-toolbar>.btn,.btn-toolbar>.btn-group,.btn-toolbar>.input-group{margin-left:5px}.btn-group>.btn:not(:first-child):not(:last-child):not(.dropdown-toggle){border-radius:0}.btn-group>.btn:first-child{margin-left:0}.btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn:last-child:not(:first-child),.btn-group>.dropdown-toggle:not(:first-child){border-top-left-radius:0;border-bottom-left-radius:0}.btn-group>.btn-group{float:left}.btn-group>.btn-group:not(:first-child):not(:last-child)>.btn{border-radius:0}.btn-group>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-bottom-left-radius:0}.btn-group .dropdown-toggle:active,.btn-group.open .dropdown-toggle{outline:0}.btn-group>.btn+.dropdown-toggle{padding-right:8px;padding-left:8px}.btn-group>.btn-lg+.dropdown-toggle{padding-right:12px;padding-left:12px}.btn-group.open .dropdown-toggle{-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn-group.open .dropdown-toggle.btn-link{-webkit-box-shadow:none;box-shadow:none}.btn .caret{margin-left:0}.btn-lg .caret{border-width:5px 5px 0}.dropup .btn-lg .caret{border-width:0 5px 5px}.btn-group-vertical>.btn,.btn-group-vertical>.btn-group,.btn-group-vertical>.btn-group>.btn{display:block;width:100%;max-width:100%;float:none}.nav-tabs.nav-justified>li{float:none}.btn-group-vertical>.btn+.btn,.btn-group-vertical>.btn+.btn-group,.btn-group-vertical>.btn-group+.btn,.btn-group-vertical>.btn-group+.btn-group{margin-top:-1px;margin-left:0}.btn-group-vertical>.btn-group:not(:first-child):not(:last-child)>.btn,.btn-group-vertical>.btn:not(:first-child):not(:last-child){border-radius:0}.btn-group-vertical>.btn:first-child:not(:last-child){border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn:last-child:not(:first-child){border-top-left-radius:0;border-top-right-radius:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.btn-group-vertical>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group-vertical>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-top-right-radius:0}.btn-group-justified,.input-group{display:table;border-collapse:separate}.btn-group-justified{width:100%;table-layout:fixed}.btn-group-justified>.btn,.btn-group-justified>.btn-group{display:table-cell;float:none;width:1%}.btn-group-justified>.btn-group .btn{width:100%}.btn-group-justified>.btn-group .dropdown-menu{left:auto}[data-toggle=buttons]>.btn input[type=checkbox],[data-toggle=buttons]>.btn input[type=radio],[data-toggle=buttons]>.btn-group>.btn input[type=checkbox],[data-toggle=buttons]>.btn-group>.btn input[type=radio]{position:absolute;clip:rect(0,0,0,0);pointer-events:none}.input-group{position:relative}.input-group[class*=col-]{float:none;padding-right:0;padding-left:0}.input-group .form-control{position:relative;z-index:2;float:left;width:100%;margin-bottom:0}.input-group .form-control:focus{z-index:3}.input-group-lg>.form-control,.input-group-lg>.input-group-addon,.input-group-lg>.input-group-btn>.btn{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}select.input-group-lg>.form-control,select.input-group-lg>.input-group-addon,select.input-group-lg>.input-group-btn>.btn{height:46px;line-height:46px}select[multiple].input-group-lg>.form-control,select[multiple].input-group-lg>.input-group-addon,select[multiple].input-group-lg>.input-group-btn>.btn,textarea.input-group-lg>.form-control,textarea.input-group-lg>.input-group-addon,textarea.input-group-lg>.input-group-btn>.btn{height:auto}.input-group-sm>.form-control,.input-group-sm>.input-group-addon,.input-group-sm>.input-group-btn>.btn{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}select.input-group-sm>.form-control,select.input-group-sm>.input-group-addon,select.input-group-sm>.input-group-btn>.btn{height:30px;line-height:30px}select[multiple].input-group-sm>.form-control,select[multiple].input-group-sm>.input-group-addon,select[multiple].input-group-sm>.input-group-btn>.btn,textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon,textarea.input-group-sm>.input-group-btn>.btn{height:auto}.input-group .form-control,.input-group-addon,.input-group-btn{display:table-cell}.input-group .form-control:not(:first-child):not(:last-child),.input-group-addon:not(:first-child):not(:last-child),.input-group-btn:not(:first-child):not(:last-child){border-radius:0}.input-group-addon{white-space:nowrap}.input-group-addon,.input-group-btn{width:1%;vertical-align:middle}.input-group-addon{padding:6px 12px;font-size:14px;font-weight:400;line-height:1;color:#555;text-align:center;background-color:#dcdcdc;border:1px solid #ccc;border-radius:4px}.input-group-addon.input-sm{padding:5px 10px;font-size:12px;border-radius:3px}.input-group-addon.input-lg{padding:10px 16px;font-size:18px;border-radius:6px}.input-group-addon input[type=checkbox],.input-group-addon input[type=radio]{margin-top:0}.input-group .form-control:first-child,.input-group-addon:first-child,.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group>.btn,.input-group-btn:first-child>.dropdown-toggle,.input-group-btn:last-child>.btn-group:not(:last-child)>.btn,.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.input-group-addon:first-child{border-right:0}.input-group .form-control:last-child,.input-group-addon:last-child,.input-group-btn:first-child>.btn-group:not(:first-child)>.btn,.input-group-btn:first-child>.btn:not(:first-child),.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group>.btn,.input-group-btn:last-child>.dropdown-toggle{border-top-left-radius:0;border-bottom-left-radius:0}.input-group-addon:last-child{border-left:0}.input-group-btn{font-size:0;white-space:nowrap}.input-group-btn,.input-group-btn>.btn{position:relative}.input-group-btn>.btn+.btn{margin-left:-1px}.input-group-btn>.btn:active,.input-group-btn>.btn:focus,.input-group-btn>.btn:hover{z-index:2}.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group{margin-right:-1px}.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group{z-index:2;margin-left:-1px}.nav{padding-left:0;margin-bottom:0;list-style:none}.nav>li,.nav>li>a{position:relative;display:block}.nav>li>a{padding:10px 15px}.nav>li>a:focus,.nav>li>a:hover{text-decoration:none;background-color:#dcdcdc}.nav>li.disabled>a{color:#cdcdcd}.nav>li.disabled>a:focus,.nav>li.disabled>a:hover{color:#cdcdcd;text-decoration:none;cursor:not-allowed;background-color:transparent}.nav .open>a,.nav .open>a:focus,.nav .open>a:hover{background-color:#dcdcdc;border-color:#21366b}.nav .nav-divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.nav>li>a>img{max-width:none}.nav-tabs{border-bottom:1px solid #ddd}.nav-tabs>li{float:left;margin-bottom:-1px}.nav-tabs>li>a{margin-right:2px;line-height:1.42857143;border:1px solid transparent;border-radius:4px 4px 0 0}.nav-tabs>li>a:hover{border-color:#dcdcdc #dcdcdc #ddd}.nav-tabs>li.active>a,.nav-tabs>li.active>a:focus,.nav-tabs>li.active>a:hover{color:#555;cursor:default;background-color:#fff;border:1px solid #ddd;border-bottom-color:transparent}.nav-tabs.nav-justified{width:100%;border-bottom:0}.nav-tabs.nav-justified>li>a{margin-bottom:5px;text-align:center}.nav-justified>.dropdown .dropdown-menu,.nav-tabs.nav-justified>.dropdown .dropdown-menu{top:auto;left:auto}@media (min-width:768px){.nav-tabs.nav-justified>li{display:table-cell;width:1%}.nav-tabs.nav-justified>li>a{margin-bottom:0}}.nav-tabs.nav-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs.nav-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border-bottom-color:#fff}}.nav-pills>li{float:left}.nav-pills>li>a{border-radius:4px}.nav-pills>li+li{margin-left:2px}.nav-pills>li.active>a,.nav-pills>li.active>a:focus,.nav-pills>li.active>a:hover{color:#fff;background-color:#21366b}.nav-justified>li,.nav-stacked>li{float:none}.nav-stacked>li+li{margin-top:2px;margin-left:0}.nav-justified{width:100%}.nav-justified>li>a{margin-bottom:5px;text-align:center}@media (min-width:768px){.nav-justified>li{display:table-cell;width:1%}.nav-justified>li>a{margin-bottom:0}}.nav-tabs-justified{border-bottom:0}.nav-tabs-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border-bottom-color:#fff}}.tab-content>.tab-pane{display:none}.navbar-brand>img,.tab-content>.active{display:block}.nav-tabs .dropdown-menu{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}.navbar{position:relative;min-height:50px;margin-bottom:20px;border:1px solid transparent}@media (min-width:768px){.navbar{border-radius:4px}.navbar-header{float:left}}.navbar-collapse{padding-right:15px;padding-left:15px;overflow-x:visible;border-top:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);-webkit-overflow-scrolling:touch}.navbar-collapse.in{overflow-y:auto}@media (min-width:768px){.navbar-collapse{width:auto;border-top:0;box-shadow:none}.navbar-collapse.collapse{display:block!important;height:auto!important;padding-bottom:0;overflow:visible!important}.navbar-collapse.in{overflow-y:visible}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse,.navbar-static-top .navbar-collapse{padding-right:0;padding-left:0}}.navbar-fixed-bottom,.navbar-fixed-top{position:fixed;right:0;left:0;z-index:1030}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:340px}@media (max-device-width:480px) and (orientation:landscape){.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:200px}}@media (min-width:768px){.navbar-fixed-bottom,.navbar-fixed-top{border-radius:0}}.navbar-fixed-top{top:0;border-width:0 0 1px}.navbar-fixed-bottom{bottom:0;margin-bottom:0;border-width:1px 0 0}.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:0;margin-left:0}}.navbar-static-top{z-index:1000;border-width:0 0 1px}@media (min-width:768px){.navbar-static-top{border-radius:0}}.navbar-brand{float:left;height:50px;padding:15px;font-size:18px;line-height:20px}.navbar-brand:focus,.navbar-brand:hover,.sim-tabs>ul>li>a:active,.sim-tabs>ul>li>a:focus,.sim-tabs>ul>li>a:hover,.sim-tabs>ul>li>a:visited{text-decoration:none}@media (min-width:768px){.navbar>.container .navbar-brand,.navbar>.container-fluid .navbar-brand{margin-left:-15px}}.navbar-toggle{position:relative;float:right;padding:9px 10px;margin-right:15px;margin-top:8px;margin-bottom:8px;background-color:transparent;background-image:none;border:1px solid transparent;border-radius:4px}.navbar-toggle:focus{outline:0}.navbar-toggle .icon-bar{display:block;width:22px;height:2px;border-radius:1px}.navbar-toggle .icon-bar+.icon-bar{margin-top:4px}@media (min-width:768px){.navbar-toggle{display:none}}.navbar-nav{margin:7.5px -15px}.navbar-nav>li>a{padding-top:10px;padding-bottom:10px;line-height:20px}@media (max-width:767px){.navbar-nav .open .dropdown-menu{position:static;float:none;width:auto;margin-top:0;background-color:transparent;border:0;box-shadow:none}.navbar-nav .open .dropdown-menu .dropdown-header,.navbar-nav .open .dropdown-menu>li>a{padding:5px 15px 5px 25px}.navbar-nav .open .dropdown-menu>li>a{line-height:20px}.navbar-nav .open .dropdown-menu>li>a:focus,.navbar-nav .open .dropdown-menu>li>a:hover{background-image:none}}@media (min-width:768px){.navbar-nav{float:left;margin:0}.navbar-nav>li{float:left}.navbar-nav>li>a{padding-top:15px;padding-bottom:15px}}.navbar-form{padding:10px 15px;border-top:1px solid transparent;border-bottom:1px solid transparent;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);margin:8px -15px}@media (min-width:768px){.navbar-form .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.navbar-form .form-control{display:inline-block;width:auto;vertical-align:middle}.navbar-form .form-control-static{display:inline-block}.navbar-form .input-group{display:inline-table;vertical-align:middle}.navbar-form .input-group .form-control,.navbar-form .input-group .input-group-addon,.navbar-form .input-group .input-group-btn{width:auto}.navbar-form .input-group>.form-control{width:100%}.navbar-form .control-label{margin-bottom:0;vertical-align:middle}.navbar-form .checkbox,.navbar-form .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.navbar-form .checkbox label,.navbar-form .radio label{padding-left:0}.navbar-form .checkbox input[type=checkbox],.navbar-form .radio input[type=radio]{position:relative;margin-left:0}.navbar-form .has-feedback .form-control-feedback{top:0}}@media (max-width:767px){.navbar-form .form-group{margin-bottom:5px}.navbar-form .form-group:last-child{margin-bottom:0}}@media (min-width:768px){.navbar-form{width:auto;padding-top:0;padding-bottom:0;margin-right:0;margin-left:0;border:0;-webkit-box-shadow:none;box-shadow:none}}.navbar-nav>li>.dropdown-menu{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}.navbar-fixed-bottom .navbar-nav>li>.dropdown-menu{margin-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.navbar-btn{margin-top:8px;margin-bottom:8px}.navbar-btn.btn-sm{margin-top:10px;margin-bottom:10px}.navbar-btn.btn-xs{margin-top:14px;margin-bottom:14px}.navbar-text{margin-top:15px;margin-bottom:15px}@media (min-width:768px){.navbar-text{float:left;margin-right:15px;margin-left:15px}.navbar-left{float:left!important}.navbar-right{float:right!important;margin-right:-15px}.navbar-right~.navbar-right{margin-right:0}}.navbar-default{background-color:#f8f8f8;border-color:#e7e7e7}.navbar-default .navbar-brand,.navbar-default .navbar-nav>li>a,.navbar-default .navbar-text{color:#777}.navbar-default .navbar-brand:focus,.navbar-default .navbar-brand:hover{color:#5e5e5e;background-color:transparent}.navbar-default .navbar-nav>li>a:focus,.navbar-default .navbar-nav>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:focus,.navbar-default .navbar-nav>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav>.disabled>a,.navbar-default .navbar-nav>.disabled>a:focus,.navbar-default .navbar-nav>.disabled>a:hover{color:#ccc;background-color:transparent}.navbar-default .navbar-nav>.open>a,.navbar-default .navbar-nav>.open>a:focus,.navbar-default .navbar-nav>.open>a:hover{color:#555;background-color:#e7e7e7}@media (max-width:767px){.navbar-default .navbar-nav .open .dropdown-menu>li>a{color:#777}.navbar-default .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav .open .dropdown-menu>.active>a,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#ccc;background-color:transparent}}.navbar-default .navbar-toggle{border-color:#ddd}.navbar-default .navbar-toggle:focus,.navbar-default .navbar-toggle:hover{background-color:#ddd}.navbar-default .navbar-toggle .icon-bar{background-color:#888}.navbar-default .navbar-collapse,.navbar-default .navbar-form{border-color:#e7e7e7}.navbar-default .btn-link,.navbar-default .navbar-link{color:#777}.navbar-default .navbar-link:hover,a.list-group-item .list-group-item-heading,button.list-group-item .list-group-item-heading{color:#333}.navbar-default .btn-link:focus,.navbar-default .btn-link:hover{color:#333}.navbar-default .btn-link[disabled]:focus,.navbar-default .btn-link[disabled]:hover,fieldset[disabled] .navbar-default .btn-link:focus,fieldset[disabled] .navbar-default .btn-link:hover{color:#ccc}.navbar-inverse{background-color:#222;border-color:#080808}.navbar-inverse .navbar-brand,.navbar-inverse .navbar-nav>li>a,.navbar-inverse .navbar-text{color:#f3f3f3}.navbar-inverse .navbar-brand:focus,.navbar-inverse .navbar-brand:hover,.navbar-inverse .navbar-nav>li>a:focus,.navbar-inverse .navbar-nav>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav>.active>a,.navbar-inverse .navbar-nav>.active>a:focus,.navbar-inverse .navbar-nav>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav>.disabled>a,.navbar-inverse .navbar-nav>.disabled>a:focus,.navbar-inverse .navbar-nav>.disabled>a:hover{color:#444;background-color:transparent}.navbar-inverse .navbar-nav>.open>a,.navbar-inverse .navbar-nav>.open>a:focus,.navbar-inverse .navbar-nav>.open>a:hover{color:#fff;background-color:#080808}@media (max-width:767px){.navbar-inverse .navbar-nav .open .dropdown-menu>.dropdown-header{border-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu .divider{background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a{color:#f3f3f3}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#444;background-color:transparent}}.navbar-inverse .navbar-toggle{border-color:#333}.navbar-inverse .navbar-toggle:focus,.navbar-inverse .navbar-toggle:hover{background-color:#333}.navbar-inverse .navbar-toggle .icon-bar{background-color:#fff}.navbar-inverse .navbar-collapse,.navbar-inverse .navbar-form{border-color:#101010}.navbar-inverse .btn-link,.navbar-inverse .navbar-link{color:#f3f3f3}.navbar-inverse .navbar-link:hover{color:#fff}.navbar-inverse .btn-link:focus,.navbar-inverse .btn-link:hover{color:#fff}.navbar-inverse .btn-link[disabled]:focus,.navbar-inverse .btn-link[disabled]:hover,fieldset[disabled] .navbar-inverse .btn-link:focus,fieldset[disabled] .navbar-inverse .btn-link:hover{color:#444}.breadcrumb{padding:8px 15px;margin-bottom:20px;list-style:none;background-color:#f5f5f5;border-radius:4px}.breadcrumb>li,.pagination{display:inline-block}.breadcrumb>li+li:before{padding:0 5px;color:#ccc;content:\"/ \"}.breadcrumb>.active{color:#cdcdcd}.pagination{padding-left:0;margin:20px 0;border-radius:4px}.pager li,.pagination>li{display:inline}.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:6px 12px;margin-left:-1px;line-height:1.42857143;color:#21366b;text-decoration:none;background-color:#fff;border:1px solid #ddd}.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:2;color:#0f1831;background-color:#dcdcdc;border-color:#ddd}.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:3;color:#fff;cursor:default;background-color:#21366b;border-color:#21366b}.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#cdcdcd;cursor:not-allowed;background-color:#fff;border-color:#ddd}.pagination-lg>li>a,.pagination-lg>li>span{padding:10px 16px;font-size:18px;line-height:1.3333333}.pagination-lg>li:first-child>a,.pagination-lg>li:first-child>span{border-top-left-radius:6px;border-bottom-left-radius:6px}.pagination-lg>li:last-child>a,.pagination-lg>li:last-child>span{border-top-right-radius:6px;border-bottom-right-radius:6px}.pagination-sm>li>a,.pagination-sm>li>span{padding:5px 10px;font-size:12px;line-height:1.5}.pagination-sm>li:first-child>a,.pagination-sm>li:first-child>span{border-top-left-radius:3px;border-bottom-left-radius:3px}.pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-top-right-radius:3px;border-bottom-right-radius:3px}.pager{padding-left:0;margin:20px 0;text-align:center;list-style:none}.pager li>a,.pager li>span{display:inline-block;padding:5px 14px;background-color:#fff;border:1px solid #ddd;border-radius:15px}.pager li>a:focus,.pager li>a:hover{text-decoration:none;background-color:#dcdcdc}.pager .next>a,.pager .next>span{float:right}.pager .previous>a,.pager .previous>span{float:left}.pager .disabled>a,.pager .disabled>a:focus,.pager .disabled>a:hover,.pager .disabled>span{color:#cdcdcd;cursor:not-allowed;background-color:#fff}.label{display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em}a.badge:focus,a.badge:hover,a.label:focus,a.label:hover{color:#fff;text-decoration:none;cursor:pointer}.label:empty{display:none}.btn .label{position:relative;top:-1px}.label-default{background-color:#cdcdcd}.label-default[href]:focus,.label-default[href]:hover{background-color:#b4b4b4}.label-primary{background-color:#21366b}.label-primary[href]:focus,.label-primary[href]:hover{background-color:#152244}.label-success{background-color:#5cb85c}.label-success[href]:focus,.label-success[href]:hover{background-color:#449d44}.label-info{background-color:#5bc0de}.label-info[href]:focus,.label-info[href]:hover{background-color:#31b0d5}.label-warning{background-color:#f0ad4e}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f}.label-danger{background-color:#d9534f}.label-danger[href]:focus,.label-danger[href]:hover{background-color:#c9302c}.badge{display:inline-block;min-width:10px;padding:3px 7px;font-size:12px;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:middle;background-color:#cdcdcd;border-radius:10px}.badge:empty{display:none}.btn .badge{position:relative;top:-1px}.btn-group-xs>.btn .badge,.btn-xs .badge{top:0;padding:1px 5px}.list-group-item.active>.badge,.nav-pills>.active>a>.badge{color:#21366b;background-color:#fff}.list-group-item>.badge{float:right}.list-group-item>.badge+.badge{margin-right:5px}.nav-pills>li>a>.badge{margin-left:3px}.jumbotron{padding-top:30px;padding-bottom:30px;margin-bottom:30px;background-color:#dcdcdc}.jumbotron,.jumbotron .h1,.jumbotron h1,a.list-group-item-danger .list-group-item-heading,a.list-group-item-info .list-group-item-heading,a.list-group-item-success .list-group-item-heading,a.list-group-item-warning .list-group-item-heading,button.list-group-item-danger .list-group-item-heading,button.list-group-item-info .list-group-item-heading,button.list-group-item-success .list-group-item-heading,button.list-group-item-warning .list-group-item-heading{color:inherit}.jumbotron p{margin-bottom:15px;font-size:21px;font-weight:200}.jumbotron>hr{border-top-color:#c3c3c3}.container .jumbotron,.container-fluid .jumbotron{padding-right:15px;padding-left:15px;border-radius:6px}.jumbotron .container{max-width:100%}@media screen and (min-width:768px){.jumbotron{padding-top:48px;padding-bottom:48px}.container .jumbotron,.container-fluid .jumbotron{padding-right:60px;padding-left:60px}.jumbotron .h1,.jumbotron h1{font-size:63px}}.thumbnail{display:block;padding:4px;margin-bottom:20px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:border .2s ease-in-out;-o-transition:border .2s ease-in-out;transition:border .2s ease-in-out}.thumbnail a>img,.thumbnail>img{margin-right:auto;margin-left:auto}a.thumbnail.active,a.thumbnail:focus,a.thumbnail:hover{border-color:#21366b}.thumbnail .caption{padding:9px;color:#333}.alert{padding:15px;margin-bottom:20px;border:1px solid transparent;border-radius:4px}.alert h4{margin-top:0;color:inherit}.alert .alert-link,.sim-controls ul.checkbox li label,.sim-controls ul.radio li label{font-weight:700}.alert>p,.alert>ul{margin-bottom:0}.alert-dismissable,.alert-dismissible{padding-right:35px}.alert-dismissable .close,.alert-dismissible .close{position:relative;top:-2px;right:-21px;color:inherit}.alert-success{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.alert-success hr{border-top-color:#c9e2b3}.alert-success .alert-link{color:#2b542c}.alert-info{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.alert-info hr{border-top-color:#a6e1ec}.alert-info .alert-link{color:#245269}.alert-warning{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.alert-warning hr{border-top-color:#f7e1b5}.alert-warning .alert-link{color:#66512c}.alert-danger{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.alert-danger hr{border-top-color:#e4b9c0}.alert-danger .alert-link{color:#843534}.progress{height:20px;margin-bottom:20px;overflow:hidden;background-color:#f5f5f5;border-radius:4px;-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.progress-bar{float:left;width:0%;height:100%;font-size:12px;line-height:20px;color:#fff;text-align:center;background-color:#21366b;-webkit-box-shadow:inset 0-1px 0 rgba(0,0,0,.15);box-shadow:inset 0-1px 0 rgba(0,0,0,.15);-webkit-transition:width .6s ease;-o-transition:width .6s ease;transition:width .6s ease}.progress-bar-striped,.progress-striped .progress-bar{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:40px 40px}.progress-bar.active,.progress.active .progress-bar{-webkit-animation:progress-bar-stripes 2s linear infinite;-o-animation:progress-bar-stripes 2s linear infinite;animation:progress-bar-stripes 2s linear infinite}.progress-bar-success{background-color:#5cb85c}.progress-striped .progress-bar-danger,.progress-striped .progress-bar-info,.progress-striped .progress-bar-success,.progress-striped .progress-bar-warning{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)}.progress-bar-info{background-color:#5bc0de}.progress-bar-warning{background-color:#f0ad4e}.progress-bar-danger{background-color:#d9534f}.media{margin-top:15px}.media:first-child{margin-top:0}.media,.media-body{overflow:hidden;zoom:1}.media-body{width:10000px}.media-object{display:block}.media-object.img-thumbnail{max-width:none}.media-right,.media>.pull-right{padding-left:10px}.media-left,.media>.pull-left{padding-right:10px}.media-body,.media-left,.media-right{display:table-cell;vertical-align:top}.media-middle{vertical-align:middle}.media-bottom{vertical-align:bottom}.media-heading{margin-top:0;margin-bottom:5px}.media-list{padding-left:0;list-style:none}.list-group{padding-left:0;margin-bottom:20px}.list-group-item{position:relative;display:block;padding:10px 15px;margin-bottom:-1px;background-color:#fff;border:1px solid #ddd}.list-group-item:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.list-group-item:last-child{margin-bottom:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.list-group-item.disabled,.list-group-item.disabled:focus,.list-group-item.disabled:hover{color:#cdcdcd;cursor:not-allowed;background-color:#dcdcdc}.list-group-item.disabled .list-group-item-heading,.list-group-item.disabled:focus .list-group-item-heading,.list-group-item.disabled:hover .list-group-item-heading{color:inherit}.list-group-item.disabled .list-group-item-text,.list-group-item.disabled:focus .list-group-item-text,.list-group-item.disabled:hover .list-group-item-text{color:#cdcdcd}.list-group-item.active,.list-group-item.active:focus,.list-group-item.active:hover{z-index:2;color:#fff;background-color:#21366b;border-color:#21366b}.list-group-item.active .list-group-item-heading,.list-group-item.active .list-group-item-heading>.small,.list-group-item.active .list-group-item-heading>small,.list-group-item.active:focus .list-group-item-heading,.list-group-item.active:focus .list-group-item-heading>.small,.list-group-item.active:focus .list-group-item-heading>small,.list-group-item.active:hover .list-group-item-heading,.list-group-item.active:hover .list-group-item-heading>.small,.list-group-item.active:hover .list-group-item-heading>small{color:inherit}.list-group-item.active .list-group-item-text,.list-group-item.active:focus .list-group-item-text,.list-group-item.active:hover .list-group-item-text{color:#8099d8}a.list-group-item,button.list-group-item{color:#555}a.list-group-item:focus,a.list-group-item:hover,button.list-group-item:focus,button.list-group-item:hover{color:#555;text-decoration:none;background-color:#f5f5f5}button.list-group-item{width:100%;text-align:left}.list-group-item-success{color:#3c763d;background-color:#dff0d8}a.list-group-item-success,button.list-group-item-success{color:#3c763d}a.list-group-item-success:focus,a.list-group-item-success:hover,button.list-group-item-success:focus,button.list-group-item-success:hover{color:#3c763d;background-color:#d0e9c6}a.list-group-item-success.active,a.list-group-item-success.active:focus,a.list-group-item-success.active:hover,button.list-group-item-success.active,button.list-group-item-success.active:focus,button.list-group-item-success.active:hover{color:#fff;background-color:#3c763d;border-color:#3c763d}.list-group-item-info{color:#31708f;background-color:#d9edf7}a.list-group-item-info,button.list-group-item-info{color:#31708f}a.list-group-item-info:focus,a.list-group-item-info:hover,button.list-group-item-info:focus,button.list-group-item-info:hover{color:#31708f;background-color:#c4e3f3}a.list-group-item-info.active,a.list-group-item-info.active:focus,a.list-group-item-info.active:hover,button.list-group-item-info.active,button.list-group-item-info.active:focus,button.list-group-item-info.active:hover{color:#fff;background-color:#31708f;border-color:#31708f}.list-group-item-warning{color:#8a6d3b;background-color:#fcf8e3}a.list-group-item-warning,button.list-group-item-warning{color:#8a6d3b}a.list-group-item-warning:focus,a.list-group-item-warning:hover,button.list-group-item-warning:focus,button.list-group-item-warning:hover{color:#8a6d3b;background-color:#faf2cc}a.list-group-item-warning.active,a.list-group-item-warning.active:focus,a.list-group-item-warning.active:hover,button.list-group-item-warning.active,button.list-group-item-warning.active:focus,button.list-group-item-warning.active:hover{color:#fff;background-color:#8a6d3b;border-color:#8a6d3b}.list-group-item-danger{color:#a94442;background-color:#f2dede}a.list-group-item-danger,button.list-group-item-danger{color:#a94442}a.list-group-item-danger:focus,a.list-group-item-danger:hover,button.list-group-item-danger:focus,button.list-group-item-danger:hover{color:#a94442;background-color:#ebcccc}a.list-group-item-danger.active,a.list-group-item-danger.active:focus,a.list-group-item-danger.active:hover,button.list-group-item-danger.active,button.list-group-item-danger.active:focus,button.list-group-item-danger.active:hover{color:#fff;background-color:#a94442;border-color:#a94442}.list-group-item-heading{margin-top:0;margin-bottom:5px}.list-group-item-text{margin-bottom:0;line-height:1.3}.panel{margin-bottom:20px;background-color:#fff;border:1px solid transparent;border-radius:4px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}.panel-body{padding:15px}.panel-heading{padding:10px 15px;border-bottom:1px solid transparent;border-top-left-radius:3px;border-top-right-radius:3px}.panel-heading>.dropdown .dropdown-toggle,.panel-title,.panel-title>.small,.panel-title>.small>a,.panel-title>a,.panel-title>small,.panel-title>small>a{color:inherit}.panel-title{margin-top:0;margin-bottom:0;font-size:16px}.panel-footer{padding:10px 15px;background-color:#f5f5f5;border-top:1px solid #ddd;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.list-group,.panel>.panel-collapse>.list-group{margin-bottom:0}.panel>.list-group .list-group-item,.panel>.panel-collapse>.list-group .list-group-item{border-width:1px 0;border-radius:0}.panel>.list-group:first-child .list-group-item:first-child,.panel>.panel-collapse>.list-group:first-child .list-group-item:first-child{border-top:0;border-top-left-radius:3px;border-top-right-radius:3px}.panel>.list-group:last-child .list-group-item:last-child,.panel>.panel-collapse>.list-group:last-child .list-group-item:last-child{border-bottom:0;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.panel-heading+.panel-collapse>.list-group .list-group-item:first-child{border-top-left-radius:0;border-top-right-radius:0}.panel-heading+.list-group .list-group-item:first-child{border-top-width:0}.list-group+.panel-footer{border-top-width:0}.panel>.panel-collapse>.table,.panel>.table,.panel>.table-responsive>.table{margin-bottom:0}.panel>.panel-collapse>.table caption,.panel>.table caption,.panel>.table-responsive>.table caption{padding-right:15px;padding-left:15px}.panel>.table-responsive:first-child>.table:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child,.panel>.table:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child,.panel>.table:first-child>thead:first-child>tr:first-child{border-top-left-radius:3px;border-top-right-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table:first-child>thead:first-child>tr:first-child th:first-child{border-top-left-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table:first-child>thead:first-child>tr:first-child th:last-child{border-top-right-radius:3px}.panel>.table-responsive:last-child>.table:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child,.panel>.table:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child{border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:first-child{border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:last-child{border-bottom-right-radius:3px}.panel-group .panel-heading+.panel-collapse>.list-group,.panel-group .panel-heading+.panel-collapse>.panel-body,.panel>.panel-body+.table,.panel>.panel-body+.table-responsive,.panel>.table+.panel-body,.panel>.table-responsive+.panel-body{border-top:1px solid #ddd}.panel>.table-bordered,.panel>.table-responsive>.table-bordered{border:0}.panel>.table-bordered>tbody>tr>td:first-child,.panel>.table-bordered>tbody>tr>th:first-child,.panel>.table-bordered>tfoot>tr>td:first-child,.panel>.table-bordered>tfoot>tr>th:first-child,.panel>.table-bordered>thead>tr>td:first-child,.panel>.table-bordered>thead>tr>th:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:first-child,.panel>.table-responsive>.table-bordered>thead>tr>td:first-child,.panel>.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.panel>.table-bordered>tbody>tr>td:last-child,.panel>.table-bordered>tbody>tr>th:last-child,.panel>.table-bordered>tfoot>tr>td:last-child,.panel>.table-bordered>tfoot>tr>th:last-child,.panel>.table-bordered>thead>tr>td:last-child,.panel>.table-bordered>thead>tr>th:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:last-child,.panel>.table-responsive>.table-bordered>thead>tr>td:last-child,.panel>.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.panel>.table-bordered>tbody>tr:first-child>td,.panel>.table-bordered>tbody>tr:first-child>th,.panel>.table-bordered>thead>tr:first-child>td,.panel>.table-bordered>thead>tr:first-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>th,.panel>.table-responsive>.table-bordered>thead>tr:first-child>td,.panel>.table-responsive>.table-bordered>thead>tr:first-child>th{border-bottom:0}.panel>.table-bordered>tbody>tr:last-child>td,.panel>.table-bordered>tbody>tr:last-child>th,.panel>.table-bordered>tfoot>tr:last-child>td,.panel>.table-bordered>tfoot>tr:last-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>th,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>td,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}.panel>.table-responsive{margin-bottom:0;border:0}.panel-group{margin-bottom:20px}.panel-group .panel{margin-bottom:0;border-radius:4px}.panel-group .panel+.panel{margin-top:5px}.panel-group .panel-heading{border-bottom:0}.panel-group .panel-footer{border-top:0}.panel-group .panel-footer+.panel-collapse .panel-body{border-bottom:1px solid #ddd}.panel-default,.well blockquote{border-color:#ddd}.panel-default>.panel-heading{color:#333;background-color:#f5f5f5;border-color:#ddd}.panel-default>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ddd}.panel-default>.panel-heading .badge{color:#f5f5f5;background-color:#333}.panel-default>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ddd}.panel-primary{border-color:#21366b}.panel-primary>.panel-heading{color:#fff;background-color:#21366b;border-color:#21366b}.panel-primary>.panel-heading+.panel-collapse>.panel-body{border-top-color:#21366b}.panel-primary>.panel-heading .badge{color:#21366b;background-color:#fff}.panel-primary>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#21366b}.panel-success{border-color:#d6e9c6}.panel-success>.panel-heading{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.panel-success>.panel-heading+.panel-collapse>.panel-body{border-top-color:#d6e9c6}.panel-success>.panel-heading .badge{color:#dff0d8;background-color:#3c763d}.panel-success>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#d6e9c6}.panel-info{border-color:#bce8f1}.panel-info>.panel-heading{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.panel-info>.panel-heading+.panel-collapse>.panel-body{border-top-color:#bce8f1}.panel-info>.panel-heading .badge{color:#d9edf7;background-color:#31708f}.panel-info>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#bce8f1}.panel-warning{border-color:#faebcc}.panel-warning>.panel-heading{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.panel-warning>.panel-heading+.panel-collapse>.panel-body{border-top-color:#faebcc}.panel-warning>.panel-heading .badge{color:#fcf8e3;background-color:#8a6d3b}.panel-warning>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#faebcc}.panel-danger{border-color:#ebccd1}.panel-danger>.panel-heading{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.panel-danger>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ebccd1}.panel-danger>.panel-heading .badge{color:#f2dede;background-color:#a94442}.panel-danger>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ebccd1}.embed-responsive{position:relative;display:block;height:0;padding:0;overflow:hidden}.embed-responsive .embed-responsive-item,.embed-responsive embed,.embed-responsive iframe,.embed-responsive object,.embed-responsive video{position:absolute;top:0;bottom:0;left:0;width:100%;height:100%;border:0}.embed-responsive-16by9{padding-bottom:56.25%}.embed-responsive-4by3{padding-bottom:75%}.well{min-height:20px;padding:19px;margin-bottom:20px;background-color:#f5f5f5;border:1px solid #e3e3e3;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,.05)}.well blockquote{border-color:rgba(0,0,0,.15)}.well-lg{padding:24px;border-radius:6px}.well-sm{padding:9px;border-radius:3px}.close{float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0#fff;filter:alpha(opacity=20);opacity:.2}.close:focus,.close:hover{color:#000;text-decoration:none;cursor:pointer;filter:alpha(opacity=50);opacity:.5}button.close{padding:0;cursor:pointer;background:0 0;border:0;-webkit-appearance:none;appearance:none}.modal,.modal-open{overflow:hidden}.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1050;display:none;-webkit-overflow-scrolling:touch;outline:0}.modal.fade .modal-dialog{-webkit-transform:translate(0,-25%);-ms-transform:translate(0,-25%);-o-transform:translate(0,-25%);transform:translate(0,-25%);-webkit-transition:-webkit-transform .3s ease-out;-moz-transition:-moz-transform .3s ease-out;-o-transition:-o-transform .3s ease-out;transition:transform .3s ease-out}.modal.in .modal-dialog{-webkit-transform:translate(0,0);-ms-transform:translate(0,0);-o-transform:translate(0,0);transform:translate(0,0)}.modal-open .modal{overflow-x:hidden;overflow-y:auto}.modal-dialog{position:relative;width:auto;margin:10px}.modal-content{position:relative;background-color:#fff;background-clip:padding-box;border:1px solid #999;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 3px 9px rgba(0,0,0,.5);box-shadow:0 3px 9px rgba(0,0,0,.5);outline:0}.modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1040;background-color:#000}.modal-backdrop.fade{filter:alpha(opacity=0);opacity:0}.modal-backdrop.in{filter:alpha(opacity=50);opacity:.5}.modal-header{padding:15px;border-bottom:1px solid #e5e5e5}.modal-header .close{margin-top:-2px}.modal-title{margin:0;line-height:1.42857143}.modal-body{position:relative;padding:15px}.modal-footer{padding:15px;text-align:right;border-top:1px solid #e5e5e5}.modal-footer .btn+.btn{margin-bottom:0;margin-left:5px}.modal-footer .btn-group .btn+.btn{margin-left:-1px}.modal-footer .btn-block+.btn-block{margin-left:0}.modal-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}@media (min-width:768px){.modal-dialog{width:600px;margin:30px auto}.modal-content{-webkit-box-shadow:0 5px 15px rgba(0,0,0,.5);box-shadow:0 5px 15px rgba(0,0,0,.5)}.modal-sm{width:300px}}@media (min-width:992px){.modal-lg{width:900px}}.tooltip{position:absolute;z-index:1070;display:block;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:12px;filter:alpha(opacity=0);opacity:0}.tooltip.in{filter:alpha(opacity=90);opacity:.9}.tooltip.top{padding:5px 0;margin-top:-3px}.tooltip.right{padding:0 5px;margin-left:3px}.tooltip.bottom{padding:5px 0;margin-top:3px}.tooltip.left{padding:0 5px;margin-left:-3px}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow,.tooltip.top-right .tooltip-arrow{bottom:0;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{right:5px}.tooltip.top-right .tooltip-arrow{left:5px}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:14px;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,.2);box-shadow:0 5px 10px rgba(0,0,0,.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover>.arrow,.popover>.arrow:after{border-width:11px;position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}.popover>.arrow:after{content:\"\";border-width:10px}.popover.top>.arrow{bottom:-11px;left:50%;margin-left:-11px;border-top-color:#999;border-top-color:rgba(0,0,0,.25);border-bottom-width:0}.popover.top>.arrow:after{bottom:1px;margin-left:-10px;content:\" \";border-top-color:#fff;border-bottom-width:0}.popover.right>.arrow{top:50%;left:-11px;margin-top:-11px;border-right-color:#999;border-right-color:rgba(0,0,0,.25);border-left-width:0}.popover.right>.arrow:after{bottom:-10px;left:1px;content:\" \";border-right-color:#fff;border-left-width:0}.popover.bottom>.arrow{top:-11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#999;border-bottom-color:rgba(0,0,0,.25)}.popover.bottom>.arrow:after{top:1px;margin-left:-10px;content:\" \";border-top-width:0;border-bottom-color:#fff}.popover.left>.arrow{top:50%;right:-11px;margin-top:-11px;border-right-width:0;border-left-color:#999;border-left-color:rgba(0,0,0,.25)}.popover.left>.arrow:after{right:1px;bottom:-10px;content:\" \";border-right-width:0;border-left-color:#fff}.popover-title{padding:8px 14px;margin:0;font-size:14px;background-color:#f7f7f7;border-bottom:1px solid #ebebeb;border-radius:5px 5px 0 0}.popover-content{padding:9px 14px}.carousel,.carousel-inner{position:relative}.carousel-inner{width:100%;overflow:hidden}.carousel-inner>.item{position:relative;display:none;-webkit-transition:.6s ease-in-out left;-o-transition:.6s ease-in-out left;transition:.6s ease-in-out left}.carousel-inner>.item>a>img,.carousel-inner>.item>img{line-height:1}@media all and (transform-3d),(-webkit-transform-3d){.carousel-inner>.item{-webkit-transition:-webkit-transform .6s ease-in-out;-moz-transition:-moz-transform .6s ease-in-out;-o-transition:-o-transform .6s ease-in-out;transition:transform .6s ease-in-out;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;-webkit-perspective:1000px;-moz-perspective:1000px;perspective:1000px}.carousel-inner>.item.active.right,.carousel-inner>.item.next{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);left:0}.carousel-inner>.item.active.left,.carousel-inner>.item.prev{-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0);left:0}.carousel-inner>.item.active,.carousel-inner>.item.next.left,.carousel-inner>.item.prev.right{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);left:0}}.carousel-inner>.active,.carousel-inner>.next,.carousel-inner>.prev{display:block}.carousel-inner>.active,.carousel-inner>.next.left,.carousel-inner>.prev.right{left:0}.carousel-control,.carousel-inner>.next,.carousel-inner>.prev{position:absolute;top:0;width:100%}.carousel-inner>.next{left:100%}.carousel-inner>.active.left,.carousel-inner>.prev{left:-100%}.carousel-inner>.active.right{left:100%}.carousel-control{bottom:0;left:0;width:15%;font-size:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6);background-color:transparent;filter:alpha(opacity=50);opacity:.5}.carousel-control.left{background-image:-webkit-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#80000000\', endColorstr=\'#00000000\', GradientType=1);background-repeat:repeat-x}.carousel-control.right{right:0;left:auto;background-image:-webkit-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#00000000\', endColorstr=\'#80000000\', GradientType=1);background-repeat:repeat-x}.carousel-control:focus,.carousel-control:hover{color:#fff;text-decoration:none;outline:0;filter:alpha(opacity=90);opacity:.9}.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{position:absolute;top:50%;z-index:5;display:inline-block;margin-top:-10px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{left:50%;margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{right:50%;margin-right:-10px}.carousel-control .icon-next,.carousel-control .icon-prev{width:20px;height:20px;font-family:serif;line-height:1}.carousel-control .icon-prev:before{content:\"‹\"}.carousel-control .icon-next:before{content:\"›\"}.carousel-indicators{position:absolute;bottom:10px;left:50%;z-index:15;width:60%;padding-left:0;margin-left:-30%;text-align:center;list-style:none}.carousel-indicators li{display:inline-block;width:10px;height:10px;margin:1px;text-indent:-999px;cursor:pointer;background-color:#000 \\9;background-color:transparent;border:1px solid #fff;border-radius:10px}.carousel-indicators .active{width:12px;height:12px;margin:0;background-color:#fff}.carousel-caption{position:absolute;right:15%;bottom:20px;left:15%;z-index:10;padding-top:20px;padding-bottom:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}.carousel-caption .btn{text-shadow:none}@media screen and (min-width:768px){.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{width:30px;height:30px;margin-top:-10px;font-size:30px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{margin-right:-10px}.carousel-caption{right:20%;left:20%;padding-bottom:30px}.carousel-indicators{bottom:20px}}.btn-group-vertical>.btn-group:after,.btn-group-vertical>.btn-group:before,.btn-toolbar:after,.btn-toolbar:before,.clearfix:after,.clearfix:before,.container-fluid:after,.container-fluid:before,.container:after,.container:before,.dl-horizontal dd:after,.dl-horizontal dd:before,.form-horizontal .form-group:after,.form-horizontal .form-group:before,.modal-footer:after,.modal-footer:before,.modal-header:after,.modal-header:before,.nav:after,.nav:before,.navbar-collapse:after,.navbar-collapse:before,.navbar-header:after,.navbar-header:before,.navbar:after,.navbar:before,.pager:after,.pager:before,.panel-body:after,.panel-body:before,.row:after,.row:before{display:table;content:\" \"}.btn-group-vertical>.btn-group:after,.btn-toolbar:after,.clearfix:after,.container-fluid:after,.container:after,.dl-horizontal dd:after,.form-horizontal .form-group:after,.modal-footer:after,.modal-header:after,.nav:after,.navbar-collapse:after,.navbar-header:after,.navbar:after,.pager:after,.panel-body:after,.row:after{clear:both}.center-block{display:block;margin-right:auto;margin-left:auto}.pull-right{float:right!important}.pull-left{float:left!important}.hide{display:none!important}.show{display:block!important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none!important}.affix{position:fixed}@-ms-viewport{width:device-width}.visible-lg,.visible-lg-block,.visible-lg-inline,.visible-lg-inline-block,.visible-md,.visible-md-block,.visible-md-inline,.visible-md-inline-block,.visible-sm,.visible-sm-block,.visible-sm-inline,.visible-sm-inline-block,.visible-xs,.visible-xs-block,.visible-xs-inline,.visible-xs-inline-block{display:none!important}@media (max-width:767px){.visible-xs,.visible-xs-block{display:block!important}table.visible-xs{display:table!important}tr.visible-xs{display:table-row!important}td.visible-xs,th.visible-xs{display:table-cell!important}.visible-xs-inline{display:inline!important}.visible-xs-inline-block{display:inline-block!important}}@media (min-width:768px) and (max-width:991px){.visible-sm,.visible-sm-block{display:block!important}table.visible-sm{display:table!important}tr.visible-sm{display:table-row!important}td.visible-sm,th.visible-sm{display:table-cell!important}.visible-sm-inline{display:inline!important}.visible-sm-inline-block{display:inline-block!important}}@media (min-width:992px) and (max-width:1199px){.visible-md,.visible-md-block{display:block!important}table.visible-md{display:table!important}tr.visible-md{display:table-row!important}td.visible-md,th.visible-md{display:table-cell!important}.visible-md-inline{display:inline!important}.visible-md-inline-block{display:inline-block!important}}@media (min-width:1200px){.visible-lg,.visible-lg-block{display:block!important}table.visible-lg{display:table!important}tr.visible-lg{display:table-row!important}td.visible-lg,th.visible-lg{display:table-cell!important}.visible-lg-inline{display:inline!important}.visible-lg-inline-block{display:inline-block!important}}@media (max-width:767px){.hidden-xs{display:none!important}}@media (min-width:768px) and (max-width:991px){.hidden-sm{display:none!important}}@media (min-width:992px) and (max-width:1199px){.hidden-md{display:none!important}}@media (min-width:1200px){.hidden-lg{display:none!important}}.visible-print{display:none!important}@media print{.visible-print{display:block!important}table.visible-print{display:table!important}tr.visible-print{display:table-row!important}td.visible-print,th.visible-print{display:table-cell!important}}.visible-print-block{display:none!important}@media print{.visible-print-block{display:block!important}}.visible-print-inline{display:none!important}@media print{.visible-print-inline{display:inline!important}}.bootstrap-select>select.bs-select-hidden,.visible-print-inline-block,select.bs-select-hidden,select.selectpicker{display:none!important}@media print{.visible-print-inline-block{display:inline-block!important}.hidden-print{display:none!important}}body,html{width:100%;height:100%;margin:0}.app-view{position:relative;margin:10px auto 0;max-width:960px;width:100%}@media screen and (max-height:560px){.app-view{margin-top:0}}.app-view .loading-screen{position:fixed;z-index:1200;left:0;top:0;width:100%;height:100%;min-height:600px;background-color:#fff}.app-view .loading-screen .beaker{border-radius:10px;border-top-right-radius:0;border-top-left-radius:0;display:inline-block;height:75px;left:50%;margin-left:-50px;position:absolute;top:50%;margin-top:-60px;width:100px;background-color:#ededed;box-sizing:content-box}.app-view .loading-screen .beaker:after,.app-view .loading-screen .beaker:before{content:\"\";box-sizing:content-box;position:absolute;top:-45px}.app-view .loading-screen .beaker:before{border-left:10px solid #ededed;border-radius:10px;border-right:10px solid #ededed;height:10px;left:-5px;width:90px}.app-view .loading-screen .beaker:after{border-left:10px solid #ededed;border-right:10px solid #ededed;height:45px;width:80px}.app-view .loading-screen .beaker .bubbles{position:absolute;left:10px;right:10px;bottom:75px;height:1000px;overflow:hidden}.app-view .loading-screen .beaker .bubbles .bubble{position:absolute;bottom:0;border-radius:50%;background-color:#575c5f;width:10px;height:10px;-webkit-animation-name:bubble;animation-name:bubble;-webkit-animation-duration:1600ms;animation-duration:1600ms;-webkit-animation-iteration-count:infinite;animation-iteration-count:infinite;-webkit-animation-timing-function:linear;animation-timing-function:linear;-webkit-transform:translateY(1em);-moz-transform:translateY(1em);-ms-transform:translateY(1em);transform:translateY(1em)}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(1){left:5%}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(2){background-color:#20356b;width:7px;height:7px;left:12%;bottom:-45px;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(3){background-color:#f0cf31;width:16px;height:16px;left:26%;-webkit-animation-duration:2000ms;animation-duration:2000ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(4){background-color:#71b653;width:9px;height:9px;left:46%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:400ms;animation-delay:400ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(5){background-color:#f47b4d;width:12px;height:12px;left:59%;bottom:-22.5px;-webkit-animation-delay:-100ms;animation-delay:-100ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(6){background-color:#20356b;width:14px;height:14px;left:77%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(7){background-color:#f47b4d;width:6px;height:6px;left:13%;bottom:-37.5px;-webkit-animation-delay:800ms;animation-delay:800ms}.sims{position:relative}.sim-content.rendering{position:absolute;top:0;left:0}.sim-view{height:100%;width:100%}.footer{position:absolute;margin:16px 0 10px;float:left;clear:both;width:100%;font-size:16px;color:#222}.footer .footer-left{float:left;margin-left:16px}.footer .footer-left img{opacity:.7}.footer .footer-right{float:right;margin-right:16px}.footer .footer-right span{width:88px;display:inline-block;padding-right:8px;line-height:14px;vertical-align:bottom;color:#b5b5b5;text-transform:lowercase;text-align:right;font-size:12px}.footer .footer-right a{display:inline-block;padding-bottom:2px}.footer img{max-height:32px;display:inline-block}.sim-tabs>ul{margin:0;padding:0 0 0 30px;font-size:0;list-style-type:none;color:#21366b;border-bottom:2px solid #21366b}.sim-tabs>ul>li{display:inline-block;margin-right:3px}.sim-tabs>ul>li>a{display:block;padding:7px 10px;font-size:1.4rem;background-color:#ededed;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sim-tabs>ul>li>a.singleton{cursor:default}.sim-tabs>ul>li>a>.tab-title{margin-left:2px;vertical-align:middle}.sim-tabs>ul>li>a>.tab-title::after{font-weight:700;margin-left:5px;vertical-align:top;content:\"+\"}.sim-tabs>ul>li>a.active{color:#ededed;background-color:#21366b}.sim-tabs>ul>li>a.disabled{cursor:not-allowed;pointer-events:none;opacity:.65}.sim-content{display:none;width:100%;min-height:600px;position:relative;top:0;left:0}.sim-content.active{display:block}.scene-view{width:100%;height:100%;max-height:682px;background:url(img/symphony-green.png)}@media screen and (max-height:560px){.scene-view{height:463px}}.scene-view-ui{position:absolute;top:0;left:0;width:100%;height:0}.return-ladybug-btn{font-weight:500;color:#fff;background-color:#78b04a;border:0;position:absolute;top:293px;left:50%;margin-left:-63px}.return-ladybug-btn:hover{color:#fff;opacity:.9}.return-ladybug-btn:active,.return-ladybug-btn:focus:active{color:#fff;background:#608c3b;outline:0;-webkit-box-shadow:none;box-shadow:none}.return-ladybug-btn:focus{outline:0;color:#fff}.return-ladybug-btn.disabled,.return-ladybug-btn.disabled.active,.return-ladybug-btn.disabled:active,.return-ladybug-btn.disabled:focus,.return-ladybug-btn.disabled:hover,.return-ladybug-btn[disabled],.return-ladybug-btn[disabled].active,.return-ladybug-btn[disabled]:active,.return-ladybug-btn[disabled]:focus,.return-ladybug-btn[disabled]:hover,fieldset[disabled] .return-ladybug-btn,fieldset[disabled] .return-ladybug-btn.active,fieldset[disabled] .return-ladybug-btn:active,fieldset[disabled] .return-ladybug-btn:focus,fieldset[disabled] .return-ladybug-btn:hover{background-color:#78b04a}.sim-controls.remote-control-view-header{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;background:0 0;position:absolute;right:20px;padding-bottom:0}.sim-controls.remote-control-view-header h2{border-bottom:none;margin-bottom:0}.seek-bar-view{width:100%;height:8px;background:rgba(0,0,0,.06);box-shadow:inset 0 0 4px rgba(0,0,0,.29);clip:rect(-4px auto 12px 0);cursor:pointer}.seek-bar-view .seek-bar-progress{position:relative;height:100%;width:50%;background:rgba(33,54,107,.7)}.seek-bar-view .seek-bar-handle{width:16px;height:16px;position:absolute;left:100%;margin-left:-8px;margin-top:-4px;background:#bdcccf;border:1px solid rgba(111,121,147,.54);border-radius:50%}.seek-bar-view .seek-bar-overwritten{position:absolute;right:0;height:100%;background:rgba(255,0,0,.36)}body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sims .sim-content{min-height:inherit}.sim-controls-column{position:absolute;right:20px;top:20px}@media screen and (max-height:560px){.sim-controls-column{left:20px;right:inherit}}.sim-controls{background:rgba(255,255,255,.5);padding:15px;position:relative;margin-bottom:12px;width:186px}.sim-controls input.form-control{background:rgba(255,255,255,.27);border-color:rgba(0,0,0,.1);position:relative}.sim-controls input.form-control::-webkit-inner-spin-button,.sim-controls input.form-control::-webkit-outer-spin-button{right:4px;margin-top:2px;position:absolute}.sim-controls h2{font-size:16px;font-weight:400;color:rgba(51,51,51,.8);margin-top:0;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.09)}.sim-controls h2:not(:first-child){margin-top:14px}.sim-controls ul.checkbox,.sim-controls ul.radio{list-style:none;padding:0;margin:0}.sim-controls ul.checkbox:last-child,.sim-controls ul.radio:last-child{margin-bottom:-2px}.sim-controls ul.checkbox li,.sim-controls ul.radio li{text-align:left;list-style-image:none}.btn.active:focus,.btn:active:focus,.btn:focus{outline:0!important}.btn-zoom-in,.btn-zoom-out,.btn.btn-zoom-in,.btn.btn-zoom-out{background:0 0;padding:0;opacity:.8;font-weight:400}.btn-zoom-in:focus,.btn-zoom-out:focus,.btn.btn-zoom-in:focus,.btn.btn-zoom-out:focus{outline:0;color:inherit}.btn-zoom-in:hover,.btn-zoom-out:hover,.btn.btn-zoom-in:hover,.btn.btn-zoom-out:hover{color:inherit;opacity:1}.btn-zoom-in:active,.btn-zoom-out:active,.btn.btn-zoom-in:active,.btn.btn-zoom-out:active{color:inherit;-webkit-box-shadow:none;box-shadow:none}.btn-zoom-in>.fa,.btn-zoom-out>.fa,.btn.btn-zoom-in>.fa,.btn.btn-zoom-out>.fa{position:relative;font-size:20px}.btn-zoom-in>.fa>.fa,.btn-zoom-out>.fa>.fa,.btn.btn-zoom-in>.fa>.fa,.btn.btn-zoom-out>.fa>.fa{font-size:10px;position:absolute;top:5px;left:4px}.playback-controls-wrapper{position:absolute;bottom:5px;width:100%;height:62px;padding:10px;background:rgba(255,255,255,.5);text-align:center;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.playback-controls-wrapper .playback-btn{display:inline-block;background:rgba(33,54,107,.2);color:#21366b;outline:0;border:0;border-radius:50%;width:28px;height:28px;text-align:center}.playback-controls-wrapper .playback-btn:hover{opacity:.9}.playback-controls-wrapper .playback-btn:active{background:#21366b;color:#fff}.bootstrap-select .dropdown-menu li a span.check-mark,.playback-controls-wrapper .playback-btn.pause-btn,.playback-controls-wrapper .playback-btn.play-btn,.playback-controls-wrapper .playback-btn.record-btn,input[type=checkbox],input[type=radio]{display:none}.sim-view.record-mode:not(.playing) .playback-controls-wrapper .playback-btn.record-btn,.sim-view:not(.record-mode):not(.playing) .playback-controls-wrapper .playback-btn.play-btn{display:inline-block}.bootstrap-select .dropdown-menu li a span.text,.sim-view.playing .playback-controls-wrapper .playback-btn.pause-btn{display:inline-block}.playback-controls-wrapper .playback-btn.pause-btn,.playback-controls-wrapper .playback-btn.play-btn,.playback-controls-wrapper .playback-btn.record-btn{width:42px;height:42px;font-size:16px}.playback-controls-wrapper .playback-btn.play-btn{padding-left:10px}.playback-controls-wrapper .btn-normal{font-weight:500;color:#21366b;background-color:rgba(33,54,107,.2);border:0;margin:5px 5px 0}.playback-controls-wrapper .btn-normal:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .btn-normal:active,.playback-controls-wrapper .btn-normal:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .btn-normal:focus{outline:0;color:#21366b}.playback-controls-wrapper .btn-normal.disabled,.playback-controls-wrapper .btn-normal.disabled.active,.playback-controls-wrapper .btn-normal.disabled:active,.playback-controls-wrapper .btn-normal.disabled:focus,.playback-controls-wrapper .btn-normal.disabled:hover,.playback-controls-wrapper .btn-normal[disabled],.playback-controls-wrapper .btn-normal[disabled].active,.playback-controls-wrapper .btn-normal[disabled]:active,.playback-controls-wrapper .btn-normal[disabled]:focus,.playback-controls-wrapper .btn-normal[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .btn-normal,fieldset[disabled] .playback-controls-wrapper .btn-normal.active,fieldset[disabled] .playback-controls-wrapper .btn-normal:active,fieldset[disabled] .playback-controls-wrapper .btn-normal:focus,fieldset[disabled] .playback-controls-wrapper .btn-normal:hover{background-color:rgba(33,54,107,.2)}.playback-controls-wrapper .clear-btn{float:left}.playback-controls-wrapper .reset-btn{float:right}.playback-controls-wrapper .playback-mode-wrapper{position:absolute;left:170px;top:15px}.playback-controls-wrapper .playback-mode-wrapper .btn{font-weight:500;color:#21366b;background-color:rgba(33,54,107,.2);border:0}.playback-controls-wrapper .playback-mode-wrapper .btn:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .playback-mode-wrapper .btn:active,.playback-controls-wrapper .playback-mode-wrapper .btn:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .playback-mode-wrapper .btn:focus{outline:0;color:#21366b}.playback-controls-wrapper .playback-mode-wrapper .btn.disabled,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled.active,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:active,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:focus,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:hover,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled],.playback-controls-wrapper .playback-mode-wrapper .btn[disabled].active,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:active,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:focus,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn.active,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:active,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:focus,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:hover{background-color:rgba(33,54,107,.2)}.playback-controls-wrapper .playback-mode-wrapper .btn.active{-webkit-box-shadow:none;box-shadow:none;background:rgba(33,54,107,.7);color:#fff}.playback-controls-wrapper .playback-center-buttons-wrapper{width:250px;position:absolute;left:50%;margin-left:-125px;top:0;height:100%;padding:10px;text-align:center}.playback-controls-wrapper .seek-bar-view{position:absolute;bottom:100%;left:0}.bootstrap-select .dropdown-menu li,.slider{position:relative}.slider.noUi-target,.slider.noUi-target *,input[type=checkbox]+label,input[type=radio]+label{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.slider.noUi-target,.slider.noUi-target *{-ms-touch-action:none;-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-base{width:100%;height:100%;position:relative}.slider .noUi-origin{position:absolute;right:0;top:0;left:0;bottom:0}.slider .noUi-handle{position:relative;z-index:1}.slider .noUi-stacking .noUi-handle{z-index:10}.slider .noUi-stacking+.noUi-origin{*z-index:-1}.slider.noUi-state-tap .noUi-origin{-webkit-transition:left .3s,top .3s;transition:left .3s,top .3s}.slider.noUi-state-drag *{cursor:inherit!important}.slider.noUi-horizontal{height:2px;margin-top:12px;margin-bottom:12px}.slider.noUi-horizontal .noUi-base:after,.slider.noUi-horizontal .noUi-base:before{content:\"\";position:absolute;height:14px;left:0;width:100%}.slider.noUi-horizontal .noUi-base:before{bottom:2px}.slider.noUi-horizontal .noUi-base:after{top:2px}.slider .noUi-handle:after,.slider.noUi-vertical .noUi-base:after,.slider.noUi-vertical .noUi-base:before{content:\"\";position:absolute;width:14px;top:0;height:100%}.slider.noUi-vertical .noUi-base:before{right:2px}.slider.noUi-vertical .noUi-base:after{left:2px}.slider.noUi-horizontal .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-horizontal.noUi-extended{padding:0 15px}.slider.noUi-horizontal.noUi-extended .noUi-origin{right:-15px}.slider.noUi-vertical{width:2px}.slider.noUi-vertical .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-vertical.noUi-extended{padding:15px 0}.slider.noUi-vertical.noUi-extended .noUi-origin{bottom:-15px}.slider .noUi-background{background:#fafafa}.slider.noUi-connect{background:#21366b;-webkit-transition:background 450ms ease;-o-transition:background 450ms ease;transition:background 450ms ease}.slider .noUi-dragable{cursor:w-resize}.slider.noUi-vertical .noUi-dragable{cursor:n-resize}.slider .noUi-handle{text-align:center}.slider .noUi-handle:after{display:block;width:12px;height:12px;top:50%;left:50%;margin-top:-6px;margin-left:-6px;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease}.slider .noUi-active:after{width:100%;height:100%;margin-top:-50%;margin-left:-50%}.slider[disabled] .noUi-connect,.slider[disabled] .noUi-handle:after,.slider[disabled] .noUi-handle:before,.slider[disabled].noUi-connect{background:#b8b8b8}.slider[disabled] .noUi-handle{cursor:not-allowed}.slider.pipped{margin-bottom:30px}.slider .noUi-pips,.slider .noUi-pips *{-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-pips{position:absolute;font:400 12px Arial;color:#999}.slider .noUi-value{width:40px;position:absolute;text-align:center}.slider .noUi-value-sub{color:#ccc;font-size:10px}.slider .noUi-marker{position:absolute;background:#afafaf}.slider .noUi-marker-sub{background:#ddd}.slider .noUi-marker-large{background:#ccc}.slider .noUi-pips-horizontal{padding:8px 0;height:50px;top:100%;left:0;width:100%}.slider .noUi-value-horizontal{margin-left:-20px;padding-top:16px}.slider .noUi-value-horizontal.noUi-value-sub{padding-top:12px}.slider .noUi-marker-horizontal.noUi-marker{margin-left:-1px;width:2px;height:4px}.slider .noUi-marker-horizontal.noUi-marker-sub{height:8px}.slider .noUi-marker-horizontal.noUi-marker-large{height:12px}.slider .noUi-pips-vertical{padding:0 8px;height:100%;top:0;left:100%}.slider .noUi-value-vertical{width:15px;margin-left:20px;margin-top:-5px}.slider .noUi-marker-vertical.noUi-marker{width:5px;height:2px;margin-top:-1px}.slider .noUi-marker-vertical.noUi-marker-sub{width:10px}.slider .noUi-marker-vertical.noUi-marker-large{width:15px}input[type=checkbox]+label,input[type=radio]+label{display:inline-block;position:relative;padding-left:26px;margin-bottom:12px;line-height:16px;user-select:none}input[type=checkbox]+label:last-child,input[type=radio]+label:last-child{margin-bottom:0}input[type=checkbox]+label:before,input[type=radio]+label:before{content:\"\";position:absolute;top:0;left:0;width:16px;height:16px;background:#fff;border:2px solid #333;cursor:pointer}input[type=radio]+label:before{border-radius:50%}input[type=radio]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease}input[type=radio]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px}input[type=checkbox]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);-o-transform:rotate(90deg);transform:rotate(90deg);-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;cursor:pointer}input[type=checkbox]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px;-webkit-transform:rotate(0);-ms-transform:rotate(0);-o-transform:rotate(0);transform:rotate(0)}.bootstrap-select{width:220px \\0;vertical-align:middle}.bootstrap-select>.dropdown-toggle{position:relative;width:100%;text-align:right;white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between}.bootstrap-select>.dropdown-toggle:after{margin-top:-1px}.bootstrap-select>.dropdown-toggle.bs-placeholder,.bootstrap-select>.dropdown-toggle.bs-placeholder:active,.bootstrap-select>.dropdown-toggle.bs-placeholder:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder:hover{color:#999}.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:hover{color:rgba(255,255,255,.5)}.bootstrap-select>select{position:absolute!important;bottom:0;left:50%;display:block!important;width:.5px!important;height:100%!important;padding:0!important;opacity:0!important;border:0;z-index:0!important}.bootstrap-select>select.mobile-device{top:0;left:0;display:block!important;width:100%!important;z-index:2!important}.bootstrap-select.is-invalid .dropdown-toggle,.error .bootstrap-select .dropdown-toggle,.has-error .bootstrap-select .dropdown-toggle,.was-validated .bootstrap-select select:invalid+.dropdown-toggle{border-color:#b94a48}.bootstrap-select.is-valid .dropdown-toggle,.was-validated .bootstrap-select select:valid+.dropdown-toggle{border-color:#28a745}.bootstrap-select.fit-width{width:auto!important}.bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn){width:220px}.bootstrap-select .dropdown-toggle:focus,.bootstrap-select>select.mobile-device:focus+.dropdown-toggle{outline:thin dotted #333!important;outline:5px auto -webkit-focus-ring-color!important;outline-offset:-2px}.bootstrap-select.form-control{margin-bottom:0;padding:0;border:0;height:auto}:not(.input-group)>.bootstrap-select.form-control:not([class*=col-]){width:100%}.bootstrap-select.form-control.input-group-btn{float:none;z-index:auto}.form-inline .bootstrap-select,.form-inline .bootstrap-select.form-control:not([class*=col-]){width:auto}.bootstrap-select:not(.input-group-btn),.bootstrap-select[class*=col-]{float:none;display:inline-block;margin-left:0}.bootstrap-select.dropdown-menu-right,.bootstrap-select[class*=col-].dropdown-menu-right,.row .bootstrap-select[class*=col-].dropdown-menu-right{float:right}.form-group .bootstrap-select,.form-horizontal .bootstrap-select,.form-inline .bootstrap-select{margin-bottom:0}.form-group-lg .bootstrap-select.form-control,.form-group-sm .bootstrap-select.form-control{padding:0}.form-group-lg .bootstrap-select.form-control .dropdown-toggle,.form-group-sm .bootstrap-select.form-control .dropdown-toggle{height:100%;font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-lg .dropdown-toggle,.bootstrap-select.form-control-sm .dropdown-toggle{font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-sm .dropdown-toggle{padding:.25rem .5rem}.bootstrap-select.form-control-lg .dropdown-toggle{padding:.5rem 1rem}.form-inline .bootstrap-select .form-control{width:100%}.bootstrap-select .dropdown-menu li.disabled a,.bootstrap-select.disabled,.bootstrap-select>.disabled{cursor:not-allowed}.bootstrap-select.disabled:focus,.bootstrap-select>.disabled:focus{outline:0!important}.bootstrap-select.bs-container{position:absolute;top:0;left:0;height:0!important;padding:0!important}.bootstrap-select.bs-container .dropdown-menu{z-index:1060}.bootstrap-select .dropdown-toggle .filter-option{position:static;top:0;left:0;float:left;height:100%;width:100%;text-align:left;overflow:hidden;flex:0 1 auto}.bs3.bootstrap-select .dropdown-toggle .filter-option,.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option .filter-option-inner{padding-right:inherit}.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option{position:absolute;padding-top:inherit;padding-bottom:inherit;padding-left:inherit;float:none}.bootstrap-select .dropdown-toggle .filter-option-inner-inner{overflow:hidden}.bootstrap-select .dropdown-toggle .filter-expand{width:0!important;float:left;opacity:0!important;overflow:hidden}.bootstrap-select .dropdown-toggle .caret{position:absolute;top:50%;right:12px;margin-top:-2px;vertical-align:middle}.input-group .bootstrap-select.form-control .dropdown-toggle{border-radius:inherit}.bootstrap-select[class*=col-] .dropdown-toggle{width:100%}.bootstrap-select .dropdown-menu{min-width:100%;box-sizing:border-box}.bootstrap-select .dropdown-menu>.inner:focus{outline:0!important}.bootstrap-select .dropdown-menu.inner{position:static;float:none;border:0;padding:0;margin:0;border-radius:0;box-shadow:none}.bootstrap-select .dropdown-menu li.active small{color:rgba(255,255,255,.5)!important}.bootstrap-select .dropdown-menu li a{cursor:pointer;user-select:none}.bootstrap-select .dropdown-menu li a.opt{position:relative;padding-left:2.25em}.bootstrap-select .dropdown-menu li small{padding-left:.5em}.bootstrap-select .dropdown-menu .notify{position:absolute;bottom:5px;width:96%;margin:0 2%;min-height:26px;padding:3px 5px;background:#f5f5f5;border:1px solid #e3e3e3;box-shadow:inset 0 1px 1px rgba(0,0,0,.05);pointer-events:none;opacity:.9;box-sizing:border-box}.bootstrap-select .dropdown-menu .notify.fadeOut{animation:300ms linear 750ms forwards bs-notify-fadeOut}.bootstrap-select .no-results{padding:3px;background:#f5f5f5;margin:0 5px;white-space:nowrap}.bootstrap-select.fit-width .dropdown-toggle .filter-option{position:static;display:inline;padding:0}.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner,.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner-inner{display:inline}.bootstrap-select.fit-width .dropdown-toggle .bs-caret:before{content:\" \"}.bootstrap-select.fit-width .dropdown-toggle .caret{position:static;top:auto;margin-top:-1px}.bootstrap-select.show-tick .dropdown-menu .selected span.check-mark{position:absolute;display:inline-block;right:15px;top:5px}.bootstrap-select.show-tick .dropdown-menu li a span.text{margin-right:34px}.bootstrap-select .bs-ok-default:after{content:\"\";display:block;width:.5em;height:1em;border-style:solid;border-width:0 .26em .26em 0;transform-style:preserve-3d;transform:rotate(45deg)}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle{z-index:1061}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:before{content:\"\";border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:7px solid rgba(204,204,204,.2);position:absolute;bottom:-4px;left:9px;display:none}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:after{content:\"\";border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #fff;position:absolute;bottom:-4px;left:10px;display:none}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:before{bottom:auto;top:-4px;border-top:7px solid rgba(204,204,204,.2);border-bottom:0}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:after{bottom:auto;top:-4px;border-top:6px solid #fff;border-bottom:0}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:before{right:12px;left:auto}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:after{right:13px;left:auto}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:before,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:before{display:block}.bs-actionsbox,.bs-donebutton,.bs-searchbox{padding:4px 8px}.bs-actionsbox,.bs-donebutton{width:100%;box-sizing:border-box}.bs-actionsbox .btn-group button{width:50%}.bs-donebutton{float:left}.bs-donebutton .btn-group button{width:100%}.bs-searchbox+.bs-actionsbox{padding:0 8px 4px}.bs-searchbox .form-control{margin-bottom:0;width:100%;float:none}\n/*!\n *  Font Awesome 4.7.0 by @davegandy - http://fontawesome.io - @fontawesome\n *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)\n */\n@-webkit-keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@font-face{font-family:\"FontAwesome\";src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?v=4.7.0);src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0)format(\"embedded-opentype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0)format(\"woff2\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0)format(\"woff\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0)format(\"truetype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular)format(\"svg\");font-weight:400;font-style:normal}.fa{display:inline-block;font:14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.fa-lg{font-size:1.33333333em;line-height:.75em;vertical-align:-15%}.fa-2x{font-size:2em}.fa-3x{font-size:3em}.fa-4x{font-size:4em}.fa-5x{font-size:5em}.fa-fw{width:1.28571429em;text-align:center}.fa-ul{padding-left:0;margin-left:2.14285714em;list-style-type:none}.fa-ul>li{position:relative}.fa-li{position:absolute;left:-2.14285714em;width:2.14285714em;top:.14285714em;text-align:center}.fa-li.fa-lg{left:-1.85714286em}.fa-border{padding:.2em .25em .15em;border:solid .08em #eee;border-radius:.1em}.fa-pull-left{float:left}.fa-pull-right,.pull-right{float:right}.fa.fa-pull-left{margin-right:.3em}.fa.fa-pull-right{margin-left:.3em}.pull-left{float:left}.fa.pull-left{margin-right:.3em}.fa.pull-right{margin-left:.3em}.fa-spin{-webkit-animation:fa-spin 2s infinite linear;animation:fa-spin 2s infinite linear}.fa-pulse{-webkit-animation:fa-spin 1s infinite steps(8);animation:fa-spin 1s infinite steps(8)}.fa-rotate-90{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=1)\";-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.fa-rotate-180{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2)\";-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.fa-rotate-270{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=3)\";-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.fa-flip-horizontal{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1)\";-webkit-transform:scale(-1,1);-ms-transform:scale(-1,1);transform:scale(-1,1)}.fa-flip-vertical{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1)\";-webkit-transform:scale(1,-1);-ms-transform:scale(1,-1);transform:scale(1,-1)}:root .fa-flip-horizontal,:root .fa-flip-vertical,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-rotate-90{filter:none}.fa-stack{position:relative;display:inline-block;width:2em;height:2em;line-height:2em;vertical-align:middle}.fa-stack-1x,.fa-stack-2x{position:absolute;left:0;width:100%;text-align:center}.fa-stack-1x{line-height:inherit}.fa-stack-2x{font-size:2em}.fa-inverse{color:#fff}.fa-glass:before{content:\"\"}.fa-music:before{content:\"\"}.fa-search:before{content:\"\"}.fa-envelope-o:before{content:\"\"}.fa-heart:before{content:\"\"}.fa-star:before{content:\"\"}.fa-star-o:before{content:\"\"}.fa-user:before{content:\"\"}.fa-film:before{content:\"\"}.fa-th-large:before{content:\"\"}.fa-th:before{content:\"\"}.fa-th-list:before{content:\"\"}.fa-check:before{content:\"\"}.fa-close:before,.fa-remove:before,.fa-times:before{content:\"\"}.fa-search-plus:before{content:\"\"}.fa-search-minus:before{content:\"\"}.fa-power-off:before{content:\"\"}.fa-signal:before{content:\"\"}.fa-cog:before,.fa-gear:before{content:\"\"}.fa-trash-o:before{content:\"\"}.fa-home:before{content:\"\"}.fa-file-o:before{content:\"\"}.fa-clock-o:before{content:\"\"}.fa-road:before{content:\"\"}.fa-download:before{content:\"\"}.fa-arrow-circle-o-down:before{content:\"\"}.fa-arrow-circle-o-up:before{content:\"\"}.fa-inbox:before{content:\"\"}.fa-play-circle-o:before{content:\"\"}.fa-repeat:before,.fa-rotate-right:before{content:\"\"}.fa-refresh:before{content:\"\"}.fa-list-alt:before{content:\"\"}.fa-lock:before{content:\"\"}.fa-flag:before{content:\"\"}.fa-headphones:before{content:\"\"}.fa-volume-off:before{content:\"\"}.fa-volume-down:before{content:\"\"}.fa-volume-up:before{content:\"\"}.fa-qrcode:before{content:\"\"}.fa-barcode:before{content:\"\"}.fa-tag:before{content:\"\"}.fa-tags:before{content:\"\"}.fa-book:before{content:\"\"}.fa-bookmark:before{content:\"\"}.fa-print:before{content:\"\"}.fa-camera:before{content:\"\"}.fa-font:before{content:\"\"}.fa-bold:before{content:\"\"}.fa-italic:before{content:\"\"}.fa-text-height:before{content:\"\"}.fa-text-width:before{content:\"\"}.fa-align-left:before{content:\"\"}.fa-align-center:before{content:\"\"}.fa-align-right:before{content:\"\"}.fa-align-justify:before{content:\"\"}.fa-list:before{content:\"\"}.fa-dedent:before,.fa-outdent:before{content:\"\"}.fa-indent:before{content:\"\"}.fa-video-camera:before{content:\"\"}.fa-image:before,.fa-photo:before,.fa-picture-o:before{content:\"\"}.fa-pencil:before{content:\"\"}.fa-map-marker:before{content:\"\"}.fa-adjust:before{content:\"\"}.fa-tint:before{content:\"\"}.fa-edit:before,.fa-pencil-square-o:before{content:\"\"}.fa-share-square-o:before{content:\"\"}.fa-check-square-o:before{content:\"\"}.fa-arrows:before{content:\"\"}.fa-step-backward:before{content:\"\"}.fa-fast-backward:before{content:\"\"}.fa-backward:before{content:\"\"}.fa-play:before{content:\"\"}.fa-pause:before{content:\"\"}.fa-stop:before{content:\"\"}.fa-forward:before{content:\"\"}.fa-fast-forward:before{content:\"\"}.fa-step-forward:before{content:\"\"}.fa-eject:before{content:\"\"}.fa-chevron-left:before{content:\"\"}.fa-chevron-right:before{content:\"\"}.fa-plus-circle:before{content:\"\"}.fa-minus-circle:before{content:\"\"}.fa-times-circle:before{content:\"\"}.fa-check-circle:before{content:\"\"}.fa-question-circle:before{content:\"\"}.fa-info-circle:before{content:\"\"}.fa-crosshairs:before{content:\"\"}.fa-times-circle-o:before{content:\"\"}.fa-check-circle-o:before{content:\"\"}.fa-ban:before{content:\"\"}.fa-arrow-left:before{content:\"\"}.fa-arrow-right:before{content:\"\"}.fa-arrow-up:before{content:\"\"}.fa-arrow-down:before{content:\"\"}.fa-mail-forward:before,.fa-share:before{content:\"\"}.fa-expand:before{content:\"\"}.fa-compress:before{content:\"\"}.fa-plus:before{content:\"\"}.fa-minus:before{content:\"\"}.fa-asterisk:before{content:\"\"}.fa-exclamation-circle:before{content:\"\"}.fa-gift:before{content:\"\"}.fa-leaf:before{content:\"\"}.fa-fire:before{content:\"\"}.fa-eye:before{content:\"\"}.fa-eye-slash:before{content:\"\"}.fa-exclamation-triangle:before,.fa-warning:before{content:\"\"}.fa-plane:before{content:\"\"}.fa-calendar:before{content:\"\"}.fa-random:before{content:\"\"}.fa-comment:before{content:\"\"}.fa-magnet:before{content:\"\"}.fa-chevron-up:before{content:\"\"}.fa-chevron-down:before{content:\"\"}.fa-retweet:before{content:\"\"}.fa-shopping-cart:before{content:\"\"}.fa-folder:before{content:\"\"}.fa-folder-open:before{content:\"\"}.fa-arrows-v:before{content:\"\"}.fa-arrows-h:before{content:\"\"}.fa-bar-chart-o:before,.fa-bar-chart:before{content:\"\"}.fa-twitter-square:before{content:\"\"}.fa-facebook-square:before{content:\"\"}.fa-camera-retro:before{content:\"\"}.fa-key:before{content:\"\"}.fa-cogs:before,.fa-gears:before{content:\"\"}.fa-comments:before{content:\"\"}.fa-thumbs-o-up:before{content:\"\"}.fa-thumbs-o-down:before{content:\"\"}.fa-star-half:before{content:\"\"}.fa-heart-o:before{content:\"\"}.fa-sign-out:before{content:\"\"}.fa-linkedin-square:before{content:\"\"}.fa-thumb-tack:before{content:\"\"}.fa-external-link:before{content:\"\"}.fa-sign-in:before{content:\"\"}.fa-trophy:before{content:\"\"}.fa-github-square:before{content:\"\"}.fa-upload:before{content:\"\"}.fa-lemon-o:before{content:\"\"}.fa-phone:before{content:\"\"}.fa-square-o:before{content:\"\"}.fa-bookmark-o:before{content:\"\"}.fa-phone-square:before{content:\"\"}.fa-twitter:before{content:\"\"}.fa-facebook-f:before,.fa-facebook:before{content:\"\"}.fa-github:before{content:\"\"}.fa-unlock:before{content:\"\"}.fa-credit-card:before{content:\"\"}.fa-feed:before,.fa-rss:before{content:\"\"}.fa-hdd-o:before{content:\"\"}.fa-bullhorn:before{content:\"\"}.fa-bell:before{content:\"\"}.fa-certificate:before{content:\"\"}.fa-hand-o-right:before{content:\"\"}.fa-hand-o-left:before{content:\"\"}.fa-hand-o-up:before{content:\"\"}.fa-hand-o-down:before{content:\"\"}.fa-arrow-circle-left:before{content:\"\"}.fa-arrow-circle-right:before{content:\"\"}.fa-arrow-circle-up:before{content:\"\"}.fa-arrow-circle-down:before{content:\"\"}.fa-globe:before{content:\"\"}.fa-wrench:before{content:\"\"}.fa-tasks:before{content:\"\"}.fa-filter:before{content:\"\"}.fa-briefcase:before{content:\"\"}.fa-arrows-alt:before{content:\"\"}.fa-group:before,.fa-users:before{content:\"\"}.fa-chain:before,.fa-link:before{content:\"\"}.fa-cloud:before{content:\"\"}.fa-flask:before{content:\"\"}.fa-cut:before,.fa-scissors:before{content:\"\"}.fa-copy:before,.fa-files-o:before{content:\"\"}.fa-paperclip:before{content:\"\"}.fa-floppy-o:before,.fa-save:before{content:\"\"}.fa-square:before{content:\"\"}.fa-bars:before,.fa-navicon:before,.fa-reorder:before{content:\"\"}.fa-list-ul:before{content:\"\"}.fa-list-ol:before{content:\"\"}.fa-strikethrough:before{content:\"\"}.fa-underline:before{content:\"\"}.fa-table:before{content:\"\"}.fa-magic:before{content:\"\"}.fa-truck:before{content:\"\"}.fa-pinterest:before{content:\"\"}.fa-pinterest-square:before{content:\"\"}.fa-google-plus-square:before{content:\"\"}.fa-google-plus:before{content:\"\"}.fa-money:before{content:\"\"}.fa-caret-down:before{content:\"\"}.fa-caret-up:before{content:\"\"}.fa-caret-left:before{content:\"\"}.fa-caret-right:before{content:\"\"}.fa-columns:before{content:\"\"}.fa-sort:before,.fa-unsorted:before{content:\"\"}.fa-sort-desc:before,.fa-sort-down:before{content:\"\"}.fa-sort-asc:before,.fa-sort-up:before{content:\"\"}.fa-envelope:before{content:\"\"}.fa-linkedin:before{content:\"\"}.fa-rotate-left:before,.fa-undo:before{content:\"\"}.fa-gavel:before,.fa-legal:before{content:\"\"}.fa-dashboard:before,.fa-tachometer:before{content:\"\"}.fa-comment-o:before{content:\"\"}.fa-comments-o:before{content:\"\"}.fa-bolt:before,.fa-flash:before{content:\"\"}.fa-sitemap:before{content:\"\"}.fa-umbrella:before{content:\"\"}.fa-clipboard:before,.fa-paste:before{content:\"\"}.fa-lightbulb-o:before{content:\"\"}.fa-exchange:before{content:\"\"}.fa-cloud-download:before{content:\"\"}.fa-cloud-upload:before{content:\"\"}.fa-user-md:before{content:\"\"}.fa-stethoscope:before{content:\"\"}.fa-suitcase:before{content:\"\"}.fa-bell-o:before{content:\"\"}.fa-coffee:before{content:\"\"}.fa-cutlery:before{content:\"\"}.fa-file-text-o:before{content:\"\"}.fa-building-o:before{content:\"\"}.fa-hospital-o:before{content:\"\"}.fa-ambulance:before{content:\"\"}.fa-medkit:before{content:\"\"}.fa-fighter-jet:before{content:\"\"}.fa-beer:before{content:\"\"}.fa-h-square:before{content:\"\"}.fa-plus-square:before{content:\"\"}.fa-angle-double-left:before{content:\"\"}.fa-angle-double-right:before{content:\"\"}.fa-angle-double-up:before{content:\"\"}.fa-angle-double-down:before{content:\"\"}.fa-angle-left:before{content:\"\"}.fa-angle-right:before{content:\"\"}.fa-angle-up:before{content:\"\"}.fa-angle-down:before{content:\"\"}.fa-desktop:before{content:\"\"}.fa-laptop:before{content:\"\"}.fa-tablet:before{content:\"\"}.fa-mobile-phone:before,.fa-mobile:before{content:\"\"}.fa-circle-o:before{content:\"\"}.fa-quote-left:before{content:\"\"}.fa-quote-right:before{content:\"\"}.fa-spinner:before{content:\"\"}.fa-circle:before{content:\"\"}.fa-mail-reply:before,.fa-reply:before{content:\"\"}.fa-github-alt:before{content:\"\"}.fa-folder-o:before{content:\"\"}.fa-folder-open-o:before{content:\"\"}.fa-smile-o:before{content:\"\"}.fa-frown-o:before{content:\"\"}.fa-meh-o:before{content:\"\"}.fa-gamepad:before{content:\"\"}.fa-keyboard-o:before{content:\"\"}.fa-flag-o:before{content:\"\"}.fa-flag-checkered:before{content:\"\"}.fa-terminal:before{content:\"\"}.fa-code:before{content:\"\"}.fa-mail-reply-all:before,.fa-reply-all:before{content:\"\"}.fa-star-half-empty:before,.fa-star-half-full:before,.fa-star-half-o:before{content:\"\"}.fa-location-arrow:before{content:\"\"}.fa-crop:before{content:\"\"}.fa-code-fork:before{content:\"\"}.fa-chain-broken:before,.fa-unlink:before{content:\"\"}.fa-question:before{content:\"\"}.fa-info:before{content:\"\"}.fa-exclamation:before{content:\"\"}.fa-superscript:before{content:\"\"}.fa-subscript:before{content:\"\"}.fa-eraser:before{content:\"\"}.fa-puzzle-piece:before{content:\"\"}.fa-microphone:before{content:\"\"}.fa-microphone-slash:before{content:\"\"}.fa-shield:before{content:\"\"}.fa-calendar-o:before{content:\"\"}.fa-fire-extinguisher:before{content:\"\"}.fa-rocket:before{content:\"\"}.fa-maxcdn:before{content:\"\"}.fa-chevron-circle-left:before{content:\"\"}.fa-chevron-circle-right:before{content:\"\"}.fa-chevron-circle-up:before{content:\"\"}.fa-chevron-circle-down:before{content:\"\"}.fa-html5:before{content:\"\"}.fa-css3:before{content:\"\"}.fa-anchor:before{content:\"\"}.fa-unlock-alt:before{content:\"\"}.fa-bullseye:before{content:\"\"}.fa-ellipsis-h:before{content:\"\"}.fa-ellipsis-v:before{content:\"\"}.fa-rss-square:before{content:\"\"}.fa-play-circle:before{content:\"\"}.fa-ticket:before{content:\"\"}.fa-minus-square:before{content:\"\"}.fa-minus-square-o:before{content:\"\"}.fa-level-up:before{content:\"\"}.fa-level-down:before{content:\"\"}.fa-check-square:before{content:\"\"}.fa-pencil-square:before{content:\"\"}.fa-external-link-square:before{content:\"\"}.fa-share-square:before{content:\"\"}.fa-compass:before{content:\"\"}.fa-caret-square-o-down:before,.fa-toggle-down:before{content:\"\"}.fa-caret-square-o-up:before,.fa-toggle-up:before{content:\"\"}.fa-caret-square-o-right:before,.fa-toggle-right:before{content:\"\"}.fa-eur:before,.fa-euro:before{content:\"\"}.fa-gbp:before{content:\"\"}.fa-dollar:before,.fa-usd:before{content:\"\"}.fa-inr:before,.fa-rupee:before{content:\"\"}.fa-cny:before,.fa-jpy:before,.fa-rmb:before,.fa-yen:before{content:\"\"}.fa-rouble:before,.fa-rub:before,.fa-ruble:before{content:\"\"}.fa-krw:before,.fa-won:before{content:\"\"}.fa-bitcoin:before,.fa-btc:before{content:\"\"}.fa-file:before{content:\"\"}.fa-file-text:before{content:\"\"}.fa-sort-alpha-asc:before{content:\"\"}.fa-sort-alpha-desc:before{content:\"\"}.fa-sort-amount-asc:before{content:\"\"}.fa-sort-amount-desc:before{content:\"\"}.fa-sort-numeric-asc:before{content:\"\"}.fa-sort-numeric-desc:before{content:\"\"}.fa-thumbs-up:before{content:\"\"}.fa-thumbs-down:before{content:\"\"}.fa-youtube-square:before{content:\"\"}.fa-youtube:before{content:\"\"}.fa-xing:before{content:\"\"}.fa-xing-square:before{content:\"\"}.fa-youtube-play:before{content:\"\"}.fa-dropbox:before{content:\"\"}.fa-stack-overflow:before{content:\"\"}.fa-instagram:before{content:\"\"}.fa-flickr:before{content:\"\"}.fa-adn:before{content:\"\"}.fa-bitbucket:before{content:\"\"}.fa-bitbucket-square:before{content:\"\"}.fa-tumblr:before{content:\"\"}.fa-tumblr-square:before{content:\"\"}.fa-long-arrow-down:before{content:\"\"}.fa-long-arrow-up:before{content:\"\"}.fa-long-arrow-left:before{content:\"\"}.fa-long-arrow-right:before{content:\"\"}.fa-apple:before{content:\"\"}.fa-windows:before{content:\"\"}.fa-android:before{content:\"\"}.fa-linux:before{content:\"\"}.fa-dribbble:before{content:\"\"}.fa-skype:before{content:\"\"}.fa-foursquare:before{content:\"\"}.fa-trello:before{content:\"\"}.fa-female:before{content:\"\"}.fa-male:before{content:\"\"}.fa-gittip:before,.fa-gratipay:before{content:\"\"}.fa-sun-o:before{content:\"\"}.fa-moon-o:before{content:\"\"}.fa-archive:before{content:\"\"}.fa-bug:before{content:\"\"}.fa-vk:before{content:\"\"}.fa-weibo:before{content:\"\"}.fa-renren:before{content:\"\"}.fa-pagelines:before{content:\"\"}.fa-stack-exchange:before{content:\"\"}.fa-arrow-circle-o-right:before{content:\"\"}.fa-arrow-circle-o-left:before{content:\"\"}.fa-caret-square-o-left:before,.fa-toggle-left:before{content:\"\"}.fa-dot-circle-o:before{content:\"\"}.fa-wheelchair:before{content:\"\"}.fa-vimeo-square:before{content:\"\"}.fa-try:before,.fa-turkish-lira:before{content:\"\"}.fa-plus-square-o:before{content:\"\"}.fa-space-shuttle:before{content:\"\"}.fa-slack:before{content:\"\"}.fa-envelope-square:before{content:\"\"}.fa-wordpress:before{content:\"\"}.fa-openid:before{content:\"\"}.fa-bank:before,.fa-institution:before,.fa-university:before{content:\"\"}.fa-graduation-cap:before,.fa-mortar-board:before{content:\"\"}.fa-yahoo:before{content:\"\"}.fa-google:before{content:\"\"}.fa-reddit:before{content:\"\"}.fa-reddit-square:before{content:\"\"}.fa-stumbleupon-circle:before{content:\"\"}.fa-stumbleupon:before{content:\"\"}.fa-delicious:before{content:\"\"}.fa-digg:before{content:\"\"}.fa-pied-piper-pp:before{content:\"\"}.fa-pied-piper-alt:before{content:\"\"}.fa-drupal:before{content:\"\"}.fa-joomla:before{content:\"\"}.fa-language:before{content:\"\"}.fa-fax:before{content:\"\"}.fa-building:before{content:\"\"}.fa-child:before{content:\"\"}.fa-paw:before{content:\"\"}.fa-spoon:before{content:\"\"}.fa-cube:before{content:\"\"}.fa-cubes:before{content:\"\"}.fa-behance:before{content:\"\"}.fa-behance-square:before{content:\"\"}.fa-steam:before{content:\"\"}.fa-steam-square:before{content:\"\"}.fa-recycle:before{content:\"\"}.fa-automobile:before,.fa-car:before{content:\"\"}.fa-cab:before,.fa-taxi:before{content:\"\"}.fa-tree:before{content:\"\"}.fa-spotify:before{content:\"\"}.fa-deviantart:before{content:\"\"}.fa-soundcloud:before{content:\"\"}.fa-database:before{content:\"\"}.fa-file-pdf-o:before{content:\"\"}.fa-file-word-o:before{content:\"\"}.fa-file-excel-o:before{content:\"\"}.fa-file-powerpoint-o:before{content:\"\"}.fa-file-image-o:before,.fa-file-photo-o:before,.fa-file-picture-o:before{content:\"\"}.fa-file-archive-o:before,.fa-file-zip-o:before{content:\"\"}.fa-file-audio-o:before,.fa-file-sound-o:before{content:\"\"}.fa-file-movie-o:before,.fa-file-video-o:before{content:\"\"}.fa-file-code-o:before{content:\"\"}.fa-vine:before{content:\"\"}.fa-codepen:before{content:\"\"}.fa-jsfiddle:before{content:\"\"}.fa-life-bouy:before,.fa-life-buoy:before,.fa-life-ring:before,.fa-life-saver:before,.fa-support:before{content:\"\"}.fa-circle-o-notch:before{content:\"\"}.fa-ra:before,.fa-rebel:before,.fa-resistance:before{content:\"\"}.fa-empire:before,.fa-ge:before{content:\"\"}.fa-git-square:before{content:\"\"}.fa-git:before{content:\"\"}.fa-hacker-news:before,.fa-y-combinator-square:before,.fa-yc-square:before{content:\"\"}.fa-tencent-weibo:before{content:\"\"}.fa-qq:before{content:\"\"}.fa-wechat:before,.fa-weixin:before{content:\"\"}.fa-paper-plane:before,.fa-send:before{content:\"\"}.fa-paper-plane-o:before,.fa-send-o:before{content:\"\"}.fa-history:before{content:\"\"}.fa-circle-thin:before{content:\"\"}.fa-header:before{content:\"\"}.fa-paragraph:before{content:\"\"}.fa-sliders:before{content:\"\"}.fa-share-alt:before{content:\"\"}.fa-share-alt-square:before{content:\"\"}.fa-bomb:before{content:\"\"}.fa-futbol-o:before,.fa-soccer-ball-o:before{content:\"\"}.fa-tty:before{content:\"\"}.fa-binoculars:before{content:\"\"}.fa-plug:before{content:\"\"}.fa-slideshare:before{content:\"\"}.fa-twitch:before{content:\"\"}.fa-yelp:before{content:\"\"}.fa-newspaper-o:before{content:\"\"}.fa-wifi:before{content:\"\"}.fa-calculator:before{content:\"\"}.fa-paypal:before{content:\"\"}.fa-google-wallet:before{content:\"\"}.fa-cc-visa:before{content:\"\"}.fa-cc-mastercard:before{content:\"\"}.fa-cc-discover:before{content:\"\"}.fa-cc-amex:before{content:\"\"}.fa-cc-paypal:before{content:\"\"}.fa-cc-stripe:before{content:\"\"}.fa-bell-slash:before{content:\"\"}.fa-bell-slash-o:before{content:\"\"}.fa-trash:before{content:\"\"}.fa-copyright:before{content:\"\"}.fa-at:before{content:\"\"}.fa-eyedropper:before{content:\"\"}.fa-paint-brush:before{content:\"\"}.fa-birthday-cake:before{content:\"\"}.fa-area-chart:before{content:\"\"}.fa-pie-chart:before{content:\"\"}.fa-line-chart:before{content:\"\"}.fa-lastfm:before{content:\"\"}.fa-lastfm-square:before{content:\"\"}.fa-toggle-off:before{content:\"\"}.fa-toggle-on:before{content:\"\"}.fa-bicycle:before{content:\"\"}.fa-bus:before{content:\"\"}.fa-ioxhost:before{content:\"\"}.fa-angellist:before{content:\"\"}.fa-cc:before{content:\"\"}.fa-ils:before,.fa-shekel:before,.fa-sheqel:before{content:\"\"}.fa-meanpath:before{content:\"\"}.fa-buysellads:before{content:\"\"}.fa-connectdevelop:before{content:\"\"}.fa-dashcube:before{content:\"\"}.fa-forumbee:before{content:\"\"}.fa-leanpub:before{content:\"\"}.fa-sellsy:before{content:\"\"}.fa-shirtsinbulk:before{content:\"\"}.fa-simplybuilt:before{content:\"\"}.fa-skyatlas:before{content:\"\"}.fa-cart-plus:before{content:\"\"}.fa-cart-arrow-down:before{content:\"\"}.fa-diamond:before{content:\"\"}.fa-ship:before{content:\"\"}.fa-user-secret:before{content:\"\"}.fa-motorcycle:before{content:\"\"}.fa-street-view:before{content:\"\"}.fa-heartbeat:before{content:\"\"}.fa-venus:before{content:\"\"}.fa-mars:before{content:\"\"}.fa-mercury:before{content:\"\"}.fa-intersex:before,.fa-transgender:before{content:\"\"}.fa-transgender-alt:before{content:\"\"}.fa-venus-double:before{content:\"\"}.fa-mars-double:before{content:\"\"}.fa-venus-mars:before{content:\"\"}.fa-mars-stroke:before{content:\"\"}.fa-mars-stroke-v:before{content:\"\"}.fa-mars-stroke-h:before{content:\"\"}.fa-neuter:before{content:\"\"}.fa-genderless:before{content:\"\"}.fa-facebook-official:before{content:\"\"}.fa-pinterest-p:before{content:\"\"}.fa-whatsapp:before{content:\"\"}.fa-server:before{content:\"\"}.fa-user-plus:before{content:\"\"}.fa-user-times:before{content:\"\"}.fa-bed:before,.fa-hotel:before{content:\"\"}.fa-viacoin:before{content:\"\"}.fa-train:before{content:\"\"}.fa-subway:before{content:\"\"}.fa-medium:before{content:\"\"}.fa-y-combinator:before,.fa-yc:before{content:\"\"}.fa-optin-monster:before{content:\"\"}.fa-opencart:before{content:\"\"}.fa-expeditedssl:before{content:\"\"}.fa-battery-4:before,.fa-battery-full:before,.fa-battery:before{content:\"\"}.fa-battery-3:before,.fa-battery-three-quarters:before{content:\"\"}.fa-battery-2:before,.fa-battery-half:before{content:\"\"}.fa-battery-1:before,.fa-battery-quarter:before{content:\"\"}.fa-battery-0:before,.fa-battery-empty:before{content:\"\"}.fa-mouse-pointer:before{content:\"\"}.fa-i-cursor:before{content:\"\"}.fa-object-group:before{content:\"\"}.fa-object-ungroup:before{content:\"\"}.fa-sticky-note:before{content:\"\"}.fa-sticky-note-o:before{content:\"\"}.fa-cc-jcb:before{content:\"\"}.fa-cc-diners-club:before{content:\"\"}.fa-clone:before{content:\"\"}.fa-balance-scale:before{content:\"\"}.fa-hourglass-o:before{content:\"\"}.fa-hourglass-1:before,.fa-hourglass-start:before{content:\"\"}.fa-hourglass-2:before,.fa-hourglass-half:before{content:\"\"}.fa-hourglass-3:before,.fa-hourglass-end:before{content:\"\"}.fa-hourglass:before{content:\"\"}.fa-hand-grab-o:before,.fa-hand-rock-o:before{content:\"\"}.fa-hand-paper-o:before,.fa-hand-stop-o:before{content:\"\"}.fa-hand-scissors-o:before{content:\"\"}.fa-hand-lizard-o:before{content:\"\"}.fa-hand-spock-o:before{content:\"\"}.fa-hand-pointer-o:before{content:\"\"}.fa-hand-peace-o:before{content:\"\"}.fa-trademark:before{content:\"\"}.fa-registered:before{content:\"\"}.fa-creative-commons:before{content:\"\"}.fa-gg:before{content:\"\"}.fa-gg-circle:before{content:\"\"}.fa-tripadvisor:before{content:\"\"}.fa-odnoklassniki:before{content:\"\"}.fa-odnoklassniki-square:before{content:\"\"}.fa-get-pocket:before{content:\"\"}.fa-wikipedia-w:before{content:\"\"}.fa-safari:before{content:\"\"}.fa-chrome:before{content:\"\"}.fa-firefox:before{content:\"\"}.fa-opera:before{content:\"\"}.fa-internet-explorer:before{content:\"\"}.fa-television:before,.fa-tv:before{content:\"\"}.fa-contao:before{content:\"\"}.fa-500px:before{content:\"\"}.fa-amazon:before{content:\"\"}.fa-calendar-plus-o:before{content:\"\"}.fa-calendar-minus-o:before{content:\"\"}.fa-calendar-times-o:before{content:\"\"}.fa-calendar-check-o:before{content:\"\"}.fa-industry:before{content:\"\"}.fa-map-pin:before{content:\"\"}.fa-map-signs:before{content:\"\"}.fa-map-o:before{content:\"\"}.fa-map:before{content:\"\"}.fa-commenting:before{content:\"\"}.fa-commenting-o:before{content:\"\"}.fa-houzz:before{content:\"\"}.fa-vimeo:before{content:\"\"}.fa-black-tie:before{content:\"\"}.fa-fonticons:before{content:\"\"}.fa-reddit-alien:before{content:\"\"}.fa-edge:before{content:\"\"}.fa-credit-card-alt:before{content:\"\"}.fa-codiepie:before{content:\"\"}.fa-modx:before{content:\"\"}.fa-fort-awesome:before{content:\"\"}.fa-usb:before{content:\"\"}.fa-product-hunt:before{content:\"\"}.fa-mixcloud:before{content:\"\"}.fa-scribd:before{content:\"\"}.fa-pause-circle:before{content:\"\"}.fa-pause-circle-o:before{content:\"\"}.fa-stop-circle:before{content:\"\"}.fa-stop-circle-o:before{content:\"\"}.fa-shopping-bag:before{content:\"\"}.fa-shopping-basket:before{content:\"\"}.fa-hashtag:before{content:\"\"}.fa-bluetooth:before{content:\"\"}.fa-bluetooth-b:before{content:\"\"}.fa-percent:before{content:\"\"}.fa-gitlab:before{content:\"\"}.fa-wpbeginner:before{content:\"\"}.fa-wpforms:before{content:\"\"}.fa-envira:before{content:\"\"}.fa-universal-access:before{content:\"\"}.fa-wheelchair-alt:before{content:\"\"}.fa-question-circle-o:before{content:\"\"}.fa-blind:before{content:\"\"}.fa-audio-description:before{content:\"\"}.fa-volume-control-phone:before{content:\"\"}.fa-braille:before{content:\"\"}.fa-assistive-listening-systems:before{content:\"\"}.fa-american-sign-language-interpreting:before,.fa-asl-interpreting:before{content:\"\"}.fa-deaf:before,.fa-deafness:before,.fa-hard-of-hearing:before{content:\"\"}.fa-glide:before{content:\"\"}.fa-glide-g:before{content:\"\"}.fa-sign-language:before,.fa-signing:before{content:\"\"}.fa-low-vision:before{content:\"\"}.fa-viadeo:before{content:\"\"}.fa-viadeo-square:before{content:\"\"}.fa-snapchat:before{content:\"\"}.fa-snapchat-ghost:before{content:\"\"}.fa-snapchat-square:before{content:\"\"}.fa-pied-piper:before{content:\"\"}.fa-first-order:before{content:\"\"}.fa-yoast:before{content:\"\"}.fa-themeisle:before{content:\"\"}.fa-google-plus-circle:before,.fa-google-plus-official:before{content:\"\"}.fa-fa:before,.fa-font-awesome:before{content:\"\"}.fa-handshake-o:before{content:\"\"}.fa-envelope-open:before{content:\"\"}.fa-envelope-open-o:before{content:\"\"}.fa-linode:before{content:\"\"}.fa-address-book:before{content:\"\"}.fa-address-book-o:before{content:\"\"}.fa-address-card:before,.fa-vcard:before{content:\"\"}.fa-address-card-o:before,.fa-vcard-o:before{content:\"\"}.fa-user-circle:before{content:\"\"}.fa-user-circle-o:before{content:\"\"}.fa-user-o:before{content:\"\"}.fa-id-badge:before{content:\"\"}.fa-drivers-license:before,.fa-id-card:before{content:\"\"}.fa-drivers-license-o:before,.fa-id-card-o:before{content:\"\"}.fa-quora:before{content:\"\"}.fa-free-code-camp:before{content:\"\"}.fa-telegram:before{content:\"\"}.fa-thermometer-4:before,.fa-thermometer-full:before,.fa-thermometer:before{content:\"\"}.fa-thermometer-3:before,.fa-thermometer-three-quarters:before{content:\"\"}.fa-thermometer-2:before,.fa-thermometer-half:before{content:\"\"}.fa-thermometer-1:before,.fa-thermometer-quarter:before{content:\"\"}.fa-thermometer-0:before,.fa-thermometer-empty:before{content:\"\"}.fa-shower:before{content:\"\"}.fa-bath:before,.fa-bathtub:before,.fa-s15:before{content:\"\"}.fa-podcast:before{content:\"\"}.fa-window-maximize:before{content:\"\"}.fa-window-minimize:before{content:\"\"}.fa-window-restore:before{content:\"\"}.fa-times-rectangle:before,.fa-window-close:before{content:\"\"}.fa-times-rectangle-o:before,.fa-window-close-o:before{content:\"\"}.fa-bandcamp:before{content:\"\"}.fa-grav:before{content:\"\"}.fa-etsy:before{content:\"\"}.fa-imdb:before{content:\"\"}.fa-ravelry:before{content:\"\"}.fa-eercast:before{content:\"\"}.fa-microchip:before{content:\"\"}.fa-snowflake-o:before{content:\"\"}.fa-superpowers:before{content:\"\"}.fa-wpexplorer:before{content:\"\"}.fa-meetup:before{content:\"\"}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}');
+('/*!\n * Bootstrap v3.4.1 (https://getbootstrap.com/)\n * Copyright 2011-2019 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:none;text-decoration:underline dotted}b,strong{font-weight:700}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-.5em}sub{bottom:-.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=checkbox],input[type=radio]{box-sizing:border-box;padding:0}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{height:auto}input[type=search]{-webkit-appearance:textfield;box-sizing:content-box}input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{border:0}textarea{overflow:auto}optgroup{font-weight:700}table{border-collapse:collapse;border-spacing:0}legend,td,th{padding:0}\n/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */\n@-webkit-keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-moz-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-o-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-moz-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-o-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-webkit-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-moz-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-o-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-webkit-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-moz-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-o-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-webkit-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-moz-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-o-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes bs-notify-fadeOut{0%{opacity:.9}to{opacity:0}}@media print{*,:after,:before{color:#000!important;text-shadow:none!important;background:0 0!important;box-shadow:none!important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\"attr(href)\")\"}abbr[title]:after{content:\" (\"attr(title)\")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}blockquote,pre{border:1px solid #999}thead{display:table-header-group}blockquote,img,pre,tr{page-break-inside:avoid}img{max-width:100%!important}h2,h3,p{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000!important}.label{border:1px solid #000}.table{border-collapse:collapse!important}.table td,.table th{background-color:#fff!important}.table-bordered td,.table-bordered th{border:1px solid #ddd!important}}@font-face{font-family:\"Glyphicons Halflings\";src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot);src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot?#iefix)format(\"embedded-opentype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff2)format(\"woff2\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff)format(\"woff\"),url(../../common/v3/fonts/glyphicons-halflings-regular.ttf)format(\"truetype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular)format(\"svg\")}.glyphicon{position:relative;top:1px;display:inline-block;font-family:\"Glyphicons Halflings\";font-style:normal;font-weight:400;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.glyphicon-asterisk:before{content:\"*\"}.glyphicon-plus:before{content:\"+\"}.glyphicon-eur:before,.glyphicon-euro:before{content:\"€\"}.glyphicon-minus:before,.sim-tabs>ul>li>a.active>.tab-title::after{content:\"−\"}.glyphicon-cloud:before{content:\"☁\"}.glyphicon-envelope:before{content:\"✉\"}.glyphicon-pencil:before{content:\"✏\"}.glyphicon-glass:before{content:\"\"}.glyphicon-music:before{content:\"\"}.glyphicon-search:before{content:\"\"}.glyphicon-heart:before{content:\"\"}.glyphicon-star:before{content:\"\"}.glyphicon-star-empty:before{content:\"\"}.glyphicon-user:before{content:\"\"}.glyphicon-film:before{content:\"\"}.glyphicon-th-large:before{content:\"\"}.glyphicon-th:before{content:\"\"}.glyphicon-th-list:before{content:\"\"}.glyphicon-ok:before{content:\"\"}.glyphicon-remove:before{content:\"\"}.glyphicon-zoom-in:before{content:\"\"}.glyphicon-zoom-out:before{content:\"\"}.glyphicon-off:before{content:\"\"}.glyphicon-signal:before{content:\"\"}.glyphicon-cog:before{content:\"\"}.glyphicon-trash:before{content:\"\"}.glyphicon-home:before{content:\"\"}.glyphicon-file:before{content:\"\"}.glyphicon-time:before{content:\"\"}.glyphicon-road:before{content:\"\"}.glyphicon-download-alt:before{content:\"\"}.glyphicon-download:before{content:\"\"}.glyphicon-upload:before{content:\"\"}.glyphicon-inbox:before{content:\"\"}.glyphicon-play-circle:before{content:\"\"}.glyphicon-repeat:before{content:\"\"}.glyphicon-refresh:before{content:\"\"}.glyphicon-list-alt:before{content:\"\"}.glyphicon-lock:before{content:\"\"}.glyphicon-flag:before{content:\"\"}.glyphicon-headphones:before{content:\"\"}.glyphicon-volume-off:before{content:\"\"}.glyphicon-volume-down:before{content:\"\"}.glyphicon-volume-up:before{content:\"\"}.glyphicon-qrcode:before{content:\"\"}.glyphicon-barcode:before{content:\"\"}.glyphicon-tag:before{content:\"\"}.glyphicon-tags:before{content:\"\"}.glyphicon-book:before{content:\"\"}.glyphicon-bookmark:before{content:\"\"}.glyphicon-print:before{content:\"\"}.glyphicon-camera:before{content:\"\"}.glyphicon-font:before{content:\"\"}.glyphicon-bold:before{content:\"\"}.glyphicon-italic:before{content:\"\"}.glyphicon-text-height:before{content:\"\"}.glyphicon-text-width:before{content:\"\"}.glyphicon-align-left:before{content:\"\"}.glyphicon-align-center:before{content:\"\"}.glyphicon-align-right:before{content:\"\"}.glyphicon-align-justify:before{content:\"\"}.glyphicon-list:before{content:\"\"}.glyphicon-indent-left:before{content:\"\"}.glyphicon-indent-right:before{content:\"\"}.glyphicon-facetime-video:before{content:\"\"}.glyphicon-picture:before{content:\"\"}.glyphicon-map-marker:before{content:\"\"}.glyphicon-adjust:before{content:\"\"}.glyphicon-tint:before{content:\"\"}.glyphicon-edit:before{content:\"\"}.glyphicon-share:before{content:\"\"}.glyphicon-check:before{content:\"\"}.glyphicon-move:before{content:\"\"}.glyphicon-step-backward:before{content:\"\"}.glyphicon-fast-backward:before{content:\"\"}.glyphicon-backward:before{content:\"\"}.glyphicon-play:before{content:\"\"}.glyphicon-pause:before{content:\"\"}.glyphicon-stop:before{content:\"\"}.glyphicon-forward:before{content:\"\"}.glyphicon-fast-forward:before{content:\"\"}.glyphicon-step-forward:before{content:\"\"}.glyphicon-eject:before{content:\"\"}.glyphicon-chevron-left:before{content:\"\"}.glyphicon-chevron-right:before{content:\"\"}.glyphicon-plus-sign:before{content:\"\"}.glyphicon-minus-sign:before{content:\"\"}.glyphicon-remove-sign:before{content:\"\"}.glyphicon-ok-sign:before{content:\"\"}.glyphicon-question-sign:before{content:\"\"}.glyphicon-info-sign:before{content:\"\"}.glyphicon-screenshot:before{content:\"\"}.glyphicon-remove-circle:before{content:\"\"}.glyphicon-ok-circle:before{content:\"\"}.glyphicon-ban-circle:before{content:\"\"}.glyphicon-arrow-left:before{content:\"\"}.glyphicon-arrow-right:before{content:\"\"}.glyphicon-arrow-up:before{content:\"\"}.glyphicon-arrow-down:before{content:\"\"}.glyphicon-share-alt:before{content:\"\"}.glyphicon-resize-full:before{content:\"\"}.glyphicon-resize-small:before{content:\"\"}.glyphicon-exclamation-sign:before{content:\"\"}.glyphicon-gift:before{content:\"\"}.glyphicon-leaf:before{content:\"\"}.glyphicon-fire:before{content:\"\"}.glyphicon-eye-open:before{content:\"\"}.glyphicon-eye-close:before{content:\"\"}.glyphicon-warning-sign:before{content:\"\"}.glyphicon-plane:before{content:\"\"}.glyphicon-calendar:before{content:\"\"}.glyphicon-random:before{content:\"\"}.glyphicon-comment:before{content:\"\"}.glyphicon-magnet:before{content:\"\"}.glyphicon-chevron-up:before{content:\"\"}.glyphicon-chevron-down:before{content:\"\"}.glyphicon-retweet:before{content:\"\"}.glyphicon-shopping-cart:before{content:\"\"}.glyphicon-folder-close:before{content:\"\"}.glyphicon-folder-open:before{content:\"\"}.glyphicon-resize-vertical:before{content:\"\"}.glyphicon-resize-horizontal:before{content:\"\"}.glyphicon-hdd:before{content:\"\"}.glyphicon-bullhorn:before{content:\"\"}.glyphicon-bell:before{content:\"\"}.glyphicon-certificate:before{content:\"\"}.glyphicon-thumbs-up:before{content:\"\"}.glyphicon-thumbs-down:before{content:\"\"}.glyphicon-hand-right:before{content:\"\"}.glyphicon-hand-left:before{content:\"\"}.glyphicon-hand-up:before{content:\"\"}.glyphicon-hand-down:before{content:\"\"}.glyphicon-circle-arrow-right:before{content:\"\"}.glyphicon-circle-arrow-left:before{content:\"\"}.glyphicon-circle-arrow-up:before{content:\"\"}.glyphicon-circle-arrow-down:before{content:\"\"}.glyphicon-globe:before{content:\"\"}.glyphicon-wrench:before{content:\"\"}.glyphicon-tasks:before{content:\"\"}.glyphicon-filter:before{content:\"\"}.glyphicon-briefcase:before{content:\"\"}.glyphicon-fullscreen:before{content:\"\"}.glyphicon-dashboard:before{content:\"\"}.glyphicon-paperclip:before{content:\"\"}.glyphicon-heart-empty:before{content:\"\"}.glyphicon-link:before{content:\"\"}.glyphicon-phone:before{content:\"\"}.glyphicon-pushpin:before{content:\"\"}.glyphicon-usd:before{content:\"\"}.glyphicon-gbp:before{content:\"\"}.glyphicon-sort:before{content:\"\"}.glyphicon-sort-by-alphabet:before{content:\"\"}.glyphicon-sort-by-alphabet-alt:before{content:\"\"}.glyphicon-sort-by-order:before{content:\"\"}.glyphicon-sort-by-order-alt:before{content:\"\"}.glyphicon-sort-by-attributes:before{content:\"\"}.glyphicon-sort-by-attributes-alt:before{content:\"\"}.glyphicon-unchecked:before{content:\"\"}.glyphicon-expand:before{content:\"\"}.glyphicon-collapse-down:before{content:\"\"}.glyphicon-collapse-up:before{content:\"\"}.glyphicon-log-in:before{content:\"\"}.glyphicon-flash:before{content:\"\"}.glyphicon-log-out:before{content:\"\"}.glyphicon-new-window:before{content:\"\"}.glyphicon-record:before{content:\"\"}.glyphicon-save:before{content:\"\"}.glyphicon-open:before{content:\"\"}.glyphicon-saved:before{content:\"\"}.glyphicon-import:before{content:\"\"}.glyphicon-export:before{content:\"\"}.glyphicon-send:before{content:\"\"}.glyphicon-floppy-disk:before{content:\"\"}.glyphicon-floppy-saved:before{content:\"\"}.glyphicon-floppy-remove:before{content:\"\"}.glyphicon-floppy-save:before{content:\"\"}.glyphicon-floppy-open:before{content:\"\"}.glyphicon-credit-card:before{content:\"\"}.glyphicon-transfer:before{content:\"\"}.glyphicon-cutlery:before{content:\"\"}.glyphicon-header:before{content:\"\"}.glyphicon-compressed:before{content:\"\"}.glyphicon-earphone:before{content:\"\"}.glyphicon-phone-alt:before{content:\"\"}.glyphicon-tower:before{content:\"\"}.glyphicon-stats:before{content:\"\"}.glyphicon-sd-video:before{content:\"\"}.glyphicon-hd-video:before{content:\"\"}.glyphicon-subtitles:before{content:\"\"}.glyphicon-sound-stereo:before{content:\"\"}.glyphicon-sound-dolby:before{content:\"\"}.glyphicon-sound-5-1:before{content:\"\"}.glyphicon-sound-6-1:before{content:\"\"}.glyphicon-sound-7-1:before{content:\"\"}.glyphicon-copyright-mark:before{content:\"\"}.glyphicon-registration-mark:before{content:\"\"}.glyphicon-cloud-download:before{content:\"\"}.glyphicon-cloud-upload:before{content:\"\"}.glyphicon-tree-conifer:before{content:\"\"}.glyphicon-tree-deciduous:before{content:\"\"}.glyphicon-cd:before{content:\"\"}.glyphicon-save-file:before{content:\"\"}.glyphicon-open-file:before{content:\"\"}.glyphicon-level-up:before{content:\"\"}.glyphicon-copy:before{content:\"\"}.glyphicon-paste:before{content:\"\"}.glyphicon-alert:before{content:\"\"}.glyphicon-equalizer:before{content:\"\"}.glyphicon-king:before{content:\"\"}.glyphicon-queen:before{content:\"\"}.glyphicon-pawn:before{content:\"\"}.glyphicon-bishop:before{content:\"\"}.glyphicon-knight:before{content:\"\"}.glyphicon-baby-formula:before{content:\"\"}.glyphicon-tent:before{content:\"⛺\"}.glyphicon-blackboard:before{content:\"\"}.glyphicon-bed:before{content:\"\"}.glyphicon-apple:before{content:\"\"}.glyphicon-erase:before{content:\"\"}.glyphicon-hourglass:before{content:\"⌛\"}.glyphicon-lamp:before{content:\"\"}.glyphicon-duplicate:before{content:\"\"}.glyphicon-piggy-bank:before{content:\"\"}.glyphicon-scissors:before{content:\"\"}.glyphicon-bitcoin:before,.glyphicon-btc:before,.glyphicon-xbt:before{content:\"\"}.glyphicon-jpy:before,.glyphicon-yen:before{content:\"¥\"}.glyphicon-rub:before,.glyphicon-ruble:before{content:\"₽\"}.glyphicon-scale:before{content:\"\"}.glyphicon-ice-lolly:before{content:\"\"}.glyphicon-ice-lolly-tasted:before{content:\"\"}.glyphicon-education:before{content:\"\"}.glyphicon-option-horizontal:before{content:\"\"}.glyphicon-option-vertical:before{content:\"\"}.glyphicon-menu-hamburger:before{content:\"\"}.glyphicon-modal-window:before{content:\"\"}.glyphicon-oil:before{content:\"\"}.glyphicon-grain:before{content:\"\"}.glyphicon-sunglasses:before{content:\"\"}.glyphicon-text-size:before{content:\"\"}.glyphicon-text-color:before{content:\"\"}.glyphicon-text-background:before{content:\"\"}.glyphicon-object-align-top:before{content:\"\"}.glyphicon-object-align-bottom:before{content:\"\"}.glyphicon-object-align-horizontal:before{content:\"\"}.glyphicon-object-align-left:before{content:\"\"}.glyphicon-object-align-vertical:before{content:\"\"}.glyphicon-object-align-right:before{content:\"\"}.glyphicon-triangle-right:before{content:\"\"}.glyphicon-triangle-left:before{content:\"\"}.glyphicon-triangle-bottom:before{content:\"\"}.glyphicon-triangle-top:before{content:\"\"}.glyphicon-console:before{content:\"\"}.glyphicon-superscript:before{content:\"\"}.glyphicon-subscript:before{content:\"\"}.glyphicon-menu-left:before{content:\"\"}.glyphicon-menu-right:before{content:\"\"}.glyphicon-menu-down:before{content:\"\"}.glyphicon-menu-up:before{content:\"\"}*,:after,:before{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:transparent}body{font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#21366b;text-decoration:none}a:focus,a:hover{color:#0f1831;text-decoration:underline}a:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.carousel-inner>.item>a>img,.carousel-inner>.item>img,.img-responsive,.thumbnail a>img,.thumbnail>img{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #dcdcdc}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=button]{cursor:pointer}.h1,.h2,.h3,.h4,.h5,.h6,h1,h2,h3,h4,h5,h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-weight:400;line-height:1;color:#cdcdcd}.h1,.h2,.h3,h1,h2,h3{margin-top:20px;margin-bottom:10px}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small{font-size:65%}.h4,.h5,.h6,h4,h5,h6{margin-top:10px;margin-bottom:10px}.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-size:75%}.h1,h1{font-size:36px}.h2,h2{font-size:30px}.h3,h3{font-size:24px}.h4,h4{font-size:18px}.h5,h5{font-size:14px}.h6,h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}.small,small{font-size:85%}.mark,mark{padding:.2em;background-color:#fcf8e3}.text-left,th{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#cdcdcd}.text-primary{color:#21366b}a.text-primary:focus,a.text-primary:hover{color:#152244}.text-success{color:#3c763d}a.text-success:focus,a.text-success:hover{color:#2b542c}.text-info{color:#31708f}a.text-info:focus,a.text-info:hover{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:focus,a.text-warning:hover{color:#66512c}.text-danger{color:#a94442}a.text-danger:focus,a.text-danger:hover{color:#843534}.bg-primary{color:#fff;background-color:#21366b}a.bg-primary:focus,a.bg-primary:hover{background-color:#152244}.bg-success{background-color:#dff0d8}a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #dcdcdc}dl,ol,ul{margin-top:0;margin-bottom:10px}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}.list-inline,.list-unstyled{padding-left:0;list-style:none}.list-inline{margin-left:-5px}.list-inline>li{display:inline-block;padding-right:5px;padding-left:5px}dl{margin-bottom:20px}dd,dt{line-height:1.42857143}dt{font-weight:700}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[data-original-title],abbr[title]{cursor:help}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #dcdcdc}blockquote ol:last-child,blockquote p:last-child,blockquote ul:last-child{margin-bottom:0}blockquote .small,blockquote footer,blockquote small{display:block;font-size:80%;line-height:1.42857143;color:#cdcdcd}blockquote .small:before,blockquote footer:before,blockquote small:before{content:\"— \"}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;text-align:right;border-right:5px solid #dcdcdc;border-left:0}.blockquote-reverse .small:before,.blockquote-reverse footer:before,.blockquote-reverse small:before,.sim-tabs>ul>li>a.singleton.active>.tab-title::after,.sim-tabs>ul>li>a.singleton>.tab-title::after,blockquote.pull-right .small:before,blockquote.pull-right footer:before,blockquote.pull-right small:before{content:\"\"}.blockquote-reverse .small:after,.blockquote-reverse footer:after,.blockquote-reverse small:after,blockquote.pull-right .small:after,blockquote.pull-right footer:after,blockquote.pull-right small:after{content:\" —\"}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}code,kbd,pre,samp{font-family:Menlo,Monaco,Consolas,\"Courier New\",monospace}code,kbd,pre{padding:2px 4px;font-size:90%;color:#c7254e;background-color:#f9f2f4;border-radius:4px}kbd{color:#fff;background-color:#333;border-radius:3px;box-shadow:inset 0-1px 0 rgba(0,0,0,.25)}kbd kbd{padding:0;font-size:100%;font-weight:700;box-shadow:none}pre{display:block;padding:9.5px;margin:0 0 10px;font-size:13px;line-height:1.42857143;color:#333;word-break:break-all;word-wrap:break-word;background-color:#f5f5f5;border:1px solid #ccc}pre code{padding:0;font-size:inherit;color:inherit;white-space:pre-wrap;border-radius:0}.pre-scrollable{max-height:340px;overflow-y:scroll}.container{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}@media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}@media (min-width:1200px){.container{width:1170px}}.container-fluid{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}.row{margin-right:-15px;margin-left:-15px}.row-no-gutters{margin-right:0;margin-left:0}.row-no-gutters [class*=col-]{padding-right:0;padding-left:0}.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{position:relative;min-height:1px;padding-right:15px;padding-left:15px}.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{float:left}.col-xs-12{width:100%}.col-xs-11{width:91.66666667%}.col-xs-10{width:83.33333333%}.col-xs-9{width:75%}.col-xs-8{width:66.66666667%}.col-xs-7{width:58.33333333%}.col-xs-6{width:50%}.col-xs-5{width:41.66666667%}.col-xs-4{width:33.33333333%}.col-xs-3{width:25%}.col-xs-2{width:16.66666667%}.col-xs-1{width:8.33333333%}.col-xs-pull-12{right:100%}.col-xs-pull-11{right:91.66666667%}.col-xs-pull-10{right:83.33333333%}.col-xs-pull-9{right:75%}.col-xs-pull-8{right:66.66666667%}.col-xs-pull-7{right:58.33333333%}.col-xs-pull-6{right:50%}.col-xs-pull-5{right:41.66666667%}.col-xs-pull-4{right:33.33333333%}.col-xs-pull-3{right:25%}.col-xs-pull-2{right:16.66666667%}.col-xs-pull-1{right:8.33333333%}.col-xs-pull-0{right:auto}.col-xs-push-12{left:100%}.col-xs-push-11{left:91.66666667%}.col-xs-push-10{left:83.33333333%}.col-xs-push-9{left:75%}.col-xs-push-8{left:66.66666667%}.col-xs-push-7{left:58.33333333%}.col-xs-push-6{left:50%}.col-xs-push-5{left:41.66666667%}.col-xs-push-4{left:33.33333333%}.col-xs-push-3{left:25%}.col-xs-push-2{left:16.66666667%}.col-xs-push-1{left:8.33333333%}.col-xs-push-0{left:auto}.col-xs-offset-12{margin-left:100%}.col-xs-offset-11{margin-left:91.66666667%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-0{margin-left:0}@media (min-width:768px){.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9{float:left}.col-sm-12{width:100%}.col-sm-11{width:91.66666667%}.col-sm-10{width:83.33333333%}.col-sm-9{width:75%}.col-sm-8{width:66.66666667%}.col-sm-7{width:58.33333333%}.col-sm-6{width:50%}.col-sm-5{width:41.66666667%}.col-sm-4{width:33.33333333%}.col-sm-3{width:25%}.col-sm-2{width:16.66666667%}.col-sm-1{width:8.33333333%}.col-sm-pull-12{right:100%}.col-sm-pull-11{right:91.66666667%}.col-sm-pull-10{right:83.33333333%}.col-sm-pull-9{right:75%}.col-sm-pull-8{right:66.66666667%}.col-sm-pull-7{right:58.33333333%}.col-sm-pull-6{right:50%}.col-sm-pull-5{right:41.66666667%}.col-sm-pull-4{right:33.33333333%}.col-sm-pull-3{right:25%}.col-sm-pull-2{right:16.66666667%}.col-sm-pull-1{right:8.33333333%}.col-sm-pull-0{right:auto}.col-sm-push-12{left:100%}.col-sm-push-11{left:91.66666667%}.col-sm-push-10{left:83.33333333%}.col-sm-push-9{left:75%}.col-sm-push-8{left:66.66666667%}.col-sm-push-7{left:58.33333333%}.col-sm-push-6{left:50%}.col-sm-push-5{left:41.66666667%}.col-sm-push-4{left:33.33333333%}.col-sm-push-3{left:25%}.col-sm-push-2{left:16.66666667%}.col-sm-push-1{left:8.33333333%}.col-sm-push-0{left:auto}.col-sm-offset-12{margin-left:100%}.col-sm-offset-11{margin-left:91.66666667%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-0{margin-left:0}}@media (min-width:992px){.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9{float:left}.col-md-12{width:100%}.col-md-11{width:91.66666667%}.col-md-10{width:83.33333333%}.col-md-9{width:75%}.col-md-8{width:66.66666667%}.col-md-7{width:58.33333333%}.col-md-6{width:50%}.col-md-5{width:41.66666667%}.col-md-4{width:33.33333333%}.col-md-3{width:25%}.col-md-2{width:16.66666667%}.col-md-1{width:8.33333333%}.col-md-pull-12{right:100%}.col-md-pull-11{right:91.66666667%}.col-md-pull-10{right:83.33333333%}.col-md-pull-9{right:75%}.col-md-pull-8{right:66.66666667%}.col-md-pull-7{right:58.33333333%}.col-md-pull-6{right:50%}.col-md-pull-5{right:41.66666667%}.col-md-pull-4{right:33.33333333%}.col-md-pull-3{right:25%}.col-md-pull-2{right:16.66666667%}.col-md-pull-1{right:8.33333333%}.col-md-pull-0{right:auto}.col-md-push-12{left:100%}.col-md-push-11{left:91.66666667%}.col-md-push-10{left:83.33333333%}.col-md-push-9{left:75%}.col-md-push-8{left:66.66666667%}.col-md-push-7{left:58.33333333%}.col-md-push-6{left:50%}.col-md-push-5{left:41.66666667%}.col-md-push-4{left:33.33333333%}.col-md-push-3{left:25%}.col-md-push-2{left:16.66666667%}.col-md-push-1{left:8.33333333%}.col-md-push-0{left:auto}.col-md-offset-12{margin-left:100%}.col-md-offset-11{margin-left:91.66666667%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-9{margin-left:75%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-6{margin-left:50%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-3{margin-left:25%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-0{margin-left:0}}@media (min-width:1200px){.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9{float:left}.col-lg-12{width:100%}.col-lg-11{width:91.66666667%}.col-lg-10{width:83.33333333%}.col-lg-9{width:75%}.col-lg-8{width:66.66666667%}.col-lg-7{width:58.33333333%}.col-lg-6{width:50%}.col-lg-5{width:41.66666667%}.col-lg-4{width:33.33333333%}.col-lg-3{width:25%}.col-lg-2{width:16.66666667%}.col-lg-1{width:8.33333333%}.col-lg-pull-12{right:100%}.col-lg-pull-11{right:91.66666667%}.col-lg-pull-10{right:83.33333333%}.col-lg-pull-9{right:75%}.col-lg-pull-8{right:66.66666667%}.col-lg-pull-7{right:58.33333333%}.col-lg-pull-6{right:50%}.col-lg-pull-5{right:41.66666667%}.col-lg-pull-4{right:33.33333333%}.col-lg-pull-3{right:25%}.col-lg-pull-2{right:16.66666667%}.col-lg-pull-1{right:8.33333333%}.col-lg-pull-0{right:auto}.col-lg-push-12{left:100%}.col-lg-push-11{left:91.66666667%}.col-lg-push-10{left:83.33333333%}.col-lg-push-9{left:75%}.col-lg-push-8{left:66.66666667%}.col-lg-push-7{left:58.33333333%}.col-lg-push-6{left:50%}.col-lg-push-5{left:41.66666667%}.col-lg-push-4{left:33.33333333%}.col-lg-push-3{left:25%}.col-lg-push-2{left:16.66666667%}.col-lg-push-1{left:8.33333333%}.col-lg-push-0{left:auto}.col-lg-offset-12{margin-left:100%}.col-lg-offset-11{margin-left:91.66666667%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-0{margin-left:0}}pre code,table{background-color:transparent}table col[class*=col-]{position:static;display:table-column;float:none}table td[class*=col-],table th[class*=col-]{position:static;display:table-cell;float:none}caption{padding-top:8px;padding-bottom:8px;color:#cdcdcd;text-align:left}.table{width:100%;max-width:100%;margin-bottom:20px}.table>thead>tr>th{padding:8px;line-height:1.42857143;border-top:1px solid #ddd}.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}.panel>.table>tbody:first-child>tr:first-child td,.panel>.table>tbody:first-child>tr:first-child th,.table>caption+thead>tr:first-child>td,.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>td,.table>thead:first-child>tr:first-child>th{border-top:0}.table>tbody+tbody{border-top:2px solid #ddd}.table .table{background-color:#fff}.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:5px}.table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}.table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}.table-hover>tbody>tr:hover,.table>tbody>tr.active>td,.table>tbody>tr.active>th,.table>tbody>tr>td.active,.table>tbody>tr>th.active,.table>tfoot>tr.active>td,.table>tfoot>tr.active>th,.table>tfoot>tr>td.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>thead>tr.active>th,.table>thead>tr>td.active,.table>thead>tr>th.active{background-color:#f5f5f5}.table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr.active:hover>th,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover{background-color:#e8e8e8}.table>tbody>tr.success>td,.table>tbody>tr.success>th,.table>tbody>tr>td.success,.table>tbody>tr>th.success,.table>tfoot>tr.success>td,.table>tfoot>tr.success>th,.table>tfoot>tr>td.success,.table>tfoot>tr>th.success,.table>thead>tr.success>td,.table>thead>tr.success>th,.table>thead>tr>td.success,.table>thead>tr>th.success{background-color:#dff0d8}.table-hover>tbody>tr.success:hover>td,.table-hover>tbody>tr.success:hover>th,.table-hover>tbody>tr:hover>.success,.table-hover>tbody>tr>td.success:hover,.table-hover>tbody>tr>th.success:hover{background-color:#d0e9c6}.table>tbody>tr.info>td,.table>tbody>tr.info>th,.table>tbody>tr>td.info,.table>tbody>tr>th.info,.table>tfoot>tr.info>td,.table>tfoot>tr.info>th,.table>tfoot>tr>td.info,.table>tfoot>tr>th.info,.table>thead>tr.info>td,.table>thead>tr.info>th,.table>thead>tr>td.info,.table>thead>tr>th.info{background-color:#d9edf7}.table-hover>tbody>tr.info:hover>td,.table-hover>tbody>tr.info:hover>th,.table-hover>tbody>tr:hover>.info,.table-hover>tbody>tr>td.info:hover,.table-hover>tbody>tr>th.info:hover{background-color:#c4e3f3}.table>tbody>tr.warning>td,.table>tbody>tr.warning>th,.table>tbody>tr>td.warning,.table>tbody>tr>th.warning,.table>tfoot>tr.warning>td,.table>tfoot>tr.warning>th,.table>tfoot>tr>td.warning,.table>tfoot>tr>th.warning,.table>thead>tr.warning>td,.table>thead>tr.warning>th,.table>thead>tr>td.warning,.table>thead>tr>th.warning{background-color:#fcf8e3}.table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr.warning:hover>th,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover{background-color:#faf2cc}.table>tbody>tr.danger>td,.table>tbody>tr.danger>th,.table>tbody>tr>td.danger,.table>tbody>tr>th.danger,.table>tfoot>tr.danger>td,.table>tfoot>tr.danger>th,.table>tfoot>tr>td.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>thead>tr.danger>th,.table>thead>tr>td.danger,.table>thead>tr>th.danger{background-color:#f2dede}.table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr.danger:hover>th,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover{background-color:#ebcccc}.table-responsive{min-height:.01%;overflow-x:auto}@media screen and (max-width:767px){.table-responsive{width:100%;margin-bottom:15px;overflow-y:hidden;-ms-overflow-style:-ms-autohiding-scrollbar;border:1px solid #ddd}.table-responsive>.table{margin-bottom:0}.table-responsive>.table>tbody>tr>td,.table-responsive>.table>tbody>tr>th,.table-responsive>.table>tfoot>tr>td,.table-responsive>.table>tfoot>tr>th,.table-responsive>.table>thead>tr>td,.table-responsive>.table>thead>tr>th{white-space:nowrap}.table-responsive>.table-bordered{border:0}.table-responsive>.table-bordered>tbody>tr>td:first-child,.table-responsive>.table-bordered>tbody>tr>th:first-child,.table-responsive>.table-bordered>tfoot>tr>td:first-child,.table-responsive>.table-bordered>tfoot>tr>th:first-child,.table-responsive>.table-bordered>thead>tr>td:first-child,.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.table-responsive>.table-bordered>tbody>tr>td:last-child,.table-responsive>.table-bordered>tbody>tr>th:last-child,.table-responsive>.table-bordered>tfoot>tr>td:last-child,.table-responsive>.table-bordered>tfoot>tr>th:last-child,.table-responsive>.table-bordered>thead>tr>td:last-child,.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.table-responsive>.table-bordered>tbody>tr:last-child>td,.table-responsive>.table-bordered>tbody>tr:last-child>th,.table-responsive>.table-bordered>tfoot>tr:last-child>td,.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}}fieldset,legend{padding:0;border:0}fieldset{min-width:0;margin:0}legend{display:block;width:100%;margin-bottom:20px;font-size:21px;line-height:inherit;color:#333;border-bottom:1px solid #e5e5e5}label{display:inline-block;max-width:100%;margin-bottom:5px;font-weight:700}input[type=search]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-appearance:none;appearance:none}input[type=checkbox],input[type=radio]{margin:4px 0 0;margin-top:1px \\9;line-height:normal}fieldset[disabled] input[type=checkbox],fieldset[disabled] input[type=radio],input[type=checkbox].disabled,input[type=checkbox][disabled],input[type=radio].disabled,input[type=radio][disabled]{cursor:not-allowed}input[type=file]{display:block}input[type=range]{display:block;width:100%}.form-group-sm select[multiple].form-control,.form-group-sm textarea.form-control,select[multiple],select[multiple].input-sm,select[size],textarea.form-control,textarea.input-sm{height:auto}input[type=checkbox]:focus,input[type=file]:focus,input[type=radio]:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.form-control,output{display:block;font-size:14px;line-height:1.42857143;color:#555}output{padding-top:7px}.form-control{width:100%;height:34px;padding:6px 12px;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075);-webkit-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}.form-control:focus{border-color:#66afe9;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)}.form-control::-moz-placeholder{color:#999;opacity:1}.form-control:-ms-input-placeholder{color:#999}.form-control::-webkit-input-placeholder{color:#999}.form-control::-ms-expand{background-color:transparent;border:0}.form-control[disabled],.form-control[readonly],fieldset[disabled] .form-control{background-color:#dcdcdc;opacity:1}.checkbox.disabled label,.form-control[disabled],.radio.disabled label,fieldset[disabled] .checkbox label,fieldset[disabled] .form-control,fieldset[disabled] .radio label{cursor:not-allowed}@media screen and (-webkit-min-device-pixel-ratio:0){input[type=date].form-control,input[type=datetime-local].form-control,input[type=month].form-control,input[type=time].form-control{line-height:34px}.input-group-sm input[type=date],.input-group-sm input[type=datetime-local],.input-group-sm input[type=month],.input-group-sm input[type=time],input[type=date].input-sm,input[type=datetime-local].input-sm,input[type=month].input-sm,input[type=time].input-sm{line-height:30px}.input-group-lg input[type=date],.input-group-lg input[type=datetime-local],.input-group-lg input[type=month],.input-group-lg input[type=time],input[type=date].input-lg,input[type=datetime-local].input-lg,input[type=month].input-lg,input[type=time].input-lg{line-height:46px}}.form-group{margin-bottom:15px}.checkbox,.radio{position:relative;display:block;margin-top:10px;margin-bottom:10px}.checkbox label,.checkbox-inline,.radio label,.radio-inline{padding-left:20px;margin-bottom:0;font-weight:400;cursor:pointer}.checkbox label,.radio label{min-height:20px}.checkbox input[type=checkbox],.checkbox-inline input[type=checkbox],.radio input[type=radio],.radio-inline input[type=radio]{position:absolute;margin-top:4px \\9;margin-left:-20px}.checkbox+.checkbox,.radio+.radio{margin-top:-5px}.checkbox-inline,.radio-inline{position:relative;display:inline-block;vertical-align:middle}.checkbox-inline.disabled,.radio-inline.disabled,fieldset[disabled] .checkbox-inline,fieldset[disabled] .radio-inline{cursor:not-allowed}.checkbox-inline+.checkbox-inline,.radio-inline+.radio-inline{margin-top:0;margin-left:10px}.form-control-static{min-height:34px;padding-top:7px;padding-bottom:7px;margin-bottom:0}.form-control-static.input-lg,.form-control-static.input-sm{padding-right:0;padding-left:0}.form-group-sm .form-control,.input-sm{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.form-group-sm select.form-control,select.input-sm{height:30px;line-height:30px}.form-group-sm .form-control-static{height:30px;min-height:32px;padding:6px 10px;font-size:12px;line-height:1.5}.form-group-lg .form-control,.input-lg{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.form-group-lg select[multiple].form-control,.form-group-lg textarea.form-control,select[multiple].input-lg,textarea.input-lg{height:auto}.form-group-lg select.form-control,select.input-lg{height:46px;line-height:46px}.form-group-lg .form-control-static{height:46px;min-height:38px;padding:11px 16px;font-size:18px;line-height:1.3333333}.has-feedback{position:relative}.has-feedback .form-control{padding-right:42.5px}.form-control-feedback{position:absolute;top:0;right:0;z-index:2;display:block;width:34px;height:34px;line-height:34px;text-align:center;pointer-events:none}.form-group-lg .form-control+.form-control-feedback,.input-group-lg+.form-control-feedback,.input-lg+.form-control-feedback{width:46px;height:46px;line-height:46px}.form-group-sm .form-control+.form-control-feedback,.input-group-sm+.form-control-feedback,.input-sm+.form-control-feedback{width:30px;height:30px;line-height:30px}.has-success .checkbox,.has-success .checkbox-inline,.has-success .control-label,.has-success .help-block,.has-success .radio,.has-success .radio-inline,.has-success.checkbox label,.has-success.checkbox-inline label,.has-success.radio label,.has-success.radio-inline label{color:#3c763d}.has-success .form-control{border-color:#3c763d;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-success .form-control:focus{border-color:#2b542c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168}.has-success .input-group-addon{color:#3c763d;background-color:#dff0d8;border-color:#3c763d}.has-success .form-control-feedback{color:#3c763d}.has-warning .checkbox,.has-warning .checkbox-inline,.has-warning .control-label,.has-warning .help-block,.has-warning .radio,.has-warning .radio-inline,.has-warning.checkbox label,.has-warning.checkbox-inline label,.has-warning.radio label,.has-warning.radio-inline label{color:#8a6d3b}.has-warning .form-control{border-color:#8a6d3b;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-warning .form-control:focus{border-color:#66512c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b}.has-warning .input-group-addon{color:#8a6d3b;background-color:#fcf8e3;border-color:#8a6d3b}.has-warning .form-control-feedback{color:#8a6d3b}.has-error .checkbox,.has-error .checkbox-inline,.has-error .control-label,.has-error .help-block,.has-error .radio,.has-error .radio-inline,.has-error.checkbox label,.has-error.checkbox-inline label,.has-error.radio label,.has-error.radio-inline label{color:#a94442}.has-error .form-control{border-color:#a94442;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-error .form-control:focus{border-color:#843534;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483}.has-error .input-group-addon{color:#a94442;background-color:#f2dede;border-color:#a94442}.has-error .form-control-feedback{color:#a94442}.has-feedback label~.form-control-feedback{top:25px}.has-feedback label.sr-only~.form-control-feedback{top:0}.help-block{display:block;margin-top:5px;margin-bottom:10px;color:#737373}@media (min-width:768px){.form-inline .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.form-inline .form-control{display:inline-block;width:auto;vertical-align:middle}.form-inline .form-control-static{display:inline-block}.form-inline .input-group{display:inline-table;vertical-align:middle}.form-inline .input-group .form-control,.form-inline .input-group .input-group-addon,.form-inline .input-group .input-group-btn{width:auto}.form-inline .input-group>.form-control{width:100%}.form-inline .control-label{margin-bottom:0;vertical-align:middle}.form-inline .checkbox,.form-inline .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.form-inline .checkbox label,.form-inline .radio label{padding-left:0}.form-inline .checkbox input[type=checkbox],.form-inline .radio input[type=radio]{position:relative;margin-left:0}.form-inline .has-feedback .form-control-feedback{top:0}}.form-horizontal .checkbox,.form-horizontal .checkbox-inline,.form-horizontal .radio,.form-horizontal .radio-inline{padding-top:7px;margin-top:0;margin-bottom:0}.form-horizontal .checkbox,.form-horizontal .radio{min-height:27px}.form-horizontal .form-group{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.form-horizontal .control-label{padding-top:7px;margin-bottom:0;text-align:right}}.form-horizontal .has-feedback .form-control-feedback{right:15px}@media (min-width:768px){.form-horizontal .form-group-lg .control-label{padding-top:11px;font-size:18px}.form-horizontal .form-group-sm .control-label{padding-top:6px;font-size:12px}}.btn{display:inline-block;margin-bottom:0;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;touch-action:manipulation;cursor:pointer;background-image:none;border:1px solid transparent;padding:6px 12px;font-size:14px;line-height:1.42857143;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.btn.active.focus,.btn.active:focus,.btn.focus,.btn:active.focus,.btn:active:focus,.btn:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.btn.focus,.btn:focus,.btn:hover{color:#333;text-decoration:none}.btn.active,.btn:active{background-image:none;outline:0;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn.disabled,.btn[disabled],fieldset[disabled] .btn{cursor:not-allowed;filter:alpha(opacity=65);opacity:.65;-webkit-box-shadow:none;box-shadow:none}a.btn.disabled,fieldset[disabled] a.btn{pointer-events:none}.btn-default{color:#333;background-color:#fff;border-color:#ccc}.btn-default.focus,.btn-default:focus{color:#333;background-color:#e6e6e6;border-color:#8c8c8c}.btn-default:hover{color:#333;background-color:#e6e6e6;border-color:#adadad}.btn-default.active,.btn-default:active,.open>.dropdown-toggle.btn-default{color:#333;background-color:#e6e6e6;background-image:none;border-color:#adadad}.btn-default.active.focus,.btn-default.active:focus,.btn-default.active:hover,.btn-default:active.focus,.btn-default:active:focus,.btn-default:active:hover,.open>.dropdown-toggle.btn-default.focus,.open>.dropdown-toggle.btn-default:focus,.open>.dropdown-toggle.btn-default:hover{color:#333;background-color:#d4d4d4;border-color:#8c8c8c}.btn-default.disabled.focus,.btn-default.disabled:focus,.btn-default.disabled:hover,.btn-default[disabled].focus,.btn-default[disabled]:focus,.btn-default[disabled]:hover,fieldset[disabled] .btn-default.focus,fieldset[disabled] .btn-default:focus,fieldset[disabled] .btn-default:hover{background-color:#fff;border-color:#ccc}.btn-default .badge{color:#fff;background-color:#333}.btn-primary{color:#fff;background-color:#21366b;border-color:#1b2c58}.btn-primary.focus,.btn-primary:focus{color:#fff;background-color:#152244;border-color:#000}.btn-primary:hover{color:#fff;background-color:#152244;border-color:#0d1529}.btn-primary.active,.btn-primary:active,.open>.dropdown-toggle.btn-primary{color:#fff;background-color:#152244;background-image:none;border-color:#0d1529}.btn-primary.active.focus,.btn-primary.active:focus,.btn-primary.active:hover,.btn-primary:active.focus,.btn-primary:active:focus,.btn-primary:active:hover,.open>.dropdown-toggle.btn-primary.focus,.open>.dropdown-toggle.btn-primary:focus,.open>.dropdown-toggle.btn-primary:hover{color:#fff;background-color:#0d1529;border-color:#000}.btn-primary.disabled.focus,.btn-primary.disabled:focus,.btn-primary.disabled:hover,.btn-primary[disabled].focus,.btn-primary[disabled]:focus,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary.focus,fieldset[disabled] .btn-primary:focus,fieldset[disabled] .btn-primary:hover{background-color:#21366b;border-color:#1b2c58}.btn-primary .badge{color:#21366b;background-color:#fff}.btn-success{color:#fff;background-color:#5cb85c;border-color:#4cae4c}.btn-success.focus,.btn-success:focus{color:#fff;background-color:#449d44;border-color:#255625}.btn-success:hover{color:#fff;background-color:#449d44;border-color:#398439}.btn-success.active,.btn-success:active,.open>.dropdown-toggle.btn-success{color:#fff;background-color:#449d44;background-image:none;border-color:#398439}.btn-success.active.focus,.btn-success.active:focus,.btn-success.active:hover,.btn-success:active.focus,.btn-success:active:focus,.btn-success:active:hover,.open>.dropdown-toggle.btn-success.focus,.open>.dropdown-toggle.btn-success:focus,.open>.dropdown-toggle.btn-success:hover{color:#fff;background-color:#398439;border-color:#255625}.btn-success.disabled.focus,.btn-success.disabled:focus,.btn-success.disabled:hover,.btn-success[disabled].focus,.btn-success[disabled]:focus,.btn-success[disabled]:hover,fieldset[disabled] .btn-success.focus,fieldset[disabled] .btn-success:focus,fieldset[disabled] .btn-success:hover{background-color:#5cb85c;border-color:#4cae4c}.btn-success .badge{color:#5cb85c;background-color:#fff}.btn-info{color:#fff;background-color:#5bc0de;border-color:#46b8da}.btn-info.focus,.btn-info:focus{color:#fff;background-color:#31b0d5;border-color:#1b6d85}.btn-info:hover{color:#fff;background-color:#31b0d5;border-color:#269abc}.btn-info.active,.btn-info:active,.open>.dropdown-toggle.btn-info{color:#fff;background-color:#31b0d5;background-image:none;border-color:#269abc}.btn-info.active.focus,.btn-info.active:focus,.btn-info.active:hover,.btn-info:active.focus,.btn-info:active:focus,.btn-info:active:hover,.open>.dropdown-toggle.btn-info.focus,.open>.dropdown-toggle.btn-info:focus,.open>.dropdown-toggle.btn-info:hover{color:#fff;background-color:#269abc;border-color:#1b6d85}.btn-info.disabled.focus,.btn-info.disabled:focus,.btn-info.disabled:hover,.btn-info[disabled].focus,.btn-info[disabled]:focus,.btn-info[disabled]:hover,fieldset[disabled] .btn-info.focus,fieldset[disabled] .btn-info:focus,fieldset[disabled] .btn-info:hover{background-color:#5bc0de;border-color:#46b8da}.btn-info .badge{color:#5bc0de;background-color:#fff}.btn-warning{color:#fff;background-color:#f0ad4e;border-color:#eea236}.btn-warning.focus,.btn-warning:focus{color:#fff;background-color:#ec971f;border-color:#985f0d}.btn-warning:hover{color:#fff;background-color:#ec971f;border-color:#d58512}.btn-warning.active,.btn-warning:active,.open>.dropdown-toggle.btn-warning{color:#fff;background-color:#ec971f;background-image:none;border-color:#d58512}.btn-warning.active.focus,.btn-warning.active:focus,.btn-warning.active:hover,.btn-warning:active.focus,.btn-warning:active:focus,.btn-warning:active:hover,.open>.dropdown-toggle.btn-warning.focus,.open>.dropdown-toggle.btn-warning:focus,.open>.dropdown-toggle.btn-warning:hover{color:#fff;background-color:#d58512;border-color:#985f0d}.btn-warning.disabled.focus,.btn-warning.disabled:focus,.btn-warning.disabled:hover,.btn-warning[disabled].focus,.btn-warning[disabled]:focus,.btn-warning[disabled]:hover,fieldset[disabled] .btn-warning.focus,fieldset[disabled] .btn-warning:focus,fieldset[disabled] .btn-warning:hover{background-color:#f0ad4e;border-color:#eea236}.btn-warning .badge{color:#f0ad4e;background-color:#fff}.btn-danger{color:#fff;background-color:#d9534f;border-color:#d43f3a}.btn-danger.focus,.btn-danger:focus{color:#fff;background-color:#c9302c;border-color:#761c19}.btn-danger:hover{color:#fff;background-color:#c9302c;border-color:#ac2925}.btn-danger.active,.btn-danger:active,.open>.dropdown-toggle.btn-danger{color:#fff;background-color:#c9302c;background-image:none;border-color:#ac2925}.btn-danger.active.focus,.btn-danger.active:focus,.btn-danger.active:hover,.btn-danger:active.focus,.btn-danger:active:focus,.btn-danger:active:hover,.open>.dropdown-toggle.btn-danger.focus,.open>.dropdown-toggle.btn-danger:focus,.open>.dropdown-toggle.btn-danger:hover{color:#fff;background-color:#ac2925;border-color:#761c19}.btn-danger.disabled.focus,.btn-danger.disabled:focus,.btn-danger.disabled:hover,.btn-danger[disabled].focus,.btn-danger[disabled]:focus,.btn-danger[disabled]:hover,fieldset[disabled] .btn-danger.focus,fieldset[disabled] .btn-danger:focus,fieldset[disabled] .btn-danger:hover{background-color:#d9534f;border-color:#d43f3a}.btn-danger .badge{color:#d9534f;background-color:#fff}.btn-link{font-weight:400;color:#21366b;border-radius:0}.btn-link,.btn-link.active,.btn-link:active,.btn-link[disabled],fieldset[disabled] .btn-link{background-color:transparent;-webkit-box-shadow:none;box-shadow:none}.btn-link,.btn-link:active,.btn-link:focus,.btn-link:hover{border-color:transparent}.btn-link:focus,.btn-link:hover{color:#0f1831;text-decoration:underline;background-color:transparent}.btn-link[disabled]:focus,.btn-link[disabled]:hover,fieldset[disabled] .btn-link:focus,fieldset[disabled] .btn-link:hover{color:#cdcdcd;text-decoration:none}.btn-group-lg>.btn,.btn-lg{padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.btn-group-sm>.btn,.btn-group-xs>.btn,.btn-sm,.btn-xs{padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.btn-group-xs>.btn,.btn-xs{padding:1px 5px}.btn-block{display:block;width:100%}.alert>p+p,.btn-block+.btn-block{margin-top:5px}input[type=button].btn-block,input[type=reset].btn-block,input[type=submit].btn-block{width:100%}.fade{opacity:0;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear}.fade.in{opacity:1}.collapse{display:none}.collapse.in{display:block}tr.collapse.in{display:table-row}tbody.collapse.in{display:table-row-group}.collapsing{position:relative;height:0;overflow:hidden;-webkit-transition-property:height,visibility;transition-property:height,visibility;-webkit-transition-duration:.35s;transition-duration:.35s;-webkit-transition-timing-function:ease;transition-timing-function:ease}.caret{display:inline-block;width:0;height:0;margin-left:2px;vertical-align:middle;border-top:4px dashed;border-top:4px solid \\9;border-right:4px solid transparent;border-left:4px solid transparent}.dropdown,.dropup{position:relative}.dropdown-toggle:focus{outline:0}.dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;font-size:14px;text-align:left;list-style:none;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175)}.dropdown-menu-right,.dropdown-menu.pull-right{right:0;left:auto}.dropdown-menu .divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.dropdown-menu>li>a{display:block;padding:3px 20px;clear:both;font-weight:400;line-height:1.42857143;color:#333;white-space:nowrap}.dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{color:#262626;text-decoration:none;background-color:#f5f5f5}.dropdown-menu>.active>a,.dropdown-menu>.active>a:focus,.dropdown-menu>.active>a:hover{color:#fff;text-decoration:none;background-color:#21366b;outline:0}.dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{color:#cdcdcd}.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{text-decoration:none;cursor:not-allowed;background-color:transparent;background-image:none;filter:progid:DXImageTransform.Microsoft.gradient(enabled = false)}.open>.dropdown-menu{display:block}.open>a{outline:0}.dropdown-menu-left{right:auto;left:0}.dropdown-header{display:block;padding:3px 20px;font-size:12px;line-height:1.42857143;color:#cdcdcd;white-space:nowrap}.dropdown-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:990}.pull-right>.dropdown-menu{right:0;left:auto}.dropup .caret,.navbar-fixed-bottom .dropdown .caret{content:\"\";border-top:0;border-bottom:4px dashed;border-bottom:4px solid \\9}.dropup .dropdown-menu,.navbar-fixed-bottom .dropdown .dropdown-menu{top:auto;bottom:100%;margin-bottom:2px}@media (min-width:768px){.navbar-right .dropdown-menu{right:0;left:auto}.navbar-right .dropdown-menu-left{right:auto;left:0}}.btn-group,.btn-group-vertical{position:relative;display:inline-block;vertical-align:middle}.btn-group>.btn{float:left}.btn-group-vertical>.btn,.btn-group>.btn{position:relative}.btn-group-vertical>.btn.active,.btn-group-vertical>.btn:active,.btn-group-vertical>.btn:focus,.btn-group-vertical>.btn:hover,.btn-group>.btn.active,.btn-group>.btn:active,.btn-group>.btn:focus,.btn-group>.btn:hover{z-index:2}.btn-group .btn+.btn,.btn-group .btn+.btn-group,.btn-group .btn-group+.btn,.btn-group .btn-group+.btn-group{margin-left:-1px}.btn-toolbar{margin-left:-5px}.btn-toolbar .btn,.btn-toolbar .btn-group,.btn-toolbar .input-group{float:left}.btn-toolbar>.btn,.btn-toolbar>.btn-group,.btn-toolbar>.input-group{margin-left:5px}.btn-group>.btn:not(:first-child):not(:last-child):not(.dropdown-toggle){border-radius:0}.btn-group>.btn:first-child{margin-left:0}.btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn:last-child:not(:first-child),.btn-group>.dropdown-toggle:not(:first-child){border-top-left-radius:0;border-bottom-left-radius:0}.btn-group>.btn-group{float:left}.btn-group>.btn-group:not(:first-child):not(:last-child)>.btn{border-radius:0}.btn-group>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-bottom-left-radius:0}.btn-group .dropdown-toggle:active,.btn-group.open .dropdown-toggle{outline:0}.btn-group>.btn+.dropdown-toggle{padding-right:8px;padding-left:8px}.btn-group>.btn-lg+.dropdown-toggle{padding-right:12px;padding-left:12px}.btn-group.open .dropdown-toggle{-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn-group.open .dropdown-toggle.btn-link{-webkit-box-shadow:none;box-shadow:none}.btn .caret{margin-left:0}.btn-lg .caret{border-width:5px 5px 0}.dropup .btn-lg .caret{border-width:0 5px 5px}.btn-group-vertical>.btn,.btn-group-vertical>.btn-group,.btn-group-vertical>.btn-group>.btn{display:block;width:100%;max-width:100%;float:none}.nav-tabs.nav-justified>li{float:none}.btn-group-vertical>.btn+.btn,.btn-group-vertical>.btn+.btn-group,.btn-group-vertical>.btn-group+.btn,.btn-group-vertical>.btn-group+.btn-group{margin-top:-1px;margin-left:0}.btn-group-vertical>.btn-group:not(:first-child):not(:last-child)>.btn,.btn-group-vertical>.btn:not(:first-child):not(:last-child){border-radius:0}.btn-group-vertical>.btn:first-child:not(:last-child){border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn:last-child:not(:first-child){border-top-left-radius:0;border-top-right-radius:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.btn-group-vertical>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group-vertical>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-top-right-radius:0}.btn-group-justified,.input-group{display:table;border-collapse:separate}.btn-group-justified{width:100%;table-layout:fixed}.btn-group-justified>.btn,.btn-group-justified>.btn-group{display:table-cell;float:none;width:1%}.btn-group-justified>.btn-group .btn{width:100%}.btn-group-justified>.btn-group .dropdown-menu{left:auto}[data-toggle=buttons]>.btn input[type=checkbox],[data-toggle=buttons]>.btn input[type=radio],[data-toggle=buttons]>.btn-group>.btn input[type=checkbox],[data-toggle=buttons]>.btn-group>.btn input[type=radio]{position:absolute;clip:rect(0,0,0,0);pointer-events:none}.input-group{position:relative}.input-group[class*=col-]{float:none;padding-right:0;padding-left:0}.input-group .form-control{position:relative;z-index:2;float:left;width:100%;margin-bottom:0}.input-group .form-control:focus{z-index:3}.input-group-lg>.form-control,.input-group-lg>.input-group-addon,.input-group-lg>.input-group-btn>.btn{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}select.input-group-lg>.form-control,select.input-group-lg>.input-group-addon,select.input-group-lg>.input-group-btn>.btn{height:46px;line-height:46px}select[multiple].input-group-lg>.form-control,select[multiple].input-group-lg>.input-group-addon,select[multiple].input-group-lg>.input-group-btn>.btn,textarea.input-group-lg>.form-control,textarea.input-group-lg>.input-group-addon,textarea.input-group-lg>.input-group-btn>.btn{height:auto}.input-group-sm>.form-control,.input-group-sm>.input-group-addon,.input-group-sm>.input-group-btn>.btn{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}select.input-group-sm>.form-control,select.input-group-sm>.input-group-addon,select.input-group-sm>.input-group-btn>.btn{height:30px;line-height:30px}select[multiple].input-group-sm>.form-control,select[multiple].input-group-sm>.input-group-addon,select[multiple].input-group-sm>.input-group-btn>.btn,textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon,textarea.input-group-sm>.input-group-btn>.btn{height:auto}.input-group .form-control,.input-group-addon,.input-group-btn{display:table-cell}.input-group .form-control:not(:first-child):not(:last-child),.input-group-addon:not(:first-child):not(:last-child),.input-group-btn:not(:first-child):not(:last-child){border-radius:0}.input-group-addon{white-space:nowrap}.input-group-addon,.input-group-btn{width:1%;vertical-align:middle}.input-group-addon{padding:6px 12px;font-size:14px;font-weight:400;line-height:1;color:#555;text-align:center;background-color:#dcdcdc;border:1px solid #ccc;border-radius:4px}.input-group-addon.input-sm{padding:5px 10px;font-size:12px;border-radius:3px}.input-group-addon.input-lg{padding:10px 16px;font-size:18px;border-radius:6px}.input-group-addon input[type=checkbox],.input-group-addon input[type=radio]{margin-top:0}.input-group .form-control:first-child,.input-group-addon:first-child,.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group>.btn,.input-group-btn:first-child>.dropdown-toggle,.input-group-btn:last-child>.btn-group:not(:last-child)>.btn,.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.input-group-addon:first-child{border-right:0}.input-group .form-control:last-child,.input-group-addon:last-child,.input-group-btn:first-child>.btn-group:not(:first-child)>.btn,.input-group-btn:first-child>.btn:not(:first-child),.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group>.btn,.input-group-btn:last-child>.dropdown-toggle{border-top-left-radius:0;border-bottom-left-radius:0}.input-group-addon:last-child{border-left:0}.input-group-btn{font-size:0;white-space:nowrap}.input-group-btn,.input-group-btn>.btn{position:relative}.input-group-btn>.btn+.btn{margin-left:-1px}.input-group-btn>.btn:active,.input-group-btn>.btn:focus,.input-group-btn>.btn:hover{z-index:2}.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group{margin-right:-1px}.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group{z-index:2;margin-left:-1px}.nav{padding-left:0;margin-bottom:0;list-style:none}.nav>li,.nav>li>a{position:relative;display:block}.nav>li>a{padding:10px 15px}.nav>li>a:focus,.nav>li>a:hover{text-decoration:none;background-color:#dcdcdc}.nav>li.disabled>a{color:#cdcdcd}.nav>li.disabled>a:focus,.nav>li.disabled>a:hover{color:#cdcdcd;text-decoration:none;cursor:not-allowed;background-color:transparent}.nav .open>a,.nav .open>a:focus,.nav .open>a:hover{background-color:#dcdcdc;border-color:#21366b}.nav .nav-divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.nav>li>a>img{max-width:none}.nav-tabs{border-bottom:1px solid #ddd}.nav-tabs>li{float:left;margin-bottom:-1px}.nav-tabs>li>a{margin-right:2px;line-height:1.42857143;border:1px solid transparent;border-radius:4px 4px 0 0}.nav-tabs>li>a:hover{border-color:#dcdcdc #dcdcdc #ddd}.nav-tabs>li.active>a,.nav-tabs>li.active>a:focus,.nav-tabs>li.active>a:hover{color:#555;cursor:default;background-color:#fff;border:1px solid #ddd;border-bottom-color:transparent}.nav-tabs.nav-justified{width:100%;border-bottom:0}.nav-tabs.nav-justified>li>a{margin-bottom:5px;text-align:center}.nav-justified>.dropdown .dropdown-menu,.nav-tabs.nav-justified>.dropdown .dropdown-menu{top:auto;left:auto}@media (min-width:768px){.nav-tabs.nav-justified>li{display:table-cell;width:1%}.nav-tabs.nav-justified>li>a{margin-bottom:0}}.nav-tabs.nav-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs.nav-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border-bottom-color:#fff}}.nav-pills>li{float:left}.nav-pills>li>a{border-radius:4px}.nav-pills>li+li{margin-left:2px}.nav-pills>li.active>a,.nav-pills>li.active>a:focus,.nav-pills>li.active>a:hover{color:#fff;background-color:#21366b}.nav-justified>li,.nav-stacked>li{float:none}.nav-stacked>li+li{margin-top:2px;margin-left:0}.nav-justified{width:100%}.nav-justified>li>a{margin-bottom:5px;text-align:center}@media (min-width:768px){.nav-justified>li{display:table-cell;width:1%}.nav-justified>li>a{margin-bottom:0}}.nav-tabs-justified{border-bottom:0}.nav-tabs-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border-bottom-color:#fff}}.tab-content>.tab-pane{display:none}.navbar-brand>img,.tab-content>.active{display:block}.nav-tabs .dropdown-menu{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}.navbar{position:relative;min-height:50px;margin-bottom:20px;border:1px solid transparent}@media (min-width:768px){.navbar{border-radius:4px}.navbar-header{float:left}}.navbar-collapse{padding-right:15px;padding-left:15px;overflow-x:visible;border-top:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);-webkit-overflow-scrolling:touch}.navbar-collapse.in{overflow-y:auto}@media (min-width:768px){.navbar-collapse{width:auto;border-top:0;box-shadow:none}.navbar-collapse.collapse{display:block!important;height:auto!important;padding-bottom:0;overflow:visible!important}.navbar-collapse.in{overflow-y:visible}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse,.navbar-static-top .navbar-collapse{padding-right:0;padding-left:0}}.navbar-fixed-bottom,.navbar-fixed-top{position:fixed;right:0;left:0;z-index:1030}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:340px}@media (max-device-width:480px) and (orientation:landscape){.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:200px}}@media (min-width:768px){.navbar-fixed-bottom,.navbar-fixed-top{border-radius:0}}.navbar-fixed-top{top:0;border-width:0 0 1px}.navbar-fixed-bottom{bottom:0;margin-bottom:0;border-width:1px 0 0}.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:0;margin-left:0}}.navbar-static-top{z-index:1000;border-width:0 0 1px}@media (min-width:768px){.navbar-static-top{border-radius:0}}.navbar-brand{float:left;height:50px;padding:15px;font-size:18px;line-height:20px}.navbar-brand:focus,.navbar-brand:hover,.sim-tabs>ul>li>a:active,.sim-tabs>ul>li>a:focus,.sim-tabs>ul>li>a:hover,.sim-tabs>ul>li>a:visited{text-decoration:none}@media (min-width:768px){.navbar>.container .navbar-brand,.navbar>.container-fluid .navbar-brand{margin-left:-15px}}.navbar-toggle{position:relative;float:right;padding:9px 10px;margin-right:15px;margin-top:8px;margin-bottom:8px;background-color:transparent;background-image:none;border:1px solid transparent;border-radius:4px}.navbar-toggle:focus{outline:0}.navbar-toggle .icon-bar{display:block;width:22px;height:2px;border-radius:1px}.navbar-toggle .icon-bar+.icon-bar{margin-top:4px}@media (min-width:768px){.navbar-toggle{display:none}}.navbar-nav{margin:7.5px -15px}.navbar-nav>li>a{padding-top:10px;padding-bottom:10px;line-height:20px}@media (max-width:767px){.navbar-nav .open .dropdown-menu{position:static;float:none;width:auto;margin-top:0;background-color:transparent;border:0;box-shadow:none}.navbar-nav .open .dropdown-menu .dropdown-header,.navbar-nav .open .dropdown-menu>li>a{padding:5px 15px 5px 25px}.navbar-nav .open .dropdown-menu>li>a{line-height:20px}.navbar-nav .open .dropdown-menu>li>a:focus,.navbar-nav .open .dropdown-menu>li>a:hover{background-image:none}}@media (min-width:768px){.navbar-nav{float:left;margin:0}.navbar-nav>li{float:left}.navbar-nav>li>a{padding-top:15px;padding-bottom:15px}}.navbar-form{padding:10px 15px;border-top:1px solid transparent;border-bottom:1px solid transparent;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);margin:8px -15px}@media (min-width:768px){.navbar-form .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.navbar-form .form-control{display:inline-block;width:auto;vertical-align:middle}.navbar-form .form-control-static{display:inline-block}.navbar-form .input-group{display:inline-table;vertical-align:middle}.navbar-form .input-group .form-control,.navbar-form .input-group .input-group-addon,.navbar-form .input-group .input-group-btn{width:auto}.navbar-form .input-group>.form-control{width:100%}.navbar-form .control-label{margin-bottom:0;vertical-align:middle}.navbar-form .checkbox,.navbar-form .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.navbar-form .checkbox label,.navbar-form .radio label{padding-left:0}.navbar-form .checkbox input[type=checkbox],.navbar-form .radio input[type=radio]{position:relative;margin-left:0}.navbar-form .has-feedback .form-control-feedback{top:0}}@media (max-width:767px){.navbar-form .form-group{margin-bottom:5px}.navbar-form .form-group:last-child{margin-bottom:0}}@media (min-width:768px){.navbar-form{width:auto;padding-top:0;padding-bottom:0;margin-right:0;margin-left:0;border:0;-webkit-box-shadow:none;box-shadow:none}}.navbar-nav>li>.dropdown-menu{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}.navbar-fixed-bottom .navbar-nav>li>.dropdown-menu{margin-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.navbar-btn{margin-top:8px;margin-bottom:8px}.navbar-btn.btn-sm{margin-top:10px;margin-bottom:10px}.navbar-btn.btn-xs{margin-top:14px;margin-bottom:14px}.navbar-text{margin-top:15px;margin-bottom:15px}@media (min-width:768px){.navbar-text{float:left;margin-right:15px;margin-left:15px}.navbar-left{float:left!important}.navbar-right{float:right!important;margin-right:-15px}.navbar-right~.navbar-right{margin-right:0}}.navbar-default{background-color:#f8f8f8;border-color:#e7e7e7}.navbar-default .navbar-brand,.navbar-default .navbar-nav>li>a,.navbar-default .navbar-text{color:#777}.navbar-default .navbar-brand:focus,.navbar-default .navbar-brand:hover{color:#5e5e5e;background-color:transparent}.navbar-default .navbar-nav>li>a:focus,.navbar-default .navbar-nav>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:focus,.navbar-default .navbar-nav>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav>.disabled>a,.navbar-default .navbar-nav>.disabled>a:focus,.navbar-default .navbar-nav>.disabled>a:hover{color:#ccc;background-color:transparent}.navbar-default .navbar-nav>.open>a,.navbar-default .navbar-nav>.open>a:focus,.navbar-default .navbar-nav>.open>a:hover{color:#555;background-color:#e7e7e7}@media (max-width:767px){.navbar-default .navbar-nav .open .dropdown-menu>li>a{color:#777}.navbar-default .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav .open .dropdown-menu>.active>a,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#ccc;background-color:transparent}}.navbar-default .navbar-toggle{border-color:#ddd}.navbar-default .navbar-toggle:focus,.navbar-default .navbar-toggle:hover{background-color:#ddd}.navbar-default .navbar-toggle .icon-bar{background-color:#888}.navbar-default .navbar-collapse,.navbar-default .navbar-form{border-color:#e7e7e7}.navbar-default .btn-link,.navbar-default .navbar-link{color:#777}.navbar-default .navbar-link:hover,a.list-group-item .list-group-item-heading,button.list-group-item .list-group-item-heading{color:#333}.navbar-default .btn-link:focus,.navbar-default .btn-link:hover{color:#333}.navbar-default .btn-link[disabled]:focus,.navbar-default .btn-link[disabled]:hover,fieldset[disabled] .navbar-default .btn-link:focus,fieldset[disabled] .navbar-default .btn-link:hover{color:#ccc}.navbar-inverse{background-color:#222;border-color:#080808}.navbar-inverse .navbar-brand,.navbar-inverse .navbar-nav>li>a,.navbar-inverse .navbar-text{color:#f3f3f3}.navbar-inverse .navbar-brand:focus,.navbar-inverse .navbar-brand:hover,.navbar-inverse .navbar-nav>li>a:focus,.navbar-inverse .navbar-nav>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav>.active>a,.navbar-inverse .navbar-nav>.active>a:focus,.navbar-inverse .navbar-nav>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav>.disabled>a,.navbar-inverse .navbar-nav>.disabled>a:focus,.navbar-inverse .navbar-nav>.disabled>a:hover{color:#444;background-color:transparent}.navbar-inverse .navbar-nav>.open>a,.navbar-inverse .navbar-nav>.open>a:focus,.navbar-inverse .navbar-nav>.open>a:hover{color:#fff;background-color:#080808}@media (max-width:767px){.navbar-inverse .navbar-nav .open .dropdown-menu>.dropdown-header{border-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu .divider{background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a{color:#f3f3f3}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#444;background-color:transparent}}.navbar-inverse .navbar-toggle{border-color:#333}.navbar-inverse .navbar-toggle:focus,.navbar-inverse .navbar-toggle:hover{background-color:#333}.navbar-inverse .navbar-toggle .icon-bar{background-color:#fff}.navbar-inverse .navbar-collapse,.navbar-inverse .navbar-form{border-color:#101010}.navbar-inverse .btn-link,.navbar-inverse .navbar-link{color:#f3f3f3}.navbar-inverse .navbar-link:hover{color:#fff}.navbar-inverse .btn-link:focus,.navbar-inverse .btn-link:hover{color:#fff}.navbar-inverse .btn-link[disabled]:focus,.navbar-inverse .btn-link[disabled]:hover,fieldset[disabled] .navbar-inverse .btn-link:focus,fieldset[disabled] .navbar-inverse .btn-link:hover{color:#444}.breadcrumb{padding:8px 15px;margin-bottom:20px;list-style:none;background-color:#f5f5f5;border-radius:4px}.breadcrumb>li,.pagination{display:inline-block}.breadcrumb>li+li:before{padding:0 5px;color:#ccc;content:\"/ \"}.breadcrumb>.active{color:#cdcdcd}.pagination{padding-left:0;margin:20px 0;border-radius:4px}.pager li,.pagination>li{display:inline}.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:6px 12px;margin-left:-1px;line-height:1.42857143;color:#21366b;text-decoration:none;background-color:#fff;border:1px solid #ddd}.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:2;color:#0f1831;background-color:#dcdcdc;border-color:#ddd}.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:3;color:#fff;cursor:default;background-color:#21366b;border-color:#21366b}.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#cdcdcd;cursor:not-allowed;background-color:#fff;border-color:#ddd}.pagination-lg>li>a,.pagination-lg>li>span{padding:10px 16px;font-size:18px;line-height:1.3333333}.pagination-lg>li:first-child>a,.pagination-lg>li:first-child>span{border-top-left-radius:6px;border-bottom-left-radius:6px}.pagination-lg>li:last-child>a,.pagination-lg>li:last-child>span{border-top-right-radius:6px;border-bottom-right-radius:6px}.pagination-sm>li>a,.pagination-sm>li>span{padding:5px 10px;font-size:12px;line-height:1.5}.pagination-sm>li:first-child>a,.pagination-sm>li:first-child>span{border-top-left-radius:3px;border-bottom-left-radius:3px}.pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-top-right-radius:3px;border-bottom-right-radius:3px}.pager{padding-left:0;margin:20px 0;text-align:center;list-style:none}.pager li>a,.pager li>span{display:inline-block;padding:5px 14px;background-color:#fff;border:1px solid #ddd;border-radius:15px}.pager li>a:focus,.pager li>a:hover{text-decoration:none;background-color:#dcdcdc}.pager .next>a,.pager .next>span{float:right}.pager .previous>a,.pager .previous>span{float:left}.pager .disabled>a,.pager .disabled>a:focus,.pager .disabled>a:hover,.pager .disabled>span{color:#cdcdcd;cursor:not-allowed;background-color:#fff}.label{display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em}a.badge:focus,a.badge:hover,a.label:focus,a.label:hover{color:#fff;text-decoration:none;cursor:pointer}.label:empty{display:none}.btn .label{position:relative;top:-1px}.label-default{background-color:#cdcdcd}.label-default[href]:focus,.label-default[href]:hover{background-color:#b4b4b4}.label-primary{background-color:#21366b}.label-primary[href]:focus,.label-primary[href]:hover{background-color:#152244}.label-success{background-color:#5cb85c}.label-success[href]:focus,.label-success[href]:hover{background-color:#449d44}.label-info{background-color:#5bc0de}.label-info[href]:focus,.label-info[href]:hover{background-color:#31b0d5}.label-warning{background-color:#f0ad4e}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f}.label-danger{background-color:#d9534f}.label-danger[href]:focus,.label-danger[href]:hover{background-color:#c9302c}.badge{display:inline-block;min-width:10px;padding:3px 7px;font-size:12px;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:middle;background-color:#cdcdcd;border-radius:10px}.badge:empty{display:none}.btn .badge{position:relative;top:-1px}.btn-group-xs>.btn .badge,.btn-xs .badge{top:0;padding:1px 5px}.list-group-item.active>.badge,.nav-pills>.active>a>.badge{color:#21366b;background-color:#fff}.list-group-item>.badge{float:right}.list-group-item>.badge+.badge{margin-right:5px}.nav-pills>li>a>.badge{margin-left:3px}.jumbotron{padding-top:30px;padding-bottom:30px;margin-bottom:30px;background-color:#dcdcdc}.jumbotron,.jumbotron .h1,.jumbotron h1,a.list-group-item-danger .list-group-item-heading,a.list-group-item-info .list-group-item-heading,a.list-group-item-success .list-group-item-heading,a.list-group-item-warning .list-group-item-heading,button.list-group-item-danger .list-group-item-heading,button.list-group-item-info .list-group-item-heading,button.list-group-item-success .list-group-item-heading,button.list-group-item-warning .list-group-item-heading{color:inherit}.jumbotron p{margin-bottom:15px;font-size:21px;font-weight:200}.jumbotron>hr{border-top-color:#c3c3c3}.container .jumbotron,.container-fluid .jumbotron{padding-right:15px;padding-left:15px;border-radius:6px}.jumbotron .container{max-width:100%}@media screen and (min-width:768px){.jumbotron{padding-top:48px;padding-bottom:48px}.container .jumbotron,.container-fluid .jumbotron{padding-right:60px;padding-left:60px}.jumbotron .h1,.jumbotron h1{font-size:63px}}.thumbnail{display:block;padding:4px;margin-bottom:20px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:border .2s ease-in-out;-o-transition:border .2s ease-in-out;transition:border .2s ease-in-out}.thumbnail a>img,.thumbnail>img{margin-right:auto;margin-left:auto}a.thumbnail.active,a.thumbnail:focus,a.thumbnail:hover{border-color:#21366b}.thumbnail .caption{padding:9px;color:#333}.alert{padding:15px;margin-bottom:20px;border:1px solid transparent;border-radius:4px}.alert h4{margin-top:0;color:inherit}.alert .alert-link{font-weight:700}.alert>p,.alert>ul{margin-bottom:0}.alert-dismissable,.alert-dismissible{padding-right:35px}.alert-dismissable .close,.alert-dismissible .close{position:relative;top:-2px;right:-21px;color:inherit}.alert-success{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.alert-success hr{border-top-color:#c9e2b3}.alert-success .alert-link{color:#2b542c}.alert-info{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.alert-info hr{border-top-color:#a6e1ec}.alert-info .alert-link{color:#245269}.alert-warning{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.alert-warning hr{border-top-color:#f7e1b5}.alert-warning .alert-link{color:#66512c}.alert-danger{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.alert-danger hr{border-top-color:#e4b9c0}.alert-danger .alert-link{color:#843534}.progress{height:20px;margin-bottom:20px;overflow:hidden;background-color:#f5f5f5;border-radius:4px;-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.progress-bar{float:left;width:0%;height:100%;font-size:12px;line-height:20px;color:#fff;text-align:center;background-color:#21366b;-webkit-box-shadow:inset 0-1px 0 rgba(0,0,0,.15);box-shadow:inset 0-1px 0 rgba(0,0,0,.15);-webkit-transition:width .6s ease;-o-transition:width .6s ease;transition:width .6s ease}.progress-bar-striped,.progress-striped .progress-bar{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:40px 40px}.progress-bar.active,.progress.active .progress-bar{-webkit-animation:progress-bar-stripes 2s linear infinite;-o-animation:progress-bar-stripes 2s linear infinite;animation:progress-bar-stripes 2s linear infinite}.progress-bar-success{background-color:#5cb85c}.progress-striped .progress-bar-danger,.progress-striped .progress-bar-info,.progress-striped .progress-bar-success,.progress-striped .progress-bar-warning{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)}.progress-bar-info{background-color:#5bc0de}.progress-bar-warning{background-color:#f0ad4e}.progress-bar-danger{background-color:#d9534f}.media{margin-top:15px}.media:first-child{margin-top:0}.media,.media-body{overflow:hidden;zoom:1}.media-body{width:10000px}.media-object{display:block}.media-object.img-thumbnail{max-width:none}.media-right,.media>.pull-right{padding-left:10px}.media-left,.media>.pull-left{padding-right:10px}.media-body,.media-left,.media-right{display:table-cell;vertical-align:top}.media-middle{vertical-align:middle}.media-bottom{vertical-align:bottom}.media-heading{margin-top:0;margin-bottom:5px}.media-list{padding-left:0;list-style:none}.list-group{padding-left:0;margin-bottom:20px}.list-group-item{position:relative;display:block;padding:10px 15px;margin-bottom:-1px;background-color:#fff;border:1px solid #ddd}.list-group-item:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.list-group-item:last-child{margin-bottom:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.list-group-item.disabled,.list-group-item.disabled:focus,.list-group-item.disabled:hover{color:#cdcdcd;cursor:not-allowed;background-color:#dcdcdc}.list-group-item.disabled .list-group-item-heading,.list-group-item.disabled:focus .list-group-item-heading,.list-group-item.disabled:hover .list-group-item-heading{color:inherit}.list-group-item.disabled .list-group-item-text,.list-group-item.disabled:focus .list-group-item-text,.list-group-item.disabled:hover .list-group-item-text{color:#cdcdcd}.list-group-item.active,.list-group-item.active:focus,.list-group-item.active:hover{z-index:2;color:#fff;background-color:#21366b;border-color:#21366b}.list-group-item.active .list-group-item-heading,.list-group-item.active .list-group-item-heading>.small,.list-group-item.active .list-group-item-heading>small,.list-group-item.active:focus .list-group-item-heading,.list-group-item.active:focus .list-group-item-heading>.small,.list-group-item.active:focus .list-group-item-heading>small,.list-group-item.active:hover .list-group-item-heading,.list-group-item.active:hover .list-group-item-heading>.small,.list-group-item.active:hover .list-group-item-heading>small{color:inherit}.list-group-item.active .list-group-item-text,.list-group-item.active:focus .list-group-item-text,.list-group-item.active:hover .list-group-item-text{color:#8099d8}a.list-group-item,button.list-group-item{color:#555}a.list-group-item:focus,a.list-group-item:hover,button.list-group-item:focus,button.list-group-item:hover{color:#555;text-decoration:none;background-color:#f5f5f5}button.list-group-item{width:100%;text-align:left}.list-group-item-success{color:#3c763d;background-color:#dff0d8}a.list-group-item-success,button.list-group-item-success{color:#3c763d}a.list-group-item-success:focus,a.list-group-item-success:hover,button.list-group-item-success:focus,button.list-group-item-success:hover{color:#3c763d;background-color:#d0e9c6}a.list-group-item-success.active,a.list-group-item-success.active:focus,a.list-group-item-success.active:hover,button.list-group-item-success.active,button.list-group-item-success.active:focus,button.list-group-item-success.active:hover{color:#fff;background-color:#3c763d;border-color:#3c763d}.list-group-item-info{color:#31708f;background-color:#d9edf7}a.list-group-item-info,button.list-group-item-info{color:#31708f}a.list-group-item-info:focus,a.list-group-item-info:hover,button.list-group-item-info:focus,button.list-group-item-info:hover{color:#31708f;background-color:#c4e3f3}a.list-group-item-info.active,a.list-group-item-info.active:focus,a.list-group-item-info.active:hover,button.list-group-item-info.active,button.list-group-item-info.active:focus,button.list-group-item-info.active:hover{color:#fff;background-color:#31708f;border-color:#31708f}.list-group-item-warning{color:#8a6d3b;background-color:#fcf8e3}a.list-group-item-warning,button.list-group-item-warning{color:#8a6d3b}a.list-group-item-warning:focus,a.list-group-item-warning:hover,button.list-group-item-warning:focus,button.list-group-item-warning:hover{color:#8a6d3b;background-color:#faf2cc}a.list-group-item-warning.active,a.list-group-item-warning.active:focus,a.list-group-item-warning.active:hover,button.list-group-item-warning.active,button.list-group-item-warning.active:focus,button.list-group-item-warning.active:hover{color:#fff;background-color:#8a6d3b;border-color:#8a6d3b}.list-group-item-danger{color:#a94442;background-color:#f2dede}a.list-group-item-danger,button.list-group-item-danger{color:#a94442}a.list-group-item-danger:focus,a.list-group-item-danger:hover,button.list-group-item-danger:focus,button.list-group-item-danger:hover{color:#a94442;background-color:#ebcccc}a.list-group-item-danger.active,a.list-group-item-danger.active:focus,a.list-group-item-danger.active:hover,button.list-group-item-danger.active,button.list-group-item-danger.active:focus,button.list-group-item-danger.active:hover{color:#fff;background-color:#a94442;border-color:#a94442}.list-group-item-heading{margin-top:0;margin-bottom:5px}.list-group-item-text{margin-bottom:0;line-height:1.3}.panel{margin-bottom:20px;background-color:#fff;border:1px solid transparent;border-radius:4px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}.panel-body{padding:15px}.panel-heading{padding:10px 15px;border-bottom:1px solid transparent;border-top-left-radius:3px;border-top-right-radius:3px}.panel-heading>.dropdown .dropdown-toggle,.panel-title,.panel-title>.small,.panel-title>.small>a,.panel-title>a,.panel-title>small,.panel-title>small>a{color:inherit}.panel-title{margin-top:0;margin-bottom:0;font-size:16px}.panel-footer{padding:10px 15px;background-color:#f5f5f5;border-top:1px solid #ddd;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.list-group,.panel>.panel-collapse>.list-group{margin-bottom:0}.panel>.list-group .list-group-item,.panel>.panel-collapse>.list-group .list-group-item{border-width:1px 0;border-radius:0}.panel>.list-group:first-child .list-group-item:first-child,.panel>.panel-collapse>.list-group:first-child .list-group-item:first-child{border-top:0;border-top-left-radius:3px;border-top-right-radius:3px}.panel>.list-group:last-child .list-group-item:last-child,.panel>.panel-collapse>.list-group:last-child .list-group-item:last-child{border-bottom:0;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.panel-heading+.panel-collapse>.list-group .list-group-item:first-child{border-top-left-radius:0;border-top-right-radius:0}.panel-heading+.list-group .list-group-item:first-child{border-top-width:0}.list-group+.panel-footer{border-top-width:0}.panel>.panel-collapse>.table,.panel>.table,.panel>.table-responsive>.table{margin-bottom:0}.panel>.panel-collapse>.table caption,.panel>.table caption,.panel>.table-responsive>.table caption{padding-right:15px;padding-left:15px}.panel>.table-responsive:first-child>.table:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child,.panel>.table:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child,.panel>.table:first-child>thead:first-child>tr:first-child{border-top-left-radius:3px;border-top-right-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table:first-child>thead:first-child>tr:first-child th:first-child{border-top-left-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table:first-child>thead:first-child>tr:first-child th:last-child{border-top-right-radius:3px}.panel>.table-responsive:last-child>.table:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child,.panel>.table:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child{border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:first-child{border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:last-child{border-bottom-right-radius:3px}.panel-group .panel-heading+.panel-collapse>.list-group,.panel-group .panel-heading+.panel-collapse>.panel-body,.panel>.panel-body+.table,.panel>.panel-body+.table-responsive,.panel>.table+.panel-body,.panel>.table-responsive+.panel-body{border-top:1px solid #ddd}.panel>.table-bordered,.panel>.table-responsive>.table-bordered{border:0}.panel>.table-bordered>tbody>tr>td:first-child,.panel>.table-bordered>tbody>tr>th:first-child,.panel>.table-bordered>tfoot>tr>td:first-child,.panel>.table-bordered>tfoot>tr>th:first-child,.panel>.table-bordered>thead>tr>td:first-child,.panel>.table-bordered>thead>tr>th:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:first-child,.panel>.table-responsive>.table-bordered>thead>tr>td:first-child,.panel>.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.panel>.table-bordered>tbody>tr>td:last-child,.panel>.table-bordered>tbody>tr>th:last-child,.panel>.table-bordered>tfoot>tr>td:last-child,.panel>.table-bordered>tfoot>tr>th:last-child,.panel>.table-bordered>thead>tr>td:last-child,.panel>.table-bordered>thead>tr>th:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:last-child,.panel>.table-responsive>.table-bordered>thead>tr>td:last-child,.panel>.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.panel>.table-bordered>tbody>tr:first-child>td,.panel>.table-bordered>tbody>tr:first-child>th,.panel>.table-bordered>thead>tr:first-child>td,.panel>.table-bordered>thead>tr:first-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>th,.panel>.table-responsive>.table-bordered>thead>tr:first-child>td,.panel>.table-responsive>.table-bordered>thead>tr:first-child>th{border-bottom:0}.panel>.table-bordered>tbody>tr:last-child>td,.panel>.table-bordered>tbody>tr:last-child>th,.panel>.table-bordered>tfoot>tr:last-child>td,.panel>.table-bordered>tfoot>tr:last-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>th,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>td,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}.panel>.table-responsive{margin-bottom:0;border:0}.panel-group{margin-bottom:20px}.panel-group .panel{margin-bottom:0;border-radius:4px}.panel-group .panel+.panel{margin-top:5px}.panel-group .panel-heading{border-bottom:0}.panel-group .panel-footer{border-top:0}.panel-group .panel-footer+.panel-collapse .panel-body{border-bottom:1px solid #ddd}.panel-default,.well blockquote{border-color:#ddd}.panel-default>.panel-heading{color:#333;background-color:#f5f5f5;border-color:#ddd}.panel-default>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ddd}.panel-default>.panel-heading .badge{color:#f5f5f5;background-color:#333}.panel-default>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ddd}.panel-primary{border-color:#21366b}.panel-primary>.panel-heading{color:#fff;background-color:#21366b;border-color:#21366b}.panel-primary>.panel-heading+.panel-collapse>.panel-body{border-top-color:#21366b}.panel-primary>.panel-heading .badge{color:#21366b;background-color:#fff}.panel-primary>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#21366b}.panel-success{border-color:#d6e9c6}.panel-success>.panel-heading{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.panel-success>.panel-heading+.panel-collapse>.panel-body{border-top-color:#d6e9c6}.panel-success>.panel-heading .badge{color:#dff0d8;background-color:#3c763d}.panel-success>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#d6e9c6}.panel-info{border-color:#bce8f1}.panel-info>.panel-heading{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.panel-info>.panel-heading+.panel-collapse>.panel-body{border-top-color:#bce8f1}.panel-info>.panel-heading .badge{color:#d9edf7;background-color:#31708f}.panel-info>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#bce8f1}.panel-warning{border-color:#faebcc}.panel-warning>.panel-heading{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.panel-warning>.panel-heading+.panel-collapse>.panel-body{border-top-color:#faebcc}.panel-warning>.panel-heading .badge{color:#fcf8e3;background-color:#8a6d3b}.panel-warning>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#faebcc}.panel-danger{border-color:#ebccd1}.panel-danger>.panel-heading{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.panel-danger>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ebccd1}.panel-danger>.panel-heading .badge{color:#f2dede;background-color:#a94442}.panel-danger>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ebccd1}.embed-responsive{position:relative;display:block;height:0;padding:0;overflow:hidden}.embed-responsive .embed-responsive-item,.embed-responsive embed,.embed-responsive iframe,.embed-responsive object,.embed-responsive video{position:absolute;top:0;bottom:0;left:0;width:100%;height:100%;border:0}.embed-responsive-16by9{padding-bottom:56.25%}.embed-responsive-4by3{padding-bottom:75%}.well{min-height:20px;padding:19px;margin-bottom:20px;background-color:#f5f5f5;border:1px solid #e3e3e3;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,.05)}.well blockquote{border-color:rgba(0,0,0,.15)}.well-lg{padding:24px;border-radius:6px}.well-sm{padding:9px;border-radius:3px}.close{float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0#fff;filter:alpha(opacity=20);opacity:.2}.close:focus,.close:hover{color:#000;text-decoration:none;cursor:pointer;filter:alpha(opacity=50);opacity:.5}button.close{padding:0;cursor:pointer;background:0 0;border:0;-webkit-appearance:none;appearance:none}.modal,.modal-open{overflow:hidden}.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1050;display:none;-webkit-overflow-scrolling:touch;outline:0}.modal.fade .modal-dialog{-webkit-transform:translate(0,-25%);-ms-transform:translate(0,-25%);-o-transform:translate(0,-25%);transform:translate(0,-25%);-webkit-transition:-webkit-transform .3s ease-out;-moz-transition:-moz-transform .3s ease-out;-o-transition:-o-transform .3s ease-out;transition:transform .3s ease-out}.modal.in .modal-dialog{-webkit-transform:translate(0,0);-ms-transform:translate(0,0);-o-transform:translate(0,0);transform:translate(0,0)}.modal-open .modal{overflow-x:hidden;overflow-y:auto}.modal-dialog{position:relative;width:auto;margin:10px}.modal-content{position:relative;background-color:#fff;background-clip:padding-box;border:1px solid #999;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 3px 9px rgba(0,0,0,.5);box-shadow:0 3px 9px rgba(0,0,0,.5);outline:0}.modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1040;background-color:#000}.modal-backdrop.fade{filter:alpha(opacity=0);opacity:0}.modal-backdrop.in{filter:alpha(opacity=50);opacity:.5}.modal-header{padding:15px;border-bottom:1px solid #e5e5e5}.modal-header .close{margin-top:-2px}.modal-title{margin:0;line-height:1.42857143}.modal-body{position:relative;padding:15px}.modal-footer{padding:15px;text-align:right;border-top:1px solid #e5e5e5}.modal-footer .btn+.btn{margin-bottom:0;margin-left:5px}.modal-footer .btn-group .btn+.btn{margin-left:-1px}.modal-footer .btn-block+.btn-block{margin-left:0}.modal-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}@media (min-width:768px){.modal-dialog{width:600px;margin:30px auto}.modal-content{-webkit-box-shadow:0 5px 15px rgba(0,0,0,.5);box-shadow:0 5px 15px rgba(0,0,0,.5)}.modal-sm{width:300px}}@media (min-width:992px){.modal-lg{width:900px}}.tooltip{position:absolute;z-index:1070;display:block;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:12px;filter:alpha(opacity=0);opacity:0}.tooltip.in{filter:alpha(opacity=90);opacity:.9}.tooltip.top{padding:5px 0;margin-top:-3px}.tooltip.right{padding:0 5px;margin-left:3px}.tooltip.bottom{padding:5px 0;margin-top:3px}.tooltip.left{padding:0 5px;margin-left:-3px}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow,.tooltip.top-right .tooltip-arrow{bottom:0;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{right:5px}.tooltip.top-right .tooltip-arrow{left:5px}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:14px;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,.2);box-shadow:0 5px 10px rgba(0,0,0,.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover>.arrow,.popover>.arrow:after{border-width:11px;position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}.popover>.arrow:after{content:\"\";border-width:10px}.popover.top>.arrow{bottom:-11px;left:50%;margin-left:-11px;border-top-color:#999;border-top-color:rgba(0,0,0,.25);border-bottom-width:0}.popover.top>.arrow:after{bottom:1px;margin-left:-10px;content:\" \";border-top-color:#fff;border-bottom-width:0}.popover.right>.arrow{top:50%;left:-11px;margin-top:-11px;border-right-color:#999;border-right-color:rgba(0,0,0,.25);border-left-width:0}.popover.right>.arrow:after{bottom:-10px;left:1px;content:\" \";border-right-color:#fff;border-left-width:0}.popover.bottom>.arrow{top:-11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#999;border-bottom-color:rgba(0,0,0,.25)}.popover.bottom>.arrow:after{top:1px;margin-left:-10px;content:\" \";border-top-width:0;border-bottom-color:#fff}.popover.left>.arrow{top:50%;right:-11px;margin-top:-11px;border-right-width:0;border-left-color:#999;border-left-color:rgba(0,0,0,.25)}.popover.left>.arrow:after{right:1px;bottom:-10px;content:\" \";border-right-width:0;border-left-color:#fff}.popover-title{padding:8px 14px;margin:0;font-size:14px;background-color:#f7f7f7;border-bottom:1px solid #ebebeb;border-radius:5px 5px 0 0}.popover-content{padding:9px 14px}.carousel,.carousel-inner{position:relative}.carousel-inner{width:100%;overflow:hidden}.carousel-inner>.item{position:relative;display:none;-webkit-transition:.6s ease-in-out left;-o-transition:.6s ease-in-out left;transition:.6s ease-in-out left}.carousel-inner>.item>a>img,.carousel-inner>.item>img{line-height:1}@media all and (transform-3d),(-webkit-transform-3d){.carousel-inner>.item{-webkit-transition:-webkit-transform .6s ease-in-out;-moz-transition:-moz-transform .6s ease-in-out;-o-transition:-o-transform .6s ease-in-out;transition:transform .6s ease-in-out;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;-webkit-perspective:1000px;-moz-perspective:1000px;perspective:1000px}.carousel-inner>.item.active.right,.carousel-inner>.item.next{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);left:0}.carousel-inner>.item.active.left,.carousel-inner>.item.prev{-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0);left:0}.carousel-inner>.item.active,.carousel-inner>.item.next.left,.carousel-inner>.item.prev.right{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);left:0}}.carousel-inner>.active,.carousel-inner>.next,.carousel-inner>.prev{display:block}.carousel-inner>.active,.carousel-inner>.next.left,.carousel-inner>.prev.right{left:0}.carousel-control,.carousel-inner>.next,.carousel-inner>.prev{position:absolute;top:0;width:100%}.carousel-inner>.next{left:100%}.carousel-inner>.active.left,.carousel-inner>.prev{left:-100%}.carousel-inner>.active.right{left:100%}.carousel-control{bottom:0;left:0;width:15%;font-size:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6);background-color:transparent;filter:alpha(opacity=50);opacity:.5}.carousel-control.left{background-image:-webkit-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#80000000\', endColorstr=\'#00000000\', GradientType=1);background-repeat:repeat-x}.carousel-control.right{right:0;left:auto;background-image:-webkit-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#00000000\', endColorstr=\'#80000000\', GradientType=1);background-repeat:repeat-x}.carousel-control:focus,.carousel-control:hover{color:#fff;text-decoration:none;outline:0;filter:alpha(opacity=90);opacity:.9}.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{position:absolute;top:50%;z-index:5;display:inline-block;margin-top:-10px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{left:50%;margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{right:50%;margin-right:-10px}.carousel-control .icon-next,.carousel-control .icon-prev{width:20px;height:20px;font-family:serif;line-height:1}.carousel-control .icon-prev:before{content:\"‹\"}.carousel-control .icon-next:before{content:\"›\"}.carousel-indicators{position:absolute;bottom:10px;left:50%;z-index:15;width:60%;padding-left:0;margin-left:-30%;text-align:center;list-style:none}.carousel-indicators li{display:inline-block;width:10px;height:10px;margin:1px;text-indent:-999px;cursor:pointer;background-color:#000 \\9;background-color:transparent;border:1px solid #fff;border-radius:10px}.carousel-indicators .active{width:12px;height:12px;margin:0;background-color:#fff}.carousel-caption{position:absolute;right:15%;bottom:20px;left:15%;z-index:10;padding-top:20px;padding-bottom:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}.carousel-caption .btn{text-shadow:none}@media screen and (min-width:768px){.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{width:30px;height:30px;margin-top:-10px;font-size:30px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{margin-right:-10px}.carousel-caption{right:20%;left:20%;padding-bottom:30px}.carousel-indicators{bottom:20px}}.btn-group-vertical>.btn-group:after,.btn-group-vertical>.btn-group:before,.btn-toolbar:after,.btn-toolbar:before,.clearfix:after,.clearfix:before,.container-fluid:after,.container-fluid:before,.container:after,.container:before,.dl-horizontal dd:after,.dl-horizontal dd:before,.form-horizontal .form-group:after,.form-horizontal .form-group:before,.modal-footer:after,.modal-footer:before,.modal-header:after,.modal-header:before,.nav:after,.nav:before,.navbar-collapse:after,.navbar-collapse:before,.navbar-header:after,.navbar-header:before,.navbar:after,.navbar:before,.pager:after,.pager:before,.panel-body:after,.panel-body:before,.row:after,.row:before{display:table;content:\" \"}.btn-group-vertical>.btn-group:after,.btn-toolbar:after,.clearfix:after,.container-fluid:after,.container:after,.dl-horizontal dd:after,.form-horizontal .form-group:after,.modal-footer:after,.modal-header:after,.nav:after,.navbar-collapse:after,.navbar-header:after,.navbar:after,.pager:after,.panel-body:after,.row:after{clear:both}.center-block{display:block;margin-right:auto;margin-left:auto}.pull-right{float:right!important}.pull-left{float:left!important}.hide{display:none!important}.show{display:block!important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none!important}.affix{position:fixed}@-ms-viewport{width:device-width}.visible-lg,.visible-lg-block,.visible-lg-inline,.visible-lg-inline-block,.visible-md,.visible-md-block,.visible-md-inline,.visible-md-inline-block,.visible-sm,.visible-sm-block,.visible-sm-inline,.visible-sm-inline-block,.visible-xs,.visible-xs-block,.visible-xs-inline,.visible-xs-inline-block{display:none!important}@media (max-width:767px){.visible-xs,.visible-xs-block{display:block!important}table.visible-xs{display:table!important}tr.visible-xs{display:table-row!important}td.visible-xs,th.visible-xs{display:table-cell!important}.visible-xs-inline{display:inline!important}.visible-xs-inline-block{display:inline-block!important}}@media (min-width:768px) and (max-width:991px){.visible-sm,.visible-sm-block{display:block!important}table.visible-sm{display:table!important}tr.visible-sm{display:table-row!important}td.visible-sm,th.visible-sm{display:table-cell!important}.visible-sm-inline{display:inline!important}.visible-sm-inline-block{display:inline-block!important}}@media (min-width:992px) and (max-width:1199px){.visible-md,.visible-md-block{display:block!important}table.visible-md{display:table!important}tr.visible-md{display:table-row!important}td.visible-md,th.visible-md{display:table-cell!important}.visible-md-inline{display:inline!important}.visible-md-inline-block{display:inline-block!important}}@media (min-width:1200px){.visible-lg,.visible-lg-block{display:block!important}table.visible-lg{display:table!important}tr.visible-lg{display:table-row!important}td.visible-lg,th.visible-lg{display:table-cell!important}.visible-lg-inline{display:inline!important}.visible-lg-inline-block{display:inline-block!important}}@media (max-width:767px){.hidden-xs{display:none!important}}@media (min-width:768px) and (max-width:991px){.hidden-sm{display:none!important}}@media (min-width:992px) and (max-width:1199px){.hidden-md{display:none!important}}@media (min-width:1200px){.hidden-lg{display:none!important}}.visible-print{display:none!important}@media print{.visible-print{display:block!important}table.visible-print{display:table!important}tr.visible-print{display:table-row!important}td.visible-print,th.visible-print{display:table-cell!important}}.visible-print-block{display:none!important}@media print{.visible-print-block{display:block!important}}.visible-print-inline{display:none!important}@media print{.visible-print-inline{display:inline!important}}.bootstrap-select>select.bs-select-hidden,.visible-print-inline-block,select.bs-select-hidden,select.selectpicker{display:none!important}@media print{.visible-print-inline-block{display:inline-block!important}.hidden-print{display:none!important}}body,html{width:100%;height:100%;margin:0}.app-view{position:relative;margin:10px auto 0;max-width:960px;width:100%}@media screen and (max-height:560px){.app-view{margin-top:0}}.app-view .loading-screen{position:fixed;z-index:1200;left:0;top:0;width:100%;height:100%;min-height:600px;background-color:#fff}.app-view .loading-screen .beaker{border-radius:10px;border-top-right-radius:0;border-top-left-radius:0;display:inline-block;height:75px;left:50%;margin-left:-50px;position:absolute;top:50%;margin-top:-60px;width:100px;background-color:#ededed;box-sizing:content-box}.app-view .loading-screen .beaker:after,.app-view .loading-screen .beaker:before{content:\"\";box-sizing:content-box;position:absolute;top:-45px}.app-view .loading-screen .beaker:before{border-left:10px solid #ededed;border-radius:10px;border-right:10px solid #ededed;height:10px;left:-5px;width:90px}.app-view .loading-screen .beaker:after{border-left:10px solid #ededed;border-right:10px solid #ededed;height:45px;width:80px}.app-view .loading-screen .beaker .bubbles{position:absolute;left:10px;right:10px;bottom:75px;height:1000px;overflow:hidden}.app-view .loading-screen .beaker .bubbles .bubble{position:absolute;bottom:0;border-radius:50%;background-color:#575c5f;width:10px;height:10px;-webkit-animation-name:bubble;animation-name:bubble;-webkit-animation-duration:1600ms;animation-duration:1600ms;-webkit-animation-iteration-count:infinite;animation-iteration-count:infinite;-webkit-animation-timing-function:linear;animation-timing-function:linear;-webkit-transform:translateY(1em);-moz-transform:translateY(1em);-ms-transform:translateY(1em);transform:translateY(1em)}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(1){left:5%}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(2){background-color:#20356b;width:7px;height:7px;left:12%;bottom:-45px;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(3){background-color:#f0cf31;width:16px;height:16px;left:26%;-webkit-animation-duration:2000ms;animation-duration:2000ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(4){background-color:#71b653;width:9px;height:9px;left:46%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:400ms;animation-delay:400ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(5){background-color:#f47b4d;width:12px;height:12px;left:59%;bottom:-22.5px;-webkit-animation-delay:-100ms;animation-delay:-100ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(6){background-color:#20356b;width:14px;height:14px;left:77%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(7){background-color:#f47b4d;width:6px;height:6px;left:13%;bottom:-37.5px;-webkit-animation-delay:800ms;animation-delay:800ms}.sims{position:relative}.sim-content.rendering{position:absolute;top:0;left:0}.sim-view{height:100%;width:100%}.footer{position:absolute;margin:16px 0 10px;float:left;clear:both;width:100%;font-size:16px;color:#222}.footer .footer-left{float:left;margin-left:16px}.footer .footer-left img{opacity:.7}.footer .footer-right{float:right;margin-right:16px}.footer .footer-right span{width:88px;display:inline-block;padding-right:8px;line-height:14px;vertical-align:bottom;color:#b5b5b5;text-transform:lowercase;text-align:right;font-size:12px}.footer .footer-right a{display:inline-block;padding-bottom:2px}.footer img{max-height:32px;display:inline-block}.sim-tabs>ul{margin:0;padding:0 0 0 30px;font-size:0;list-style-type:none;color:#21366b;border-bottom:2px solid #21366b}.sim-tabs>ul>li{display:inline-block;margin-right:3px}.sim-tabs>ul>li>a{display:block;padding:7px 10px;font-size:1.4rem;background-color:#ededed;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sim-tabs>ul>li>a.singleton{cursor:default}.sim-tabs>ul>li>a>.tab-title{margin-left:2px;vertical-align:middle}.sim-tabs>ul>li>a>.tab-title::after{font-weight:700;margin-left:5px;vertical-align:top;content:\"+\"}.sim-tabs>ul>li>a.active{color:#ededed;background-color:#21366b}.sim-tabs>ul>li>a.disabled{cursor:not-allowed;pointer-events:none;opacity:.65}.sim-content{display:none;width:100%;min-height:600px;position:relative;top:0;left:0}.sim-content.active{display:block}.scene-view{width:100%;height:620px;background-image:-webkit-linear-gradient(top,#ccc 0,#fafafa 85%);background-image:-o-linear-gradient(top,#ccc 0,#fafafa 85%);background-image:linear-gradient(to bottom,#ccc 0,#fafafa 85%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#ffcccccc\', endColorstr=\'#fffafafa\', GradientType=0);background-repeat:repeat-x}@media screen and (max-height:560px){.scene-view{height:463px}}.btn.active:focus,.btn:active:focus,.btn:focus{outline:0!important}.btn-zoom-in,.btn-zoom-out,.btn.btn-zoom-in,.btn.btn-zoom-out{background:0 0;padding:0;opacity:.8;font-weight:400}.btn-zoom-in:focus,.btn-zoom-out:focus,.btn.btn-zoom-in:focus,.btn.btn-zoom-out:focus{outline:0;color:inherit}.btn-zoom-in:hover,.btn-zoom-out:hover,.btn.btn-zoom-in:hover,.btn.btn-zoom-out:hover{color:inherit;opacity:1}.btn-zoom-in:active,.btn-zoom-out:active,.btn.btn-zoom-in:active,.btn.btn-zoom-out:active{color:inherit;-webkit-box-shadow:none;box-shadow:none}.btn-zoom-in>.fa,.btn-zoom-out>.fa,.btn.btn-zoom-in>.fa,.btn.btn-zoom-out>.fa{position:relative;font-size:20px}.btn-zoom-in>.fa>.fa,.btn-zoom-out>.fa>.fa,.btn.btn-zoom-in>.fa>.fa,.btn.btn-zoom-out>.fa>.fa{font-size:10px;position:absolute;top:5px;left:4px}.sims .sim-content{min-height:inherit}.sound-btn-wrapper{position:absolute;top:-36px;right:30px}.sound-btn-wrapper>.sound-btn{background:#ededed;color:#21366b;outline:0;border:0;border-radius:50%;width:28px;height:28px;text-align:center}.sound-btn-wrapper>.sound-btn:hover{opacity:.9}.sound-btn-wrapper>.sound-btn:active{background:#21366b;color:#fff}.bootstrap-select .dropdown-menu li a span.check-mark,.sound-btn-wrapper>.sound-btn.sound-btn-low,.sound-btn-wrapper>.sound-btn.sound-btn-mute,input[type=checkbox],input[type=radio]{display:none}.hello-world{position:absolute;top:44%;width:100%;text-align:center;font-size:26px}.bootstrap-select .dropdown-menu li,.slider{position:relative}.slider.noUi-target,.slider.noUi-target *,input[type=checkbox]+label,input[type=radio]+label{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.slider.noUi-target,.slider.noUi-target *{-ms-touch-action:none;-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-base{width:100%;height:100%;position:relative}.slider .noUi-origin{position:absolute;right:0;top:0;left:0;bottom:0}.slider .noUi-handle{position:relative;z-index:1}.slider .noUi-stacking .noUi-handle{z-index:10}.slider .noUi-stacking+.noUi-origin{*z-index:-1}.slider.noUi-state-tap .noUi-origin{-webkit-transition:left .3s,top .3s;transition:left .3s,top .3s}.slider.noUi-state-drag *{cursor:inherit!important}.slider.noUi-horizontal{height:2px;margin-top:12px;margin-bottom:12px}.slider.noUi-horizontal .noUi-base:after,.slider.noUi-horizontal .noUi-base:before{content:\"\";position:absolute;height:14px;left:0;width:100%}.slider.noUi-horizontal .noUi-base:before{bottom:2px}.slider.noUi-horizontal .noUi-base:after{top:2px}.slider .noUi-handle:after,.slider.noUi-vertical .noUi-base:after,.slider.noUi-vertical .noUi-base:before{content:\"\";position:absolute;width:14px;top:0;height:100%}.slider.noUi-vertical .noUi-base:before{right:2px}.slider.noUi-vertical .noUi-base:after{left:2px}.slider.noUi-horizontal .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-horizontal.noUi-extended{padding:0 15px}.slider.noUi-horizontal.noUi-extended .noUi-origin{right:-15px}.slider.noUi-vertical{width:2px}.slider.noUi-vertical .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-vertical.noUi-extended{padding:15px 0}.slider.noUi-vertical.noUi-extended .noUi-origin{bottom:-15px}.slider .noUi-background{background:#fafafa}.slider.noUi-connect{background:#21366b;-webkit-transition:background 450ms ease;-o-transition:background 450ms ease;transition:background 450ms ease}.slider .noUi-dragable{cursor:w-resize}.slider.noUi-vertical .noUi-dragable{cursor:n-resize}.slider .noUi-handle{text-align:center}.slider .noUi-handle:after{display:block;width:12px;height:12px;top:50%;left:50%;margin-top:-6px;margin-left:-6px;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease}.slider .noUi-active:after{width:100%;height:100%;margin-top:-50%;margin-left:-50%}.slider[disabled] .noUi-connect,.slider[disabled] .noUi-handle:after,.slider[disabled] .noUi-handle:before,.slider[disabled].noUi-connect{background:#b8b8b8}.slider[disabled] .noUi-handle{cursor:not-allowed}.slider.pipped{margin-bottom:30px}.slider .noUi-pips,.slider .noUi-pips *{-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-pips{position:absolute;font:400 12px Arial;color:#999}.slider .noUi-value{width:40px;position:absolute;text-align:center}.slider .noUi-value-sub{color:#ccc;font-size:10px}.slider .noUi-marker{position:absolute;background:#afafaf}.slider .noUi-marker-sub{background:#ddd}.slider .noUi-marker-large{background:#ccc}.slider .noUi-pips-horizontal{padding:8px 0;height:50px;top:100%;left:0;width:100%}.slider .noUi-value-horizontal{margin-left:-20px;padding-top:16px}.slider .noUi-value-horizontal.noUi-value-sub{padding-top:12px}.slider .noUi-marker-horizontal.noUi-marker{margin-left:-1px;width:2px;height:4px}.slider .noUi-marker-horizontal.noUi-marker-sub{height:8px}.slider .noUi-marker-horizontal.noUi-marker-large{height:12px}.slider .noUi-pips-vertical{padding:0 8px;height:100%;top:0;left:100%}.slider .noUi-value-vertical{width:15px;margin-left:20px;margin-top:-5px}.slider .noUi-marker-vertical.noUi-marker{width:5px;height:2px;margin-top:-1px}.slider .noUi-marker-vertical.noUi-marker-sub{width:10px}.slider .noUi-marker-vertical.noUi-marker-large{width:15px}input[type=checkbox]+label,input[type=radio]+label{display:inline-block;position:relative;padding-left:26px;margin-bottom:12px;line-height:16px;user-select:none}input[type=checkbox]+label:last-child,input[type=radio]+label:last-child{margin-bottom:0}input[type=checkbox]+label:before,input[type=radio]+label:before{content:\"\";position:absolute;top:0;left:0;width:16px;height:16px;background:#fff;border:2px solid #333;cursor:pointer}input[type=radio]+label:before{border-radius:50%}input[type=radio]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease}input[type=radio]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px}input[type=checkbox]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);-o-transform:rotate(90deg);transform:rotate(90deg);-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;cursor:pointer}input[type=checkbox]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px;-webkit-transform:rotate(0);-ms-transform:rotate(0);-o-transform:rotate(0);transform:rotate(0)}.bootstrap-select{width:220px \\0;vertical-align:middle}.bootstrap-select>.dropdown-toggle{position:relative;width:100%;text-align:right;white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between}.bootstrap-select>.dropdown-toggle:after{margin-top:-1px}.bootstrap-select>.dropdown-toggle.bs-placeholder,.bootstrap-select>.dropdown-toggle.bs-placeholder:active,.bootstrap-select>.dropdown-toggle.bs-placeholder:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder:hover{color:#999}.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:hover{color:rgba(255,255,255,.5)}.bootstrap-select>select{position:absolute!important;bottom:0;left:50%;display:block!important;width:.5px!important;height:100%!important;padding:0!important;opacity:0!important;border:0;z-index:0!important}.bootstrap-select>select.mobile-device{top:0;left:0;display:block!important;width:100%!important;z-index:2!important}.bootstrap-select.is-invalid .dropdown-toggle,.error .bootstrap-select .dropdown-toggle,.has-error .bootstrap-select .dropdown-toggle,.was-validated .bootstrap-select select:invalid+.dropdown-toggle{border-color:#b94a48}.bootstrap-select.is-valid .dropdown-toggle,.was-validated .bootstrap-select select:valid+.dropdown-toggle{border-color:#28a745}.bootstrap-select.fit-width{width:auto!important}.bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn){width:220px}.bootstrap-select .dropdown-toggle:focus,.bootstrap-select>select.mobile-device:focus+.dropdown-toggle{outline:thin dotted #333!important;outline:5px auto -webkit-focus-ring-color!important;outline-offset:-2px}.bootstrap-select.form-control{margin-bottom:0;padding:0;border:0;height:auto}:not(.input-group)>.bootstrap-select.form-control:not([class*=col-]){width:100%}.bootstrap-select.form-control.input-group-btn{float:none;z-index:auto}.form-inline .bootstrap-select,.form-inline .bootstrap-select.form-control:not([class*=col-]){width:auto}.bootstrap-select:not(.input-group-btn),.bootstrap-select[class*=col-]{float:none;display:inline-block;margin-left:0}.bootstrap-select.dropdown-menu-right,.bootstrap-select[class*=col-].dropdown-menu-right,.row .bootstrap-select[class*=col-].dropdown-menu-right{float:right}.form-group .bootstrap-select,.form-horizontal .bootstrap-select,.form-inline .bootstrap-select{margin-bottom:0}.form-group-lg .bootstrap-select.form-control,.form-group-sm .bootstrap-select.form-control{padding:0}.form-group-lg .bootstrap-select.form-control .dropdown-toggle,.form-group-sm .bootstrap-select.form-control .dropdown-toggle{height:100%;font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-lg .dropdown-toggle,.bootstrap-select.form-control-sm .dropdown-toggle{font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-sm .dropdown-toggle{padding:.25rem .5rem}.bootstrap-select.form-control-lg .dropdown-toggle{padding:.5rem 1rem}.form-inline .bootstrap-select .form-control{width:100%}.bootstrap-select .dropdown-menu li.disabled a,.bootstrap-select.disabled,.bootstrap-select>.disabled{cursor:not-allowed}.bootstrap-select.disabled:focus,.bootstrap-select>.disabled:focus{outline:0!important}.bootstrap-select.bs-container{position:absolute;top:0;left:0;height:0!important;padding:0!important}.bootstrap-select.bs-container .dropdown-menu{z-index:1060}.bootstrap-select .dropdown-toggle .filter-option{position:static;top:0;left:0;float:left;height:100%;width:100%;text-align:left;overflow:hidden;flex:0 1 auto}.bs3.bootstrap-select .dropdown-toggle .filter-option,.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option .filter-option-inner{padding-right:inherit}.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option{position:absolute;padding-top:inherit;padding-bottom:inherit;padding-left:inherit;float:none}.bootstrap-select .dropdown-toggle .filter-option-inner-inner{overflow:hidden}.bootstrap-select .dropdown-toggle .filter-expand{width:0!important;float:left;opacity:0!important;overflow:hidden}.bootstrap-select .dropdown-toggle .caret{position:absolute;top:50%;right:12px;margin-top:-2px;vertical-align:middle}.input-group .bootstrap-select.form-control .dropdown-toggle{border-radius:inherit}.bootstrap-select[class*=col-] .dropdown-toggle{width:100%}.bootstrap-select .dropdown-menu{min-width:100%;box-sizing:border-box}.bootstrap-select .dropdown-menu>.inner:focus{outline:0!important}.bootstrap-select .dropdown-menu.inner{position:static;float:none;border:0;padding:0;margin:0;border-radius:0;box-shadow:none}.bootstrap-select .dropdown-menu li.active small{color:rgba(255,255,255,.5)!important}.bootstrap-select .dropdown-menu li a{cursor:pointer;user-select:none}.bootstrap-select .dropdown-menu li a.opt{position:relative;padding-left:2.25em}.bootstrap-select .dropdown-menu li a span.text{display:inline-block}.bootstrap-select .dropdown-menu li small{padding-left:.5em}.bootstrap-select .dropdown-menu .notify{position:absolute;bottom:5px;width:96%;margin:0 2%;min-height:26px;padding:3px 5px;background:#f5f5f5;border:1px solid #e3e3e3;box-shadow:inset 0 1px 1px rgba(0,0,0,.05);pointer-events:none;opacity:.9;box-sizing:border-box}.bootstrap-select .dropdown-menu .notify.fadeOut{animation:300ms linear 750ms forwards bs-notify-fadeOut}.bootstrap-select .no-results{padding:3px;background:#f5f5f5;margin:0 5px;white-space:nowrap}.bootstrap-select.fit-width .dropdown-toggle .filter-option{position:static;display:inline;padding:0}.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner,.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner-inner{display:inline}.bootstrap-select.fit-width .dropdown-toggle .bs-caret:before{content:\" \"}.bootstrap-select.fit-width .dropdown-toggle .caret{position:static;top:auto;margin-top:-1px}.bootstrap-select.show-tick .dropdown-menu .selected span.check-mark{position:absolute;display:inline-block;right:15px;top:5px}.bootstrap-select.show-tick .dropdown-menu li a span.text{margin-right:34px}.bootstrap-select .bs-ok-default:after{content:\"\";display:block;width:.5em;height:1em;border-style:solid;border-width:0 .26em .26em 0;transform-style:preserve-3d;transform:rotate(45deg)}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle{z-index:1061}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:before{content:\"\";border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:7px solid rgba(204,204,204,.2);position:absolute;bottom:-4px;left:9px;display:none}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:after{content:\"\";border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #fff;position:absolute;bottom:-4px;left:10px;display:none}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:before{bottom:auto;top:-4px;border-top:7px solid rgba(204,204,204,.2);border-bottom:0}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:after{bottom:auto;top:-4px;border-top:6px solid #fff;border-bottom:0}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:before{right:12px;left:auto}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:after{right:13px;left:auto}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:before,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:before{display:block}.bs-actionsbox,.bs-donebutton,.bs-searchbox{padding:4px 8px}.bs-actionsbox,.bs-donebutton{width:100%;box-sizing:border-box}.bs-actionsbox .btn-group button{width:50%}.bs-donebutton{float:left}.bs-donebutton .btn-group button{width:100%}.bs-searchbox+.bs-actionsbox{padding:0 8px 4px}.bs-searchbox .form-control{margin-bottom:0;width:100%;float:none}\n/*!\n *  Font Awesome 4.7.0 by @davegandy - http://fontawesome.io - @fontawesome\n *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)\n */\n@-webkit-keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@font-face{font-family:\"FontAwesome\";src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?v=4.7.0);src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0)format(\"embedded-opentype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0)format(\"woff2\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0)format(\"woff\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0)format(\"truetype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular)format(\"svg\");font-weight:400;font-style:normal}.fa{display:inline-block;font:14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.fa-lg{font-size:1.33333333em;line-height:.75em;vertical-align:-15%}.fa-2x{font-size:2em}.fa-3x{font-size:3em}.fa-4x{font-size:4em}.fa-5x{font-size:5em}.fa-fw{width:1.28571429em;text-align:center}.fa-ul{padding-left:0;margin-left:2.14285714em;list-style-type:none}.fa-ul>li{position:relative}.fa-li{position:absolute;left:-2.14285714em;width:2.14285714em;top:.14285714em;text-align:center}.fa-li.fa-lg{left:-1.85714286em}.fa-border{padding:.2em .25em .15em;border:solid .08em #eee;border-radius:.1em}.fa-pull-left{float:left}.fa-pull-right,.pull-right{float:right}.fa.fa-pull-left{margin-right:.3em}.fa.fa-pull-right{margin-left:.3em}.pull-left{float:left}.fa.pull-left{margin-right:.3em}.fa.pull-right{margin-left:.3em}.fa-spin{-webkit-animation:fa-spin 2s infinite linear;animation:fa-spin 2s infinite linear}.fa-pulse{-webkit-animation:fa-spin 1s infinite steps(8);animation:fa-spin 1s infinite steps(8)}.fa-rotate-90{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=1)\";-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.fa-rotate-180{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2)\";-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.fa-rotate-270{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=3)\";-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.fa-flip-horizontal{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1)\";-webkit-transform:scale(-1,1);-ms-transform:scale(-1,1);transform:scale(-1,1)}.fa-flip-vertical{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1)\";-webkit-transform:scale(1,-1);-ms-transform:scale(1,-1);transform:scale(1,-1)}:root .fa-flip-horizontal,:root .fa-flip-vertical,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-rotate-90{filter:none}.fa-stack{position:relative;display:inline-block;width:2em;height:2em;line-height:2em;vertical-align:middle}.fa-stack-1x,.fa-stack-2x{position:absolute;left:0;width:100%;text-align:center}.fa-stack-1x{line-height:inherit}.fa-stack-2x{font-size:2em}.fa-inverse{color:#fff}.fa-glass:before{content:\"\"}.fa-music:before{content:\"\"}.fa-search:before{content:\"\"}.fa-envelope-o:before{content:\"\"}.fa-heart:before{content:\"\"}.fa-star:before{content:\"\"}.fa-star-o:before{content:\"\"}.fa-user:before{content:\"\"}.fa-film:before{content:\"\"}.fa-th-large:before{content:\"\"}.fa-th:before{content:\"\"}.fa-th-list:before{content:\"\"}.fa-check:before{content:\"\"}.fa-close:before,.fa-remove:before,.fa-times:before{content:\"\"}.fa-search-plus:before{content:\"\"}.fa-search-minus:before{content:\"\"}.fa-power-off:before{content:\"\"}.fa-signal:before{content:\"\"}.fa-cog:before,.fa-gear:before{content:\"\"}.fa-trash-o:before{content:\"\"}.fa-home:before{content:\"\"}.fa-file-o:before{content:\"\"}.fa-clock-o:before{content:\"\"}.fa-road:before{content:\"\"}.fa-download:before{content:\"\"}.fa-arrow-circle-o-down:before{content:\"\"}.fa-arrow-circle-o-up:before{content:\"\"}.fa-inbox:before{content:\"\"}.fa-play-circle-o:before{content:\"\"}.fa-repeat:before,.fa-rotate-right:before{content:\"\"}.fa-refresh:before{content:\"\"}.fa-list-alt:before{content:\"\"}.fa-lock:before{content:\"\"}.fa-flag:before{content:\"\"}.fa-headphones:before{content:\"\"}.fa-volume-off:before{content:\"\"}.fa-volume-down:before{content:\"\"}.fa-volume-up:before{content:\"\"}.fa-qrcode:before{content:\"\"}.fa-barcode:before{content:\"\"}.fa-tag:before{content:\"\"}.fa-tags:before{content:\"\"}.fa-book:before{content:\"\"}.fa-bookmark:before{content:\"\"}.fa-print:before{content:\"\"}.fa-camera:before{content:\"\"}.fa-font:before{content:\"\"}.fa-bold:before{content:\"\"}.fa-italic:before{content:\"\"}.fa-text-height:before{content:\"\"}.fa-text-width:before{content:\"\"}.fa-align-left:before{content:\"\"}.fa-align-center:before{content:\"\"}.fa-align-right:before{content:\"\"}.fa-align-justify:before{content:\"\"}.fa-list:before{content:\"\"}.fa-dedent:before,.fa-outdent:before{content:\"\"}.fa-indent:before{content:\"\"}.fa-video-camera:before{content:\"\"}.fa-image:before,.fa-photo:before,.fa-picture-o:before{content:\"\"}.fa-pencil:before{content:\"\"}.fa-map-marker:before{content:\"\"}.fa-adjust:before{content:\"\"}.fa-tint:before{content:\"\"}.fa-edit:before,.fa-pencil-square-o:before{content:\"\"}.fa-share-square-o:before{content:\"\"}.fa-check-square-o:before{content:\"\"}.fa-arrows:before{content:\"\"}.fa-step-backward:before{content:\"\"}.fa-fast-backward:before{content:\"\"}.fa-backward:before{content:\"\"}.fa-play:before{content:\"\"}.fa-pause:before{content:\"\"}.fa-stop:before{content:\"\"}.fa-forward:before{content:\"\"}.fa-fast-forward:before{content:\"\"}.fa-step-forward:before{content:\"\"}.fa-eject:before{content:\"\"}.fa-chevron-left:before{content:\"\"}.fa-chevron-right:before{content:\"\"}.fa-plus-circle:before{content:\"\"}.fa-minus-circle:before{content:\"\"}.fa-times-circle:before{content:\"\"}.fa-check-circle:before{content:\"\"}.fa-question-circle:before{content:\"\"}.fa-info-circle:before{content:\"\"}.fa-crosshairs:before{content:\"\"}.fa-times-circle-o:before{content:\"\"}.fa-check-circle-o:before{content:\"\"}.fa-ban:before{content:\"\"}.fa-arrow-left:before{content:\"\"}.fa-arrow-right:before{content:\"\"}.fa-arrow-up:before{content:\"\"}.fa-arrow-down:before{content:\"\"}.fa-mail-forward:before,.fa-share:before{content:\"\"}.fa-expand:before{content:\"\"}.fa-compress:before{content:\"\"}.fa-plus:before{content:\"\"}.fa-minus:before{content:\"\"}.fa-asterisk:before{content:\"\"}.fa-exclamation-circle:before{content:\"\"}.fa-gift:before{content:\"\"}.fa-leaf:before{content:\"\"}.fa-fire:before{content:\"\"}.fa-eye:before{content:\"\"}.fa-eye-slash:before{content:\"\"}.fa-exclamation-triangle:before,.fa-warning:before{content:\"\"}.fa-plane:before{content:\"\"}.fa-calendar:before{content:\"\"}.fa-random:before{content:\"\"}.fa-comment:before{content:\"\"}.fa-magnet:before{content:\"\"}.fa-chevron-up:before{content:\"\"}.fa-chevron-down:before{content:\"\"}.fa-retweet:before{content:\"\"}.fa-shopping-cart:before{content:\"\"}.fa-folder:before{content:\"\"}.fa-folder-open:before{content:\"\"}.fa-arrows-v:before{content:\"\"}.fa-arrows-h:before{content:\"\"}.fa-bar-chart-o:before,.fa-bar-chart:before{content:\"\"}.fa-twitter-square:before{content:\"\"}.fa-facebook-square:before{content:\"\"}.fa-camera-retro:before{content:\"\"}.fa-key:before{content:\"\"}.fa-cogs:before,.fa-gears:before{content:\"\"}.fa-comments:before{content:\"\"}.fa-thumbs-o-up:before{content:\"\"}.fa-thumbs-o-down:before{content:\"\"}.fa-star-half:before{content:\"\"}.fa-heart-o:before{content:\"\"}.fa-sign-out:before{content:\"\"}.fa-linkedin-square:before{content:\"\"}.fa-thumb-tack:before{content:\"\"}.fa-external-link:before{content:\"\"}.fa-sign-in:before{content:\"\"}.fa-trophy:before{content:\"\"}.fa-github-square:before{content:\"\"}.fa-upload:before{content:\"\"}.fa-lemon-o:before{content:\"\"}.fa-phone:before{content:\"\"}.fa-square-o:before{content:\"\"}.fa-bookmark-o:before{content:\"\"}.fa-phone-square:before{content:\"\"}.fa-twitter:before{content:\"\"}.fa-facebook-f:before,.fa-facebook:before{content:\"\"}.fa-github:before{content:\"\"}.fa-unlock:before{content:\"\"}.fa-credit-card:before{content:\"\"}.fa-feed:before,.fa-rss:before{content:\"\"}.fa-hdd-o:before{content:\"\"}.fa-bullhorn:before{content:\"\"}.fa-bell:before{content:\"\"}.fa-certificate:before{content:\"\"}.fa-hand-o-right:before{content:\"\"}.fa-hand-o-left:before{content:\"\"}.fa-hand-o-up:before{content:\"\"}.fa-hand-o-down:before{content:\"\"}.fa-arrow-circle-left:before{content:\"\"}.fa-arrow-circle-right:before{content:\"\"}.fa-arrow-circle-up:before{content:\"\"}.fa-arrow-circle-down:before{content:\"\"}.fa-globe:before{content:\"\"}.fa-wrench:before{content:\"\"}.fa-tasks:before{content:\"\"}.fa-filter:before{content:\"\"}.fa-briefcase:before{content:\"\"}.fa-arrows-alt:before{content:\"\"}.fa-group:before,.fa-users:before{content:\"\"}.fa-chain:before,.fa-link:before{content:\"\"}.fa-cloud:before{content:\"\"}.fa-flask:before{content:\"\"}.fa-cut:before,.fa-scissors:before{content:\"\"}.fa-copy:before,.fa-files-o:before{content:\"\"}.fa-paperclip:before{content:\"\"}.fa-floppy-o:before,.fa-save:before{content:\"\"}.fa-square:before{content:\"\"}.fa-bars:before,.fa-navicon:before,.fa-reorder:before{content:\"\"}.fa-list-ul:before{content:\"\"}.fa-list-ol:before{content:\"\"}.fa-strikethrough:before{content:\"\"}.fa-underline:before{content:\"\"}.fa-table:before{content:\"\"}.fa-magic:before{content:\"\"}.fa-truck:before{content:\"\"}.fa-pinterest:before{content:\"\"}.fa-pinterest-square:before{content:\"\"}.fa-google-plus-square:before{content:\"\"}.fa-google-plus:before{content:\"\"}.fa-money:before{content:\"\"}.fa-caret-down:before{content:\"\"}.fa-caret-up:before{content:\"\"}.fa-caret-left:before{content:\"\"}.fa-caret-right:before{content:\"\"}.fa-columns:before{content:\"\"}.fa-sort:before,.fa-unsorted:before{content:\"\"}.fa-sort-desc:before,.fa-sort-down:before{content:\"\"}.fa-sort-asc:before,.fa-sort-up:before{content:\"\"}.fa-envelope:before{content:\"\"}.fa-linkedin:before{content:\"\"}.fa-rotate-left:before,.fa-undo:before{content:\"\"}.fa-gavel:before,.fa-legal:before{content:\"\"}.fa-dashboard:before,.fa-tachometer:before{content:\"\"}.fa-comment-o:before{content:\"\"}.fa-comments-o:before{content:\"\"}.fa-bolt:before,.fa-flash:before{content:\"\"}.fa-sitemap:before{content:\"\"}.fa-umbrella:before{content:\"\"}.fa-clipboard:before,.fa-paste:before{content:\"\"}.fa-lightbulb-o:before{content:\"\"}.fa-exchange:before{content:\"\"}.fa-cloud-download:before{content:\"\"}.fa-cloud-upload:before{content:\"\"}.fa-user-md:before{content:\"\"}.fa-stethoscope:before{content:\"\"}.fa-suitcase:before{content:\"\"}.fa-bell-o:before{content:\"\"}.fa-coffee:before{content:\"\"}.fa-cutlery:before{content:\"\"}.fa-file-text-o:before{content:\"\"}.fa-building-o:before{content:\"\"}.fa-hospital-o:before{content:\"\"}.fa-ambulance:before{content:\"\"}.fa-medkit:before{content:\"\"}.fa-fighter-jet:before{content:\"\"}.fa-beer:before{content:\"\"}.fa-h-square:before{content:\"\"}.fa-plus-square:before{content:\"\"}.fa-angle-double-left:before{content:\"\"}.fa-angle-double-right:before{content:\"\"}.fa-angle-double-up:before{content:\"\"}.fa-angle-double-down:before{content:\"\"}.fa-angle-left:before{content:\"\"}.fa-angle-right:before{content:\"\"}.fa-angle-up:before{content:\"\"}.fa-angle-down:before{content:\"\"}.fa-desktop:before{content:\"\"}.fa-laptop:before{content:\"\"}.fa-tablet:before{content:\"\"}.fa-mobile-phone:before,.fa-mobile:before{content:\"\"}.fa-circle-o:before{content:\"\"}.fa-quote-left:before{content:\"\"}.fa-quote-right:before{content:\"\"}.fa-spinner:before{content:\"\"}.fa-circle:before{content:\"\"}.fa-mail-reply:before,.fa-reply:before{content:\"\"}.fa-github-alt:before{content:\"\"}.fa-folder-o:before{content:\"\"}.fa-folder-open-o:before{content:\"\"}.fa-smile-o:before{content:\"\"}.fa-frown-o:before{content:\"\"}.fa-meh-o:before{content:\"\"}.fa-gamepad:before{content:\"\"}.fa-keyboard-o:before{content:\"\"}.fa-flag-o:before{content:\"\"}.fa-flag-checkered:before{content:\"\"}.fa-terminal:before{content:\"\"}.fa-code:before{content:\"\"}.fa-mail-reply-all:before,.fa-reply-all:before{content:\"\"}.fa-star-half-empty:before,.fa-star-half-full:before,.fa-star-half-o:before{content:\"\"}.fa-location-arrow:before{content:\"\"}.fa-crop:before{content:\"\"}.fa-code-fork:before{content:\"\"}.fa-chain-broken:before,.fa-unlink:before{content:\"\"}.fa-question:before{content:\"\"}.fa-info:before{content:\"\"}.fa-exclamation:before{content:\"\"}.fa-superscript:before{content:\"\"}.fa-subscript:before{content:\"\"}.fa-eraser:before{content:\"\"}.fa-puzzle-piece:before{content:\"\"}.fa-microphone:before{content:\"\"}.fa-microphone-slash:before{content:\"\"}.fa-shield:before{content:\"\"}.fa-calendar-o:before{content:\"\"}.fa-fire-extinguisher:before{content:\"\"}.fa-rocket:before{content:\"\"}.fa-maxcdn:before{content:\"\"}.fa-chevron-circle-left:before{content:\"\"}.fa-chevron-circle-right:before{content:\"\"}.fa-chevron-circle-up:before{content:\"\"}.fa-chevron-circle-down:before{content:\"\"}.fa-html5:before{content:\"\"}.fa-css3:before{content:\"\"}.fa-anchor:before{content:\"\"}.fa-unlock-alt:before{content:\"\"}.fa-bullseye:before{content:\"\"}.fa-ellipsis-h:before{content:\"\"}.fa-ellipsis-v:before{content:\"\"}.fa-rss-square:before{content:\"\"}.fa-play-circle:before{content:\"\"}.fa-ticket:before{content:\"\"}.fa-minus-square:before{content:\"\"}.fa-minus-square-o:before{content:\"\"}.fa-level-up:before{content:\"\"}.fa-level-down:before{content:\"\"}.fa-check-square:before{content:\"\"}.fa-pencil-square:before{content:\"\"}.fa-external-link-square:before{content:\"\"}.fa-share-square:before{content:\"\"}.fa-compass:before{content:\"\"}.fa-caret-square-o-down:before,.fa-toggle-down:before{content:\"\"}.fa-caret-square-o-up:before,.fa-toggle-up:before{content:\"\"}.fa-caret-square-o-right:before,.fa-toggle-right:before{content:\"\"}.fa-eur:before,.fa-euro:before{content:\"\"}.fa-gbp:before{content:\"\"}.fa-dollar:before,.fa-usd:before{content:\"\"}.fa-inr:before,.fa-rupee:before{content:\"\"}.fa-cny:before,.fa-jpy:before,.fa-rmb:before,.fa-yen:before{content:\"\"}.fa-rouble:before,.fa-rub:before,.fa-ruble:before{content:\"\"}.fa-krw:before,.fa-won:before{content:\"\"}.fa-bitcoin:before,.fa-btc:before{content:\"\"}.fa-file:before{content:\"\"}.fa-file-text:before{content:\"\"}.fa-sort-alpha-asc:before{content:\"\"}.fa-sort-alpha-desc:before{content:\"\"}.fa-sort-amount-asc:before{content:\"\"}.fa-sort-amount-desc:before{content:\"\"}.fa-sort-numeric-asc:before{content:\"\"}.fa-sort-numeric-desc:before{content:\"\"}.fa-thumbs-up:before{content:\"\"}.fa-thumbs-down:before{content:\"\"}.fa-youtube-square:before{content:\"\"}.fa-youtube:before{content:\"\"}.fa-xing:before{content:\"\"}.fa-xing-square:before{content:\"\"}.fa-youtube-play:before{content:\"\"}.fa-dropbox:before{content:\"\"}.fa-stack-overflow:before{content:\"\"}.fa-instagram:before{content:\"\"}.fa-flickr:before{content:\"\"}.fa-adn:before{content:\"\"}.fa-bitbucket:before{content:\"\"}.fa-bitbucket-square:before{content:\"\"}.fa-tumblr:before{content:\"\"}.fa-tumblr-square:before{content:\"\"}.fa-long-arrow-down:before{content:\"\"}.fa-long-arrow-up:before{content:\"\"}.fa-long-arrow-left:before{content:\"\"}.fa-long-arrow-right:before{content:\"\"}.fa-apple:before{content:\"\"}.fa-windows:before{content:\"\"}.fa-android:before{content:\"\"}.fa-linux:before{content:\"\"}.fa-dribbble:before{content:\"\"}.fa-skype:before{content:\"\"}.fa-foursquare:before{content:\"\"}.fa-trello:before{content:\"\"}.fa-female:before{content:\"\"}.fa-male:before{content:\"\"}.fa-gittip:before,.fa-gratipay:before{content:\"\"}.fa-sun-o:before{content:\"\"}.fa-moon-o:before{content:\"\"}.fa-archive:before{content:\"\"}.fa-bug:before{content:\"\"}.fa-vk:before{content:\"\"}.fa-weibo:before{content:\"\"}.fa-renren:before{content:\"\"}.fa-pagelines:before{content:\"\"}.fa-stack-exchange:before{content:\"\"}.fa-arrow-circle-o-right:before{content:\"\"}.fa-arrow-circle-o-left:before{content:\"\"}.fa-caret-square-o-left:before,.fa-toggle-left:before{content:\"\"}.fa-dot-circle-o:before{content:\"\"}.fa-wheelchair:before{content:\"\"}.fa-vimeo-square:before{content:\"\"}.fa-try:before,.fa-turkish-lira:before{content:\"\"}.fa-plus-square-o:before{content:\"\"}.fa-space-shuttle:before{content:\"\"}.fa-slack:before{content:\"\"}.fa-envelope-square:before{content:\"\"}.fa-wordpress:before{content:\"\"}.fa-openid:before{content:\"\"}.fa-bank:before,.fa-institution:before,.fa-university:before{content:\"\"}.fa-graduation-cap:before,.fa-mortar-board:before{content:\"\"}.fa-yahoo:before{content:\"\"}.fa-google:before{content:\"\"}.fa-reddit:before{content:\"\"}.fa-reddit-square:before{content:\"\"}.fa-stumbleupon-circle:before{content:\"\"}.fa-stumbleupon:before{content:\"\"}.fa-delicious:before{content:\"\"}.fa-digg:before{content:\"\"}.fa-pied-piper-pp:before{content:\"\"}.fa-pied-piper-alt:before{content:\"\"}.fa-drupal:before{content:\"\"}.fa-joomla:before{content:\"\"}.fa-language:before{content:\"\"}.fa-fax:before{content:\"\"}.fa-building:before{content:\"\"}.fa-child:before{content:\"\"}.fa-paw:before{content:\"\"}.fa-spoon:before{content:\"\"}.fa-cube:before{content:\"\"}.fa-cubes:before{content:\"\"}.fa-behance:before{content:\"\"}.fa-behance-square:before{content:\"\"}.fa-steam:before{content:\"\"}.fa-steam-square:before{content:\"\"}.fa-recycle:before{content:\"\"}.fa-automobile:before,.fa-car:before{content:\"\"}.fa-cab:before,.fa-taxi:before{content:\"\"}.fa-tree:before{content:\"\"}.fa-spotify:before{content:\"\"}.fa-deviantart:before{content:\"\"}.fa-soundcloud:before{content:\"\"}.fa-database:before{content:\"\"}.fa-file-pdf-o:before{content:\"\"}.fa-file-word-o:before{content:\"\"}.fa-file-excel-o:before{content:\"\"}.fa-file-powerpoint-o:before{content:\"\"}.fa-file-image-o:before,.fa-file-photo-o:before,.fa-file-picture-o:before{content:\"\"}.fa-file-archive-o:before,.fa-file-zip-o:before{content:\"\"}.fa-file-audio-o:before,.fa-file-sound-o:before{content:\"\"}.fa-file-movie-o:before,.fa-file-video-o:before{content:\"\"}.fa-file-code-o:before{content:\"\"}.fa-vine:before{content:\"\"}.fa-codepen:before{content:\"\"}.fa-jsfiddle:before{content:\"\"}.fa-life-bouy:before,.fa-life-buoy:before,.fa-life-ring:before,.fa-life-saver:before,.fa-support:before{content:\"\"}.fa-circle-o-notch:before{content:\"\"}.fa-ra:before,.fa-rebel:before,.fa-resistance:before{content:\"\"}.fa-empire:before,.fa-ge:before{content:\"\"}.fa-git-square:before{content:\"\"}.fa-git:before{content:\"\"}.fa-hacker-news:before,.fa-y-combinator-square:before,.fa-yc-square:before{content:\"\"}.fa-tencent-weibo:before{content:\"\"}.fa-qq:before{content:\"\"}.fa-wechat:before,.fa-weixin:before{content:\"\"}.fa-paper-plane:before,.fa-send:before{content:\"\"}.fa-paper-plane-o:before,.fa-send-o:before{content:\"\"}.fa-history:before{content:\"\"}.fa-circle-thin:before{content:\"\"}.fa-header:before{content:\"\"}.fa-paragraph:before{content:\"\"}.fa-sliders:before{content:\"\"}.fa-share-alt:before{content:\"\"}.fa-share-alt-square:before{content:\"\"}.fa-bomb:before{content:\"\"}.fa-futbol-o:before,.fa-soccer-ball-o:before{content:\"\"}.fa-tty:before{content:\"\"}.fa-binoculars:before{content:\"\"}.fa-plug:before{content:\"\"}.fa-slideshare:before{content:\"\"}.fa-twitch:before{content:\"\"}.fa-yelp:before{content:\"\"}.fa-newspaper-o:before{content:\"\"}.fa-wifi:before{content:\"\"}.fa-calculator:before{content:\"\"}.fa-paypal:before{content:\"\"}.fa-google-wallet:before{content:\"\"}.fa-cc-visa:before{content:\"\"}.fa-cc-mastercard:before{content:\"\"}.fa-cc-discover:before{content:\"\"}.fa-cc-amex:before{content:\"\"}.fa-cc-paypal:before{content:\"\"}.fa-cc-stripe:before{content:\"\"}.fa-bell-slash:before{content:\"\"}.fa-bell-slash-o:before{content:\"\"}.fa-trash:before{content:\"\"}.fa-copyright:before{content:\"\"}.fa-at:before{content:\"\"}.fa-eyedropper:before{content:\"\"}.fa-paint-brush:before{content:\"\"}.fa-birthday-cake:before{content:\"\"}.fa-area-chart:before{content:\"\"}.fa-pie-chart:before{content:\"\"}.fa-line-chart:before{content:\"\"}.fa-lastfm:before{content:\"\"}.fa-lastfm-square:before{content:\"\"}.fa-toggle-off:before{content:\"\"}.fa-toggle-on:before{content:\"\"}.fa-bicycle:before{content:\"\"}.fa-bus:before{content:\"\"}.fa-ioxhost:before{content:\"\"}.fa-angellist:before{content:\"\"}.fa-cc:before{content:\"\"}.fa-ils:before,.fa-shekel:before,.fa-sheqel:before{content:\"\"}.fa-meanpath:before{content:\"\"}.fa-buysellads:before{content:\"\"}.fa-connectdevelop:before{content:\"\"}.fa-dashcube:before{content:\"\"}.fa-forumbee:before{content:\"\"}.fa-leanpub:before{content:\"\"}.fa-sellsy:before{content:\"\"}.fa-shirtsinbulk:before{content:\"\"}.fa-simplybuilt:before{content:\"\"}.fa-skyatlas:before{content:\"\"}.fa-cart-plus:before{content:\"\"}.fa-cart-arrow-down:before{content:\"\"}.fa-diamond:before{content:\"\"}.fa-ship:before{content:\"\"}.fa-user-secret:before{content:\"\"}.fa-motorcycle:before{content:\"\"}.fa-street-view:before{content:\"\"}.fa-heartbeat:before{content:\"\"}.fa-venus:before{content:\"\"}.fa-mars:before{content:\"\"}.fa-mercury:before{content:\"\"}.fa-intersex:before,.fa-transgender:before{content:\"\"}.fa-transgender-alt:before{content:\"\"}.fa-venus-double:before{content:\"\"}.fa-mars-double:before{content:\"\"}.fa-venus-mars:before{content:\"\"}.fa-mars-stroke:before{content:\"\"}.fa-mars-stroke-v:before{content:\"\"}.fa-mars-stroke-h:before{content:\"\"}.fa-neuter:before{content:\"\"}.fa-genderless:before{content:\"\"}.fa-facebook-official:before{content:\"\"}.fa-pinterest-p:before{content:\"\"}.fa-whatsapp:before{content:\"\"}.fa-server:before{content:\"\"}.fa-user-plus:before{content:\"\"}.fa-user-times:before{content:\"\"}.fa-bed:before,.fa-hotel:before{content:\"\"}.fa-viacoin:before{content:\"\"}.fa-train:before{content:\"\"}.fa-subway:before{content:\"\"}.fa-medium:before{content:\"\"}.fa-y-combinator:before,.fa-yc:before{content:\"\"}.fa-optin-monster:before{content:\"\"}.fa-opencart:before{content:\"\"}.fa-expeditedssl:before{content:\"\"}.fa-battery-4:before,.fa-battery-full:before,.fa-battery:before{content:\"\"}.fa-battery-3:before,.fa-battery-three-quarters:before{content:\"\"}.fa-battery-2:before,.fa-battery-half:before{content:\"\"}.fa-battery-1:before,.fa-battery-quarter:before{content:\"\"}.fa-battery-0:before,.fa-battery-empty:before{content:\"\"}.fa-mouse-pointer:before{content:\"\"}.fa-i-cursor:before{content:\"\"}.fa-object-group:before{content:\"\"}.fa-object-ungroup:before{content:\"\"}.fa-sticky-note:before{content:\"\"}.fa-sticky-note-o:before{content:\"\"}.fa-cc-jcb:before{content:\"\"}.fa-cc-diners-club:before{content:\"\"}.fa-clone:before{content:\"\"}.fa-balance-scale:before{content:\"\"}.fa-hourglass-o:before{content:\"\"}.fa-hourglass-1:before,.fa-hourglass-start:before{content:\"\"}.fa-hourglass-2:before,.fa-hourglass-half:before{content:\"\"}.fa-hourglass-3:before,.fa-hourglass-end:before{content:\"\"}.fa-hourglass:before{content:\"\"}.fa-hand-grab-o:before,.fa-hand-rock-o:before{content:\"\"}.fa-hand-paper-o:before,.fa-hand-stop-o:before{content:\"\"}.fa-hand-scissors-o:before{content:\"\"}.fa-hand-lizard-o:before{content:\"\"}.fa-hand-spock-o:before{content:\"\"}.fa-hand-pointer-o:before{content:\"\"}.fa-hand-peace-o:before{content:\"\"}.fa-trademark:before{content:\"\"}.fa-registered:before{content:\"\"}.fa-creative-commons:before{content:\"\"}.fa-gg:before{content:\"\"}.fa-gg-circle:before{content:\"\"}.fa-tripadvisor:before{content:\"\"}.fa-odnoklassniki:before{content:\"\"}.fa-odnoklassniki-square:before{content:\"\"}.fa-get-pocket:before{content:\"\"}.fa-wikipedia-w:before{content:\"\"}.fa-safari:before{content:\"\"}.fa-chrome:before{content:\"\"}.fa-firefox:before{content:\"\"}.fa-opera:before{content:\"\"}.fa-internet-explorer:before{content:\"\"}.fa-television:before,.fa-tv:before{content:\"\"}.fa-contao:before{content:\"\"}.fa-500px:before{content:\"\"}.fa-amazon:before{content:\"\"}.fa-calendar-plus-o:before{content:\"\"}.fa-calendar-minus-o:before{content:\"\"}.fa-calendar-times-o:before{content:\"\"}.fa-calendar-check-o:before{content:\"\"}.fa-industry:before{content:\"\"}.fa-map-pin:before{content:\"\"}.fa-map-signs:before{content:\"\"}.fa-map-o:before{content:\"\"}.fa-map:before{content:\"\"}.fa-commenting:before{content:\"\"}.fa-commenting-o:before{content:\"\"}.fa-houzz:before{content:\"\"}.fa-vimeo:before{content:\"\"}.fa-black-tie:before{content:\"\"}.fa-fonticons:before{content:\"\"}.fa-reddit-alien:before{content:\"\"}.fa-edge:before{content:\"\"}.fa-credit-card-alt:before{content:\"\"}.fa-codiepie:before{content:\"\"}.fa-modx:before{content:\"\"}.fa-fort-awesome:before{content:\"\"}.fa-usb:before{content:\"\"}.fa-product-hunt:before{content:\"\"}.fa-mixcloud:before{content:\"\"}.fa-scribd:before{content:\"\"}.fa-pause-circle:before{content:\"\"}.fa-pause-circle-o:before{content:\"\"}.fa-stop-circle:before{content:\"\"}.fa-stop-circle-o:before{content:\"\"}.fa-shopping-bag:before{content:\"\"}.fa-shopping-basket:before{content:\"\"}.fa-hashtag:before{content:\"\"}.fa-bluetooth:before{content:\"\"}.fa-bluetooth-b:before{content:\"\"}.fa-percent:before{content:\"\"}.fa-gitlab:before{content:\"\"}.fa-wpbeginner:before{content:\"\"}.fa-wpforms:before{content:\"\"}.fa-envira:before{content:\"\"}.fa-universal-access:before{content:\"\"}.fa-wheelchair-alt:before{content:\"\"}.fa-question-circle-o:before{content:\"\"}.fa-blind:before{content:\"\"}.fa-audio-description:before{content:\"\"}.fa-volume-control-phone:before{content:\"\"}.fa-braille:before{content:\"\"}.fa-assistive-listening-systems:before{content:\"\"}.fa-american-sign-language-interpreting:before,.fa-asl-interpreting:before{content:\"\"}.fa-deaf:before,.fa-deafness:before,.fa-hard-of-hearing:before{content:\"\"}.fa-glide:before{content:\"\"}.fa-glide-g:before{content:\"\"}.fa-sign-language:before,.fa-signing:before{content:\"\"}.fa-low-vision:before{content:\"\"}.fa-viadeo:before{content:\"\"}.fa-viadeo-square:before{content:\"\"}.fa-snapchat:before{content:\"\"}.fa-snapchat-ghost:before{content:\"\"}.fa-snapchat-square:before{content:\"\"}.fa-pied-piper:before{content:\"\"}.fa-first-order:before{content:\"\"}.fa-yoast:before{content:\"\"}.fa-themeisle:before{content:\"\"}.fa-google-plus-circle:before,.fa-google-plus-official:before{content:\"\"}.fa-fa:before,.fa-font-awesome:before{content:\"\"}.fa-handshake-o:before{content:\"\"}.fa-envelope-open:before{content:\"\"}.fa-envelope-open-o:before{content:\"\"}.fa-linode:before{content:\"\"}.fa-address-book:before{content:\"\"}.fa-address-book-o:before{content:\"\"}.fa-address-card:before,.fa-vcard:before{content:\"\"}.fa-address-card-o:before,.fa-vcard-o:before{content:\"\"}.fa-user-circle:before{content:\"\"}.fa-user-circle-o:before{content:\"\"}.fa-user-o:before{content:\"\"}.fa-id-badge:before{content:\"\"}.fa-drivers-license:before,.fa-id-card:before{content:\"\"}.fa-drivers-license-o:before,.fa-id-card-o:before{content:\"\"}.fa-quora:before{content:\"\"}.fa-free-code-camp:before{content:\"\"}.fa-telegram:before{content:\"\"}.fa-thermometer-4:before,.fa-thermometer-full:before,.fa-thermometer:before{content:\"\"}.fa-thermometer-3:before,.fa-thermometer-three-quarters:before{content:\"\"}.fa-thermometer-2:before,.fa-thermometer-half:before{content:\"\"}.fa-thermometer-1:before,.fa-thermometer-quarter:before{content:\"\"}.fa-thermometer-0:before,.fa-thermometer-empty:before{content:\"\"}.fa-shower:before{content:\"\"}.fa-bath:before,.fa-bathtub:before,.fa-s15:before{content:\"\"}.fa-podcast:before{content:\"\"}.fa-window-maximize:before{content:\"\"}.fa-window-minimize:before{content:\"\"}.fa-window-restore:before{content:\"\"}.fa-times-rectangle:before,.fa-window-close:before{content:\"\"}.fa-times-rectangle-o:before,.fa-window-close-o:before{content:\"\"}.fa-bandcamp:before{content:\"\"}.fa-grav:before{content:\"\"}.fa-etsy:before{content:\"\"}.fa-imdb:before{content:\"\"}.fa-ravelry:before{content:\"\"}.fa-eercast:before{content:\"\"}.fa-microchip:before{content:\"\"}.fa-snowflake-o:before{content:\"\"}.fa-superpowers:before{content:\"\"}.fa-wpexplorer:before{content:\"\"}.fa-meetup:before{content:\"\"}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}');

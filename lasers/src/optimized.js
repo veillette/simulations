@@ -11,10 +11,12 @@
             pixi:       '../../../common/node_modules/pixi.js/dist/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../bower_components/buzz/dist/buzz.min',
-            'vector2-node':   '../../../common/math/vector2',
-            'object-pool':    '../../../common/pool',
+
+            'vector2-node':          '../../../common/math/vector2',
+            'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
+            'gauss-random':          '../../node_modules/gauss-random-shimmed/sample',
 
             views:      '../js/views',
             models:     '../js/models',
@@ -37,7 +39,6 @@
 
         less: {
             logLevel: 1,
-            async: true,
 
             globalVars: {
                 dependencyDir: '"/bower_components"'
@@ -57961,643 +57962,422 @@ define('common/v3/pixi/view/app',['require','underscore','pixi','../../app/app']
 
     return PixiAppView;
 });
-/*
- * Based on a gist from Dan Tello
- * https://gist.github.com/greypants/3739036
- */
 
-define('common/v3/updater/updater',['require','pixi'],function (require) {
+define('common/colors/colors',['require'],function (require) {
 
-    'use strict';
+	'use strict';
 
-    require('pixi');
+	// Regex from http://stackoverflow.com/a/5624139, http://stackoverflow.com/a/5624139
+	var hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+	var _replaceShorthandFunction = function(m, r, g, b) {
+		return r + r + g + g + b + b;
+	};
 
-    var Updater = function() {
+	/**
+	 * Expands shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+	 */
+	var replaceShorthand = function(hex) {
+		return hex.replace(shorthandRegex, _replaceShorthandFunction);
+	};
 
-        var DORMANCY_THRESHOLD = 333;      // 3Hz in millseconds
-        var DORMANCY_CHECK_INTERVAL = 100; // ms
 
-        var listeners = {
-            update: [],
-            sleep: [],
-            awaken: []
-        };
-        var i;
+	var Colors = {
 
-        var animationFrame;
-        var playing = false;
-        var dormant = false;
-        
-        var last  = 0;
-        var now   = 0;
-        var delta = 0;
+		/**
+		 * 
+		 */
+		parseHex: function(string) {
+			// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+			var fullHex = replaceShorthand(string);
 
-        var dormancyCheckInterval = null;
+			// Remove the hash sign on the front
+			var numbers = fullHex.replace('#', '');
 
-        this.total = 0;
+			// Now we can parse it as hex
+			return parseInt(numbers, 16);
+		},
 
-        // Runs every frame and calls listening functions
-        var frame = function() {
-            now   = Date.now();
-            delta = now - last;
-            last  = now;
-            this.total += delta;
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		rgbToHex: function(r, g, b) {
+			if (typeof r === 'object') {
+				b = r.b;
+				g = r.g;
+				r = r.r;
+			}
+			return '#' + this.rgbToHexInteger(r, g, b).toString(16).slice(1);
+		},
 
-            if (!dormant) {
-                for (i = 0; i < listeners.update.length; i++)
-                    listeners.update[i](this.total, delta);    
-            }
-            else if (delta < DORMANCY_THRESHOLD)
-                awaken();
-            
-            animationFrame = window.requestAnimationFrame(frame);
-        }.bind(this);
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		rgbToHexInteger: function(r, g, b) {
+			if (typeof r === 'object') {
+				b = r.b;
+				g = r.g;
+				r = r.r;
+			}
+			return (1 << 24) + (r << 16) + (g << 8) + b;
+		},
 
-        /**
-         * Runs at 3Hz with setInterval. If requestAnimationFrame
-         *  has fallen to 3Hz or below, it declares the updater
-         *  asleep and calls listeners of the 'sleep' event.
-         */
-        var dormancyCheck = function() {
-            delta = Date.now() - last;
-            if (!dormant) {
-                if (delta > DORMANCY_THRESHOLD)
-                    sleep();
-            }
-            else {
-                if (delta < DORMANCY_THRESHOLD)
-                    awaken();
-            }
-        }.bind(this);
+		/**
+		 * http://stackoverflow.com/a/5624139
+		 */
+		hexToRgb: function(hex) {
+			hex = replaceShorthand(hex);
 
-        var sleep = function() {
-            dormant = true;
+			var result = hexRegex.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : null;
+		},
 
-            // Call listeners
-            for (i = 0; i < listeners.sleep.length; i++)
-                listeners.sleep[i]();
-        };
+		/**
+		 * 
+		 */
+		hexToValue: function(hex) {
+			hex = replaceShorthand(hex);
 
-        var awaken = function() {
-            dormant = false;
+			var result = hexRegex.exec(hex);
+			return parseInt(result[1], 16) + parseInt(result[2], 16) + parseInt(result[3], 16);
+		},
 
-            // Reset the last time so we don't build up time
-            now   = Date.now();
-            delta = now - last;
-            last = now - delta;
+		/**
+		 * Parses an rgb/rgba string into its component parts and returns them as an object.
+		 */
+		parseRgba: function(rgbString) {
+			var result = /^rgba?\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\s*(?:,\s*([\d\.]+))?\)$/.exec(rgbString);
+			if (result) {
+				if (result[4] !== undefined) {
+					return {
+						r: parseInt(result[1]),
+						g: parseInt(result[2]),
+						b: parseInt(result[3]),
+						a: parseFloat(result[4])
+					};
+				}
+				else {
+					return {
+						r: parseInt(result[1]),
+						g: parseInt(result[2]),
+						b: parseInt(result[3])
+					};
+				}
+			}
+			else
+				return null;
+		},
 
-            // Call listeners
-            for (i = 0; i < listeners.awaken.length; i++)
-                listeners.awaken[i]();
-        };
+		/**
+		 * Takes either hex or rgba format and converts it into an rgba string with alpha.
+		 * If alpha isn't specified, defaults to 1.  If alpha is a boolean, it takes the
+		 *   place of return Object.
+		 */
+		toRgba: function(sourceColor, alpha, returnObject) {
+			var rgb = this.hexToRgb(sourceColor);
 
-        this.play = function() {
-            if (!playing) {
-                playing = true;
-                /*
-                 * Subtract the last delta so we don't do two frames 
-                 * at the same this.total time after unpausing.
-                 */
-                last = Date.now() - delta;
-                clearInterval(dormancyCheckInterval);
-                dormancyCheckInterval = setInterval(dormancyCheck, DORMANCY_CHECK_INTERVAL);
-                frame();
-            }
-            return this;
-        };
+			if (!rgb)
+				rgb = this.parseRgba(sourceColor);
 
-        this.pause = function() {
-            window.cancelAnimationFrame(animationFrame);
-            playing = false;
-            return this;
-        };
+			if (rgb) {
+				if (alpha !== undefined && alpha !== false && alpha !== true)
+					rgb.a = alpha;
+				if (rgb.a === undefined)
+					rgb.a = 1;
 
-        this.paused = function() {
-            return !playing;
-        };
+				if (returnObject || alpha === true)
+					return rgb;
+				else
+					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
+			} 
+			else
+				return null;	
+		},
 
-        this.reset = function() {
-            this.pause();
-            this.total = 0;
-            return this;
-        };
+		/**
+		 * Algorithm from http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+		 */
+		darkenRgba: function(rgba, percent) {
+			var type = typeof rgba;
+			if (type !== 'object')
+				rgba = this.toRgba(rgba);
+			var amount = Math.round(255 * percent);
+			rgba.r -= amount;
+			rgba.g -= amount;
+			rgba.b -= amount;
+			if      (rgba.r > 255) rgba.r = 255;
+			else if (rgba.r < 0)   rgba.r = 0;
+			if      (rgba.g > 255) rgba.g = 255;
+			else if (rgba.g < 0)   rgba.g = 0;
+			if      (rgba.b > 255) rgba.b = 255;
+			else if (rgba.b < 0)   rgba.b = 0;
 
-        this.addEventListener = function(event, listener) {
-            listeners[event].push(listener);
-            return this;
-        };
-    };
+			if (type === 'object')
+				return rgba;
+			else
+				return 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')';
+		},
 
-    return Updater;
-});
+		darkenHex: function(colorString, percent) {
+			var rgba = this.toRgba(colorString, true);
+			this.darkenRgba(rgba, percent);
+			return this.rgbToHex(rgba.r, rgba.g, rgba.b);
+		},
 
-define('common/v3/app/sim',['require','underscore','backbone','../updater/updater'],function (require) {
+		lightenRgba: function(rgba, percent) {
+			return this.darkenRgba(rgba, -percent);
+		},
 
-    'use strict';
+		lightenHex: function(colorString, percent) {
+			return this.darkenHex(colorString, -percent);
+		},
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+		interpolateRgba: function(rgba1, rgba2, t, rgba) {
+			if (!rgba)
+				rgba = {};
 
-    var Updater = require('../updater/updater');
+			rgba.r = Math.round((rgba1.r * t) + (rgba2.r * (1 - t)));
+			rgba.g = Math.round((rgba1.g * t) + (rgba2.g * (1 - t)));
+			rgba.b = Math.round((rgba1.b * t) + (rgba2.b * (1 - t)));
+			if (rgba1.a !== undefined && rgba2.a !== undefined)
+				rgba.a = Math.round((rgba1.a * t) + (rgba2.a * (1 - t)));
 
-    /**
-     * SimView represents a tab in the simulation.  SimView must be extended
-     *   to create specific simulation views with specific simulation models.
-     *   SimViews interface with a simulation model and contain all necessary
-     *   views for visualizing and interacting with the simulation model.
-     */
-    var SimView = Backbone.View.extend({
+			return rgba;
+		},
 
-        /**
-         * Root element properties
-         */
-        tagName:   'section',
-        className: 'sim-view',
+		interpolateHex: function(hex1, hex2, t) {
+			var rgba = this.interpolateRgba(this.hexToRgb(hex1), this.hexToRgb(hex2), t);
+			return this.rgbToHex(rgba);
+		},
 
-        /**
-         * Sets basic properties and initializes updater and simulation model.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Simulation',
-                name: 'sim',
-                link: '',
-                stepDuration: 33, // milliseconds
-                runUpdateOnReset: false
-            }, options);
+		interpolateHexInteger: function(int1, int2, t) {
+			var b1 =  int1 & 255;
+			var g1 = (int1 >> 8) & 255;
+			var r1 = (int1 >> 16) & 255;
 
-            this.title = options.title;
-            this.name  = options.name;
-            this.link = options.link;
-            this.stepDuration = options.stepDuration;
-            this.runUpdateOnReset = options.runUpdateOnReset;
+			var b2 =  int2 & 255;
+			var g2 = (int2 >> 8) & 255;
+			var r2 = (int2 >> 16) & 255;
 
-            // Updater stuff
-            this.update = _.bind(this.update, this);
+			var r = Math.round((r1 * t) + (r2 * (1 - t)));
+			var g = Math.round((g1 * t) + (g2 * (1 - t)));
+			var b = Math.round((b1 * t) + (b2 * (1 - t)));
 
-            this.updater = new Updater();
-            this.updater.addEventListener('update', this.update);
+			return (1 << 24) + (r << 16) + (g << 8) + b;
+		}
+	};
 
-            // Stepping
-            this._stepFinished = _.bind(this._stepFinished, this);
-
-            // Initialize simulation model
-            this.initSimulation();
-
-            // We want it to start playing when they first open the tab
-            this.resumePaused = false;
-        },
-
-        /**
-         * Initializes the simulation model
-         */
-        initSimulation: function() {
-            this.simulation = null;
-        },
-
-        /**
-         * Called when the view is being removed. Unbinds bound events
-         *   and stops the updater.
-         */
-        remove: function() {
-            Backbone.View.prototype.remove.apply(this);
-            this.unbind();
-            this.updater.pause();
-        },
-
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {},
-
-        /**
-         * Click event handler that plays the simulation
-         */
-        play: function(event) {
-            this.simulation.play();
-        },
-
-        /**
-         * Click event handler that pauses the simulation
-         */
-        pause: function(event) {
-            this.simulation.pause();
-        },
-
-        /**
-         * Click event handler that plays the simulation for a specified duration
-         */
-        step: function(event) {
-            // Play until a certain number of milliseconds has elapsed.
-            this.play();
-            setTimeout(this._stepFinished, this.stepDuration);
-        },
-
-        /**
-         * Called after a step through is finished
-         */
-        _stepFinished: function() {
-            this.pause();
-        },
-
-        /**
-         * Click event handler that resets the simulation back to time zero.
-         */
-        reset: function(event) {
-            if (confirm('Are you sure you want to reset everything?'))
-                this.resetSimulation();
-        },
-
-        resetSimulation: function() {
-            // Save whether or not it was paused when we reset
-            var wasPaused = this.simulation.get('paused');
-
-            // Set pause the updater and reset everything
-            this.updater.pause();
-            this.updater.reset();
-            this.resetComponents();
-            this.rerender();
-
-            // Paint the first frame
-            if (this.runUpdateOnReset) {
-                this.simulation.play();
-                this.update(0, 0);
-                this.simulation.pause();
-            }
-
-            // Resume normal function
-            this.updater.play();
-            if (!wasPaused)
-                this.simulation.play();
-        },
-
-        /**
-         * Resets the components when the reset button is pressed
-         */
-        resetComponents: function() {
-            this.simulation.reset();
-        },
-
-        /**
-         * Called during a reset to refresh the visuals.  If it
-         *   is not desireable in the simulation to actually
-         *   rerender the scene, this should be overriden to
-         *   do whatever is necessary to set everything back to
-         *   defaults.
-         */
-        rerender: function() {
-            this.render();
-            this.postRender();
-        },
-
-        /**
-         * If we switch to a new sim, we pause this one,
-         *   but we want to save whether or not it was
-         *   paused already so it doesn't resume when we
-         *   don't want it to.
-         */
-        halt: function() {
-            this.updater.pause();
-        },
-
-        /**
-         * Used from the outside to continue execution but
-         *   paying attention to whether it was already
-         *   paused or not before it was halted.
-         */
-        resume: function() {
-            this.updater.play();
-        },
-
-        /**
-         * This is run every tick of the updater and should
-         *   be used to update the simulation model and the
-         *   views.
-         */
-        update: function(time, delta) {
-            // Update the model
-            this.simulation.update(time, delta);
-        },
-
-        /**
-         * Helper function for setting properties on the waveSimulation without causing a
-         *   loop of updates between the wave simulation model and the view
-         */
-        inputLock: function(callback) {
-            if (this.updatingProperty)
-                return;
-
-            this.inputtingProperty = true;
-            callback.apply(this);
-            this.inputtingProperty = false;
-        },
-
-        /**
-         * Helper function for updating inputs from the wave simulation without causing a
-         *   loop of updates between the wave simulation model and the view
-         */
-        updateLock: function(callback) {
-            if (this.inputtingProperty)
-                return;
-
-            this.updatingProperty = true;
-            callback.apply(this);
-            this.updatingProperty = false;
-        },
-
-    });
-
-    return SimView;
+	return Colors;
 });
 
 /**
- * Minimal object pool factory — drop-in replacement for the `object-pool` npm
- * package.  The only API used across the codebase is:
+ * From https://github.com/scottbyrns/Wavelength-To-RGB
  *
- *   var pool = Pool({ init: fn, enable: fn });
- *   var obj  = pool.create();
- *   pool.remove(obj);
+ * Helper method to convert a wavelength value for a given color and
+ * produce an RGB representation of it.
+ * E.g. 484nm = rgb(0, 224, 255) = #00E0FF
+ * 
+ * This method has been added as a static method on the Math object.
+ * 
+ * - (Number[]) nmToRGB : (Number) wavelength
+ * 
+ * @param wavelength The wavelength of to convert to RGB.
+ * @return Object keys: red, green, blue
+ * 
+ * <code>
+ * >    
+ * > Math.nmToRGB(484);
+ * > {
+ * >    red: 0,
+ * >    green: 224,
+ * >    blue: 255
+ * > }
+ * > 
+ * </code>
+ * 
  */
-define('object-pool',[],function () {
+define('common/colors/wavelength',['require','./colors'],function (require) {
 
     'use strict';
 
-    /**
-     * @param {Object} [config]
-     * @param {Function} [config.init]   Called once to create a new instance.
-     * @param {Function} [config.enable] Called each time an instance is reused.
-     */
-    function Pool(config) {
-        var available = [];
-        var init   = (config && config.init)   || function () { return {}; };
-        var enable = (config && config.enable) || null;
+    var Colors = require('./colors');
 
-        return {
-            create: function () {
-                var obj = available.length > 0 ? available.pop() : init();
-                if (enable) enable(obj);
-                return obj;
-            },
-            remove: function (obj) {
-                available.push(obj);
+    var WavelengthColors = {
+
+        MIN_WAVELENGTH: 380,
+        MAX_WAVELENGTH: 780,
+
+        /**
+         * Converts wavelengths (in nanometers) to hex format.  Code duplication
+         *   here for the sake of efficiency
+         */
+        nmToHex: function(wavelength, returnHexInteger) {
+            var w = parseInt(wavelength, 10),
+                SSS,
+                R,
+                G,
+                B;
+
+            if (w >= 380 && w < 440) {
+                R = -(w - 440.0) / (440.0 - 350.0);
+                G = 0.0;
+                B = 1.0;
+            } else if (w >= 440 && w < 490) {
+                R = 0.0;
+                G = (w - 440.0) / (490.0 - 440.0);
+                B = 1.0;
+            } else if (w >= 490 && w < 510) {
+                R = 0.0;
+                G = 1.0;
+                B = -(w - 510.0) / (510.0 - 490.0);
+            } else if (w >= 510 && w < 580) {
+                R = (w - 510.0) / (580.0 - 510.0);
+                G = 1.0;
+                B = 0.0;
+            } else if (w >= 580 && w < 645) {
+                R = 1.0;
+                G = -(w - 645.0) / (645.0 - 580.0);
+                B = 0.0;
+            } else if (w >= 645 && w <= 780) {
+                R = 1.0;
+                G = 0.0;
+                B = 0.0;
+            } else {
+                R = 0.0;
+                G = 0.0;
+                B = 0.0;
             }
-        };
-    }
 
-    return Pool;
-});
-
-define('common/simulation/simulation',['require','underscore','backbone'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Backbone = require('backbone');
-
-    /**
-     * Wraps the update function in 
-     */
-    var Simulation = Backbone.Model.extend({
-
-        defaults: {
-            paused: false,
-            timeScale: 1
-        },
-        
-        /**
-         * Initialization code for new Simulation model objects.
-         */
-        initialize: function(attributes, options) {
-            options = _.extend({
-                silentReset: true
-            }, options);
-
-            this.time = 0;
-
-            this.applyOptions(options);
-            this.startingOptions = options;
-            this.startingAttributes = this.toJSON();
-
-            this.initComponents();
-        },
-
-        /**
-         * Initialization options are processed here in a separate function
-         *   so that we can reset the object and its starting values without
-         *   re-initializing it.
-         */
-        applyOptions: function(options) {
-            this.silentReset = options.silentReset;
-        },
-
-        /**
-         * Initializes all the components for the simulation like models.
-         */
-        initComponents: function() {},
-
-        /**
-         * Calls the internal _update function with an internally kept
-         *   time counter which is in seconds instead of milliseconds.
-         */
-        update: function(time, delta) {
-
-            if (!this.get('paused')) {
-                delta = (delta / 1000) * this.get('timeScale');
-                this.time += delta;
-                this._update(this.time, delta);
+            if (w >= 380 && w < 420) {
+                SSS = 0.3 + 0.7 * (w - 350) / (420 - 350);
+            } else if (w >= 420 && w <= 700) {
+                SSS = 1.0;
+            } else if (w > 700 && w <= 780) {
+                SSS = 0.3 + 0.7 * (780 - w) / (780 - 700);
+            } else {
+                SSS = 0.0;
             }
-            
-        },
 
-        /**
-         * Only runs if the simulation isn't currently paused.
-         */
-        _update: function(time, delta) {},
+            SSS *= 255;
 
-        play: function() {
-            this.paused = false;
-            this.set('paused', false);
-            this.trigger('play');
-        },
-
-        pause: function() {
-            this.paused = true;
-            this.set('paused', true);
-            this.trigger('pause');
-        },
-
-        reset: function() {
-            this.time = 0;
-            this.set(this.startingAttributes, { silent: this.silentReset });
-            this.set('timeScale', 1);
-            this.applyOptions(this.startingOptions);
-            this.resetComponents();
-        },
-
-        resetComponents: function() {
-            this.initComponents();
-        }
-
-    });
-
-    return Simulation;
-});
-
-define('common/math/motion',['require','underscore'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-    
-    function leastSquares(X, Y, _ignored, out) {
-        var n = X.length;
-        var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        for (var i = 0; i < n; i++) {
-            sumX  += X[i];
-            sumY  += Y[i];
-            sumXY += X[i] * Y[i];
-            sumX2 += X[i] * X[i];
-        }
-        var denom = n * sumX2 - sumX * sumX;
-        if (denom === 0) { out.m = NaN; out.b = NaN; return; }
-        out.m = (n * sumXY - sumX * sumY) / denom;
-        out.b = (sumY - out.m * sumX) / n;
-    }
-
-    /**
-     * Source ported from phet.common.motion.MotionMath.
-     */
-    var MotionMath = {
-
-        /**
-         * Cached objects
-         */
-        _linearRegressionResults: {},
-
-        /**
-         * Estimates a derivative using a series of points to 
-         *   create a least-squares regression line to find a
-         *   linear function from which it can take a derivative.
-         * Expects an array of objects that have a "time" and
-         *   a "value" property.
-         */
-        estimateDerivative: function(timeSeries) {
-            var out = this.getLinearRegressionCoefficients(timeSeries);
-            if (_.isNaN(out.m) || !_.isFinite(out.m)) {
-                // PhET never finished this: "todo handle this error elsewhere"
-                return 0;
+            if (returnHexInteger) {
+                return Colors.rgbToHexInteger(
+                    parseInt(SSS * R, 10), 
+                    parseInt(SSS * G, 10), 
+                    parseInt(SSS * B, 10)
+                );
             }
-            return out.m;
-        },
-
-        /**
-         * Returns an object that looks like this: {
-         *     m: line slope
-         *     b: line intercept
-         * }
-         *
-         * See https://www.npmjs.org/package/least-squares for details
-         */
-        getLinearRegressionCoefficients: function(timeSeries) {
-            var X = [];
-            var Y = [];
-            for (var i = 0; i < timeSeries.length; i++) {
-                X[i] = timeSeries[i].time;
-                Y[i] = timeSeries[i].value;
+            else {
+                return Colors.rgbToHex(
+                    parseInt(SSS * R, 10), 
+                    parseInt(SSS * G, 10), 
+                    parseInt(SSS * B, 10)
+                );  
             }
-            leastSquares(X, Y, false, this._linearRegressionResults);
-            return this._linearRegressionResults;
         },
 
         /**
-         * Returns the average time value in a data series.
+         * Converts wavelengths (in nanometers) to rgba format.  Code duplication
+         *   here for the sake of efficiency
          */
-        averageTime: function(timeSeries) {
-            var a = 0;
-            for (var i = 0; i < timeSeries.length; i++) {
-                a += timeSeries[i].time;
+        nmToRgba: function(wavelength, alpha, returnObject) {
+            var w = parseInt(wavelength, 10),
+                SSS,
+                R,
+                G,
+                B;
+
+            if (w >= 380 && w < 440) {
+                R = -(w - 440.0) / (440.0 - 350.0);
+                G = 0.0;
+                B = 1.0;
+            } else if (w >= 440 && w < 490) {
+                R = 0.0;
+                G = (w - 440.0) / (490.0 - 440.0);
+                B = 1.0;
+            } else if (w >= 490 && w < 510) {
+                R = 0.0;
+                G = 1.0;
+                B = -(w - 510.0) / (510.0 - 490.0);
+            } else if (w >= 510 && w < 580) {
+                R = (w - 510.0) / (580.0 - 510.0);
+                G = 1.0;
+                B = 0.0;
+            } else if (w >= 580 && w < 645) {
+                R = 1.0;
+                G = -(w - 645.0) / (645.0 - 580.0);
+                B = 0.0;
+            } else if (w >= 645 && w <= 780) {
+                R = 1.0;
+                G = 0.0;
+                B = 0.0;
+            } else {
+                R = 0.0;
+                G = 0.0;
+                B = 0.0;
             }
-            return a / timeSeries.length;
-        },
 
-        /**
-         * Returns a point with an estimated derivative as its value
-         *   and an average time as its time.
-         */
-        getDerivative: function(recentPositionTimeSeries) {
-            if (recentPositionTimeSeries.length === 0) {
+            if (w >= 380 && w < 420) {
+                SSS = 0.3 + 0.7 * (w - 350) / (420 - 350);
+            } else if (w >= 420 && w <= 700) {
+                SSS = 1.0;
+            } else if (w > 700 && w <= 780) {
+                SSS = 0.3 + 0.7 * (780 - w) / (780 - 700);
+            } else {
+                SSS = 0.0;
+            }
+
+            SSS *= 255;
+
+            if (alpha === undefined)
+                alpha = 1;
+
+            if (returnObject) {
                 return {
-                    value: 0,
-                    time:  0
+                    r: parseInt(SSS * R, 10), 
+                    g: parseInt(SSS * G, 10), 
+                    b: parseInt(SSS * B, 10),
+                    a: alpha
                 };
             }
             else {
-                return {
-                    value: this.estimateDerivative(recentPositionTimeSeries),
-                    time:  this.averageTime(recentPositionTimeSeries)
-                };
+                return 'rgba(' + parseInt(SSS * R, 10) + ',' + parseInt(SSS * G, 10) + ',' + parseInt(SSS * B, 10) + ',' + alpha + ')';
             }
-        },
-
-        /**
-         * PhET docs:
-         *
-         * "Gets the second derivative of the given time series data using the
-         *  central difference formula
-         *  See: http://mathews.ecs.fullerton.edu/n2003/NumericalDiffMod.html"
-         *
-         * Takes a data series called "x"
-         */
-        getSecondDerivative: function(x) {
-            if (x.length === 0) {
-                return {
-                    value: 0,
-                    time:  0
-                };
-            }
-            var sum = 0;
-            var count = 0;
-            for (var i = 1; i < x.length - 1; i++) {
-                sum += this._getSecondDerivative(x[i - 1], x[i], x[i + 1]);
-                count ++;
-            }
-            if (count === 0) {
-                return {
-                    value: 0,
-                    time: this.averageTime(x)
-                };
-            }
-            else {
-                return {
-                    value: sum / count,
-                    time: this.averageTime(x)
-                };
-            }
-        },
-
-        /**
-         * getSecondDerivative was an overloaded function in PhET's MotionMath
-         *   class, so I've separated the heart of the algorithm into its own
-         *   function.
-         */
-        _getSecondDerivative: function(a, b, c) {
-            var num = a.value - 2*b.value + c.value;
-            var h1 = c.time - b.time;
-            var h2 = b.time - a.time;
-            var h = (h1 + h2) / 2;
-            if (h === 0)
-                throw '_getSecondDerivative: h was zero';
-            else
-                return num / (h * h);
         }
 
     };
 
-    return MotionMath;
-
+    return WavelengthColors;
 });
+
+define('common/quantum/config',['require','common/colors/wavelength'],function (require) {
+
+    'use strict';
+
+    var WavelengthColors = require('common/colors/wavelength');
+
+    var QuantumConfig = {};
+
+    QuantumConfig.STIMULATION_LIKELIHOOD = 0.2;
+    QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+
+    // Tolerances used to determine if a photon matches with an atomic state energy
+    QuantumConfig.ENERGY_TOLERANCE = 0.05;
+
+    QuantumConfig.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
+    QuantumConfig.MAX_WAVELENGTH = WavelengthColors.MAX_WAVELENGTH;
+
+    QuantumConfig.DEFAULT_ATOM_RADIUS = 15;
+
+    QuantumConfig.PIXELS_PER_NM = 1E6;
+
+    return QuantumConfig;
+});
+
 /**
  * Self-contained 2D vector class.  Previously delegated the base
  * implementation to the `vector2-node` npm package; that dependency has been
@@ -58782,6 +58562,854 @@ define('common/math/vector2',[],function () {
     return Vector2;
 });
 
+/**
+ * Minimal object pool factory — drop-in replacement for the `object-pool` npm
+ * package.  The only API used across the codebase is:
+ *
+ *   var pool = Pool({ init: fn, enable: fn });
+ *   var obj  = pool.create();
+ *   pool.remove(obj);
+ */
+define('object-pool',[],function () {
+
+    'use strict';
+
+    /**
+     * @param {Object} [config]
+     * @param {Function} [config.init]   Called once to create a new instance.
+     * @param {Function} [config.enable] Called each time an instance is reused.
+     */
+    function Pool(config) {
+        var available = [];
+        var init   = (config && config.init)   || function () { return {}; };
+        var enable = (config && config.enable) || null;
+
+        return {
+            create: function () {
+                var obj = available.length > 0 ? available.pop() : init();
+                if (enable) enable(obj);
+                return obj;
+            },
+            remove: function (obj) {
+                available.push(obj);
+            }
+        };
+    }
+
+    return Pool;
+});
+
+define('common/pooled-object/pooled-object2',['require','underscore','object-pool'],function (require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var Pool = require('object-pool');
+
+    var subclasses = 0;
+
+    /**
+     * I wanted to come up with a general solution for this problem of having
+     *   a bunch of pooled objects, and I also wanted to add some extra
+     *   functionality.  I wanted to make it so an object could own any 
+     *   objects that it creates and then just call one static method on this
+     *   class to release all instances that it owns instead of having to
+     *   keep track of instances itself and release them individually.  This
+     *   is what I came up with.  There might be some precedence for this
+     *   kind of thing already, but I don't have time to look it up.  I'm not
+     *   even sure what I'd look for.  I'll probably put this in the common
+     *   files if it turns out useful.
+     */
+    var PooledObject = function() {
+
+    };
+
+    /**
+     * Instance functions/properties
+     */
+    _.extend(PooledObject.prototype, {
+
+        /**
+         * Initializes the PooledObject.  Note that this is only called when a
+         *   new object is made; it is not called after every time a recycled
+         *   object is pulled from the pool.
+         */
+        init: function() {},
+
+        /**
+         * Called with the parameters passed to the create function, this
+         *   function is for settting up the PooledObject instance with its
+         *   initial values after being pulled from the object pool.
+         */
+        onCreate: function() {},
+
+        /**
+         * Releases this instance to the object pool.
+         */
+        destroy: function() {
+            if (!this.destroyed && this.constructor._pool) {
+                this.constructor._pool.remove(this);
+                this.destroyed = true;
+            }
+        }
+
+    });
+
+    /**
+     * Static functions/properties
+     */
+    _.extend(PooledObject, {
+
+        /**
+         * Initializes and returns a new PooledObject instance from the object pool.
+         *   Accepts the normal constructor parameters and passes them on to
+         *   the created instance.
+         */
+        create: function() {
+            if (!this._pool)
+                this.initPool();
+            var pooledObject = this._pool.create();
+            pooledObject.destroyed = false;
+            pooledObject.onCreate.apply(pooledObject, arguments);
+            return pooledObject;
+        },
+
+        /**
+         * Initializes and returns a new PooledObject instance from the object pool.
+         *   Accepts the normal constructor parameters and passes them on to
+         *   the created instance.  The difference is that the first parameter
+         *   is an owner object.  The new object will be added to a list of
+         *   objects owned by that owner, so the owner can later release all
+         *   objects that it owns.
+         */
+        createWithOwner: function(owner) {
+            // See if we need to set up the infrastructure for owned objects
+            if (!this._ownedObjects) {
+                this._ownedObjects = [];
+                this._ownerId = 0;
+            }
+            // Get an array of the args for this function minus the first one (owner)
+            var constructorArgs = Array.prototype.slice.call(arguments, 1);
+            // Create the object instance
+            var pooledObject = this.create.apply(this, constructorArgs);
+            // See if this object already has an owner id, and if it doesn't, create one
+            if (this._getOwnerId(owner) === undefined)
+                this._setOwnerId(owner, this._ownerId++);
+            // Create the array for this owner's objects if it doesn't yet exist
+            if (this._ownedObjects[this._getOwnerId(owner)] === undefined)
+                this._ownedObjects[this._getOwnerId(owner)] = [];
+            // Add this new object to the object's owner array
+            this._ownedObjects[this._getOwnerId(owner)].push(pooledObject);
+            // Then return it!
+            return pooledObject;
+        },
+
+        _getOwnerId: function(owner) {
+            return owner['__ownerId_' + this._subclassId];
+        },
+
+        _setOwnerId: function(owner, id) {
+            owner['__ownerId_' + this._subclassId] = id;
+        },
+
+        /**
+         * Initializes the object pool.  
+         */
+        initPool: function() {
+            this._pool = Pool(this.getPoolConfig());
+        },
+
+        /**
+         * Returns the configuration to pass to the Pool constructor. This is meant
+         *   to be overriden by child classes if necessary.
+         */
+        getPoolConfig: function() {
+            var Constructor = this;
+            return {
+                init: function() {
+                    var obj = new Constructor();
+                    obj.init();
+                    return obj;
+                }
+            };
+        },
+
+        /**
+         * Destroys all objects owned by the given owner.
+         */
+        destroyAllOwnedBy: function(owner) {
+            if (this._ownedObjects && this._getOwnerId(owner) !== undefined && this._ownedObjects[this._getOwnerId(owner)]) {
+                var objects = this._ownedObjects[this._getOwnerId(owner)];
+                for (var i = objects.length - 1; i >= 0; i--) {
+                    objects[i].destroy();
+                    objects.splice(i, 1);
+                }
+            }
+        },
+
+        _subclassId: subclasses,
+
+        /**
+         * Modeled somewhat after Backbone's extend function, this is a convenience
+         *   function for creating child classes of PooledObject.
+         */
+        extend: function(objectConstructor, prototypeProps, staticProps) {
+            if (!_.isFunction(objectConstructor)) {
+                staticProps = prototypeProps;
+                prototypeProps = objectConstructor;
+                objectConstructor = function() {};
+            }
+
+            var parent = this;
+            var child = function() {
+                parent.apply(this, arguments);
+                objectConstructor.apply(this, arguments);
+            };
+
+            // Static functions/properties
+            _.extend(child, parent, staticProps);
+            delete child._pool;
+            delete child._ownedObjects;
+            delete child._ownerId;
+            child._subclassId = subclasses++;
+
+            // If this were the parent instead of PooledObject, it wouldn't work
+            //   because binding a function can only happen once, and if we tried
+            //   to create a wrapper function that used function.apply, it would
+            //   call the parent's wrapper next in the chain, which would bind the
+            //   parent's context instead of the child's, so it would be pointless.
+            for (var key in PooledObject) {
+                if (child.hasOwnProperty(key) && _.isFunction(PooledObject[key]) && !(staticProps && staticProps[key])) {
+                    child[key] = _.bind(PooledObject[key], child);
+                }
+            }
+
+            // This piece is straight from Backbone.js. It "sets the prototype chain to inherit from parent".
+            var Surrogate = function(){ this.constructor = child; };
+            Surrogate.prototype = parent.prototype;
+            child.prototype = new Surrogate;
+
+            // Instance functions/properties
+            _.extend(child.prototype, parent.prototype, prototypeProps);
+
+            child.prototype.constructor = child;
+            
+            return child;
+        }
+
+    });
+
+
+    return PooledObject;
+});
+define('common/pooled-object/model',['require','underscore','./pooled-object2'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var PooledObject = require('./pooled-object2');
+
+
+    /**
+     * A vanilla replacement of the Backbone Model designed to be used with
+     *   a built-in object pool
+     */
+    var PooledModel = PooledObject.extend({
+
+        init: function() {
+            this.attributes = {};
+        },
+
+        /**
+         * Called on the instance after 'create' is called to set initial values
+         */
+        onCreate: function(attributes, options) {
+            attributes = _.defaults({}, attributes, _.result(this, 'defaults'));
+            this.set(attributes, options);
+        },
+
+        set: function(key, val, options) {
+            var attrs;
+            if (typeof key === 'object') {
+                attrs = key;
+                options = val;
+            } 
+            else {
+                attrs = {};
+                attrs[key] = val;
+            }
+
+            for (var key in attrs)
+                this.attributes[key] = attrs[key];
+
+            return this;
+        },
+
+        get: function(key) {
+            return this.attributes[key];
+        },
+
+        destroy: function() {
+            PooledObject.prototype.destroy.apply(this, arguments);
+
+            // Make sure the collection knows we destroyed it
+            if (this.collections) {
+                for (var i = this.collections.length - 1; i >= 0; i--)
+                    this.collections[i].alertDestroyed(this);
+            }
+        }
+
+    });
+
+
+    return PooledModel;
+});
+define('common/models/positionable-object-vanilla',['require','underscore','object-pool','../math/vector2','../pooled-object/model'],function (require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var Pool = require('object-pool');
+
+    var Vector2     = require('../math/vector2');
+    var PooledModel = require('../pooled-object/model');
+
+    var vectorPool = Pool({
+        init: function() {
+            return new Vector2();
+        },
+        enable: function(vector) {
+            vector.set(0, 0);
+        }
+    });
+
+var counter = 0;
+    /**
+     * Represents an object in 2D space and provides some helper functions
+     *   for changing a position vector in a way that leverages Backbone's
+     *   event system.
+     */
+    var VanillaPositionableObject = PooledModel.extend({
+
+        init: function() {
+            PooledModel.prototype.init.apply(this, arguments);
+
+            this._offsetPosition = new Vector2();
+        },
+
+        defaults: {
+            velocity: null,
+            acceleration: null
+        },
+
+        /**
+         * Called on the instance after 'create' is called to set initial values
+         */
+        onCreate: function(attributes, options) {
+            PooledModel.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.set('position', this.createVector2().set(this.get('position')));
+        },
+
+        toJSON: function(options) {
+            return _.clone(this.attributes);
+        },
+
+        createVector2: function() {
+            return vectorPool.create();
+        },
+
+        removeVector2: function(vec) {
+            vectorPool.remove(vec);
+        },
+
+        getX: function(x) {
+            return this.get('position').x;
+        },
+
+        getY: function(y) {
+            return this.get('position').y;
+        },
+
+        setX: function(x) {
+            this.setPosition(x, this.get('position').y);
+        },
+
+        setY: function(y) {
+            this.setPosition(this.get('position').x, y);
+        },
+
+        translate: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('position').add(x);
+            else
+                this.get('position').add(x, y);
+        },
+
+        setPosition: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('position').set(x);
+            else
+                this.get('position').set(x, y);
+        },
+
+        offsetPosition: function(offset) {
+            return this._offsetPosition.set(this.get('position')).add(offset);
+        },
+
+        getPosition: function() {
+            return this.get('position');
+        },
+
+        destroy: function() {
+            if (!this.destroyed) 
+                this.removeVector2(this.get('position'));
+            PooledModel.prototype.destroy.apply(this, arguments);
+        }
+
+    });
+
+
+    return VanillaPositionableObject;
+});
+define('common/models/motion-object-vanilla',['require','underscore','../math/vector2','./positionable-object-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+    
+    var Vector2 = require('../math/vector2');
+
+    var VanillaPositionableObject = require('./positionable-object-vanilla');
+
+    /**
+     * Uses the base of VanillaPositionableObject, which has a position vector
+     *   as one of its attributes, and adds velocity and acceleration
+     *   which can be used to calculate new positions.
+     */
+    var VanillaMotionObject = VanillaPositionableObject.extend({
+
+        init: function() {
+            VanillaPositionableObject.prototype.init.apply(this, arguments);
+
+            // For internal use to avoid creating and destroying objects
+            this._vec2 = new Vector2(0, 0);
+        },
+        
+        defaults: _.extend({}, VanillaPositionableObject.prototype.defaults, {
+            velocity: null,
+            acceleration: null
+        }),
+
+        onCreate: function(attributes, options) {
+            VanillaPositionableObject.prototype.onCreate.apply(this, [attributes, options]);
+
+            // Create new vectors
+            this.set('velocity',     this.createVector2().set(this.get('velocity')));
+            this.set('acceleration', this.createVector2().set(this.get('acceleration')));
+        },
+
+        /**
+         * Updates position with a position function that only takes
+         *   into account velocity and delta time, leaving out
+         *   acceleration.
+         */
+        updatePositionFromVelocity: function(deltaTime, options) {
+            this._vec2.set(this.get('velocity'));
+            this.translate(this._vec2.scale(deltaTime), options);
+        },
+
+        /**
+         * Updates position with a standard position function based
+         *   on delta time and velocity and acceleration.
+         */
+        updatePositionFromAcceleration: function(deltaTime, options) {
+            this._vec2.x = this.get('velocity').x * deltaTime + 0.5 * this.get('acceleration').x * deltaTime * deltaTime;
+            this._vec2.y = this.get('velocity').y * deltaTime + 0.5 * this.get('acceleration').y * deltaTime * deltaTime;
+            this.translate(this._vec2);
+        },
+
+        /**
+         * Updates the velocity based on the acceleration and the
+         *   delta time.
+         */
+        updateVelocity: function(deltaTime, options) {
+            this._vec2.x = this.get('acceleration').x * deltaTime;
+            this._vec2.y = this.get('acceleration').y * deltaTime;
+            this.addVelocity(this._vec2, options);
+        },
+
+        /**
+         * Just combines the calls for a common use case where we
+         *   update the velocity based on the acceleration and
+         *   time and then use velocity and acceleration and time
+         *   to update the position of the object.
+         */
+        updatePositionAndVelocity: function(deltaTime, options) {
+            this.updateVelocity(deltaTime, options);
+            this.updatePositionFromAcceleration(deltaTime, options);
+        },
+
+        /**
+         * An alias of updatePositionAndVelocity
+         */
+        updateMotion: null, // (Defined outside this extend function)
+
+        /**
+         * Function that facilitates setting the velocity vector 
+         *   while still triggering a change event.
+         */
+        setVelocity: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('velocity').set(x);
+            else
+                this.get('velocity').set(x, y);
+        },
+
+        /**
+         * Sets just the velocity in the x direction.
+         */
+        setVelocityX: function(x) {
+            this.setVelocity(x, this.get('velocity').y);
+        },
+
+        /**
+         * Sets just the velocity in the y direction.
+         */
+        setVelocityY: function(y) {
+            this.setVelocity(this.get('velocity').x, y);
+        },
+
+        /**
+         * Kind of like translation but for velocity. Just adds the given
+         *   vector to the current velocity.
+         */
+        addVelocity: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('velocity').add(x);
+            else
+                this.get('velocity').add(x, y);
+        },
+
+        getVelocity: function() {
+            return this.get('velocity');
+        },
+
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y) {
+            if (x instanceof Vector2)
+                this.get('acceleration').set(x);
+            else
+                this.get('acceleration').set(x, y);
+        },
+
+        getAcceleration: function() {
+            return this.get('acceleration');
+        },
+
+        /** 
+         * Avoid memory leaks from the pool.
+         */
+        destroy: function(options) {
+            if (!this.destroyed) {
+                this.removeVector2(this.get('velocity'));
+                this.removeVector2(this.get('acceleration'));
+            }
+
+            VanillaPositionableObject.prototype.destroy.apply(this, arguments);
+        }
+
+    });
+
+    /**
+     * Set function aliases
+     */
+    VanillaMotionObject.prototype.updateMotion = VanillaMotionObject.prototype.updatePositionAndVelocity;
+
+
+    return VanillaMotionObject;
+});
+
+define('common/mechanics/models/particle-vanilla',['require','../../math/vector2','../../models/motion-object-vanilla'],function (require) {
+
+    'use strict';
+
+    var Vector2             = require('../../math/vector2');
+    var VanillaMotionObject = require('../../models/motion-object-vanilla');
+
+    /**
+     * A particle that moves according to the Verlet method
+     */
+    var VanillaParticle = VanillaMotionObject.extend({
+
+        init: function() {
+            VanillaMotionObject.prototype.init.apply(this, arguments);
+
+            this.prevAcceleration = new Vector2();
+        },
+
+        onCreate: function(attributes, options) {
+            VanillaMotionObject.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
+
+        /**
+         * Determines the new state of the body using the Verlet method
+         */
+        update: function(time, deltaTime) {
+            // New position
+            var xNew = this.getX()
+                + deltaTime * this.get('velocity').x
+                + deltaTime * deltaTime * this.get('acceleration').x / 2;
+            var yNew = this.getY()
+                + deltaTime * this.get('velocity').y
+                + deltaTime * deltaTime * this.get('acceleration').y / 2;
+            this.setPosition(xNew, yNew);
+
+            // New velocity
+            var vxNew = this.get('velocity').x + deltaTime * (this.get('acceleration').x + this.prevAcceleration.x) / 2;
+            var vyNew = this.get('velocity').y + deltaTime * (this.get('acceleration').y + this.prevAcceleration.y) / 2;
+            this.setVelocity(vxNew, vyNew);
+
+            // New acceleration
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
+
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y, options) {
+            this.prevAcceleration.set(this.get('acceleration'));
+
+            VanillaMotionObject.prototype.setAcceleration.apply(this, arguments);
+        },
+
+        getSpeed: function() {
+            return this.get('velocity').length();
+        }
+
+    });
+
+    return VanillaParticle;
+});
+define('common/quantum/models/physics-util',['require'],function (require) {
+
+    'use strict';
+
+    /**
+     * Constants
+     */
+
+    // Planck's constant J-s
+    var PLANCK = 6.626E-34;
+    // Speed of light - m/s
+    var LIGHT_SPEED = 2.9979E8;
+    // Electron rest mass - kg
+    var ELECTRON_MASS = 9.109E-31;
+    // Joules per EV, EV per Joule
+    var JOULES_PER_EV = 1.6022E-19;
+    var EV_PER_JOULE = 1 / JOULES_PER_EV;
+    // nanometers per meter
+    var NM_PER_M = 1E9;
+    // Avogadro's number
+    var AVOGADRO = 6.022E23;
+
+
+    /**
+     * A collection of utilities having to do with physical constants and phenomena
+     */
+    var PhysicsUtil = {
+
+        PLANCK: PLANCK,
+        LIGHT_SPEED: LIGHT_SPEED,
+        ELECTRON_MASS: ELECTRON_MASS,
+        JOULES_PER_EV: JOULES_PER_EV,
+        EV_PER_JOULE: EV_PER_JOULE,
+        NM_PER_M: NM_PER_M,
+        AVOGADRO: AVOGADRO,
+
+        /**
+         * Determines the energy, in EV, of radiation with a specified wavelength
+         *
+         * @param wavelength in nm
+         * @return energy in EV
+         */
+        wavelengthToEnergy: function(wavelength) {
+            return PLANCK * LIGHT_SPEED / wavelength / JOULES_PER_EV * NM_PER_M;
+        },
+
+        /**
+         * Determines the wavelength, in nm, of radiation with a specified energy
+         *
+         * @param ev energy of the radiation, in ev
+         * @return wavelength in nm
+         */
+        energyToWavelength: function(ev) {
+            return (PLANCK * LIGHT_SPEED / ev) * EV_PER_JOULE * NM_PER_M;
+        },
+
+        /**
+         * Returns the frequency of EM radiation of a specified wavelength
+         *
+         * @param wavelength Wavelength, in nm
+         * @return frequency in Hz
+         */
+        wavelengthToFrequency: function(wavelength) {
+            return LIGHT_SPEED * NM_PER_M / wavelength;
+        },
+
+        /**
+         * Returns the wavelength, in nm, of EM radiation of a specified
+         * frequency
+         *
+         * @param frequency in Hz
+         * @return wavelength in nm
+         */
+        frequencyToWavelength: function(frequency) {
+            return LIGHT_SPEED * NM_PER_M / frequency;
+        },
+
+        /**
+         * Returns the energy, in EV, of EM radiation of a specified frequency
+         *
+         * @param frequency in Hz
+         * @return energy in EV
+         */
+        frequencyToEnergy: function(frequency) {
+            return this.wavelengthToEnergy(this.frequencyToWavelength(frequency));
+        },
+
+        /**
+         * Returns the frequency, in Hz, of EM radiation of a specified energy
+         *
+         * @param energy
+         * @return frequency in Hz
+         */
+        energyToFrequency: function(energy) {
+            return this.wavelengthToFrequency(this.energyToWavelength(energy));
+        }
+
+    };
+
+    return PhysicsUtil;
+});
+
+define('common/quantum/models/photon-vanilla',['require','underscore','../../math/vector2','../../mechanics/models/particle-vanilla','./physics-util'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2         = require('../../math/vector2');
+    var VanillaParticle = require('../../mechanics/models/particle-vanilla');
+    
+    var PhysicsUtil = require('./physics-util');
+
+    /**
+     * This model represents a photon and includes functionality that was previously
+     *   separated into the CollidableAdapter class in the original PhET sims.
+     */
+    var VanillaPhoton = VanillaParticle.extend({
+
+        collidable: true,
+
+        init: function() {
+            VanillaParticle.prototype.init.apply(this, arguments);
+
+            this.prevPosition = new Vector2();
+            this.prevVelocity = new Vector2();
+        },
+
+        defaults: _.extend({}, VanillaParticle.prototype.defaults, {
+            wavelength: undefined,
+            // If this photon was produced by the stimulation of another, this
+            // is a reference to that photon.
+            parentPhoton: null,
+            // If this photon has stimulated the production of another photon, this
+            // is a reference to that photon
+            childPhoton: null
+        }),
+
+        onCreate: function(attributes, options) {
+            VanillaParticle.prototype.onCreate.apply(this, [attributes, options]);
+
+            this.prevPosition.set(this.get('position'));
+            this.prevVelocity.set(this.get('velocity'));
+
+            this._markedForDestruction = false;
+        },
+
+        /**
+         * Sets a flag for the electron to be destroyed on the next loop
+         */
+        markForDestruction: function() {
+            this._markedForDestruction = true;
+        },
+
+        /**
+         * Returns whether the electron has been marked for destruction
+         */
+        markedForDestruction: function() {
+            return this._markedForDestruction;
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            VanillaParticle.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            VanillaParticle.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        },
+
+        /**
+         * Converts wavelength to energy and returns it.
+         */
+        getEnergy: function() {
+            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+        }
+
+    }, {
+
+        // Defaults
+        DEFAULT_SPEED:          1,
+        RADIUS:                 10,
+
+        // Savelength constants
+        RED:                    680,
+        DEEP_RED:               640,
+        BLUE:                   440,
+        MIN_VISIBLE_WAVELENGTH: 380,
+        MAX_VISIBLE_WAVELENGTH: 710,
+        GRAY:                   5000
+
+    });
+
+    return VanillaPhoton;
+});
 define('common/math/polyfills',['require'],function (require) {
 
     'use strict';
@@ -59130,223 +59758,361 @@ define('common/math/rectangle',['require','./polyfills','./vector2','./line-inte
     return Rectangle;
 });
 
-/**
- * This is just an AMD wrapper for binarysearch by Soldair
- * (https://github.com/soldair/node-binarysearch)
- *
- * If we switch to a non-AMD system or don't need to be able to run off
- *   the raw source for testing, we can get rid of this and just import
- *   it directly from its node_module.
- */
-define('common/binarysearch/binarysearch',['require','exports','module'],function(require, exports, module) {
+define('common/quantum/models/stimulated-photon-vanilla',['require','common/math/rectangle','./photon-vanilla'],function (require) {
 
-  module.exports = function(arr,search,comparitor) {
-    if(!arr) return -1;
-    // as long as it has a length i will try and itterate over it.
-    if(arr.length === undefined) return -1;
-    
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
+    'use strict';
 
-    return bs(arr,search,comparitor);
-  };
+    var Rectangle = require('common/math/rectangle');
 
-  module.exports.first = function(arr,search,comparitor) {
-    return module.exports.closest(arr,search,{exists:true},comparitor);
-  };
+    var VanillaPhoton = require('./photon-vanilla');
 
-  module.exports.last = function(arr,search,comparitor) {
-    return module.exports.closest(arr,search,{exists:true,end:true},comparitor);
-  };
+    /**
+     * Extends photon to add static functions to produce photons due to stimulated emission.
+     */
+    var StimulatedVanillaPhoton = VanillaPhoton.extend({}, {
 
-  module.exports.closest = function(arr,search,opts,comparitor) {
+        separation: 9,
 
-    if(typeof opts === 'function') {
-      comparitor = opts;
-      opts = {};
-    }
+        // The bounds within which a stimulated photon must be created. This keeps them
+        //   inside the laser cavity
+        stimulationBounds: new Rectangle(),
 
-    if(arr.length === 0) return -1;
-    if(arr.length === 1) return 0;
+        setStimulationBounds: function(stimulationBounds) {
+            StimulatedVanillaPhoton.stimulationBounds = stimulationBounds;
+        },
 
-    opts = opts||{};
-    if(!comparitor) comparitor = this._defaultComparitor();
-    
-    var closest = bsclosest(arr, search, comparitor, opts.end, opts.exists?false:true);
+        getSeparation: function() {
+            return StimulatedVanillaPhoton.separation;
+        },
 
-    if(closest > arr.length-1) closest = arr.length-1;
-    else if(closest < 0) closest = 0;
+        setSeparation: function(separation) {
+            StimulatedVanillaPhoton.separation = separation;
+        },
 
-    return closest;
-  };
+        createStimulated: function(stimulatingPhoton, location, atom) {
+            var newPhoton = VanillaPhoton.create({
+                wavelength: stimulatingPhoton.get('wavelength'), 
+                position: location,
+                velocity: stimulatingPhoton.get('velocity')
+            });
 
-  // inserts element into the correct sorted spot into the array
-  module.exports.insert = function(arr,search,opts,comparitor){ 
+            var idx = 1;
+            var yOffset = StimulatedVanillaPhoton.separation;
+            var sign = idx % 2 === 0 ? 1 : -1;
+            var dy = yOffset *  sign * (stimulatingPhoton.get('velocity').x / stimulatingPhoton.get('velocity').length());
+            var dx = yOffset * -sign * (stimulatingPhoton.get('velocity').y / stimulatingPhoton.get('velocity').length());
+            var newY = stimulatingPhoton.getY() + dy;
+            var newX = stimulatingPhoton.getX() + dx;
 
-    if(typeof opts === 'function') {
-      comparitor = opts;
-      opts = {};
-    }
+            // Keep the photon inside the cavity.
+            var minY = StimulatedVanillaPhoton.stimulationBounds.bottom() + VanillaPhoton.RADIUS;
+            var maxY = StimulatedVanillaPhoton.stimulationBounds.top();
+            if (newY < minY || newY > maxY) {
+                newY = atom.getY();
+                newX = atom.getX() - VanillaPhoton.RADIUS;
+            }
 
-    opts = opts||{};
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
-    if(!arr.length) {
-      arr[0] = search;
-      return 0;
-    }
+            newPhoton.setPosition(newX, newY);
 
-    var closest = module.exports.closest(arr,search,comparitor);
-
-    var cmp = comparitor(arr[closest],search);
-    if(cmp < 0) {//less
-      arr.splice(++closest,0,search);
-    } else if(cmp > 0){ 
-      arr.splice(closest,0,search);
-    } else {
-      if(opts.unique){
-        arr[closest] = search;
-      } else {
-        // im equal. this value should be appended to the list of existing same sorted values.
-        while(comparitor(arr[closest],search) === 0){
-          if(closest >= arr.length-1) break;
-          closest++;
+            return newPhoton;
         }
 
-        arr.splice(closest,0,search);
-      }
-    }
-    return closest;
-  };
-
-  // this method returns the start and end indicies of a range. [start,end]
-  module.exports.range = function(arr,from,to,comparitor) {
-    if(!comparitor) comparitor = module.exports._defaultComparitor();
-
-    var fromi = module.exports.closest(arr,from,comparitor);
-
-    var toi = module.exports.closest(arr,to,{end:true},comparitor);
-
-    // this is a hack. 
-    // i should be able to fix the algorithm and generate a correct range.
-
-    while(fromi <= toi){ 
-      if(comparitor(arr[fromi],from) > -1) break;
-
-      fromi++
-    }
-
-    while(toi >= fromi){ 
-      if(comparitor(arr[toi],to) < 1) break;
-      toi--;
-    }
-
-    return [fromi,toi];
-  };
-
-  // this method returns the values of a range;
-  module.exports.rangeValue = function(arr,from,to,comparitor){
-    var range = module.exports.range(arr,from,to,comparitor);
-    return arr.slice(range[0],range[1]+1);
-  };
-
-  //
-  module.exports.indexObject = function(o,extractor) {
-    var index = [];
-    
-    Object.keys(o).forEach(function(k){
-      index.push({k:k,v:extractor(o[k])});
+        
     });
 
-    return index.sort(function(o1,o2){
-      return o1.v - o2.v;
-    });
-  };
-
-  module.exports.cmp = function(v1,v2){
-    return v1 - v2;
-  };
-
-  module.exports._defaultComparitor = function() {
-    var indexMode,indexModeSearch;
-    return function(v,search){
-      // support the object format of generated indexes
-      if(indexMode === undefined){
-        if(typeof v === 'object' && v.hasOwnProperty('v')) indexMode = true;
-        if(typeof search === 'object' && search.hasOwnProperty('v')) indexModeSearch = true
-      }
-
-      if(indexMode) v = v.v;
-      if(indexModeSearch) search = search.v;
-
-      return v - search;
-    };
-  };
-
-  module.exports._binarySearch = bs;
-  module.exports._binarySearchClosest = bsclosest;
-
-  function bs(arr, search, comparitor) {
-
-    var max = arr.length-1,min = 0,middle,cmp;
-    // continue searching while key may exist
-    while (max >= min) {
-      middle = mid(min, max);
-
-      cmp = comparitor(arr[middle],search,middle);
-
-      if (cmp < 0) {
-        min = middle + 1;
-      } else if (cmp > 0) {
-        max = middle - 1;
-      } else {
-        return middle;
-      }
-    }
-    // key not found
-    return -1;
-  }
-
-  function bsclosest(arr, search, comparitor, invert, closest) {
-    var mids = {}
-    , min = 0,max = arr.length-1,middle,cmp
-    , sanity = arr.length;
-
-    while (min < max) {
-      middle = midCareful(min, max,mids); 
-      cmp = comparitor(arr[middle],search,middle);
-      if(invert){
-        if (cmp > 0)max = middle - 1;
-        else min = middle;   
-      } else {
-        if (cmp < 0)min = middle + 1;
-        else max = middle;
-      }
-      if(!--sanity) break;
-    }
-     
-    if (max == min && comparitor(arr[min],search) === 0) return min;
-    
-    if(closest) {
-      var match = comparitor(arr[min],search);
-      if(min == arr.length-1 && match < 0) return min;
-      if(min == 0 && match > 0) return 0;
-
-      return closest?(invert?min+1:min-1):-1;
-    } 
-    return -1; 
-  }
-
-  function mid(v1,v2){
-    return v1+Math.floor((v2-v1)/2);
-  }
-
-  function midCareful(v1,v2,mids){
-    var mid = v1+Math.floor((v2-v1)/2);
-    if(mids[mid]) mid = v1+Math.ceil((v2-v1)/2);
-    mids[mid] = 1;
-    return mid;
-  }
-
+    return StimulatedVanillaPhoton;
 });
+define('common/quantum/models/atomic-state',['require','underscore','backbone','common/math/vector2','../config','./photon-vanilla','./stimulated-photon-vanilla','./physics-util'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var Vector2 = require('common/math/vector2');
+
+    var QuantumConfig = require('../config');
+
+    var VanillaPhoton           = require('./photon-vanilla');
+    var VanillaStimulatedPhoton = require('./stimulated-photon-vanilla');
+    var PhysicsUtil             = require('./physics-util');
+
+
+    var constants = {};
+    constants.minWavelength = VanillaPhoton.BLUE - 20;
+    constants.maxWavelength = VanillaPhoton.GRAY;
+    constants.minEnergy = PhysicsUtil.wavelengthToEnergy(constants.maxWavelength);
+    constants.maxEnergy = PhysicsUtil.wavelengthToEnergy(constants.minWavelength);
+    constants.STIMULATION_LIKELIHOOD = QuantumConfig.STIMULATION_LIKELIHOOD;
+    constants.wavelengthTolerance = 10;
+
+
+    /**
+     * Represents an object in 2D space and provides some helper functions
+     *   for changing a position vector in a way that leverages Backbone's
+     *   event system.
+     */
+    var AtomicState = Backbone.Model.extend({
+
+        defaults: {
+            energyLevel: undefined,
+            // The lifetime of the state--this is based on the energy level;
+            //   the higher the energy, the shorter the lifetime.
+            meanLifetime: Number.POSITIVE_INFINITY,
+            nextHigherState: undefined,
+            nextLowerState: undefined
+        },
+        
+        initialize: function(attributes, options) {
+            // Cached objects
+            this._vHat = new Vector2();
+            this._photonPosition = new Vector2();
+        },
+
+        clone: function() {
+            var atomicState = new AtomicState();
+
+            atomicState.set('energyLevel',     this.get('energyLevel'));
+            atomicState.set('meanLifetime',    this.get('meanLifetime'));
+            atomicState.set('nextHigherState', this.get('nextHigherState'));
+            atomicState.set('nextLowerState',  this.get('nextLowerState'));
+            
+            return atomicState;
+        },
+
+        enterState: function(atom) {},
+
+        leaveState: function(atom) {},
+
+        /**
+         * Returns the wavelength of a photon that would be emitted if the atom dropped to
+         *   the next lower energy state
+         *
+         * @return wavelength of emitted photon
+         */
+        determineEmittedPhotonWavelength: function(nextState) {
+            if (nextState === undefined)
+                nextState = this.get('nextLowerState');
+
+            var energy1 = PhysicsUtil.wavelengthToEnergy(this.getWavelength());
+            var energy2 = PhysicsUtil.wavelengthToEnergy(nextState.getWavelength());
+            var emittedWavelength = Math.min(
+                PhysicsUtil.energyToWavelength(energy1 - energy2),
+                AtomicState.maxWavelength
+            );
+
+            return emittedWavelength;
+        },
+
+        /**
+         * Tells if a photon will be emitted from this state if the atom is struck by a
+         *   specified photon. This is true if the energy of the specified photon is equal,
+         *   within a tolerance, of the difference in energy between this state and the
+         *   next lowest energy state.
+         *
+         * @param photon
+         * @return true if the photon makes the atom go to a higher state
+         */
+        isStimulatedBy: function(photon, atom) {
+            var result = false;
+            var states = atom.getStates();
+            var stimulatedPhotonEnergy;
+
+            if (QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS) {
+                for (var i = 0; i < states.length && !states[i].equals(this) && result === false; i++) {
+                    var state = states[i];
+                    if (state.get('energyLevel') < this.get('energyLevel') ) {
+                        stimulatedPhotonEnergy = this.get('energyLevel') - state.get('energyLevel');
+                        result = (
+                            Math.abs(photon.getEnergy() - stimulatedPhotonEnergy) <= QuantumConfig.ENERGY_TOLERANCE && 
+                            Math.random() < AtomicState.STIMULATION_LIKELIHOOD
+                        );
+                    }
+                }
+            }
+            else {
+                stimulatedPhotonEnergy = this.get('energyLevel') - this.getNextLowerEnergyState().get('energyLevel');
+                result = (
+                    Math.abs(photon.getEnergy() - stimulatedPhotonEnergy) <= QuantumConfig.ENERGY_TOLERANCE && 
+                    Math.random() < AtomicState.STIMULATION_LIKELIHOOD
+                );
+            }
+
+            return result;
+        },
+
+        /**
+         * Handles the collision of an atom with a photon
+         */
+        collideWithPhoton: function(atom, photon) {
+
+            // See if the photon knocks the atom to a higher state
+            var newState = this.getElevatedState(atom, photon, this.get('energyLevel'));
+            if (newState) {
+                photon.markForDestruction();
+                atom.setCurrentState(newState);
+                return;
+            }
+
+            // If the photon has the same energy as the difference
+            //   between this level and a lower state, then emit a
+            //   photon of that energy
+            if (this.isStimulatedBy(photon, atom)) {
+                // Place the replacement photon beyond the atom, so it doesn't
+                //   collide again right away
+                var vHat = this._vHat.set(photon.get('velocity')).normalize();
+                vHat.scale(atom.get('radius'));
+                var position = this._photonPosition.set(
+                    atom.getX() + vHat.x,
+                    atom.getY() + vHat.y
+                );
+                photon.setPosition(position);
+
+                var emittedPhoton = VanillaStimulatedPhoton.createStimulated(photon, position, atom);
+                atom.emitPhoton(emittedPhoton);
+
+                // Change state
+                atom.setCurrentState(atom.getLowestEnergyState());
+            }
+        },
+
+        /**
+         * Tests only the energy level and wavelength. Cannot test the nextHigherState and nextLowerState
+         * because that results in stack overflows.
+         *
+         * @param obj
+         * @return true if equal
+         */
+        equals: function(obj) {
+            if (obj instanceof AtomicState && obj)
+                return this.get('energyLevel') === obj.get('energyLevel');
+            
+            return false;
+        },
+
+        /**
+         * Returns a string that can be used to identify this state
+         */
+        hashCode: function() {
+            return '' + this.get('energyLevel') + this.get('meanLifetime');
+        },
+
+        /**
+         * Searches through the states of a specified atom for one whose energy differential
+         *   between it and a specified energy matches the energy in a specified photon. The
+         *   reason the energy needs to be specified as a parameter is that the GroundState
+         *   has to pretend it has energy of 0 for the colors and such to work right, but
+         *   other states can use their actual energies.
+         *
+         * @param atom
+         * @param photon
+         * @param energy
+         * @return the state that the atom can be in that is the specified energy above its current state
+         */
+        getElevatedState: function(atom, photon, energy) {
+            var result = null;
+            var states = atom.getStates();
+            for (var stateIdx = states.length - 1; stateIdx >= 0 && !states[stateIdx].equals(this) && result === null; stateIdx--) {
+                var de = photon.getEnergy() - (states[stateIdx].get('energyLevel') - energy);
+                if (Math.abs(de) <= QuantumConfig.ENERGY_TOLERANCE)
+                    result = states[stateIdx];
+            }
+            return result;
+        },
+
+        /**
+         * Converts the energy level into a wavelength and returns it.
+         */
+        getWavelength: function() {
+            return PhysicsUtil.energyToWavelength(this.get('energyLevel'));
+        },
+
+        getNextLowerEnergyState: function() {
+            return this.get('nextLowerState');
+        },
+
+        getNextHigherEnergyState: function() {
+            return this.get('nextHigherState');
+        },
+
+        getEnergyLevel: function() {
+            return this.get('energyLevel');
+        }
+
+    }, _.extend({}, constants, {
+        
+        /**
+         * Sets the next-higher and next-lower attributes for an array of AtomicStates
+         *
+         * @param states
+         */
+        linkStates: function(states) {
+            for (var i = 1; i < states.length; i++) {
+                states[i ].set('nextLowerState', states[i - 1]);
+                states[i - 1].set('nextHigherState', states[i]);
+            }
+
+            states[states.length - 1].set('nextHigherState', AtomicState.MaxEnergyState.instance());
+        }
+
+    }));
+
+
+    /**
+     * Energy state with maximum energy
+     */
+    var MaxEnergyState = AtomicState.extend({
+
+        collideWithPhoton: function(atom, photon) {},
+
+        getWavelength: function() {
+            // The hard-coded number here is a hack so the energy level graphic can be
+            //   adjusted up to the top of the window. This is not great programming
+            return MaxEnergyState.minWavelength - 80;
+        }
+
+    }, {
+
+        instance: function() {
+            if (!this._instance)
+                this._instance = new MaxEnergyState();
+            return this._instance;
+        }
+
+    });
+
+
+    /**
+     * Energy state with minimum energy
+     */
+    var MinEnergyState = AtomicState.extend({
+
+        initialize: function(attributes, options) {
+            AtomicState.prototype.initialize.apply(this, arguments);
+
+            this.set('energyLevel', MinEnergyState.minEnergy);
+        },
+
+        collideWithPhoton: function(atom, photon) {}
+
+    }, {
+
+        instance: function() {
+            if (!this._instance)
+                this._instance = new MinEnergyState();
+            return this._instance;
+        }
+
+    });
+
+
+    AtomicState.MaxEnergyState = MaxEnergyState;
+    AtomicState.MinEnergyState = MinEnergyState;
+
+
+    return AtomicState;
+});
+
 define('common/models/positionable-object',['require','backbone','../math/vector2','object-pool'],function (require) {
 
     'use strict';
@@ -59647,1568 +60413,890 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
     return MotionObject;
 });
 
-define('common/math/range',['require'],function (require) {
+define('common/mechanics/models/particle',['require','../../math/vector2','../../models/motion-object'],function (require) {
 
     'use strict';
+
+    var Vector2      = require('../../math/vector2');
+    var MotionObject = require('../../models/motion-object');
 
     /**
-     * A function that takes a range object in the format
-     *   { min: <number>, max: <number> } and adds helper
-     *   functions to it that perform common tasks related
-     *   to ranges.
+     * A particle that moves according to the Verlet method
      */
-    var range = function(rangeObject) {
-        rangeObject.random = function() {
-            return (this.max - this.min) * Math.random() + this.min;
-        };
-
-        rangeObject.lerp = function(percent) {
-            return this.length() * percent + this.min;
-        };
-
-        rangeObject.percent = function(x) {
-            return (x - this.min) / this.length();
-        };
-
-        rangeObject.constrainedPercent = function(x) {
-            return this.percent(Math.max(this.min, Math.min(this.max, x)));
-        };
-
-        rangeObject.contains = function(x) {
-            return x <= this.max && x >= this.min;
-        };
-
-        rangeObject.length = function() {
-            return this.max - this.min;
-        };
-
-        rangeObject.center = function() {
-            return this.min + (this.length() / 2);
-        };
-
-        return rangeObject;
-    };
-
-    return range;
-
-});
-define('constants',['require','common/math/range'],function (require) {
-
-    'use strict';
-
-    var range = require('common/math/range');
-
-    var Constants = {};
-
-    /*************************************************************************
-     **                                                                     **
-     **                         UNIVERSAL CONSTANTS                         **
-     **                                                                     **
-     *************************************************************************/
-
-    Constants.MIN_SCENE_DIAMETER = 5; // centimeters
-    Constants.ESTIMATION_SAMPLE_SIZE = 6; // number of samples
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                             UPDATE MODES                            **
-     **                                                                     **
-     *************************************************************************/
-
-    Constants.UpdateMode = {
-    	POSITION:     0,
-    	VELOCITY:     1,
-    	ACCELERATION: 2
-    };
-
-    Constants.POSITION_COLOR = '#2575BA';
-    Constants.VELOCITY_COLOR = '#CD2520';
-    Constants.ACCELERATION_COLOR = '#349E34';
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                               LADYBUG                               **
-     **                                                                     **
-     *************************************************************************/
-
-    var Ladybug = {};
-
-    Ladybug.DEFAULT_WIDTH  = 0.4; // centimeters
-    Ladybug.DEFAULT_LENGTH = 0.6; // centimeters
-
-    Constants.Ladybug = Ladybug;
-
-
-    var LadybugView = {};
-
-    LadybugView.WING_OPEN_VELOCITY = 2; // centimeters per second
-
-    Constants.LadybugView = LadybugView;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                             LADYBUG MOVER                           **
-     **                                                                     **
-     *************************************************************************/
-
-    var LadybugMover = {};
-
-    LadybugMover.LINEAR_SPEED = 0.8; // centimeters per second
-    LadybugMover.CIRCLE_RADIUS = 2; // centimeters
-    LadybugMover.CIRCLE_SPEED = 0.018; // not centimeters...some arbitrary value
-    LadybugMover.ELLIPSE_A = 2; // centimeters
-    LadybugMover.ELLIPSE_B = 1.4; // centimeters
-
-    Constants.LadybugMover = LadybugMover;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                          LADYBUG TRACE VIEW                         **
-     **                                                                     **
-     *************************************************************************/
-
-    var LadybugTraceView = {};
-
-    LadybugTraceView.NEW_OPACITY = 1;
-    LadybugTraceView.OLD_OPACITY = 0.15;
-    LadybugTraceView.SECONDS_TO_BE_OLD = 2; // seconds
-    LadybugTraceView.NEW_OPACITY_RANGE = range({
-        min: LadybugTraceView.NEW_OPACITY,
-        max: LadybugTraceView.OLD_OPACITY
-    });
-
-    Constants.LadybugTraceView = LadybugTraceView;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                         REMOTE CONTROL VIEW                         **
-     **                                                                     **
-     *************************************************************************/
-
-    var RemoteControlView = {};
-
-    RemoteControlView.RIGHT = 20;
-    RemoteControlView.BOTTOM = 62 + 8 + 20;
-    RemoteControlView.TAB_BG_COLOR = '#fff';
-    RemoteControlView.TAB_BG_ALPHA = 0.2;
-    RemoteControlView.TAB_ACTIVE_BG_COLOR = '#fff';
-    RemoteControlView.TAB_ACTIVE_BG_ALPHA = 0.5;
-    RemoteControlView.TAB_FONT = 'bold 14px Arial';
-    RemoteControlView.TAB_WIDTH = 108;
-    RemoteControlView.TAB_HEIGHT = 36;
-    RemoteControlView.TABS = [{
-        label: 'Position',
-        color: Constants.POSITION_COLOR
-    },{
-        label: 'Velocity',
-        color: Constants.VELOCITY_COLOR
-    },{
-        label: 'Acceleration',
-        color: Constants.ACCELERATION_COLOR
-    }];
-    RemoteControlView.PANEL_PADDING = 10;
-    RemoteControlView.PANEL_WIDTH  = 186; // pixels
-    RemoteControlView.PANEL_HEIGHT = 210; // pixels
-    RemoteControlView.AREA_WIDTH  = RemoteControlView.PANEL_WIDTH - 2 * RemoteControlView.PANEL_PADDING;
-    RemoteControlView.AREA_HEIGHT = RemoteControlView.PANEL_WIDTH - 2 * RemoteControlView.PANEL_PADDING;
-    RemoteControlView.ARROW_AREA_COLOR = '#fff';
-    RemoteControlView.ARROW_AREA_ALPHA = 0.5;
-
-    Constants.RemoteControlView = RemoteControlView;
-
-
-    return Constants;
-});
-
-define('models/ladybug',['require','underscore','common/models/motion-object','common/math/rectangle','constants'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-
-    var MotionObject = require('common/models/motion-object');
-    var Rectangle    = require('common/math/rectangle');
-
-    var Constants = require('constants');
-
-    var Ladybug = MotionObject.extend({
-
-        defaults: _.extend({}, MotionObject.prototype.defaults, {
-            width:  Constants.Ladybug.DEFAULT_WIDTH,
-            length: Constants.Ladybug.DEFAULT_LENGTH,
-            angle: 0
-        }),
+    var Particle = MotionObject.extend({
 
         initialize: function(attributes, options) {
             MotionObject.prototype.initialize.apply(this, [attributes, options]);
 
-            // For internal use to avoid creating and destroying objects
-            this._bounds = new Rectangle();
+            this.prevAcceleration = new Vector2(this.get('acceleration'));
         },
-
-        reset: function() {
-            this.setPosition(0, 0);
-            this.setVelocity(0, 0);
-            this.setAcceleration(0, 0);
-            this.set('angle', 0);
-        },
-
-        getBounds: function() {
-            return this._bounds.set(
-                this.get('position').x - this.get('width')  / 2,
-                this.get('position').y - this.get('length') / 2,
-                this.get('width'),
-                this.get('length')
-            );
-        },
-
-        pointInDirectionOfMotion: function() {
-            this.set('angle', this.get('velocity').angle());
-        }
-
-    }, Constants.Ladybug);
-
-    return Ladybug;
-});
-
-define('models/ladybug-mover',['require','underscore','common/math/vector2','constants'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Vector2 = require('common/math/vector2');
-
-    var Constants = require('constants');
-
-    /**
-     *
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.model.LadybugMotionModel
-     */
-    var LadybugMover = function(simulation) {
-        this.simulation = simulation;
-        this.motionType = LadybugMover.MOTION_TYPE_MANUAL;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(LadybugMover.prototype, {
-
-        setMotionType: function(motionType) {
-            if (this.motionType !== motionType) {
-                this.motionType = motionType;
-                this.motionType.init(this.simulation);
-            }
-        },
-
-        update: function(deltaTime) {
-            this.motionType.update(deltaTime, this.simulation);
-        },
-
-        reset: function() {
-            this.setMotionType(LadybugMover.MOTION_TYPE_MANUAL);
-        },
-
-        isInManualMode: function() {
-            return this.motionType === LadybugMover.MOTION_TYPE_MANUAL;
-        }
-
-    });
-
-    /**
-     * Static functions/properties
-     */
-     _.extend(LadybugMover, Constants.LadybugMover);
-
-    LadybugMover.MOTION_TYPE_MANUAL = {
-
-        init: function(simulation) {
-            simulation.initManual();
-        },
-
-        update: function() {}
-
-    };
-
-    LadybugMover.MOTION_TYPE_LINEAR = {
-
-        speed: LadybugMover.LINEAR_SPEED,
-
-        init: function(simulation) {
-            var velocity = Vector2
-                .fromAngle(simulation.ladybug.get('angle'))
-                .scale(this.speed);
-
-            simulation.ladybug.setVelocity(velocity);
-        },
-
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
-
-            var velocity = Vector2
-                .fromAngle(ladybug.get('velocity').angle())
-                .scale(this.speed);
-
-            ladybug.setVelocity(velocity);
-            ladybug.updatePositionFromVelocity(deltaTime);
-
-            var x  = ladybug.get('position').x;
-            var y  = ladybug.get('position').y;
-            var vx = ladybug.get('velocity').x;
-            var vy = ladybug.get('velocity').y;
-            var bounds = simulation.getBounds();
-
-            // Stay within bounds
-            if (x > bounds.right() && vx > 0) {
-                vx = -Math.abs(vx);
-                x = bounds.right();
-            }
-            if (x < bounds.left() && vx < 0) {
-                vx = Math.abs(vx);
-                x = bounds.left();
-            }
-            if (y > bounds.top() && vy > 0) {
-                vy = -Math.abs(vy);
-                y = bounds.top();
-            }
-            if (y < bounds.bottom() && vy < 0) {
-                vy = Math.abs(vy);
-                y = bounds.bottom();
-            }
-
-            ladybug.setPosition(x, y);
-            ladybug.setVelocity(vx, vy);
-            ladybug.setAcceleration(simulation.estimateAcceleration());
-            ladybug.set('angle', ladybug.get('velocity').angle());
-            simulation.setSamplePoint(ladybug.get('position'));
-        }
-
-    };
-
-    LadybugMover.MOTION_TYPE_CIRCULAR = {
-
-        _pos: new Vector2(),
-        _vel: new Vector2(),
-        _acc: new Vector2(),
-
-        init: function(simulation) {
-            simulation.clearSampleHistory();
-            simulation.resetSamplingMotionModel();
-        },
-
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
-            var distanceFromCenter = ladybug.get('position').length();
-            var distanceFromRing = Math.abs(distanceFromCenter - LadybugMover.CIRCLE_RADIUS);
-
-            var dx = LadybugMover.CIRCLE_RADIUS - distanceFromCenter;
-            var speed = LadybugMover.CIRCLE_SPEED;
-            var velocity;
-
-            if (distanceFromRing > speed+ 1E-6) {
-                // We need to move toward the ring
-                var velocity = this._vel
-                    .set(speed, 0)
-                    .rotate(ladybug.get('position').angle())
-                    .scale((dx < 0) ? -1 : 1);
-
-                simulation.startSampling();
-                simulation.setSamplePoint(
-                    ladybug.get('position').x + velocity.x / deltaTime,
-                    ladybug.get('position').y + velocity.y / deltaTime
-                );
-                simulation.updatePositionMode(deltaTime);
-            }
-            else {
-                // We are on the ring
-                var angle = ladybug.get('position').angle();
-                var r = LadybugMover.CIRCLE_RADIUS;
-
-                // Approximate a delta theta
-                var deltaTheta = -Math.PI / 64 * 1.3 * deltaTime * 30 * 0.7 * 2 * 0.85 * 0.4;
-                var n = Math.floor(Math.PI * 2 / deltaTheta); // n * deltaTheta = 2 * PI
-                var newAngle = angle + (2 * Math.PI) / n;
-
-                simulation.stopSampling();
-
-                var position = this._pos
-                    .set(1, 0)
-                    .rotate(newAngle)
-                    .scale(r);
-                ladybug.setPosition(position);
-
-                var velocity = this._vel
-                    .set(1, 0)
-                    .rotate(newAngle + Math.PI / 2)
-                    .scale((newAngle - angle) / deltaTime * r);
-                ladybug.setVelocity(velocity);
-                ladybug.set('angle', velocity.angle());
-
-                var acceleration = this._acc
-                    .set(1, 0)
-                    .rotate(newAngle + Math.PI)
-                    .scale(Math.pow(velocity.length(), 2) / r);
-                ladybug.setAcceleration(acceleration);
-
-                simulation.setSamplePoint(ladybug.get('position'));
-            }
-        }
-
-    };
-
-    LadybugMover.MOTION_TYPE_ELLIPTICAL = {
 
         /**
-         * This is an internal "time" that really has nothing to do with
-         *   actual simulation time. It's just used to determine where
-         *   we are on the elliptical path relative to when we began.
+         * Determines the new state of the body using the Verlet method
          */
-        time: 0,
+        update: function(time, deltaTime) {
+            // New position
+            var xNew = this.getX()
+                + deltaTime * this.get('velocity').x
+                + deltaTime * deltaTime * this.get('acceleration').x / 2;
+            var yNew = this.getY()
+                + deltaTime * this.get('velocity').y
+                + deltaTime * deltaTime * this.get('acceleration').y / 2;
+            this.setPosition(xNew, yNew);
 
-        init: function() {},
+            // New velocity
+            var vxNew = this.get('velocity').x + deltaTime * (this.get('acceleration').x + this.prevAcceleration.x) / 2;
+            var vyNew = this.get('velocity').y + deltaTime * (this.get('acceleration').y + this.prevAcceleration.y) / 2;
+            this.setVelocity(vxNew, vyNew);
 
-        update: function(deltaTime, simulation) {
-            var ladybug = simulation.ladybug;
+            // New acceleration
+            this.prevAcceleration.set(this.get('acceleration'));
+        },
 
-            var a = LadybugMover.ELLIPSE_A;
-            var b = LadybugMover.ELLIPSE_B;
+        /**
+         * Function that facilitates setting the acceleration vector 
+         *   while still triggering a change event.
+         */
+        setAcceleration: function(x, y, options) {
+            this.prevAcceleration.set(this.get('acceleration'));
 
-            var n = 79 * deltaTime / 0.015 * 0.7 * 5;
-            this.time += 2 * Math.PI / Math.floor(n);
-            var t = this.time;
+            MotionObject.prototype.setAcceleration.apply(this, arguments);
+        },
 
-            ladybug.setPosition(     a * Math.cos(t),  b * Math.sin(t));
-            ladybug.setVelocity(    -a * Math.sin(t),  b * Math.cos(t));
-            ladybug.setAcceleration(-a * Math.cos(t), -b * Math.sin(t));
-
-            ladybug.set('angle', ladybug.get('velocity').angle());
+        getSpeed: function() {
+            return this.get('velocity').length();
         }
 
-    };
+    });
 
-
-    LadybugMover.MOTION_TYPES = {
-        'Manual':     LadybugMover.MOTION_TYPE_MANUAL,
-        'Linear':     LadybugMover.MOTION_TYPE_LINEAR,
-        'Circular':   LadybugMover.MOTION_TYPE_CIRCULAR,
-        'Elliptical': LadybugMover.MOTION_TYPE_ELLIPTICAL
-    };
-
-
-
-
-    return LadybugMover;
+    return Particle;
 });
-
-define('models/ladybug-state-record',['require','underscore','common/math/vector2'],function (require) {
+define('common/quantum/models/photon',['require','underscore','common/math/vector2','common/mechanics/models/particle','./physics-util'],function (require) {
 
     'use strict';
 
     var _ = require('underscore');
 
-    var Vector2 = require('common/math/vector2');
+    var Vector2  = require('common/math/vector2');
+    var Particle = require('common/mechanics/models/particle');
+    
+    var PhysicsUtil = require('./physics-util');
 
     /**
-     * An object that holds a ladybug model's state at a
-     *   given point in time.  It is intended for these
-     *   objects to get recycled.
+     * This model represents a photon and includes functionality that was previously
+     *   separated into the CollidableAdapter class in the original PhET sims.
      */
-    var LadybugStateRecord = function() {
-        this.time = 0;
+    var Photon = Particle.extend({
 
-        this.position     = new Vector2();
-        this.velocity     = new Vector2();
-        this.acceleration = new Vector2();
+        collidable: true,
 
-        this.angle = 0;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(LadybugStateRecord.prototype, {
-
-        recordState: function(time, ladybug) {
-            this.time = time;
-
-            this.position.set(ladybug.get('position'));
-            this.velocity.set(ladybug.get('velocity'));
-            this.acceleration.set(ladybug.get('acceleration'));
-
-            this.angle = ladybug.get('angle');
-        },
-
-        applyState: function(ladybug) {
-            ladybug.setPosition(this.position);
-            ladybug.setVelocity(this.velocity);
-            ladybug.setAcceleration(this.acceleration);
-
-            ladybug.set('angle', this.angle);
-        },
-
-        getTime: function() {
-            return this.time;
-        }
-
-    });
-
-
-    return LadybugStateRecord;
-});
-
-define('models/sampling-motion-model',['require','underscore','common/math/vector2'],function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Vector2 = require('common/math/vector2');
-
-    /**
-     * Used internally in SamplingMotionModel to keep track
-     *   of a history of values and derive velocity and
-     *   acceleration from that history.
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.Motion2DModel.Motion2DValue
-     */
-    var SamplingMotionModelValue = function(numPoints, halfWindowSize, numPointsAveraged, initialValue) {
-        this.avgBefore = 0;
-        this.avgMid = 0;
-        this.avgNow = 0;
-        this.values = [];
-        this.averages = [];
-        this.halfWindowSize = halfWindowSize;
-        this.numPointsAveraged = numPointsAveraged;
-        this.numPoints = numPoints;
-
-        this.reset(initialValue);
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(SamplingMotionModelValue.prototype, {
-
-        reset: function(initialValue) {
-            for (var i = 0; i < this.numPoints; i++)
-                this.values[i] = initialValue;
-        },
-
-        addPoint: function(val) {
-            // Put the new value on the end and remove the first
-            this.values.push(val);
-            this.values.shift();
-
-            // Update averages array
-            var averagesLength = this.lengthOfAveragesArray();
-            var halfWindowSize = this.halfWindowSize;
-            for (var i = 0; i < averagesLength; i++) {
-                this.averages[i] = 0;
-                for (var j = -halfWindowSize; j <= halfWindowSize; j++)
-                    this.averages[i] += this.values[i + halfWindowSize + j];
-                this.averages[i] = this.averages[i] / (2 * halfWindowSize + 1);
-            }
-        },
-
-        addPointAndUpdate: function(val) {
-            this.addPoint(val);
-            this.updateAverages();
-        },
-
-        updateAverages: function() {
-            var numPointsAveraged = this.numPointsAveraged;
-            var averagesLength = this.lengthOfAveragesArray();
-
-            var sumXBefore = 0;
-            var sumXMid = 0;
-            var sumXNow = 0;
-
-            var i;
-
-            for (i = 0; i <= (numPointsAveraged - 1); i++)
-                sumXBefore += this.averages[i];
-            this.avgBefore = sumXBefore / numPointsAveraged;
-
-            for (i = (averagesLength - numPointsAveraged) / 2; i <= (averagesLength + numPointsAveraged - 2) / 2; i++)
-                sumXMid += this.averages[i];
-            this.avgMid = sumXMid / numPointsAveraged;
-
-            for (i = (averagesLength - numPointsAveraged); i <= (averagesLength - 1); i++)
-                sumXNow += this.averages[i];
-            this.avgNow = sumXNow / numPointsAveraged;
-        },
-
-        lengthOfAveragesArray: function() {
-            return this.numPoints - 2 * this.halfWindowSize;
-        },
-
-        getVelocity: function() {
-            return this.avgNow - this.avgBefore;
-        },
-
-        getAcceleration: function() {
-            return this.avgNow - 2 * this.avgMid + this.avgBefore;
-        },
-
-        getAverageMid: function() {
-            return this.avgMid;
-        }
-
-    });
-
-
-    /**
-     * Keeps a history of 2D points and derives velocity and
-     *   acceleration from that history.
-     *
-     * Modeled after edu.colorado.phet.ladybugmotion2d.Motion2DModel
-     */
-    var SamplingMotionModel = function(halfWindowSize, numPointsAveraged, x0, y0) {
-        this.x = new SamplingMotionModelValue(3 * numPointsAveraged + 2 * halfWindowSize, halfWindowSize, numPointsAveraged, x0);
-        this.y = new SamplingMotionModelValue(3 * numPointsAveraged + 2 * halfWindowSize, halfWindowSize, numPointsAveraged, y0);
-
-        this.velocity = new Vector2();
-        this.acceleration = new Vector2();
-        this.avgMid = new Vector2();
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(SamplingMotionModel.prototype, {
-
-        addPointAndUpdate: function(xNow, yNow) {
-            if (xNow instanceof Vector2) {
-                yNow = xNow.y;
-                xNow = xNow.x;
-            }
-
-            this.x.addPointAndUpdate(xNow);
-            this.y.addPointAndUpdate(yNow);
-        },
-
-        getVelocity: function() {
-            return this.velocity.set(
-                this.x.getVelocity(),
-                this.y.getVelocity()
-            );
-        },
-
-        getAcceleration: function() {
-            return this.acceleration.set(
-                this.x.getAcceleration(),
-                this.y.getAcceleration()
-            );
-        },
-
-        getAverageMid: function() {
-            return this.avgMid.set(
-                this.x.getAverageMid(),
-                this.y.getAverageMid()
-            );
-        },
-
-        reset: function(x0, y0) {
-            if (x0 instanceof Vector2) {
-                y0 = x0.y;
-                x0 = x0.x;
-            }
-
-            this.x.reset(x0);
-            this.y.reset(y0);
-        }
-
-    });
-
-
-    return SamplingMotionModel;
-});
-
-define('models/simulation',['require','exports','module','underscore','object-pool','common/simulation/simulation','common/math/motion','common/math/vector2','common/math/rectangle','common/binarysearch/binarysearch','models/ladybug','models/ladybug-mover','models/ladybug-state-record','models/sampling-motion-model','constants'],function (require, exports, module) {
-
-    'use strict';
-
-    var _ = require('underscore');
-    var Pool = require('object-pool');
-
-    var Simulation   = require('common/simulation/simulation');
-    var MotionMath   = require('common/math/motion');
-    var Vector2      = require('common/math/vector2');
-    var Rectangle    = require('common/math/rectangle');
-    var binarySearch = require('common/binarysearch/binarysearch');
-
-    var Ladybug             = require('models/ladybug');
-    var LadybugMover        = require('models/ladybug-mover');
-    var LadybugStateRecord  = require('models/ladybug-state-record');
-    var SamplingMotionModel = require('models/sampling-motion-model');
-
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-
-    /**
-     * Object pooling
-     */
-    var penPathEntryPool = Pool({
-        init: function() {
-            return {};
-        },
-        enable: function(point) {
-            point.time = 0;
-            point.x = 0;
-            point.y = 0;
-        }
-    });
-
-    var ladybugStateRecordPool = Pool({
-        init: function() {
-            return new LadybugStateRecord();
-        }
-    });
-
-    /**
-     * The bulk of the logic for the simulation model resides here.
-     */
-    var LadybugMotionSimulation = Simulation.extend({
-
-        defaults: _.extend(Simulation.prototype.defaults, {
-            motionType: 'Manual',
-            updateMode: UpdateMode.POSITION,
-            recording: true,
-            paused: true,
-
-            furthestRecordedTime: 0, // Seconds
-            maxRecordingTime:    20  // Seconds
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            wavelength: undefined,
+            // If this photon was produced by the stimulation of another, this
+            // is a reference to that photon.
+            parentPhoton: null,
+            // If this photon has stimulated the production of another photon, this
+            // is a reference to that photon
+            childPhoton: null
         }),
 
         initialize: function(attributes, options) {
-            // The centerpiece
-            this.ladybug = new Ladybug();
+            Particle.prototype.initialize.apply(this, [attributes, options]);
 
-            // Stuff for directing the motion of the ladybug:
-            //   We're pretending there is a virtual pen that is drawing a path
-            //   of where we want the ladybug to go.  It can either be from the
-            //   user dragging the ladybug around the screen or from the remote
-            //   control arrows.
-            this.samplingMotionModel = new SamplingMotionModel(10, 5, 0, 0);
-            this.penPath = []; // Holds the pen positions and the time they were taken
-            this.penDown = false; // Whether or not the "pen" is down--whether we're receiving input
-            this.penPoint = new Vector2(); // Current position of the pen
-            this.ladybugMover = new LadybugMover(this);
-
-            // State history
-            this.stateHistory = [];
-
-            // This version of state history has references to records in
-            //   stateHistory but culls duplicate records in continuous
-            //   blocks of states with unchanged position.
-            this.culledStateHistory = [];
-
-            // For determining appropriate motion in motion presets
-            this.bounds = new Rectangle();
-
-            // Object caches
-            this._lastSamplePoint = new Vector2();
-            this._velocity = new Vector2();
-            this._acceleration = new Vector2();
-
-            this.initEstimationObjects();
-
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
-
-            this.on('change:recording',  this.recordingModeChanged);
-            this.on('change:paused',     this.pausedChanged);
-            this.on('change:updateMode', this.updateModeChanged);
-            this.on('change:motionType', this.motionTypeChanged);
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
         },
 
         /**
-         * We store our derivative-estimation arrays and the
-         *   objects contained therein in order that we might
-         *   reuse them and not cause unnecessary waste each
-         *   frame.  This function sets it all up in the very
-         *   beginning.
+         * Overrides setPosition function to keep track of the previous position
          */
-        initEstimationObjects: function() {
-            this.xTimeSeries = [];
-            this.yTimeSeries = [];
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
 
-            for (var i = 0; i < Constants.ESTIMATION_SAMPLE_SIZE; i++) {
-                this.xTimeSeries.push({ time: 0, value: 0 });
-                this.yTimeSeries.push({ time: 0, value: 0 });
-            }
+            Particle.prototype.setPosition.apply(this, arguments);
         },
 
         /**
-         * Initializes the models used in the simulation
+         * Overrides setVelocity function to keep track of the previous velocity
          */
-        initComponents: function() {
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
 
+            Particle.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
         },
 
         /**
-         * Overrides simulation's reset function
+         * Converts wavelength to energy and returns it.
          */
-        reset: function() {
-            this.time = 0;
-            this.set('time', 0);
-            this.set(this.startingAttributes);
-            this.clearHistory();
-            this.resetSamplingMotionModel();
-            this.penPoint.set(0, 0);
-            this.stopSampling();
-            this.ladybug.reset();
+        getEnergy: function() {
+            return PhysicsUtil.wavelengthToEnergy(this.get('wavelength'));
+        }
+
+    }, {
+
+        // Defaults
+        DEFAULT_SPEED:          1,
+        RADIUS:                 10,
+
+        // Savelength constants
+        RED:                    680,
+        DEEP_RED:               640,
+        BLUE:                   440,
+        MIN_VISIBLE_WAVELENGTH: 380,
+        MAX_VISIBLE_WAVELENGTH: 710,
+        GRAY:                   5000
+
+    });
+
+    return Photon;
+});
+define('common/quantum/models/stimulated-photon',['require','common/math/rectangle','./photon'],function (require) {
+
+    'use strict';
+
+    var Rectangle = require('common/math/rectangle');
+
+    var Photon = require('./photon');
+
+    /**
+     * Extends photon to add static functions to produce photons due to stimulated emission.
+     */
+    var StimulatedPhoton = Photon.extend({}, {
+
+        separation: 9,
+
+        // The bounds within which a stimulated photon must be created. This keeps them
+        //   inside the laser cavity
+        stimulationBounds: new Rectangle(),
+
+        setStimulationBounds: function(stimulationBounds) {
+            StimulatedPhoton.stimulationBounds = stimulationBounds;
         },
 
-        /**
-         * Function called by Simulation.update only when the
-         *   simulation is not paused.  It's just an update
-         *   function that assumes not paused.
-         * Only runs if simulation isn't currently paused.
-         * If we're recording, it saves state
-         */
-        _update: function(time, deltaTime) {
-            // For the time slider and anything else relying on time
-            this.set('time', time);
-
-            if (this.get('recording')) {
-                // Run update and then save state
-                this.ladybugMover.update(deltaTime);
-
-                this.recordCurrentPenPoint();
-                this.trimSampleHistory();
-
-                if (this.ladybugMover.isInManualMode())
-                    this.updateManualMovement(deltaTime);
-
-                this.recordState();
-                this.set('furthestRecordedTime', time);
-            }
-            else {
-                // We're playing back, so apply a saved state instead of updating
-                this.applyPlaybackState();
-
-                // And if we've reached the end of what we've recorded, stop
-                if (time >= this.get('furthestRecordedTime'))
-                    this.pause();
-            }
+        getSeparation: function() {
+            return StimulatedPhoton.separation;
         },
 
-        /**
-         * Figures out which update function to run depending
-         *   on whether the user is dragging the ladybug
-         *   directly (penDown) or not and which update mode
-         *   is currently selected.
-         */
-        updateManualMovement: function(deltaTime) {
-            if (this.penDown) {
-                this.updatePositionMode(deltaTime);
-            }
-            else {
-                switch (this.get('updateMode')) {
-                    case UpdateMode.POSITION:
-                        this.updatePositionMode(deltaTime);
-                        break;
-                    case UpdateMode.VELOCITY:
-                        this.updateVelocityMode(deltaTime);
-                        break;
-                    case UpdateMode.ACCELERATION:
-                        this.updateAccelerationMode(deltaTime);
-                        break;
-                }
-            }
+        setSeparation: function(separation) {
+            StimulatedPhoton.separation = separation;
         },
 
-        /**
-         * The update function for when we are in position mode
-         *   (when the ladybug is driven by its position--or in
-         *   this case driven by the pen points that indirectly
-         *   determine position), this function updates all of
-         *   the ladybug's motion properties according to the
-         *   time (time between steps).
-         */
-        updatePositionMode: function(deltaTime) {
-            if (this.penPath.length > 2) {
-                this.samplingMotionModel.addPointAndUpdate(this.getLastSamplePoint());
-                this.ladybug.setPosition(this.samplingMotionModel.getAverageMid());
+        createStimulated: function(stimulatingPhoton, location, atom) {
+            var newPhoton = new Photon({
+                wavelength: stimulatingPhoton.get('wavelength'), 
+                position: location,
+                velocity: stimulatingPhoton.get('velocity')
+            });
 
-                // PhET: added fudge factors for getting the scale right with
-                //   current settings of [samplingMotionModel and] used
-                //   spreadsheet to make sure model v and a are approximately
-                //   correct.
-                var vscale = (1 / deltaTime) / 10;
-                var ascale = vscale * vscale * 3.835;
-                this.ladybug.setVelocity(this.samplingMotionModel.getVelocity().scale(vscale));
-                this.ladybug.setAcceleration(this.samplingMotionModel.getAcceleration().scale(ascale));
-            }
-            else {
-                this.ladybug.setVelocity(0, 0);
-                this.ladybug.setAcceleration(0, 0);
+            var idx = 1;
+            var yOffset = StimulatedPhoton.separation;
+            var sign = idx % 2 === 0 ? 1 : -1;
+            var dy = yOffset *  sign * (stimulatingPhoton.get('velocity').x / stimulatingPhoton.get('velocity').length());
+            var dx = yOffset * -sign * (stimulatingPhoton.get('velocity').y / stimulatingPhoton.get('velocity').length());
+            var newY = stimulatingPhoton.getY() + dy;
+            var newX = stimulatingPhoton.getX() + dx;
+
+            // Keep the photon inside the cavity.
+            var minY = StimulatedPhoton.stimulationBounds.bottom() + Photon.RADIUS;
+            var maxY = StimulatedPhoton.stimulationBounds.top();
+            if (newY < minY || newY > maxY) {
+                newY = atom.getY();
+                newX = atom.getX() - Photon.RADIUS;
             }
 
-            this.pointInDirectionOfMotion();
+            newPhoton.setPosition(newX, newY);
+
+            return newPhoton;
+        }
+
+        
+    });
+
+    return StimulatedPhoton;
+});
+define('common/mechanics/models/body',['require','underscore','common/math/vector2','./particle'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Particle = require('./particle');
+
+    /**
+     * A body with mass and momentum
+     */
+    var Body = Particle.extend({
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            lastColidedBody: null,
+            theta: 0,
+            omega: 0,
+            alpha: 0,
+            prevAlpha: 0,
+            mass: 0
+        }),
+
+        initialize: function(attributes, options) {
+            Particle.prototype.initialize.apply(this, [attributes, options]);
+
+            this._momentum = new Vector2();
         },
 
         /**
-         * The update function for when we are in velocity mode
-         *   (when the ladybug is driven by its velocity), this
-         *   function updates all of the ladybug's motion
-         *   properties according to the delta time (time
-         *   between steps).
+         * 
          */
-        updateVelocityMode: function(deltaTime) {
-            if (this.penPath.length > 0)
-                this.samplingMotionModel.addPointAndUpdate(this.getLastSamplePoint());
+        update: function(deltaTime) {
+            var alpha = this.get('alpha');
+            var omega = this.get('omega');
+            var prevAlpha = this.get('prevAlpha');
+            
+            // New orientation
+            this.set('theta', this.get('theta') + deltaTime * omega + deltaTime * deltaTime * alpha / 2);
+            // New angular velocity
+            this.set('omega', omega + deltaTime * (alpha + prevAlpha) / 2);
+            // Track angular acceleration
+            this.set('prevAlpha', alpha);
 
-            this.ladybug.updatePositionFromVelocity(deltaTime);
-            this.ladybug.setAcceleration(this.estimateAcceleration());
+            Particle.prototype.update.apply(this, arguments);
+        },
 
-            this.pointInDirectionOfMotion();
+        getCM: function() {
+            throw 'Must be implemented in child class';
+        },
+
+        getMomentOfInertia: function() {
+            throw 'Must be implemented in child class';
         },
 
         /**
-         * The update function for when we are in acceleration
-         *   mode (when the ladybug is driven by its
-         *   acceleration), this function updates all of the
-         *   ladybug's motion properties according to the
-         *   delta time (time between steps).
+         * Returns the total kinetic energy of the body, translational
+         * and rotational
+         *
+         * @return the kinetic energy
          */
-        updateAccelerationMode: function(deltaTime) {
-            this.ladybug.updatePositionFromVelocity(deltaTime);
-            this.ladybug.updateVelocity(deltaTime);
-            this.pointInDirectionOfMotion();
+        getKineticEnergy: function() {
+            return (
+                (this.get('mass') * this.get('velocity').lengthSq() / 2) +
+                (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2)
+            );
         },
 
-        /**
-         * Sets the motion type on the ladybug mover
-         */
-        motionTypeChanged: function(simulation, motionTypeKey) {
-            this.ladybugMover.setMotionType(LadybugMover.MOTION_TYPES[motionTypeKey]);
-        },
-
-        /**
-         * Called when we're entering manual mode and just
-         *   came from one of the automated motion types.
-         */
-        initManual: function() {
-            this.resetSamplingMotionModel();
-            this.clearSampleHistory();
-        },
-
-        /**
-         * Called when we're starting to add sample points.
-         *   Sets penDown to true.
-         */
-        startSampling: function() {
-            this.penDown = true;
-        },
-
-        /**
-         * Called when we're finished adding sample points.
-         *   Sets penDown to false.
-         */
-        stopSampling: function() {
-            this.penDown = false;
-        },
-
-        /**
-         * Returns whether or not we're taking input samples
-         *   (penDown is true).
-         */
-        sampling: function() {
-            return this.penDown;
-        },
-
-        /**
-         * Takes the current pen point, which is stored in
-         *   the property this.penPoint, and creates a pen
-         *   path entry out of it (attaching the current
-         *   time) and then appends it to the pen path.
-         */
-        recordCurrentPenPoint: function() {
-            var pathEntry = penPathEntryPool.create();
-            pathEntry.time = this.get('time');
-            pathEntry.x = this.penPoint.x;
-            pathEntry.y = this.penPoint.y;
-            this.penPath.push(pathEntry);
-        },
-
-        /**
-         * Finds the last sample point (pen path entry) and
-         *   returns it as a Vector2.
-         */
-        getLastSamplePoint: function() {
-            return this._lastSamplePoint.set(
-                this.penPath[this.penPath.length - 1].x,
-                this.penPath[this.penPath.length - 1].y
+        getMomentum: function() {
+            return this._momentum.set(
+                this.get('velocity').x * this.get('mass'),
+                this.get('velocity').y * this.get('mass')
             );
         },
 
         /**
-         * Sets the current sample point (this.penPoint) to
-         *   the specified x and y values.  Also takes a
-         *   single Vector2 object instead.
+         * Function that facilitates setting the momentum vector 
+         *   while still triggering a change event.
          */
-        setSamplePoint: function(x, y) {
-            if (x instanceof Vector2) {
-                y = x.y;
-                x = x.x;
-            }
-
-            this.penPoint.x = x;
-            this.penPoint.y = y;
-        },
-
-        /**
-         * Keeps the pen path under a certain length
-         */
-        trimSampleHistory: function() {
-            while (this.penPath.length > 100)
-                this.shiftSampleHistory();
-        },
-
-        /**
-         * Shifts the first sample off the front of the pen
-         *   path array in a way that is safe for the object
-         *   pool.
-         */
-        shiftSampleHistory: function() {
-            penPathEntryPool.remove(this.penPath.shift());
-        },
-
-        /**
-         * Clears pen path (sample) history in a way that is
-         *   safe for the object pool.
-         */
-        clearSampleHistory: function() {
-            for (var i = 0; i < this.penPath.length; i++)
-                penPathEntryPool.remove(this.penPath[i]);
-            this.penPath.splice(0, this.penPath.length);
-            this.penPoint.set(0, 0);
-        },
-
-        /**
-         * Clears state and sample history.
-         */
-        clearHistory: function() {
-            this.stateHistory.splice(0, this.stateHistory.length);
-            this.culledStateHistory.splice(0, this.culledStateHistory.length);
-            this.clearSampleHistory();
-            this.trigger('history-removed');
-        },
-
-        /**
-         * Clears all history after a specified time.
-         */
-        clearHistoryAfter: function(time) {
-            // Remove records beyond a certain time
-            var i;
-            for (i = this.stateHistory.length - 1; i >= 0; i--) {
-                if (this.stateHistory[i].time >= time)
-                    this.stateHistory.splice(i, 1);
-            }
-            for (i = this.culledStateHistory.length - 1; i >= 0; i--) {
-                if (this.culledStateHistory[i].time >= time)
-                    this.culledStateHistory.splice(i, 1);
-            }
-
-            this._historyTimes = null;
-
-            this.set('furthestRecordedTime', time);
-
-            /* If we were previously dragging the position of the ladybug
-             *   and we seek to a certain position in history and want to
-             *   write over it and we start dragging again, it will think
-             *   we're starting at the last dragged position instead of
-             *   at the desired position in history if we fail to clear
-             *   the sampling data, and it looks very unnatural when that
-             *   happens.
-             */
-            if (this.penDown) {
-                this.clearSampleHistory();
-                this.resetSamplingMotionModel();
-            }
-
-            this.trigger('history-removed');
-        },
-
-        getCulledStateHistory: function() {
-            return this.culledStateHistory;
-        },
-
-        /**
-         * Resets the sampling motion model.
-         */
-        resetSamplingMotionModel: function() {
-            this.samplingMotionModel.reset(this.ladybug.get('position'));
-        },
-
-        /**
-         * Records the current state in the model history.
-         */
-        recordState: function() {
-            var stateRecord = ladybugStateRecordPool.create();
-            stateRecord.recordState(this.get('time'), this.ladybug);
-
-            // Check if we want to add it to the culled history
-            if (!this.stateMatchesPrevious(stateRecord))
-                this.culledStateHistory.push(stateRecord);
-
-            this.stateHistory.push(stateRecord);
-
-            this.trigger('history-added');
-        },
-
-        /**
-         * Returns whether or not the given state matches the
-         *   previously recorded state.  If no previous state
-         *   exists, it returns false.
-         */
-        stateMatchesPrevious: function(state) {
-            if (this.stateHistory.length > 1 &&
-                this.stateHistory[this.stateHistory.length - 1].position.equals(state.position)) {
-                return true;
-            }
-
-            return false;
-        },
-
-        /**
-         * Applies the appropriate saved state for this moment
-         *   in history.
-         */
-        applyPlaybackState: function() {
-            var stateRecord = this.findStateWithClosestTime(this.time);
-            if (stateRecord)
-                stateRecord.applyState(this.ladybug);
-        },
-
-        /**
-         * Performs a binary search to find the state whose time
-         *   is closest to the specified time.
-         */
-        findStateWithClosestTime: function(time) {
-            if (!this._historyTimes)
-                return null;
-
-            var stateIndex = binarySearch.closest(this._historyTimes, time);
-            return this.stateHistory[stateIndex];
-        },
-
-        /**
-         * Listens for changes in the paused state of the sim.
-         *   We need to set up some stuff before we can play back,
-         *   and when we start recording at a new position, we
-         *   need to make sure we clear history beyond that point.
-         */
-        pausedChanged: function(simulation, paused) {
-            if (paused) {
-                this.prepareForPlayback();
-            }
-            else {
-                if (!this.get('recording'))
-                    this.prepareForPlayback();
-                else
-                    this.clearHistoryAfter(this.get('time'));
-            }
-        },
-
-        /**
-         * Clears history without changing current state of the
-         *   ladybug.
-         */
-        clear: function() {
-            var paused = this.get('paused');
-            this.pause();
-
-            this.time = 0;
-            this.set('time', 0);
-            this.set('furthestRecordedTime', 0);
-            this.clearHistory();
-
-            if (!paused)
-                this.play();
-        },
-
-        /**
-         * Rewinds to the beginning.
-         */
-        rewind: function() {
-            this.time = 0;
-            this.set('time', 0);
-
-            this.applyPlaybackState();
-
-            if (this.get('recording'))
-                this.clearHistory();
-        },
-
-        /**
-         * Sets the sim time to the specified second and applies
-         *   the current playback state so the user can see
-         *   what happened at that point in time.
-         */
-        setTime: function(time) {
-            this.time = time;
-            this.set('time', time);
-
-            this.applyPlaybackState();
-        },
-
-        updateModeChanged: function(simulation, updateMode) {
-            if (updateMode === UpdateMode.POSITION) {
-                this.clearSampleHistory();
-                this.resetSamplingMotionModel();
-            }
-        },
-
-        /**
-         * We need to prepare for playback before we can re-apply
-         *   any saved states, so we need to catch those cases
-         *   when we are in danger of applying a state.
-         */
-        recordingModeChanged: function(simulation, recording) {
-            if (!recording)
-                this.prepareForPlayback();
-        },
-
-        /**
-         * Called before switching to playback (non-recording) mode
-         *   to get ready to read stored states in order. It sorts
-         *   the array of historical states by time and then plucks
-         *   just the times out into a separate array for faster
-         *   random access.
-         */
-        prepareForPlayback: function() {
-            // Sort the historical states by time ascending
-            _.sortBy(this.stateHistory, function(state) {
-                return state.time;
-            });
-
-            /* Store just the times in a parallel array so we
-             *   can do a binary search.
-             */
-            this._historyTimes = _.pluck(this.stateHistory, 'time');
-        },
-
-        /**
-         * Rotates the ladybug model to the estimated direction
-         *   of motion only if it is moving.
-         */
-        pointInDirectionOfMotion: function() {
-            if (this.estimateVelocity().length() > 1E-6)
-                this.ladybug.set('angle', this.estimateAngle());
-        },
-
-        /**
-         * Returns an estimated angle in radians that is derived
-         *   from the estimated velocity vector.
-         */
-        estimateAngle: function() {
-            return this.estimateVelocity().angle();
-        },
-
-        /**
-         * Estimates velocity from historical positions.
-         * Note: The original version has an index parameter,
-         *   but they must have refactored the function at
-         *   some point and didn't update the references to
-         *   it, so I've gone through and changed all the
-         *   calls because it seemed to be ignoring the index
-         *   parameter anyway.
-         */
-        estimateVelocity: function() {
-            var xTimeSeries = this.xTimeSeries;
-            var yTimeSeries = this.yTimeSeries;
-
-            var historySample = this.stateHistory.slice(this.stateHistory.length - Constants.ESTIMATION_SAMPLE_SIZE, this.stateHistory.length);
-            var diff = Constants.ESTIMATION_SAMPLE_SIZE - historySample.length;
-            for (var i = 0; i < historySample.length; i++) {
-                xTimeSeries[i + diff].time  = historySample[i].time;
-                xTimeSeries[i + diff].value = historySample[i].position.x;
-
-                yTimeSeries[i + diff].time  = historySample[i].time;
-                yTimeSeries[i + diff].value = historySample[i].position.y;
-            }
-            for (var j = 0; j < diff; j++) {
-                xTimeSeries[j].time  = 0;
-                xTimeSeries[j].value = 0;
-                yTimeSeries[j].time  = 0;
-                yTimeSeries[j].value = 0;
-            }
-
-            var vx = MotionMath.estimateDerivative(xTimeSeries);
-            var vy = MotionMath.estimateDerivative(yTimeSeries);
-
-            return this._velocity.set(vx, vy);
-        },
-
-        /**
-         * Estimates acceleration from historical velocities.
-         * Note: The original version has an index parameter,
-         *   but they must have refactored the function at
-         *   some point and didn't update the references to
-         *   it, so I've gone through and changed all the
-         *   calls because it seemed to be ignoring the index
-         *   parameter anyway.
-         */
-        estimateAcceleration: function() {
-            var xTimeSeries = this.xTimeSeries;
-            var yTimeSeries = this.yTimeSeries;
-
-            var historySample = this.stateHistory.slice(this.stateHistory.length - Constants.ESTIMATION_SAMPLE_SIZE, this.stateHistory.length);
-            for (var i = 0; i < historySample.length; i++) {
-                xTimeSeries[i].time  = historySample[i].time;
-                xTimeSeries[i].value = historySample[i].velocity.x;
-
-                yTimeSeries[i].time  = historySample[i].time;
-                yTimeSeries[i].value = historySample[i].velocity.y;
-            }
-
-            var ax = MotionMath.estimateDerivative(xTimeSeries);
-            var ay = MotionMath.estimateDerivative(yTimeSeries);
-
-            return this._acceleration.set(ax, ay);
-        },
-
-        /**
-         * Sets a bounding box around the scene from the min
-         *   and max x and y values.  It's easier to give
-         *   these values because one can simply reverse the
-         *   model-view-transform with screen coordinates.
-         */
-        setBounds: function(minX, minY, maxX, maxY) {
-            var width = maxX - minX;
-            var height = maxY - minY;
-            this.bounds.set(minX, minY, width, height);
-        },
-
-        /**
-         * Returns a bounding rectangle of the scene.
-         */
-        getBounds: function() {
-            return this.bounds;
-        },
-
-        /**
-         * Returns the ladybug to the center.
-         */
-        returnLadybug: function() {
-            this.ladybug.setPosition(0, 0);
-            this.ladybug.setVelocity(0, 0);
-            this.clearSampleHistory();
-            this.setSamplePoint(this.ladybug.get('position'));
-            this.resetSamplingMotionModel();
-        },
-
-        ladybugOutOfBounds: function() {
-            return !this.bounds.contains(this.ladybug.get('position'));
+        setMomentum: function(x, y, options) {
+            if (x instanceof Vector2)
+                this.setVelocity(x.x / this.get('mass'), x.y / this.get('mass'), y);
+            else
+                this.setVelocity(x / this.get('mass'), y / this.get('mass'), options);
         }
 
     });
 
-    return LadybugMotionSimulation;
+    return Body;
 });
-
-define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','pixi'],function(require) {
+define('common/mechanics/models/boxlike-body',['require','underscore','common/math/vector2','common/math/rectangle','./body'],function (require) {
 
     'use strict';
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var version = (PIXI.VERSION || '').replace(/^v/i, '');
-    var majorVersion = parseInt(version.split('.')[0], 10);
-    var useRendererOptionsObject = !isNaN(majorVersion) ? majorVersion >= 5 : !!PIXI.Renderer;
-    var fallbackSceneWidth = 800;
-    var fallbackSceneHeight = 600;
-    var MAX_POST_RENDER_SIZE_ATTEMPTS = 20;
+    var _ = require('underscore');
+
+    var Vector2   = require('common/math/vector2');
+    var Rectangle = require('common/math/rectangle');
+
+    var Body = require('./body');
 
     /**
-     * SceneView is the main focus of the app. 
-     *
+     * A spherical body with mass and momentum
      */
-    var PixiSceneView = Backbone.View.extend({
-        getTargetSize: function() {
-            var width = this.$el.width();
-            var height = this.$el.height();
-            var $parent = this.$el.parent();
+    var BoxlikeBody = Body.extend({
 
-            if (!width && $parent.length)
-                width = $parent.width();
-            if (!height && $parent.length)
-                height = $parent.height();
+        collidable: true,
 
-            if (!width && this.renderer && this.renderer.width)
-                width = this.renderer.width;
-            if (!height && this.renderer && this.renderer.height)
-                height = this.renderer.height;
+        defaults: _.extend({}, Body.prototype.defaults, {
+            mass: Number.POSITIVE_INFINITY,
+            minimumWidth: 100,
+            leftWallVx: 0,
+            corner1: undefined,
+            corner2: undefined
+        }),
 
-            if (!width)
-                width = fallbackSceneWidth;
-            if (!height)
-                height = fallbackSceneHeight;
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
 
-            return {
-                width: width,
-                height: height
-            };
+            this.set('corner1', new Vector2(this.get('corner1')));
+            this.set('corner2', new Vector2(this.get('corner2')));
+            this.corner1 = this.get('corner1');
+            this.corner2 = this.get('corner2');
+            this.center  = new Vector2();
+
+            this.bounds = new Rectangle();
+
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
+
+            this.setState(this.corner1, this.corner2);
         },
 
-
-        tagName: 'canvas',
-        className: 'scene-view',
-
-        events: {
-            
+        getCM: function() {
+            return this.center;
         },
 
-        initialize: function(options) {
-            // Save options
-            if (options.simulation)
-                this.simulation = options.simulation;
-            else
-                throw 'PixiSceneView requires a simulation model to render.';
-
-            // Add a separate, disconnected element for hybrid views
-            this.$ui = $('<div class="scene-view-ui">');
-            this.ui = this.$ui[0];
-
-            // Bind events
-            $(window).bind('resize', $.proxy(this.windowResized, this));
+        getMomentOfInertia: function() {
+            return Number.MAX_VALUE;
         },
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            this.renderContent();
-            this.initRenderer();
-
-            return this;
+        setBounds: function(minX, minY, maxX, maxY) {
+            this.setState(
+                this.corner1.set(this.minX, this.minY), 
+                this.corner2.set(this.maxX, this.maxY)
+            );
         },
 
-        /**
-         * Renders 
-         */
-        renderContent: function() {
-            
+        getBounds: function() {
+            this.bounds.set(this.minX, this.minY, this.getWidth(), this.getHeight());
+            return this.bounds;
         },
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.ensureSizedAndInitGraphics(0);
+        setState: function(corner1, corner2) {
+            this.corner1.set(corner1);
+            this.corner2.set(corner2);
+            this.maxX = Math.max(corner1.x, corner2.x);
+            this.maxY = Math.max(corner1.y, corner2.y);
+            this.minX = Math.min(Math.min(corner1.x, corner2.x), this.maxX - this.get('minimumWidth'));
+            this.minY = Math.min(corner1.y, corner2.y);
+            this.center.set(
+                (this.maxX + this.minX) / 2,
+                (this.maxY + this.minY) / 2
+            );
+            this.setPosition(this.minX, this.minY);
         },
 
-        ensureSizedAndInitGraphics: function(attempt) {
-            var measuredWidth = this.$el.width();
-            var measuredHeight = this.$el.height();
-            var hasMeasuredSceneSize = measuredWidth > 1 && measuredHeight > 1;
-
-            if (!hasMeasuredSceneSize && attempt < MAX_POST_RENDER_SIZE_ATTEMPTS) {
-                setTimeout(_.bind(function() {
-                    this.ensureSizedAndInitGraphics(attempt + 1);
-                }, this), 0);
-                return;
-            }
-
-            this.resize(true);
-            this.initGraphics();
+        getCorner1X: function() {
+            return this.corner1.x;
         },
 
-        /**
-         * Initializes a renderer
-         */
-        initRenderer: function() {
-            var targetSize = this.getTargetSize();
-            var width = targetSize.width;
-            var height = targetSize.height;
-            var options = {
-                resolution: window.devicePixelRatio ? window.devicePixelRatio : 1,
-                view: this.el,
-                transparent: true,
-                antialias: true
-            };
-
-            if (useRendererOptionsObject) {
-                options.width = width;
-                options.height = height;
-                options.autoDensity = true;
-                this.renderer = PIXI.autoDetectRenderer(options);
-            } else {
-                this.renderer = PIXI.autoDetectRenderer(width, height, options);
-            }
-
-            this.width  = width;
-            this.height = height;
-
-            // Create a stage to hold everything
-            this.stage = new PIXI.Container();
+        getCorner1Y: function() {
+            return this.corner1.y;
         },
 
-        initGraphics: function() {
-            
+        getCorner2X: function() {
+            return this.corner2.x;
+        },
+
+        getCorner2Y: function() {
+            return this.corner2.y;
+        },
+
+        getCenter: function() {
+            return this.center;
+        },
+
+        getMinX: function() {
+            return this.minX;
+        },
+
+        getMinY: function() {
+            return this.minY;
+        },
+
+        getMaxX: function() {
+            return this.maxX;
+        },
+
+        getMaxY: function() {
+            return this.maxY;
+        },
+
+        getWidth: function() {
+            return Math.abs(this.corner2.x - this.corner1.x);
+        },
+
+        getHeight: function() {
+            return Math.abs(this.corner2.y - this.corner1.y);
+        },
+
+        getContactOffset: function(body) {
+            return 0;
+        },
+
+        getLeftWallVx: function() {
+            return this.get('leftWallVx');
         },
 
         /**
-         * Called on a window resize to resize the canvas
+         * Overrides setPosition function to keep track of the previous position
          */
-        windowResized: function(event) {
-            this.resizeOnNextUpdate = true;
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            Body.prototype.setPosition.apply(this, arguments);
         },
 
-        resize: function(override) {
-            var targetSize = this.getTargetSize();
-            var width = targetSize.width;
-            var height = targetSize.height;
-            this.width  = width;
-            this.height = height;
-            if (override || width != this.renderer.width || height != this.renderer.height) {
-                this.resizeGraphics();
-                this.trigger('resized');
-            }
-            this.resizeOnNextUpdate = false;
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
 
-            this.offset = this.$el.offset();
+            Body.prototype.setVelocity.apply(this, arguments);
         },
 
-        resizeGraphics: function() {
-            this.renderer.resize(this.width, this.height);
+        getPreviousPosition: function() {
+            return this.prevPosition;
         },
 
-        reset: function() {
-
-        },
-
-        update: function(time, deltaTime, paused, timeScale) {
-            if (this.resizeOnNextUpdate)
-                this.resize();
-
-            this._update(time, deltaTime, paused, timeScale);
-
-            // Render everything
-            this.renderer.render(this.stage);
-        },
-
-        _update: function(time, deltaTime) {}
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        }
 
     });
 
-    return PixiSceneView;
+    return BoxlikeBody;
+});
+define('common/quantum/models/tube',['require','underscore','common/math/vector2','common/mechanics/models/boxlike-body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var BoxlikeBody = require('common/mechanics/models/boxlike-body');
+
+    /**
+     * 
+     */
+    var Tube = BoxlikeBody.extend({
+
+        defaults: _.extend({}, BoxlikeBody.prototype.defaults, {
+            origin: new Vector2(),
+            width: 0,
+            height: 0
+        }),
+
+        /**
+         * 
+         */
+        initialize: function(attributes, options) {
+            this.set({
+                position: this.get('origin'),
+                corner1: this.get('origin'),
+                corner2: new Vector2(
+                    this.get('origin').x + this.get('width'), 
+                    this.get('origin').y + this.get('height')
+                )
+            });
+
+            BoxlikeBody.prototype.initialize.apply(this, [attributes, options]);
+
+            // Set the initial bounds
+            this.getBounds();
+
+            this.on('change:height', this.heightChanged);
+        },
+
+        heightChanged: function(tube, height) {
+            // Reposition the walls of the cavity
+            var yMiddle = this.get('origin').y + this.previous('height') / 2;
+            this.get('origin').set(
+                this.get('origin').x, 
+                yMiddle - height / 2
+            );
+            this.setBounds(this.getMinX(), this.get('origin').y - height / 2, this.get('width'), height);
+            this.getBounds();
+        }
+
+    });
+
+    return Tube;
+});
+define('common/mechanics/models/spherical-body',['require','underscore','common/math/vector2','./body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var Body = require('./body');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var SphericalBody = Body.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Body.prototype.defaults, {
+            radius: 0
+        }),
+
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
+
+            this.prevPosition = new Vector2(this.get('position'));
+            this.prevVelocity = new Vector2(this.get('velocity'));
+        },
+
+        getCM: function() {
+            return this.get('position');
+        },
+
+        getMomentOfInertia: function() {
+            return this.get('mass') * this.get('radius') * this.get('radius') * 2 / 5;
+        },
+
+        getCenter: function() {
+            return this.get('position');
+        },
+
+        /**
+         * Overrides setPosition function to keep track of the previous position
+         */
+        setPosition: function(x, y, options) {
+            this.prevPosition.set(this.get('position'));
+
+            Body.prototype.setPosition.apply(this, arguments);
+        },
+
+        /**
+         * Overrides setVelocity function to keep track of the previous velocity
+         */
+        setVelocity: function(x, y, options) {
+            this.prevVelocity.set(this.get('velocity'));
+
+            Body.prototype.setVelocity.apply(this, arguments);
+        },
+
+        getPreviousPosition: function() {
+            return this.prevPosition;
+        },
+
+        getPreviousVelocity: function() {
+            return this.prevVelocity;
+        }
+
+    });
+
+    return SphericalBody;
+});
+define('common/quantum/models/state-lifetime-manager',['require','underscore','common/math/vector2','./photon-vanilla'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2 = require('common/math/vector2');
+
+    var VanillaPhoton = require('./photon-vanilla');
+
+    /**
+     * An object that manages the lifetime of an AtomicEnergyState.
+     * 
+     * When it is created, it sets a time of death for an atom's current state,
+     *   and when that time comes, causes a photon to be emitted and the atom
+     *   to change to the next appropriate energy state.
+     */
+    var StateLifetimeManager = function() {
+        this.initialize.apply(this, arguments);
+    };
+
+    /**
+     * Instance functions/properties
+     */
+    _.extend(StateLifetimeManager.prototype, {
+
+        /**
+         * Initializes the StateLifetimeManager's properties with provided initial values
+         */
+        initialize: function(atom, emitOnStateChange, simulation) {
+            this.atom = atom;
+            this.emitOnStateChange = emitOnStateChange;
+            this.simulation = simulation;
+
+            // Add this manager to the simulation model so the update function gets called in the sim loop
+            simulation.addModel(this);
+
+            var temp = 0;
+            while (temp === 0)
+                temp = Math.random();
+            
+            this.state = atom.getCurrentState();
+
+            // Get the lifetime for this state
+            if (atom.get('isStateLifetimeFixed')) {
+                // This line gives a fixed death time
+                this.deathTime = this.state.get('meanLifetime');
+            }
+            else {
+                // Assign a deathtime based on an exponential distribution
+                // The square root pushes the distribution toward 1.
+                this.deathTime = Math.pow(-Math.log(temp), 0.5) * this.state.get('meanLifetime');
+            }
+
+            // Initialize the field that tracks the state's lifetime
+            this.lifeTime = 0;
+
+            this.horizontalEmissionLikelihood = 0.10;
+
+            // Cached objects
+            this._position = new Vector2();
+            this._velocity = new Vector2();
+            this._vHat     = new Vector2();
+        },
+
+        /**
+         * Changes the state of the associated atom if the state's lifetime has been exceeded.
+         */
+        update: function(time, deltaTime) {
+            this.lifeTime += deltaTime;
+            if (this.lifeTime >= this.deathTime) {
+                var nextState = this.atom.getEnergyStateAfterEmission();
+
+                if (this.emitOnStateChange) {
+                    var speed = VanillaPhoton.DEFAULT_SPEED * this.simulation.get('photonSpeedScale');
+                    var theta = this.getEmissionDirection();
+                    var x = speed * Math.cos(theta);
+                    var y = speed * Math.sin(theta);
+
+                    if (nextState != this.atom.getCurrentState()) {
+                        var emittedPhoton = VanillaPhoton.create({
+                            wavelength: this.state.determineEmittedPhotonWavelength(nextState),
+                            position: this.atom.get('position'),
+                            velocity: this._velocity.set(x, y)
+                        });
+
+                        // Place the replacement photon beyond the atom, so it doesn't collide again
+                        //   right away
+                        var vHat = this._vHat.set(emittedPhoton.get('velocity')).normalize();
+                        var position = this._position.set(this.atom.get('position'));
+                        position.add(vHat.scale(this.atom.get('radius') + 10));
+                        emittedPhoton.setPosition(position);
+
+                        this.atom.emitPhoton(emittedPhoton);
+                    }
+                }
+
+                // Change state
+                this.atom.set('currentState', nextState);
+
+                // Remove us from the model
+                this.kill();
+            }
+        },
+
+        /**
+         * 
+         */
+        kill: function() {
+            this.simulation.removeModel(this);
+        },
+
+        getEmissionDirection: function() {
+            if (Math.random() <= this.horizontalEmissionLikelihood)
+                return Math.PI * (Math.random() < 0.5 ? 1 : 0);
+            else
+                return Math.random() * Math.PI * 2;
+        }
+
+    });
+
+
+    return StateLifetimeManager;
+});
+define('common/quantum/models/atom',['require','underscore','common/mechanics/models/spherical-body','./state-lifetime-manager','../config'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var SphericalBody = require('common/mechanics/models/spherical-body');
+
+    var StateLifetimeManager = require('./state-lifetime-manager');
+
+    var QuantumConfig = require('../config');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var Atom = SphericalBody.extend({
+
+        defaults: _.extend({}, SphericalBody.prototype.defaults, {
+            radius: QuantumConfig.DEFAULT_ATOM_RADIUS,
+            mass: 1000,
+            currentState: null,
+            isStateLifetimeFixed: false
+        }),
+
+        /**
+         * Required options: {
+         *   simulation: simulation model,
+         *   numStates: number of states    
+         * }
+         */
+        initialize: function(attributes, options) {
+            SphericalBody.prototype.initialize.apply(this, [attributes, options]);
+
+            this.simulation = options.simulation;
+            this.groundState = null;
+            this.highestEnergyState = null;
+
+            this.states = [];
+
+            this.on('change:currentState', this.currentStateChanged);
+
+            this.set('currentState', this.simulation.getGroundState());
+            this.setNumEnergyLevels(options.numStates, this.simulation);
+        },
+
+        getCurrentState: function() {
+            return this.get('currentState');
+        },
+
+        setCurrentState: function(currentState) {
+            this.set('currentState', currentState);
+        },
+
+        getStates: function() {
+            return this.states;
+        },
+
+        getModel: function() {
+            return this.simulation;
+        },
+
+        /**
+         * Returns the number of the atom's current state. This is the index of the state in the
+         *   atom's array of state. The ground state is number 0
+         */
+        getCurrentStateNumber: function() {
+            for (var i = 0; i < this.states.length; i++) {
+                if (this.getCurrentState() == this.states[i])
+                    return i;
+            }
+            return 0;
+        },
+
+        /**
+         * Sets the states that the atom can be in.  Sets the atom's current state to the
+         *   ground state
+         */
+        setStates: function(states) {
+            this.states = states;
+            // Find the minimum and maximum energy states
+            var maxEnergy = -Number.MAX_VALUE;
+            for (var i = 0; i < states.length; i++) {
+                var state = states[i];
+                var energy = state.get('energyLevel');
+                if (energy > maxEnergy) {
+                    maxEnergy = energy;
+                    this.highestEnergyState = state;
+                }
+            }
+
+            this.groundState = this.getLowestEnergyState();
+            this.set('currentState', this.groundState);
+        },
+
+        /**
+         * Populates the list of AtomicStates that this atom can be in, based on the
+         *   specified number of energy levels it can occupy
+         */
+        setNumEnergyLevels: function(numEnergyLevels, simulation) {
+            for (var i = 0; i < numEnergyLevels; i++)
+                this.states[i] = null;
+            this.states[0] = simulation.getGroundState();
+            this.groundState = this.states[0];
+            this.highestEnergyState = this.states[this.states.length - 1];
+        },
+
+        getGroundState: function() {
+            return this.groundState;
+        },
+
+        /**
+         * Returns the atom's state with the lowest energy
+         */
+        getLowestEnergyState: function() {
+            var lowestState = null;
+            var lowestEnergy = Number.MAX_VALUE;
+            for (var i = 0; i < this.states.length; i++) {
+                var state = this.states[i];
+                if (state.get('energyLevel') < lowestEnergy) {
+                    lowestEnergy = state.get('energyLevel');
+                    lowestState = state;
+                }
+            }
+            return lowestState;
+        },
+
+        getHighestEnergyState: function() {
+            return this.highestEnergyState;
+        },
+
+        /**
+         * Returns the state the atom will be in if it emits a photon. By default,
+         *   this is the next lower energy state
+         */
+        getEnergyStateAfterEmission: function() {
+            return this.get('currentState').getNextLowerEnergyState();
+        },
+
+        emitPhoton: function(emittedPhoton) {
+            this.trigger('photon-emitted', this, emittedPhoton);
+        },
+
+        collideWithPhoton: function(photon) {
+            this.get('currentState').collideWithPhoton(this, photon);
+        },
+
+        currentStateChanged: function(atom, currentState) {
+            if (this.stateLifetimeManager)
+                this.stateLifetimeManager.kill();
+
+            if (this.previous('currentState'))
+                this.previous('currentState').leaveState(this);
+            
+            if (currentState)
+                currentState.enterState(this);
+
+            this.stateLifetimeManager = new StateLifetimeManager(this, true, this.simulation);
+        }
+
+    }, {
+
+        DEFAULT_RADIUS: QuantumConfig.DEFAULT_ATOM_RADIUS
+
+    });
+
+    return Atom;
+});
+define('gauss-random',['require','exports','module'],function (require, exports, module) {'use strict'
+
+module.exports = gaussRandom
+
+function gaussRandom() {
+  return Math.sqrt(-2.0 * Math.log(Math.random())) * Math.cos(2.0 * Math.PI * Math.random())
+}
 });
 
 define('common/math/solve-cubic-equation',['require'],function (require) {
@@ -62020,6 +62108,3377 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 });
 
 
+define('common/quantum/models/beam',['require','underscore','gauss-random','common/math/vector2','common/math/piecewise-curve','common/mechanics/models/particle','./photon-vanilla'],function (require) {
+
+    'use strict';
+
+    var _           = require('underscore');
+    var gaussRandom = require('gauss-random');
+
+    var Vector2        = require('common/math/vector2');
+    var PiecewiseCurve = require('common/math/piecewise-curve');
+    var Particle       = require('common/mechanics/models/particle');
+
+    var VanillaPhoton = require('./photon-vanilla');
+
+    /**
+     * A PhotonSource of photons that all have identical speeds. Their directions can
+     *   vary by a specified fanout angle.
+     *
+     * The beam has a beamWidth, and the photons are randomly distributed across that
+     *   beamWidth.
+     *
+     * Its position is at the midpoint of that beamWidth.
+     */
+    var Beam = Particle.extend({
+
+        defaults: _.extend({}, Particle.prototype.defaults, {
+            wavelength: undefined,
+            // Used to deterimine when photons should be produced
+            photonsPerSecond: 0,
+            // Maximum photon rate
+            maxPhotonsPerSecond: undefined,
+            // Angle at which the beam fans out, in radians
+            fanout: 0,
+            // Length of beam
+            length: undefined,
+            // Starting speed for photons
+            speed: undefined,
+            // Width of the beam
+            beamWidth: undefined,
+            // Whether or not we're firing photons
+            enabled: false,
+            // Flag to determine if photon production is Gaussian or fixed
+            photonProductionIsGaussian: false
+        }),
+
+        initialize: function(attributes, options) {
+            Particle.prototype.initialize.apply(this, [attributes, options]);
+
+            this.nextTimeToProducePhoton = 0;
+            // The rate at which the beam produces photons
+            this.timeSinceLastPhotonProduced = 0;
+
+            if (options && options.direction)
+                this.photonVelocity = new Vector2(options.direction).normalize().scale(this.get('speed'));
+
+            // Cached objects
+            this._direction = new Vector2();
+            this._generatedPosition = new Vector2();
+            this._photonVelocity = new Vector2();
+
+            this.on('change:photonsPerSecond', this.photonsPerSecondChanged);
+            this.on('change:enabled', this.enabledChanged);
+        },
+
+        /**
+         * 
+         */
+        update: function(time, deltaTime) {
+            Particle.prototype.update.apply(this, arguments);
+            
+            // Produce photons
+            if (this.get('enabled')) {
+                this.timeSinceLastPhotonProduced += deltaTime;
+                if (this.nextTimeToProducePhoton < this.timeSinceLastPhotonProduced) {
+                    var nPhotons = Math.floor(this.timeSinceLastPhotonProduced * this.get('photonsPerSecond') / 1E3);
+                    for (var i = 0; i < nPhotons; i++) {
+                        // Set the photon's velocity to a fanout angle proportional to its distance from
+                        //   the center of the beam
+                        var photonLoc = this.generatePosition();
+                        var angle = (photonLoc.distance(this.get('position')) / this.get('beamWidth') / 2) * this.get('fanout');
+                        var angleToPhoton = Math.atan2(
+                            photonLoc.y - this.getY(),
+                            photonLoc.x - this.getX()
+                        );
+                        var alpha = this.photonVelocity.angle() - angleToPhoton;
+                        if (alpha > 0)
+                            angle *= -1;
+                        
+                        var photonVelocity = this._photonVelocity.set(this.photonVelocity).rotate(angle);
+                        var newPhoton = VanillaPhoton.create({
+                            wavelength: this.get('wavelength'),
+                            position: photonLoc,
+                            velocity: photonVelocity
+                        });
+
+                        this.trigger('photon-emitted', this, newPhoton);
+                    }
+                    
+                    this.nextTimeToProducePhoton = this.getNextTimeToProducePhoton();
+                    this.timeSinceLastPhotonProduced = 0;
+                }
+            }
+        },
+
+        setDirection: function(direction) {
+            this._direction
+                .set(direction)
+                .normalize()
+                .scale(this.get('speed'));
+
+            this.photonVelocity.set(this._direction);
+        },
+
+        getDirection: function() {
+            return this.photonVelocity.angle();
+        },
+
+        generatePosition: function() {
+            var r = Math.random();
+            var inset = 10;  // inset from the edges of the "beam" that photons are emitted
+            var d = r * ((this.get('beamWidth') - inset) / 2) * (Math.random() < 0.5 ? 1 : -1);
+            var dx =  d * Math.sin(this.photonVelocity.angle());
+            var dy = -d * Math.cos(this.photonVelocity.angle());
+            return this._generatedPosition.set(this.getX() + dx, this.getY() + dy);
+        },
+
+        getNextTimeToProducePhoton: function() {
+            var temp = this.get('photonProductionIsGaussian') ? (gaussRandom() + 1.0) : 1;
+            return temp / (this.get('photonsPerSecond') / 1000);
+        },
+
+        getBounds: function() {
+            var alpha = this.get('fanout') / 2;
+            var x = this.getX();
+            var y = this.getY();
+            var length = this.get('length');
+            var beamWidth = this.get('beamWidth');
+
+            var curve = new PiecewiseCurve();
+            curve.moveTo(x, y);
+            curve.lineToRelative(0, -beamWidth / 2);
+            curve.lineToRelative(length * Math.cos(alpha), -length * Math.sin(alpha) / 2);
+            curve.lineToRelative(0, beamWidth + length * Math.sin(alpha));
+            curve.lineToRelative(-length * Math.cos(alpha), -length * Math.sin(alpha) / 2);
+            curve.close();
+
+            // Rotate it around the position
+            curve.translate(-x, -y);
+            curve.rotate(this.getDirection());
+            curve.translate(x, y);
+
+            return curve;
+        },
+
+        photonsPerSecondChanged: function(photon, photonsPerSecond) {
+            // The following if statement prevents the system from sending out a big
+            //   wave of photons if it has been set at a rate of 0 for awhile.
+            if (this.previous('photonsPerSecond') === 0)
+                this.timeSinceLastPhotonProduced = 0;
+            
+            this.nextTimeToProducePhoton = this.getNextTimeToProducePhoton();
+        },
+
+        enabledChanged: function(photon, enabled) {
+            this.timeSinceLastPhotonProduced = 0;
+        }
+
+    });
+
+    return Beam;
+});
+define('common/collections/vanilla',['require','underscore','backbone'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var setOptions = { add: true, remove: true, merge: true };
+    var addOptions = { add: true, remove: false, merge: false };
+    var unshiftOptions = _.extend({ at: 0 }, addOptions);
+    var emptyOptions = {};
+    var silentOptions = { silent: true };
+
+    var splice = function(array, insert, at) {
+        at = Math.min(Math.max(at, 0), array.length);
+        var tail = Array(array.length - at);
+        var length = insert.length;
+        for (var i = 0; i < tail.length; i++) tail[i] = array[i + at];
+        for (i = 0; i < length; i++) array[i + at] = insert[i];
+        for (i = 0; i < tail.length; i++) array[i + length + at] = tail[i];
+    };
+
+    /**
+     * This is a replacement for Backbone.Collection that can be used with
+     *   vanilla JavaScript objects but with some of the benefits that the
+     *   Backbone version offers, like events for adding and removing.
+     *   Note that this is not meant to be a complete replacement for the
+     *   Backbone version, but it should at least use the same interface
+     *   for the features that it does replace so it can be swapped out
+     *   without changing much code.  Features should be added to this as
+     *   needed.
+     *
+     * Much of this code is from the original Backbone.Collection source
+     *   or is a modified version of it.  The original is distributed
+     *   under the MIT license.
+     */
+    var VanillaCollection = function(models, options) {
+        options || (options = {});
+        if (options.comparator !== undefined) 
+            this.comparator = options.comparator;
+        this._reset();
+        this.initialize.apply(this, arguments);
+        if (models) 
+            this.reset(models);
+    };
+
+    /**
+     * Instance functions/properties
+     */
+    _.extend(VanillaCollection.prototype, Backbone.Events, {
+
+        initialize: function() {
+            this._pushOptions = _.extend({ at: this.length }, addOptions);
+        },
+
+        add: function(models, options) {
+            if (options)
+                return this.set(models, _.extend(addOptions, options));
+            else
+                return this.set(models, addOptions);
+        },
+
+        push: function(model, options) {
+            // Calling `set` instead of `add` is a design decision.  I've pre-combined the
+            //   'push' and 'add' options to avoid calling `extend` if it's unnecessary.
+            this._pushOptions.at = this.length;
+            if (options)
+                return this.set(model, _.extend(this._pushOptions, options));
+            else
+                return this.set(model, this._pushOptions);
+        },
+
+        pop: function(options) {
+            var model = this.at(this.length - 1);
+            return this.remove(model, options);
+        },
+
+        unshift: function(model, options) {
+            // Calling `set` instead of `add` is a design decision.  I've pre-combined the
+            //   'push' and 'add' options to avoid calling `extend` if it's unnecessary.
+            if (options)
+                return this.set(model, _.extend(unshiftOptions, options));
+            else
+                return this.set(model, unshiftOptions);
+        },
+
+        shift: function(options) {
+            var model = this.at(0);
+            return this.remove(model, options);
+        },
+
+        slice: function() {
+            return Array.prototype.slice.apply(this.models, arguments);
+        },
+
+        set: function(models, options) {
+            if (models == null) return;
+
+            options = _.defaults({}, options, setOptions);
+            if (options.parse && !this._isModel(models)) models = this.parse(models, options);
+
+            var singular = !_.isArray(models);
+            models = singular ? [models] : models.slice();
+
+            var at = options.at;
+            if (at != null) at = +at;
+            if (at < 0) at += this.length + 1;
+
+            var toAdd = [];
+            var toRemove = [];
+            var modelMap = {};
+
+            var add = options.add;
+            var merge = options.merge;
+            var remove = options.remove;
+
+            var sort = false;
+            var sortable = this.comparator && (at == null) && options.sort !== false;
+            var sortAttr = _.isString(this.comparator) ? this.comparator : null;
+
+            // Add models that aren't already in the collection to toAdd
+            var model, i;
+            for (i = 0; i < models.length; i++) {
+                model = models[i];
+
+                // If a duplicate is found, prevent it from being added
+                var existing = this.get(model);
+                if (!existing && add) {
+                    toAdd.push(model);
+                    this._addReference(model);
+                }
+            }
+
+            // Remove stale models.
+            if (remove) {
+                // If the `remove` option was set, we want to remove all
+                // models that aren't in the current set of models being
+                // added or set
+                for (i = 0; i < this.length; i++) {
+                    model = this.models[i];
+                    if (models.indexOf(model) === -1) 
+                        toRemove.push(model);
+                }
+                if (toRemove.length)
+                    this._removeModels(toRemove, options);
+            }
+
+            // See if sorting is needed, update `length` and splice in new models.
+            if (toAdd.length) {
+                if (sortable)
+                    sort = true;
+                splice(this.models, toAdd, at == null ? this.length : at);
+                this.length = this.models.length;
+            }
+
+            // Silently sort the collection if appropriate.
+            if (sort)
+                this.sort(silentOptions);
+
+            // Unless silenced, it's time to fire all appropriate add/sort/update events.
+            if (!options.silent) {
+                for (i = 0; i < toAdd.length; i++) {
+                    if (at != null) options.index = at + i;
+                    model = toAdd[i];
+                    this.trigger('add', model, this, options);
+                }
+
+                if (sort) 
+                    this.trigger('sort', this, options);
+
+                if (toAdd.length || toRemove.length) {
+                    options.changes = {
+                        added: toAdd,
+                        removed: toRemove
+                    };
+                    this.trigger('update', this, options);
+                }
+            }
+
+            // Return the added (or merged) model (or models).
+            return singular ? models[0] : models;
+        },
+
+        remove: function(models, options) {
+            if (!options)
+                options = emptyOptions;
+            var singular = !_.isArray(models);
+            models = singular ? [models] : _.clone(models);
+            var removed = this._removeModels(models, options);
+            if (!options.silent && removed) this.trigger('update', this, options);
+            return singular ? removed[0] : removed;
+        },
+
+        reset: function(models, options) {
+            options = options ? _.clone(options) : {};
+            // Remove references in each model to this collection
+            for (var i = 0; i < this.models.length; i++)
+                this._removeReference(this.models[i]);
+            // Reset and add models
+            this._reset();
+            models = this.add(models, _.extend({silent: true}, options));
+            // Trigger the reset event
+            if (!options.silent)
+                this.trigger('reset', this, options);
+            return models;
+        },
+
+        get: function(obj) {
+            if (obj == null) return void 0;
+            for (var i = 0; i < this.models.length; i++) {
+                if (obj === this.models[i])
+                    return obj;
+            }
+            return null;
+        },
+
+        at: function(index) {
+            if (index < 0) index += this.length;
+            return this.models[index];
+        },
+
+        sort: function(options) {
+            var comparator = this.comparator;
+            if (!comparator) throw new Error('Cannot sort a set without a comparator');
+            options || (options = {});
+
+            var length = comparator.length;
+            if (_.isFunction(comparator)) comparator = _.bind(comparator, this);
+
+            // Run sort based on type of `comparator`.
+            if (length === 1 || _.isString(comparator)) {
+                this.models = this.sortBy(comparator);
+            } else {
+                this.models.sort(comparator);
+            }
+            if (!options.silent) this.trigger('sort', this, options);
+            return this;
+        },
+
+        _removeModels: function(models, options) {
+            var removed = [];
+            for (var i = 0; i < models.length; i++) {
+                var model = this.get(models[i]);
+                if (!model)
+                    continue;
+
+                var index = this.models.indexOf(model);
+                this.models.splice(index, 1);
+                this.length--;
+
+                if (!options.silent) {
+                    options.index = index;
+                    this.trigger('remove', model, this, options);
+                }
+
+                removed.push(model);
+                this._removeReference(model, options);
+            }
+            return removed.length ? removed : false;
+        },
+
+        _reset: function() {
+            this.length = 0;
+            this.models = [];
+        },
+
+        _addReference: function(model) {
+            model.collection = this;
+            // Add this collection to a list of collections in the model, because
+            //   the model could belong to multiple collections
+            if (!model.collections)
+                model.collections = [];
+            if (model.collections.indexOf(this) === -1)
+                model.collections.push(this);
+        },
+
+        _isModel: function() {
+            return false;
+        },
+
+        _removeReference: function(model) {
+            if (this === model.collection) 
+                delete model.collection;
+
+            if (model.collections) {
+                var index = model.collections.indexOf(this);
+                if (index !== -1)
+                    model.collections.splice(index, 1);
+            }
+        },
+
+        alertDestroyed: function(model) {
+            this.remove(model);
+            this.trigger('destroy', model);
+        },
+
+        // Underscore methods
+        forEach:     Backbone.Collection.prototype.forEach,
+        each:        Backbone.Collection.prototype.each,
+        map:         Backbone.Collection.prototype.map,
+        collect:     Backbone.Collection.prototype.collect,
+        reduce:      Backbone.Collection.prototype.reduce,
+        foldl:       Backbone.Collection.prototype.foldl,
+        inject:      Backbone.Collection.prototype.inject,
+        reduceRight: Backbone.Collection.prototype.ight,
+        foldr:       Backbone.Collection.prototype.foldr,
+        find:        Backbone.Collection.prototype.find,
+        detect:      Backbone.Collection.prototype.detect,
+        filter:      Backbone.Collection.prototype.filter,
+        select:      Backbone.Collection.prototype.select,
+        reject:      Backbone.Collection.prototype.reject,
+        every:       Backbone.Collection.prototype.every,
+        all:         Backbone.Collection.prototype.all,
+        some:        Backbone.Collection.prototype.some,
+        any:         Backbone.Collection.prototype.any,
+        include:     Backbone.Collection.prototype.include,
+        includes:    Backbone.Collection.prototype.includes,
+        contains:    Backbone.Collection.prototype.contains,
+        invoke:      Backbone.Collection.prototype.invoke,
+        max:         Backbone.Collection.prototype.max,
+        min:         Backbone.Collection.prototype.min,
+        toArray:     Backbone.Collection.prototype.toArray,
+        size:        Backbone.Collection.prototype.size,
+        first:       Backbone.Collection.prototype.first,
+        head:        Backbone.Collection.prototype.head,
+        take:        Backbone.Collection.prototype.take,
+        initial:     Backbone.Collection.prototype.initial,
+        rest:        Backbone.Collection.prototype.rest,
+        tail:        Backbone.Collection.prototype.tail,
+        drop:        Backbone.Collection.prototype.drop,
+        last:        Backbone.Collection.prototype.last,
+        without:     Backbone.Collection.prototype.without,
+        difference:  Backbone.Collection.prototype.difference,
+        indexOf:     Backbone.Collection.prototype.indexOf,
+        shuffle:     Backbone.Collection.prototype.shuffle,
+        lastIndexOf: Backbone.Collection.prototype.lastIndexOf,
+        isEmpty:     Backbone.Collection.prototype.isEmpty,
+        chain:       Backbone.Collection.prototype.chain,
+        sample:      Backbone.Collection.prototype.sample,
+        partition:   Backbone.Collection.prototype.partition,
+        groupBy:     Backbone.Collection.prototype.groupBy,
+        countBy:     Backbone.Collection.prototype.countBy,
+        sortBy:      Backbone.Collection.prototype.sortBy,
+        indexBy:     Backbone.Collection.prototype.indexBy,
+
+    });
+
+    // Make sure the collection can be extended by giving it Backbone's extend function
+    VanillaCollection.extend = Backbone.Collection.extend;
+
+
+    return VanillaCollection;
+});
+define('common/simulation/simulation',['require','underscore','backbone'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Backbone = require('backbone');
+
+    /**
+     * Wraps the update function in 
+     */
+    var Simulation = Backbone.Model.extend({
+
+        defaults: {
+            paused: false,
+            timeScale: 1
+        },
+        
+        /**
+         * Initialization code for new Simulation model objects.
+         */
+        initialize: function(attributes, options) {
+            options = _.extend({
+                silentReset: true
+            }, options);
+
+            this.time = 0;
+
+            this.applyOptions(options);
+            this.startingOptions = options;
+            this.startingAttributes = this.toJSON();
+
+            this.initComponents();
+        },
+
+        /**
+         * Initialization options are processed here in a separate function
+         *   so that we can reset the object and its starting values without
+         *   re-initializing it.
+         */
+        applyOptions: function(options) {
+            this.silentReset = options.silentReset;
+        },
+
+        /**
+         * Initializes all the components for the simulation like models.
+         */
+        initComponents: function() {},
+
+        /**
+         * Calls the internal _update function with an internally kept
+         *   time counter which is in seconds instead of milliseconds.
+         */
+        update: function(time, delta) {
+
+            if (!this.get('paused')) {
+                delta = (delta / 1000) * this.get('timeScale');
+                this.time += delta;
+                this._update(this.time, delta);
+            }
+            
+        },
+
+        /**
+         * Only runs if the simulation isn't currently paused.
+         */
+        _update: function(time, delta) {},
+
+        play: function() {
+            this.paused = false;
+            this.set('paused', false);
+            this.trigger('play');
+        },
+
+        pause: function() {
+            this.paused = true;
+            this.set('paused', true);
+            this.trigger('pause');
+        },
+
+        reset: function() {
+            this.time = 0;
+            this.set(this.startingAttributes, { silent: this.silentReset });
+            this.set('timeScale', 1);
+            this.applyOptions(this.startingOptions);
+            this.resetComponents();
+        },
+
+        resetComponents: function() {
+            this.initComponents();
+        }
+
+    });
+
+    return Simulation;
+});
+
+define('common/simulation/fixed-interval-simulation',['require','./simulation'],function (require) {
+
+    'use strict';
+
+    var Simulation = require('./simulation');
+
+    /**
+     * Wraps the update function in 
+     */
+    var FixedIntervalSimulation = Simulation.extend({
+
+        /**
+         * Initialization code for new FixedIntervalSimulation objects.
+         *   Sets the frame duration and initializes the frame 
+         *   accumulator to zero.
+         */
+        initialize: function(attributes, options) {
+            Simulation.prototype.initialize.apply(this, [attributes, options]);
+
+            options = options || {};
+            var fps = options.framesPerSecond || 30;
+
+            this.frameDuration = options.frameDuration || (1 / fps); // Seconds
+            this.deltaTimePerFrame = options.deltaTimePerFrame || this.frameDuration; // Seconds
+            this.frameAccumulator = 0;
+        },
+
+        /**
+         * Because we need to update the simulation on a fixed interval
+         *   for accuracy--especially since the propagator isn't based
+         *   off of time but acts in discrete steps--we need a way to
+         *   keep track of step intervals independent of the varying
+         *   intervals created by window.requestAnimationFrame. This 
+         *   clever solution was found here: 
+         *
+         *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
+         */
+        update: function(time, delta) {
+            this._updated = false;
+
+            if (!this.paused) {
+                delta = (delta / 1000) * this.get('timeScale');
+                this.frameAccumulator += delta;
+
+                while (this.frameAccumulator >= this.frameDuration) {
+                    this.time += this.deltaTimePerFrame;
+
+                    this._update(this.time, this.deltaTimePerFrame);
+                    this._updated = true;
+                    
+                    this.frameAccumulator -= this.frameDuration;
+                }    
+            }
+        },
+
+        /**
+         * Returns whether or not a simulation update has occured since
+         *   the last time "update" was called.  Because this version
+         *   only does updates on fixed intervals, it might not actually
+         *   update the simulation every time "update" is called, which
+         *   should be on every frame.  Using this function lets the
+         *   view know whether it should redraw things that are
+         *   dependent on the sim so it doesn't waste its time if
+         *   nothing has actually changed.
+         */
+        updated: function() {
+            return this._updated;
+        }
+
+    });
+
+    return FixedIntervalSimulation;
+});
+
+define('common/quantum/models/simulation',['require','exports','module','underscore','common/simulation/fixed-interval-simulation'],function (require, exports, module) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
+
+    /**
+     * Base simulation model for quantum physics simulations
+     */
+    var QuantumSimulation = FixedIntervalSimulation.extend({
+
+        defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
+            photonSpeedScale: 1,
+            elementProperties: undefined
+        }),
+
+        getGroundState: function() {
+            return this.get('elementProperties').getGroundState();
+        },
+
+        getCurrentElementProperties: function() {
+            return this.get('elementProperties');
+        },
+
+        setCurrentElementProperties: function(elementProperties) {
+            this.set('elementProperties', elementProperties);
+        }
+
+    });
+
+    return QuantumSimulation;
+});
+
+define('common/math/reflection',['require','./vector2'],function (require) {
+
+    'use strict';
+
+    var Vector2 = require('./vector2');
+
+    var _point = new Vector2();
+
+    var Reflection = {
+
+        /**
+         * Reflects a point across a line defined by a point on the line
+         *   and the line's slope given as an angle in radians.
+         */
+        reflectPointAcrossLine: function(point, pointOnLine, lineAngle) {
+            var alpha = lineAngle % (Math.PI * 2);
+            var gamma = Math.atan2((point.y - pointOnLine.y), (point.x - pointOnLine.x)) % (Math.PI * 2);
+            var theta = (2 * alpha - gamma) % (Math.PI * 2);
+            var dist = point.distance(pointOnLine);
+            return _point.set(
+                pointOnLine.x + dist * Math.cos(theta),
+                pointOnLine.y + dist * Math.sin(theta)
+            );
+        }
+
+    };
+
+    return Reflection;
+});
+define('common/mechanics/models/sphere-sphere-collision-expert',['require','./spherical-body','common/math/vector2','common/math/reflection'],function (require) {
+
+    'use strict';
+
+    var SphericalBody = require('./spherical-body');
+
+    var Vector2    = require('common/math/vector2');
+    var Reflection = require('common/math/reflection');
+
+    // Cached objects
+    var _loa           = new Vector2();
+    var _contactPoint  = new Vector2();
+    var _vRel          = new Vector2();
+    var _n             = new Vector2();
+    var _tangentVector = new Vector2();
+    var _linePtA       = new Vector2();
+    var _linePtB       = new Vector2();
+    var _vA            = new Vector2();
+    var _vB            = new Vector2();
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var SphereSphereCollisionExpert = {
+
+        detectAndDoCollision: function(bodyA, bodyB) {
+            if (bodyA instanceof SphericalBody && 
+                bodyB instanceof SphericalBody && 
+                this.spheresTouch(bodyA, bodyB) && 
+                this.tweakCheck(bodyA, bodyB)
+            ) {
+                // Do the collision
+                this.collide(bodyA, bodyB);
+                
+                return true;
+            }
+
+            return false;
+        },
+
+        /**
+         * Returns whether or not two spheres are touching.
+         */
+        spheresTouch: function(sphereA, sphereB) {
+            if (sphereA.get('position').distanceSq(sphereB.get('position')) <= Math.pow(sphereA.get('radius') + sphereB.get('radius'), 2))
+                return true;
+            else
+                return false;
+        },
+
+        /**
+         * This check returns false if the two bodies were in contact during the previous
+         *   time step. Using this check to prevent a collision in such cases makes the
+         *   performance of the collision system much more natural looking.
+         */
+        tweakCheck: function(sphereA, sphereB) {
+            var previousDistanceSq = sphereA.getPreviousPosition().distanceSq(sphereB.getPreviousPosition());
+            return previousDistanceSq > Math.pow(sphereA.get('radius') + sphereB.get('radius'), 2);
+        },
+
+        /**
+         * Calculates and returns the line of action
+         */
+        getLoa: function(particle1, particle2) {
+            _loa
+                .set(particle1.get('position'))
+                .sub(particle2.get('position'));
+            return _loa;
+        },
+
+        collide: function(sphereA, sphereB) {
+            var dist = sphereA.get('position').distance(sphereB.get('position'));
+            var ratio = sphereA.get('radius') / dist;
+            var contactPt = _contactPoint.set(
+                sphereA.getX() + (sphereB.getX() - sphereA.getX()) * ratio,
+                sphereA.getY() + (sphereB.getY() - sphereA.getY()) * ratio
+            );
+            var loa = this.getLoa(sphereA, sphereB);
+
+            this.doCollision(sphereA, sphereB, loa, contactPt);
+        },
+
+        doCollision: function(sphereA, sphereB, loa, contactPt ) {
+            // Get the unit vector along the line of action
+            _n.set(loa);
+            _n.normalize();
+
+            // If the relative velocity shows the points moving apart, then there is no collision.
+            // This is a key check to solve otherwise sticky collision problems
+            _vRel.set(sphereA.get('velocity'));
+            _vRel.sub(sphereB.get('velocity'));
+
+            // Compute correct position of the bodies following the collision
+            _tangentVector.set(loa.y, -loa.x);
+
+            // Determine the proper positions of the bodies following the collision
+            var previousDistance = sphereB.getPreviousPosition().distance(sphereA.getPreviousPosition());
+            var offsetB = previousDistance < sphereA.get('radius') ?
+                -sphereB.get('radius') : 
+                 sphereB.get('radius');
+            var offsetXB = _n.x * offsetB;
+            var offsetYB = _n.y * offsetB;
+            _linePtB
+                .set(contactPt)
+                .sub(offsetXB, offsetYB);
+            var positionB = Reflection.reflectPointAcrossLine(
+                sphereB.get('position'), 
+                _linePtB, 
+                Math.atan2(_tangentVector.y, _tangentVector.x)
+            );
+            sphereB.setPosition(positionB);
+
+            // todo: The determination of the sign of the offset is wrong. It should be based on which side of the contact
+            // tangent the CM was on in its previous position
+            var prevPosA = sphereA.getPreviousPosition();
+            var prevDistA = prevPosA.distance(contactPt);
+            var sA = sphereA.get('radius') / prevDistA;
+            _linePtA.set(
+                contactPt.x - (contactPt.x - prevPosA.x) * sA,
+                contactPt.y - (contactPt.y - prevPosA.y) * sA
+            );
+            var positionA = Reflection.reflectPointAcrossLine(
+                sphereA.get('position'), 
+                _linePtA,
+                Math.atan2(_tangentVector.y, _tangentVector.x)
+            );
+            sphereA.setPosition(positionA);
+
+            // Compute the relative velocities of the contact points
+            var vr = _vRel.dot(_n);
+
+            // Assume the coefficient of restitution is 1
+            var e = 1;
+
+            // Compute the impulse, j
+            var numerator = -vr * (1 + e);
+            var denominator = (1 / sphereA.get('mass') + 1 / sphereB.get('mass'));
+            var j = numerator / denominator;
+
+            // Compute the new linear and angular velocities, based on the impulse
+            _vA.set(_n).scale( j / sphereA.get('mass'));
+            _vB.set(_n).scale(-j / sphereB.get('mass'));
+            sphereA.addVelocity(_vA);
+            sphereB.addVelocity(_vB);
+        }
+
+    };
+
+
+    return SphereSphereCollisionExpert;
+});
+define('common/mechanics/models/sphere-box-collision-expert',['require','./spherical-body','./boxlike-body'],function (require) {
+
+    'use strict';
+
+    var SphericalBody = require('./spherical-body');
+    var BoxlikeBody   = require('./boxlike-body');
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var SphereBoxCollisionExpert = {
+
+        detectAndDoCollision: function(bodyA, bodyB) {
+            if (this.applies(bodyA, bodyB) && 
+                this.inContact(bodyA, bodyB)
+            ) {
+                var box;
+                var sphere;
+
+                // Check that the arguments are valid and assign the box and sphere
+                if (bodyA instanceof BoxlikeBody) {
+                    box = bodyA;
+                    if (bodyB instanceof SphericalBody)
+                        sphere = bodyB;
+                    else
+                        throw 'Bad arguments given in SphereBoxCollisionExpert';
+                }
+                else if (bodyB instanceof BoxlikeBody) {
+                    box = bodyB;
+                    if (bodyA instanceof SphericalBody)
+                        sphere = bodyA;
+                    else
+                        throw 'Bad arguments given in SphereBoxCollisionExpert';
+                }
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+
+                // Do the collision
+                this.collide(sphere, box);
+                
+                return true;
+            }
+
+            return false;
+        },
+
+        applies: function(bodyA, bodyB) {
+            return (
+                (bodyA instanceof SphericalBody && bodyB instanceof BoxlikeBody) || 
+                (bodyA instanceof BoxlikeBody && bodyB instanceof SphericalBody)
+            );
+        },
+
+        /**
+         * Returns whether or not the box and sphere are touching
+         */
+        inContact: function(bodyA, bodyB) {
+            var result = false;
+            var box;
+            var sphere;
+
+            // Check that the arguments are valid
+            if (bodyA instanceof BoxlikeBody) {
+                box = bodyA;
+                if (bodyB instanceof SphericalBody)
+                    sphere = bodyB;
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+            }
+            else if (bodyB instanceof BoxlikeBody) {
+                box = bodyB;
+                if (bodyA instanceof SphericalBody)
+                    sphere = bodyA;
+                else
+                    throw 'Bad arguments given in SphereBoxCollisionExpert';
+            }
+            else
+                throw 'Bad arguments given in SphereBoxCollisionExpert';
+
+            // Hitting left wall?
+            var dx = sphere.getX() - sphere.get('radius') - box.getMinX();
+            if (dx <= 0)
+                result = true;
+
+            // Hitting right wall?
+            dx = sphere.getX() + sphere.get('radius') - box.getMaxX();
+            if (dx >= 0 && sphere.get('velocity').x > 0)
+                result = true;
+
+            // Hitting bottom wall?
+            var dy = sphere.getY() - sphere.get('radius') - box.getMinY();
+            if (dy <= 0 && sphere.get('velocity').y < 0)
+                result = true;
+
+            // Hitting top wall?
+            dy = sphere.getY() + sphere.get('radius') - box.getMaxY();
+            if (dy >= 0 && sphere.get('velocity').y > 0)
+                result = true;
+            
+            return result;
+        },
+
+        collide: function(sphere, box) {
+            var wx;
+            var wy;
+            var dx;
+            var dy;
+            var sx = sphere.getX();
+            var sy = sphere.getY();
+            var r = sphere.get('radius');
+
+            // Collision with left wall?
+            if ((sx - r) <= box.getMinX()) {
+                sphere.setVelocity(-sphere.getVelocity().x, sphere.getVelocity().y);
+                var wx = box.getMinX();
+                var dx = wx - (sx - r);
+                var newX = sx + (dx + 2);
+                sphere.setPosition(newX, sphere.getY());
+
+                // Handle giving particle kinetic energy if the wall is moving
+                var vx0 = sphere.getVelocity().x;
+                var vx1 = vx0 + box.getLeftWallVx();
+                sphere.setVelocity(vx1, sphere.getVelocity().y);
+            }
+
+            // Collision with right wall?
+            if ((sx + r) >= box.getMaxX()) {
+                sphere.setVelocity(-sphere.getVelocity().x, sphere.getVelocity().y);
+                var wx = box.getMaxX();
+                var dx = (sx + r) - wx;
+                var newX = sx - (dx * 2);
+                sphere.setPosition(newX, sphere.getY());
+            }
+
+            // Collision with top wall?
+            if ((sy - r) <= box.getMinY()) {
+                sphere.setVelocity(sphere.getVelocity().x, -sphere.getVelocity().y);
+                var wy = box.getMinY();
+                var dy = wy - (sy - r);
+                var newY = sy + (dy * 2);
+                sphere.setPosition(sphere.getX(), newY);
+            }
+
+            // Collision with bottom wall?
+            if ((sy + r) >= box.getMaxY()) {
+                sphere.setVelocity(sphere.getVelocity().x, -sphere.getVelocity().y);
+                var wy = box.getMaxY();
+                var dy = (sy + r) - wy;
+                var newY = sy - (dy - 2);
+                sphere.setPosition(sphere.getX(), newY);
+            }
+        }
+
+    };
+
+
+    return SphereBoxCollisionExpert;
+});
+define('common/quantum/models/photon-atom-collision-expert',['require','./photon-vanilla','./atom'],function (require) {
+
+    'use strict';
+
+    var Photon = require('./photon-vanilla');
+    var Atom   = require('./atom');
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var PhotonAtomCollisionExpert = {
+
+        detectAndDoCollision: function(body1, body2) {
+            var photon;
+            var atom;
+
+            if (body1 instanceof Atom)
+                atom = body1;
+            else if (body1 instanceof Photon)
+                photon = body1;
+
+            if (body2 instanceof Atom)
+                atom = body2;
+            else if (body2 instanceof Photon)
+                photon = body2;
+
+            if (atom && photon) {
+                if (photon.get('position').distanceSq(atom.get('position')) < atom.get('radius') * atom.get('radius'))
+                    atom.collideWithPhoton(photon);
+            }
+
+            return false;
+        }
+
+    };
+
+
+    return PhotonAtomCollisionExpert;
+});
+define('common/mechanics/models/wall',['require','underscore','common/math/vector2','common/math/rectangle','./body'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Vector2   = require('common/math/vector2');
+    var Rectangle = require('common/math/rectangle');
+
+    var Body = require('./body');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var Wall = Body.extend({
+
+        collidable: true,
+
+        defaults: _.extend({}, Body.prototype.defaults, {
+            bounds: null
+        }),
+
+        initialize: function(attributes, options) {
+            Body.prototype.initialize.apply(this, [attributes, options]);
+
+            this.set('bounds', new Rectangle(this.get('bounds')));
+
+            this._centerOfMass = new Vector2();
+        },
+
+        getCM: function() {
+            return this._centerOfMass.set(
+                this.get('bounds').left()   + this.get('bounds').w / 2,
+                this.get('bounds').bottom() + this.get('bounds').h / 2
+            );
+        },
+
+        getMomentOfInertia: function() {
+            return Number.POSITIVE_INFINITY;
+        },
+
+        getBounds: function() {
+            return this.get('bounds');
+        },
+
+        getPreviousPosition: function() {
+            return null;
+        },
+
+        getPreviousVelocity: function() {
+            return this.get('velocity');
+        }
+
+    });
+
+    return Wall;
+});
+define('models/mirror',['require','common/mechanics/models/wall','common/math/rectangle'],function (require) {
+
+    'use strict';
+
+    var Wall      = require('common/mechanics/models/wall');
+    var Rectangle = require('common/math/rectangle');
+
+    /**
+     * This class represents various sorts of mirrors. The mirror is conditioned
+     *   by ReflectionStrategies that are added to it that determine whether the
+     *   mirror will reflect a particular photon. A Mirror treats ReflectionStrategies
+     *   conjunctively. I.e., all have to be true for the mirror to reflect a photon.
+     *
+     * Examples of ReflectionStrategies are
+     *   - LeftReflecting
+     *   - RightReflecting
+     *   - BandPass
+     */
+    var Mirror = Wall.extend({
+
+        /**
+         * Initializes the Mirror object
+         */
+        initialize: function(attributes, options) {
+            if (options && options.start && options.end) {
+                this.set('bounds', new Rectangle(
+                    options.start.x,
+                    options.start.y,
+                    options.end.x - options.start.x,
+                    options.end.y - options.start.y
+                ));
+
+                this.set('position', options.start);
+            }
+
+            Wall.prototype.initialize.apply(this, [attributes, options]);
+
+            this.reflectionStrategies = [];
+        },
+
+        addReflectionStrategy: function(strategy) {
+            this.reflectionStrategies.push(strategy);
+        },
+
+        /**
+         * Tells if the mirror reflects a specified photon, based on the mirror's
+         *   ReflectionStrategies. All strategies must return true to their
+         *   reflects(photon) function for the mirror to return true.
+         */
+        reflects: function(photon) {
+            var result = true;
+            for (var i = 0; i < this.reflectionStrategies.length && result; i++)
+                result &= this.reflectionStrategies[i].reflects(photon);
+            return result;
+        }
+
+    });
+
+    return Mirror;
+});
+define('constants',['require','common/math/vector2'],function (require) {
+
+    'use strict';
+
+    var Vector2 = require('common/math/vector2');
+
+    var DEG_TO_RAD = Math.PI / 180;
+
+    var Constants = {};
+
+    /*************************************************************************
+     **                                                                     **
+     **                         UNIVERSAL CONSTANTS                         **
+     **                                                                     **
+     *************************************************************************/
+
+    // Clock parameters
+    Constants.DT = 12;
+    Constants.FPS = 25;
+
+    //----------------------------------------------------------------
+    // Physical configuration
+    //----------------------------------------------------------------
+
+    // Photon speed
+    Constants.ONE_ATOM_PHOTON_SPEED = 0.5;
+    Constants.MULTI_ATOM_PHOTON_SPEED = 0.5;
+
+    // Physical things
+    Constants.ORIGIN = new Vector2(120, 200);
+
+    // Beam parameters
+	Constants.MINIMUM_SEED_PHOTON_RATE    = 0;
+	Constants.MAXIMUM_SEED_PHOTON_RATE    = 30;
+	Constants.MINIMUM_PUMPING_PHOTON_RATE = 0;
+	Constants.MAXIMUM_PUMPING_PHOTON_RATE = 400;
+	Constants.PUMPING_BEAM_FANOUT         = 45 * DEG_TO_RAD;
+	Constants.SEED_BEAM_FANOUT            =  1 * DEG_TO_RAD;
+
+    // Spontaneous emission times, in milliseconds
+	Constants.MAXIMUM_STATE_LIFETIME = 400;
+    // The value for MINIMUM_GROUND_STATE_LIFETIME in the original sim is 200ms, but this was
+    //   real milliseconds and not simulation milliseconds.  I'm converting here to simulation
+    //   milliseconds so it can occur within the simulation instead of going outside the sim
+    //   in a weird, hacky way.
+    var simSecondsPerRealSecond = (Constants.FPS * Constants.DT) / 1000;
+	Constants.MINIMUM_GROUND_STATE_LIFETIME = 200 * simSecondsPerRealSecond;
+
+    // Angle within which a photon is considered to be moving horizontally. This
+    //   is used by the mirrors to "cheat" photons into lasing, and by the wave
+    //   graphic to determine its amplitude
+    Constants.PHOTON_CHEAT_ANGLE = 3 * DEG_TO_RAD;
+
+    // Thickness of the mirror graphics
+    Constants.MIRROR_THICKNESS = 15;
+
+    // Threshold number of horizontal photons that is considered "lasing"
+    Constants.LASING_THRESHOLD = 40;
+
+    // Number of photons in the system that will cause the thing to blow up
+    Constants.KABOOM_THRESHOLD = 300;
+
+    // The period over which the number of atoms in each level is averaged before
+    //   the number of atoms is updated for the energy levels monitor panel
+    Constants.ENERGY_LEVEL_MONITOR_AVERAGING_PERIOD = 0;
+
+    Constants.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+
+    Constants.PHOTON_DISCRETE = 0;
+    Constants.PHOTON_WAVE = 1;
+    Constants.PHOTON_CURTAIN = 2;
+
+
+    /*************************************************************************
+     **                                                                     **
+     **                        BASE LASER SIMULATION                        **
+     **                                                                     **
+     *************************************************************************/
+
+    var BaseLaserSimulation = {};
+
+    Constants.BaseLaserSimulation = BaseLaserSimulation;
+
+    return Constants;
+});
+
+define('models/photon-mirror-collision-expert',['require','common/math/polyfills','common/math/line-intersection','common/quantum/models/photon-vanilla','./mirror','../constants'],function (require) {
+
+    'use strict';
+
+    require('common/math/polyfills');
+    var LineIntersection = require('common/math/line-intersection');
+    var Photon           = require('common/quantum/models/photon-vanilla');
+
+    var Mirror = require('./mirror');
+
+    var Constants = require('../constants');
+
+    /**
+     * Detects and handles collisions between two bodies if one is a photon and one is an atom
+     */
+    var PhotonMirrorCollisonExpert = {
+
+        detectAndDoCollision: function(body1, body2) {
+            var photon;
+            var mirror;
+
+            if (body1 instanceof Mirror)
+                mirror = body1;
+            else if (body1 instanceof Photon)
+                photon = body1;
+
+            if (body2 instanceof Mirror)
+                mirror = body2;
+            else if (body2 instanceof Photon)
+                photon = body2;
+
+            if (mirror && photon) {
+                var photonPathIntersectsMirror = LineIntersection.linesIntersect(
+                    photon.getPreviousPosition().x, photon.getPreviousPosition().y,
+                    photon.getPosition().x, photon.getPosition().y,
+                    mirror.getPosition().x, mirror.getBounds().bottom(),
+                    mirror.getPosition().x, mirror.getBounds().top()
+                );
+
+                if (photonPathIntersectsMirror && mirror.reflects(photon)) {
+                    this.doCollision(photon, mirror);
+                }
+            }
+
+            return false;
+        },
+
+        /**
+         * This collision implementation "cheats" to make photons reflect horizontally if they
+         *   are close to horizontal
+         *
+         * @param photon
+         * @param mirror
+         */
+        doCollision: function(photon, mirror) {
+            var cheatFactor = Constants.PHOTON_CHEAT_ANGLE;
+            var dx = photon.getX() - mirror.getX();
+            photon.setPosition(mirror.getX() - dx, photon.getY());
+
+            var vx;
+            var vy;
+            if (Math.abs(photon.getVelocity().angle() % Math.PI) < cheatFactor) {
+                vx = -photon.getVelocity().length() * Math.sign(photon.getVelocity().x);
+                vy = 0;
+            }
+            else {
+                vx = -photon.getVelocity().x;
+                vy =  photon.getVelocity().y;
+            }
+
+            photon.setVelocity(vx, vy);
+        }
+
+    };
+
+
+    return PhotonMirrorCollisonExpert;
+});
+define('common/quantum/models/energy-emission-strategy',['require','underscore','backbone'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+    
+    /**
+     * Strategy for atoms emitting energy
+     */
+    var EnergyEmissionStrategy = function() {};
+
+    _.extend(EnergyEmissionStrategy.prototype, {
+
+        emitEnergy: function(atom) {}
+
+    });
+
+    EnergyEmissionStrategy.extend = Backbone.Model.extend;
+
+    return EnergyEmissionStrategy;
+});
+
+define('common/quantum/models/ground-state',['require','underscore','./atomic-state'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+    
+    var AtomicState = require('./atomic-state');
+
+    /**
+     * The ground state for an atom
+     */
+    var GroundState = AtomicState.extend({
+
+        defaults: _.extend({}, AtomicState.prototype.defaults, {
+            energyLevel: 0,
+            meanLifetime: Number.POSITIVE_INFINITY
+        }),
+
+        getNextLowerEnergyState: function() {
+            return AtomicState.MinEnergyState.instance();
+        }
+
+    });
+
+
+    return GroundState;
+});
+
+define('common/quantum/models/element-properties',['require','underscore','backbone','./atomic-state','./ground-state'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var AtomicState = require('./atomic-state');
+    var GroundState = require('./ground-state');
+
+    /**
+     * A place to store element properties
+     */
+    var ElementProperties = Backbone.Model.extend({
+
+        defaults: {
+            name: '',
+            energyLevels: [],
+            levelsMovable: false,
+            energyEmissionStrategy: null,
+            meanStateLifetime: 0,
+            workFunction: 0
+        },
+        
+        initialize: function(attributes, options) {
+            this.states = [];
+            this.set('energyLevels', _.toArray(this.get('energyLevels')));
+
+            this.initStates();
+
+            this.on('change:energyLevels', this.energyLevelsChanged);
+        },
+
+        getGroundState: function() {
+            return this.states[0];
+        },
+
+        getMeanStateLifetime: function() {
+            return this.get('meanStateLifetime');
+        },
+
+        setMeanStateLifetime: function(meanStateLifetime) {
+            this.set('meanStateLifetime', meanStateLifetime);
+        },
+
+        getEnergyEmissionStrategy: function() {
+            return this.get('energyEmissionStrategy');
+        },
+
+        getEnergyLevels: function() {
+            return this.get('energyLevels');
+        },
+
+        setWorkFunction: function(workFunction) {
+            this.set('workFunction', workFunction);
+        },
+
+        getWorkFunction: function() {
+            return this.get('workFunction');
+        },
+
+        isLevelsMovable: function() {
+            return this.get('levelsMovable');
+        },
+
+        setLevelsMovable: function(levelsMovable) {
+            this.set('levelsMovable', levelsMovable);
+        },
+
+        getStates: function() {
+            return this.states;
+        },
+
+        initStates: function() {
+            var energyLevels = this.get('energyLevels');
+            this.states[0] = new GroundState();
+            this.states[0].set('energyLevel', energyLevels[0]);
+
+            for (var i = 1; i < energyLevels.length; i++) {
+                this.states[i] = new AtomicState();
+                this.states[i].set('energyLevel', 0);
+            }
+
+            AtomicState.linkStates(this.states);
+
+            this.updateStates();
+        },
+
+        updateStates: function() {
+            var i;
+
+            // Copy the energies into a new array, sort and normalize them
+            var energyLevels = this.get('energyLevels');
+            var energies = [];
+            for (i = 0; i < energyLevels.length; i++)
+                energies[i] = energyLevels[i];
+            
+            energies.sort(function(a, b) {
+                return a - b;
+            });
+
+            this.states[0].set('energyLevel', energies[0]);
+            for (i = 1; i < this.states.length; i++) {
+                this.states[i].set('energyLevel', energies[i]);
+                this.states[i].set('meanLifetime', this.get('meanStateLifetime'));
+            }
+        },
+
+        energyLevelsChanged: function(model, energyLevels) {
+            if (energyLevels.length !== this.states.length)
+                this.initStates();
+            else
+                this.updateStates();
+        }
+
+    });
+
+
+    return ElementProperties;
+});
+
+define('models/laser-element-properties',['require','common/quantum/models/element-properties','../constants'],function (require) {
+
+    'use strict';
+
+    var ElementProperties = require('common/quantum/models/element-properties');
+
+    var Constants = require('../constants');
+
+    /**
+     * A place to store element properties in the laser simulation
+     */
+    var LaserElementProperties = ElementProperties.extend({
+
+        initialize: function(attributes, options) {
+            ElementProperties.prototype.initialize.apply(this, [attributes, options]);
+
+            // Set the mean lifetimes of the states
+            var states = this.states;
+            for (var i = 1; i < states.length; i++)
+                states[i].set('meanLifetime', Constants.MAXIMUM_STATE_LIFETIME / 2);
+        },
+
+        getMiddleEnergyState: function() {
+            return this.states[1];
+        },
+
+        getHighEnergyState: function() {
+            throw 'Function must be implemented in child class.';
+        }
+
+    });
+
+
+    return LaserElementProperties;
+});
+
+define('models/element-properties/two-level',['require','underscore','common/quantum/models/atomic-state','common/quantum/models/physics-util','common/quantum/models/photon','common/quantum/models/energy-emission-strategy','../laser-element-properties','../../constants'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var AtomicState            = require('common/quantum/models/atomic-state');
+    var PhysicsUtil            = require('common/quantum/models/physics-util');
+    var Photon                 = require('common/quantum/models/photon');
+    var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
+
+    var LaserElementProperties = require('../laser-element-properties');
+
+    var Constants = require('../../constants');
+    var groundStateEnergy = -13.6;
+
+    /**
+     * Emission strategy just for this
+     */
+    var EmissionStrategy = EnergyEmissionStrategy.extend({
+
+        emitEnergy: function(atom) {
+            return atom.getCurrentState().getNextLowerEnergyState();
+        }
+
+    });
+
+    /**
+     * ElementProperties for the 2 level atom in the laser simulation
+     */
+    var TwoLevelElementProperties = LaserElementProperties.extend({
+
+        defaults: _.extend({}, LaserElementProperties.prototype.defaults, {
+            name: 'Laser Atom',
+            meanStateLifetime: (Constants.DT / Constants.FPS) * 100,
+            energyLevels: [
+                groundStateEnergy, // Ground-state energy
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.RED)
+            ],
+            energyEmissionStrategy: new EmissionStrategy()
+        }),
+
+        // Because of the origianl poor design of the Lasers simulation, we're saddled
+        //   with needing a third, high energy state, even though we shouldn't have one.
+        dummyHighEnergyState: new AtomicState(),
+
+        getHighEnergyState: function() {
+            return this.dummyHighEnergyState;
+        }
+
+    });
+
+
+    return TwoLevelElementProperties;
+});
+
+define('models/element-properties/three-level',['require','underscore','common/quantum/models/physics-util','common/quantum/models/photon','common/quantum/models/energy-emission-strategy','../laser-element-properties','../../constants'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var PhysicsUtil            = require('common/quantum/models/physics-util');
+    var Photon                 = require('common/quantum/models/photon');
+    var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
+
+    var LaserElementProperties = require('../laser-element-properties');
+
+    var Constants = require('../../constants');
+    var groundStateEnergy = -13.6;
+
+    /**
+     * Emission strategy just for this
+     */
+    var EmissionStrategy = EnergyEmissionStrategy.extend({
+
+        emitEnergy: function(atom) {
+            return atom.getCurrentState().getNextLowerEnergyState();
+        }
+
+    });
+
+    /**
+     * ElementProperties for the 2 level atom in the laser simulation
+     */
+    var ThreeLevelElementProperties = LaserElementProperties.extend({
+
+        defaults: _.extend({}, LaserElementProperties.prototype.defaults, {
+            name: 'Laser Atom',
+            meanStateLifetime: (Constants.DT / Constants.FPS) * 100,
+            energyLevels: [
+                groundStateEnergy,
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.RED),
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(Photon.BLUE)
+            ],
+            energyEmissionStrategy: new EmissionStrategy()
+        }),
+
+        getHighEnergyState: function() {
+            return this.states[2];
+        }
+
+    });
+
+
+    return ThreeLevelElementProperties;
+});
+
+define('models/simulation',['require','exports','module','underscore','backbone','common/collections/vanilla','common/quantum/config','common/quantum/models/simulation','common/quantum/models/photon-vanilla','common/quantum/models/tube','common/quantum/models/physics-util','common/math/rectangle','common/mechanics/models/sphere-sphere-collision-expert','common/mechanics/models/sphere-box-collision-expert','common/quantum/models/photon-atom-collision-expert','./photon-mirror-collision-expert','./element-properties/two-level','./element-properties/three-level','./mirror','../constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var VanillaCollection = require('common/collections/vanilla');
+    var QuantumConfig     = require('common/quantum/config');
+    var QuantumSimulation = require('common/quantum/models/simulation');
+    var Photon            = require('common/quantum/models/photon-vanilla');
+    var Tube              = require('common/quantum/models/tube');
+    var PhysicsUtil       = require('common/quantum/models/physics-util');
+    var Rectangle         = require('common/math/rectangle');
+
+    var SphereSphereExpert         = require('common/mechanics/models/sphere-sphere-collision-expert');
+    var SphereBoxExpert            = require('common/mechanics/models/sphere-box-collision-expert');
+    var PhotonAtomCollisonExpert   = require('common/quantum/models/photon-atom-collision-expert');
+    var PhotonMirrorCollisonExpert = require('./photon-mirror-collision-expert');
+
+    // Local dependencies need to be referenced by relative paths
+    //   so we can use this in other projects.
+    var TwoLevelElementProperties   = require('./element-properties/two-level');
+    var ThreeLevelElementProperties = require('./element-properties/three-level');
+    var Mirror                      = require('./mirror');
+
+    /**
+     * Constants
+     */
+    var Constants = require('../constants');
+
+    /**
+     *
+     */
+    var LasersSimulation = QuantumSimulation.extend({
+
+        defaults: _.extend({}, QuantumSimulation.prototype.defaults, {
+
+        }),
+
+        initialize: function(attributes, options) {
+            options = _.extend({
+                framesPerSecond: Constants.FPS,
+                deltaTimePerFrame: Constants.DT
+            }, options);
+
+            // Properties for two and three level atoms
+            this.twoLevelProperties   = new TwoLevelElementProperties();
+            this.threeLevelProperties = new ThreeLevelElementProperties();
+
+            // We want this to make it into the startingAttributes object
+            this.set('elementProperties', this.twoLevelProperties);
+
+            QuantumSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+            // Cached objects
+            this._matchObject = {};
+        },
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            QuantumSimulation.prototype.initComponents.apply(this, arguments);
+
+            var width = 800;
+            var height = 800;
+            var minX = Math.floor(Constants.ORIGIN.x - 50);
+            var minY = Math.floor(Constants.ORIGIN.y - height / 2);
+            this.boundingRectangle = new Rectangle(minX, minY, width, height);
+
+            this.models = [];
+
+            this.seedBeam = null;
+            this.pumpingBeam = null;
+            this.tube = null;
+
+            this.photons = new VanillaCollection();
+            this.lasingPhotons = new VanillaCollection();
+            this.atoms = new Backbone.Collection();
+            this.mirrors = [];
+
+            // Set up the system of collision experts
+            this.collisionExperts = [];
+            this.collisionExperts.push(SphereSphereExpert);
+            this.collisionExperts.push(PhotonAtomCollisonExpert);
+            this.collisionExperts.push(SphereBoxExpert);
+            this.collisionExperts.push(PhotonMirrorCollisonExpert);
+
+            this.angleWindow = Constants.PHOTON_CHEAT_ANGLE;
+
+            this.numPhotons = 0;
+
+            this.set('elementProperties', this.twoLevelProperties);
+        },
+
+        resetComponents: function() {
+            // QuantumSimulation.prototype.resetComponents.apply(this, arguments);
+            this.twoLevelProperties   = new TwoLevelElementProperties();
+            this.threeLevelProperties = new ThreeLevelElementProperties();
+
+            this.getPumpingBeam().set('photonsPerSecond', 0);
+            this.getSeedBeam().set('photonsPerSecond', 0);
+
+            // Reset atoms to the ground state
+            var groundState = this.getGroundState();
+            for (var i = 0; i < this.atoms.length; i++)
+                this.atoms.at(i).setCurrentState(groundState);
+
+            // Clear all photons
+            for (var k = this.photons.length - 1; k >= 0; k--)
+                this.photons.at(k).destroy();
+
+            this.numPhotons = 0;
+        },
+
+        _update: function(time, deltaTime) {
+            QuantumSimulation.prototype._update.apply(this, arguments);
+
+            // Update all the models in the system
+            this.updateModels(time, deltaTime);
+
+            // Check to see if any photons need to be taken out of the system
+            this.numPhotons = 0;
+            for (var i = this.photons.length - 1; i >= 0; i--) {
+                var photon = this.photons.at(i);
+                this.numPhotons++;
+                if (!this.boundingRectangle.contains(photon.getPosition())) {
+                    // Old PhET note: We don't need to remove the element right now. The photon will
+                    //   fire an event that we will catch
+                    // Patrick: I've changed it to just destroy it now
+                    photon.destroy();
+                }
+            }
+
+            // Handle collisions between bodies
+            this.checkCollisions(deltaTime);
+        },
+
+        updateModels: function(time, deltaTime) {
+            var i;
+            for (i = 0; i < this.models.length; i++)
+                this.models[i].update(time, deltaTime);
+
+            for (i = 0; i < this.photons.length; i++)
+                this.photons.at(i).update(time, deltaTime);
+
+            for (i = 0; i < this.atoms.length; i++)
+                this.atoms.at(i).update(time, deltaTime);
+        },
+
+        addModel: function(model) {
+            this.models.push(model);
+
+            if (model instanceof Mirror)
+                this.mirrors.push(model);
+
+            if (model instanceof Tube)
+                this.tube = model;
+        },
+
+        removeModel: function(model) {
+            var index = this.models.indexOf(model);
+            if (index !== -1) {
+                this.models.splice(index, 1);
+
+                if (model instanceof Mirror) {
+                    index = this.mirrors.indexOf(model);
+                    if (index !== -1)
+                        this.mirrors.splice(index, 1);
+                }
+
+                if (model instanceof Tube && this.tube === model)
+                    this.tube = null;
+
+                return true;
+            }
+            return false;
+        },
+
+        addPhoton: function(photon) {
+            this.photons.add(photon);
+
+            // If the photon is moving nearly horizontally and is equal in energy to the
+            //   transition between the middle and ground states, consider it to be lasing
+            if (this.isLasingPhoton(photon))
+                this.lasingPhotons.add(photon);
+        },
+
+        addAtom: function(atom) {
+            this.atoms.add(atom);
+        },
+
+        setNumEnergyLevels: function(numLevels) {
+            var i;
+
+            // Set the element properties
+            switch (numLevels) {
+                case 2:
+                    this.setCurrentElementProperties(this.twoLevelProperties);
+                    this.getPumpingBeam().set('enabled', false);
+                    break;
+                case 3:
+                    this.setCurrentElementProperties(this.threeLevelProperties);
+                    this.getPumpingBeam().set('enabled', true);
+                    break;
+                default:
+                    throw 'Invalid number of levels';
+            }
+
+            // Set the available states of all the atoms
+            for (i = 0; i < this.atoms.length; i++) {
+                this.atoms.at(i).setStates(this.getCurrentElementProperties().getStates());
+            }
+
+            this.trigger('atomic-states-changed', this);
+        },
+
+        getResonatingCavity: function() {
+            return this.tube;
+        },
+
+        setResonatingCavity: function(tube) {
+            this.tube = tube;
+        },
+
+        getSeedBeam: function() {
+            return this.seedBeam;
+        },
+
+        setSeedBeam: function(seedBeam) {
+            this.setStimulatingBeam(seedBeam);
+        },
+
+        setStimulatingBeam: function(seedBeam) {
+            if (this.seedBeam)
+                this.removeModel(this.seedBeam);
+
+            this.addModel(seedBeam);
+            this.seedBeam = seedBeam;
+        },
+
+        getPumpingBeam: function() {
+            return this.pumpingBeam;
+        },
+
+        setPumpingBeam: function(pumpingBeam) {
+            if (this.pumpingBeam)
+                this.removeModel(this.pumpingBeam);
+
+            this.addModel(pumpingBeam);
+            this.pumpingBeam = pumpingBeam;
+        },
+
+        setHighEnergyMeanLifetime: function(time) {
+            this.getHighEnergyState().set('meanLifetime', time);
+        },
+
+        setMiddleEnergyMeanLifetime: function(time) {
+            this.getMiddleEnergyState().set('meanLifetime', time);
+        },
+
+        getNumGroundStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getGroundState());
+        },
+
+        getNumMiddleStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getMiddleEnergyState());
+        },
+
+        getNumHighStateAtoms: function() {
+            return this.getNumAtomsWithState(this.getCurrentElementProperties().getHighEnergyState());
+        },
+
+        getNumAtomsWithState: function(state) {
+            var count = 0;
+
+            for (var i = 0; i < this.atoms.length; i++) {
+                if (this.atoms.at(i).getCurrentState().equals(state))
+                    count++;
+            }
+
+            return count;
+        },
+
+        setBounds: function(bounds) {
+            this.boundingRectangle.set(bounds);
+        },
+
+        getNumPhotons: function() {
+            return this.numPhotons;
+        },
+
+        getMiddleEnergyState: function() {
+            return this.getCurrentElementProperties().getStates()[1];
+        },
+
+        getHighEnergyState: function() {
+            return this.getCurrentElementProperties().getHighEnergyState();
+        },
+
+        getStates: function() {
+            return this.getCurrentElementProperties().getStates();
+        },
+
+        getNumLasingPhotons: function() {
+            return this.lasingPhotons.length;
+        },
+
+        /**
+         * Returns the first match, or null if none.
+         */
+        getMatch: function(beam) {
+            var states = this.getStates();
+            for (var i = 0; i < states.length; i++) {
+                var state = states[i];
+                var e0 = this.getGroundState().get('energyLevel');
+                var transitionEnergy = state.get('energyLevel') - e0;
+                var beamEnergy = PhysicsUtil.wavelengthToEnergy(beam.getWavelength());
+
+                if (beam.get('enabled') &&
+                    beam.get('photonsPerSecond') > 0 &&
+                    Math.abs(beamEnergy - transitionEnergy) < QuantumConfig.ENERGY_TOLERANCE
+                ) {
+                    var match = this._matchObject;
+                    match.time = this.get('time');
+                    match.matchingEnergy = beamEnergy + e0;
+                    match.e0 = e0;
+                    match.transitionEnergy = transitionEnergy;
+                    match.beamEnergy = beamEnergy;
+
+                    return match;
+                }
+            }
+            return null;
+        },
+
+        checkCollisions: function(deltaTime) {
+            this.checkPhotonAtomCollisions();
+            this.checkCollisionsBetweenTwoLists(this.photons.models, this.mirrors);
+            this.checkCollisionsBetweenListAndBody(this.atoms.models, this.tube);
+
+            for (var i = this.photons.length - 1; i >= 0; i--) {
+                if (this.photons.at(i).markedForDestruction())
+                    this.photons.at(i).destroy();
+            }
+        },
+
+        checkPhotonAtomCollisions: function() {
+            // Test each photon against the atoms in the section the photon is in
+            for (var i = 0; i < this.photons.length; i++) {
+                var photon = this.photons.at(i);
+                if (this.tube.getBounds().contains(photon.getPosition()) ||
+                    this.tube.getBounds().contains(photon.getPreviousPosition())
+                ) {
+                    for (var j = 0; j < this.atoms.length; j++) {
+                        var atom = this.atoms.at(j);
+                        var s1 = atom.getCurrentState();
+                        PhotonAtomCollisonExpert.detectAndDoCollision(photon, atom);
+                        var s2 = atom.getCurrentState();
+                        if (s1 != s2)
+                            break;
+                    }
+                }
+            }
+        },
+
+        /*
+         * Detects and computes collisions between the items in two lists of collidable objects
+         */
+        checkCollisionsBetweenTwoLists: function(collidablesA, collidablesB) {
+            for (var i = 0; i < collidablesA.length; i++) {
+                var collidable1 = collidablesA[i];
+                if (!(collidable1 instanceof Photon)
+                    || this.tube.getBounds().contains(collidable1.getPosition())
+                    || this.tube.getBounds().contains(collidable1.getPreviousPosition())
+                ) {
+                    for (var j = 0; j < collidablesB.length; j++) {
+                        var collidable2 = collidablesB[j];
+                        if (collidable1 != collidable2
+                            && (
+                                !(collidable2 instanceof Photon)
+                                || this.tube.getBounds().contains(collidable2.getPosition())
+                            )
+                        ) {
+                            for (var k = 0; k < this.collisionExperts.length; k++) {
+                                this.collisionExperts[k].detectAndDoCollision(collidable1, collidable2);
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        /*
+         * Detects and computes collisions between the items in a list of collidables and a specified
+         * collidable.
+         */
+        checkCollisionsBetweenListAndBody: function(collidablesA, body) {
+            for (var i = 0; i < collidablesA.length; i++) {
+                var collidable = collidablesA[i];
+                if (body.getBounds().contains(collidable.getPosition()) ||
+                    body.getBounds().contains(collidable.getPreviousPosition())
+                ) {
+                    for (var k = 0; k < this.collisionExperts.length; k++) {
+                        this.collisionExperts[k].detectAndDoCollision(collidable, body);
+                    }
+                }
+            }
+        },
+
+        isLasingPhoton: function(photon) {
+            var middleToGroundEnergyDiff = this.getMiddleEnergyState().get('energyLevel') - this.getGroundState().get('energyLevel');
+            return (
+                Math.abs(photon.getVelocity().angle() % Math.PI) < this.angleWindow &&
+                Math.abs(photon.getEnergy() - middleToGroundEnergyDiff) <= QuantumConfig.ENERGY_TOLERANCE
+            );
+        }
+
+    }, Constants.LasersSimulation);
+
+    return LasersSimulation;
+});
+
+define('models/reflection-strategy',['require'],function (require) {
+
+    'use strict';
+
+    var ReflectionStrategy = function() {};
+
+    ReflectionStrategy.prototype.reflects = function() {};
+
+    return ReflectionStrategy;
+});
+define('models/reflection-strategy/band-pass',['require','underscore','models/reflection-strategy'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var ReflectionStrategy = require('models/reflection-strategy');
+
+    /**
+     * A ReflectionStrategy that reflects photons whose wavelengths
+     *   are between two cutoff points. Probably misnamed. It's really
+     *   more of a notch.
+     */
+    var BandPassReflectionStrategy = function(cutoffLow, cutoffHigh) {
+        ReflectionStrategy.apply(this, arguments);
+
+        this.cutoffLow = cutoffLow;
+        this.cutoffHigh = cutoffHigh;
+    };
+
+    _.extend(BandPassReflectionStrategy.prototype, ReflectionStrategy.prototype, {
+
+        reflects: function(photon) {
+            return (
+                photon.get('wavelength') >= this.cutoffLow &&
+                photon.get('wavelength') <= this.cutoffHigh
+            );
+        }
+
+    });
+
+
+    return BandPassReflectionStrategy;
+});
+define('models/reflection-strategy/left',['require','underscore','models/reflection-strategy'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var ReflectionStrategy = require('models/reflection-strategy');
+
+    /**
+     * A ReflectionStrategy that reflects to the left. That is, it reflects
+     *   photons that are traveling to the right.
+     */
+    var LeftReflectionStrategy = function(cutoffLow, cutoffHigh) {
+        ReflectionStrategy.apply(this, arguments);
+    };
+
+    _.extend(LeftReflectionStrategy.prototype, ReflectionStrategy.prototype, {
+
+        reflects: function(photon) {
+            return (photon.getVelocity().x > 0);
+        }
+
+    });
+
+
+    return LeftReflectionStrategy;
+});
+define('models/reflection-strategy/right',['require','underscore','models/reflection-strategy'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var ReflectionStrategy = require('models/reflection-strategy');
+
+    /**
+     * A ReflectionStrategy that reflects to the right. That is, it reflects
+     *   photons that are traveling to the left.
+     */
+    var RightReflectionStrategy = function(cutoffLow, cutoffHigh) {
+        ReflectionStrategy.apply(this, arguments);
+    };
+
+    _.extend(RightReflectionStrategy.prototype, ReflectionStrategy.prototype, {
+
+        reflects: function(photon) {
+            return (photon.getVelocity().x < 0);
+        }
+
+    });
+
+
+    return RightReflectionStrategy;
+});
+define('models/reflection-strategy/partial',['require','underscore','models/reflection-strategy'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var ReflectionStrategy = require('models/reflection-strategy');
+
+    /**
+     * A ReflectionStrategy that reflects a specified fraction of photons
+     */
+    var PartialReflectionStrategy = function(reflectivity) {
+        ReflectionStrategy.apply(this, arguments);
+
+        this.reflectivity = reflectivity;
+    };
+
+    _.extend(PartialReflectionStrategy.prototype, ReflectionStrategy.prototype, {
+
+        reflects: function(photon) {
+            var result = false;
+            if (this.reflectivity === 0) {
+                result = false;
+            }
+            else if (this.reflectivity === 1) {
+                result = true;
+            }
+            else {
+                var r = Math.random();
+                if (r < this.reflectivity)
+                    result = true;
+            }
+            return result;
+        },
+
+        getReflectivity: function() {
+            return this.reflectivity;
+        },
+
+        /**
+         * Sets the reflectivity. Valid values are 0 to 1.
+         */
+        setReflectivity: function(reflectivity) {
+            if (reflectivity < 0 || reflectivity > 1)
+                throw 'Reflectivity not between 0 and 1.0';
+
+            this.reflectivity = reflectivity;
+        }
+
+    });
+
+
+    return PartialReflectionStrategy;
+});
+define('models/partial-mirror',['require','models/reflection-strategy/partial','models/mirror'],function (require) {
+
+    'use strict';
+
+    var PartialReflectionStrategy = require('models/reflection-strategy/partial');
+    var Mirror                    = require('models/mirror');
+
+    /**
+     * This class represents partially reflecting mirror.
+     */
+    var PartialMirror = Mirror.extend({
+
+        defaults: {
+            reflectivity: 1
+        },
+
+        /**
+         * Initializes the PartialMirror object
+         */
+        initialize: function(attributes, options) {
+            Mirror.prototype.initialize.apply(this, [attributes, options]);
+
+            var partialStrategy = new PartialReflectionStrategy(this.get('reflectivity'));
+            this.addReflectionStrategy(partialStrategy);
+
+            this.on('change:reflectivity', this.reflectivityChanged);
+        },
+
+        addReflectionStrategy: function(strategy) {
+            // If the strategy being added is a reflecting strategy, remove the old one
+            if (strategy instanceof PartialReflectionStrategy) {
+                this.partialStrategy = strategy;
+                for (var i = 0; i < this.reflectionStrategies.length; i++) {
+                    if (this.reflectionStrategies[i] instanceof PartialReflectionStrategy) {
+                        this.reflectionStrategies.remove(this.reflectionStrategies[i]);
+                        break;
+                    }
+                }
+            }
+
+            this.reflectionStrategies.push(strategy);
+        },
+
+        reflectivityChanged: function(model, reflectivity) {
+            this.partialStrategy.setReflectivity(reflectivity);
+        },
+
+        getReflectivity: function() {
+            return this.get('reflectivity');
+        },
+
+        setReflectivity: function(reflectivity) {
+            this.set('reflectivity', reflectivity);
+        }
+
+    });
+
+    return PartialMirror;
+});
+define('models/simulation/base',['require','exports','module','underscore','common/quantum/models/tube','common/quantum/models/photon','common/quantum/models/atom','common/quantum/models/beam','common/quantum/models/physics-util','common/quantum/config','common/math/vector2','common/math/rectangle','models/simulation','models/reflection-strategy/band-pass','models/reflection-strategy/left','models/reflection-strategy/right','models/partial-mirror','constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Tube          = require('common/quantum/models/tube');
+    var Photon        = require('common/quantum/models/photon');
+    var Atom          = require('common/quantum/models/atom');
+    var Beam          = require('common/quantum/models/beam');
+    var PhysicsUtil   = require('common/quantum/models/physics-util');
+    var QuantumConfig = require('common/quantum/config');
+    var Vector2       = require('common/math/vector2');
+    var Rectangle     = require('common/math/rectangle');
+
+    var LasersSimulation           = require('models/simulation');
+    var BandPassReflectionStrategy = require('models/reflection-strategy/band-pass');
+    var LeftReflectionStrategy     = require('models/reflection-strategy/left');
+    var RightReflectionStrategy    = require('models/reflection-strategy/right');
+    var PartialMirror              = require('models/partial-mirror');
+
+    /**
+     * Constants
+     */
+    var Constants = require('constants');
+
+    /**
+     *
+     */
+    var BaseLasersSimulation = LasersSimulation.extend({
+
+        origin: Constants.ORIGIN,
+        boxHeight: 120,
+        boxWidth: 300,
+        laserOffsetX: 50,
+        defaultMiddleStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME,
+        defaultHighStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME / 4,
+
+        defaults: _.extend({}, LasersSimulation.prototype.defaults, {
+            lasingPhotonViewMode:  Constants.PHOTON_DISCRETE,
+            pumpingPhotonViewMode: Constants.PHOTON_CURTAIN,
+            displayHighLevelEmissions: false,
+            mirrorsEnabled: false,
+            exploded: false
+        }),
+
+        initialize: function(attributes, options) {
+            options = _.extend({
+                silentReset: false
+            }, options);
+
+            LasersSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+            this.on('change:mirrorsEnabled', this.mirrorsEnabledChanged);
+            this.on('change:elementProperties', this.elementPropertiesChanged);
+            this.on('change:pumpingPhotonViewMode', this.pumpingPhotonViewModeChanged);
+            this.on('change:lasingPhotonViewMode', this.lasingPhotonViewModeChanged);
+
+            this.listenTo(this.lasingPhotons, 'add remove', this.numLasingPhotonsChanged);
+        },
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            LasersSimulation.prototype.initComponents.apply(this, arguments);
+
+            this.setBounds(new Rectangle(-300, -100, 1300, 900));
+
+            this.laserOrigin = new Vector2(this.origin.x + this.laserOffsetX, this.origin.y);
+            this.seedBeamOrigin = new Vector2();
+            this.pumpingBeamOrigin = new Vector2();
+
+            this.initTube();
+            this.initBeams();
+            this.initMirrors();
+
+            this.listenTo(this.atoms, 'photon-emitted', this.photonEmitted);
+
+            this.elementPropertiesChanged(this, this.get('elementProperties'));
+        },
+
+        resetComponents: function() {
+            LasersSimulation.prototype.resetComponents.apply(this, arguments);
+
+            this.seedBeam.set('wavelength', Photon.RED);
+            this.pumpingBeam.set('wavelength',Photon.BLUE);
+
+            this.rightMirror.setReflectivity(1);
+
+            this.setNumEnergyLevels(2);
+        },
+
+        initTube: function() {
+            this.addModel(new Tube({
+                origin: this.laserOrigin,
+                width: this.boxWidth,
+                height: this.boxHeight
+            }));
+        },
+
+        initBeams: function() {
+            var seedBeam = new Beam({
+                wavelength:          Photon.RED,
+                position:            this.getSeedBeamOrigin(),
+                length:              this.boxWidth + this.laserOffsetX * 2,
+                beamWidth:           this.boxHeight - Photon.RADIUS,
+                maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
+                fanout:              Constants.SEED_BEAM_FANOUT,
+                speed:               this.get('photonSpeedScale'),
+                enabled:             true
+            }, {
+                direction: new Vector2(1, 0)
+            });
+
+            var pumpingBeam = new Beam({
+                wavelength:          Photon.BLUE,
+                position:            this.getPumpingBeamOrigin(),
+                length:              1000,
+                beamWidth:           this.tube.get('width'),
+                maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
+                fanout:              Constants.PUMPING_BEAM_FANOUT,
+                speed:               this.get('photonSpeedScale'),
+                enabled:             true
+            }, {
+                direction: new Vector2(0, 1)
+            });
+
+            this.setSeedBeam(seedBeam);
+            this.setPumpingBeam(pumpingBeam);
+
+            this.listenTo(seedBeam,    'photon-emitted', this.photonEmitted);
+            this.listenTo(pumpingBeam, 'photon-emitted', this.photonEmitted);
+        },
+
+        initMirrors: function() {
+            // If there already mirrors in the model, get rid of them
+            for (var i = this.mirrors.length - 1; i >= 0; i--)
+                this.removeModel(this.mirrors[i]);
+
+            // The right mirror is a partial mirror
+            var p1 = new Vector2(
+                this.tube.getX() + this.tube.get('width'),
+                this.tube.getY()
+            );
+            var p2 = new Vector2(
+                this.tube.getX() + this.tube.get('width'),
+                this.tube.getY() + this.tube.get('height')
+            );
+            var bandPass = new BandPassReflectionStrategy(QuantumConfig.MIN_WAVELENGTH, QuantumConfig.MAX_WAVELENGTH);
+            this.rightMirror = new PartialMirror({}, {
+                start: p1,
+                end:   p2
+            });
+            this.rightMirror.addReflectionStrategy(bandPass);
+            this.rightMirror.addReflectionStrategy(new LeftReflectionStrategy());
+
+            // The left mirror is 100% reflecting
+            var p3 = new Vector2(
+                this.tube.getX(),
+                this.tube.getY()
+            );
+            var p4 = new Vector2(
+                this.tube.getX(),
+                this.tube.getY() + this.tube.get('height')
+            );
+            this.leftMirror = new PartialMirror({}, {
+                start: p3,
+                end:   p4
+            });
+            this.leftMirror.addReflectionStrategy(bandPass);
+            this.leftMirror.addReflectionStrategy(new RightReflectionStrategy());
+            this.leftMirror.setReflectivity(1);
+        },
+
+        getSeedBeamOrigin: function() {
+            return this.seedBeamOrigin.set(this.origin);
+        },
+
+        getPumpingBeamOrigin: function() {
+            return this.pumpingBeamOrigin.set(this.origin.x + this.laserOffsetX, this.origin.y - this.laserOffsetX);
+        },
+
+        setPhotonVisibility: function(visibility, wavelength) {
+            for (var i = 0; i < this.photons.length; i++) {
+                if (this.photons.at(i).get('wavelength') === wavelength)
+                    this.photons.at(i).set('visible', visibility);
+            }
+        },
+
+        photonEmitted: function(source, photon) {
+            this.addPhoton(photon);
+            var photonVisible = true;
+
+            // Was the photon emitted by an atom?
+            if (source instanceof Atom) {
+                // Don't show certain photons
+                if (source.getStates().length > 2 &&
+                    source.getCurrentState().equals(source.getStates()[2]) &&
+                    !this.get('displayHighLevelEmissions')
+                ) {
+                    photonVisible = false;
+                }
+                else {
+                    var middleEnergyLevel = this.getMiddleEnergyState().getEnergyLevel();
+                    var groundEnergyLevel = this.getGroundState().getEnergyLevel();
+                    var energyLevelDiff = middleEnergyLevel - groundEnergyLevel;
+                    if (Math.abs(photon.getEnergy() - energyLevelDiff) <= QuantumConfig.ENERGY_TOLERANCE)
+                        photonVisible = (this.get('lasingPhotonViewMode') === Constants.PHOTON_DISCRETE);
+                }
+            }
+
+            // Is it a photon from the seed beam?
+            if (source === this.seedBeam)
+                photonVisible = true;
+
+            // Is it a pumping beam photon, and are we viewing discrete photons?
+            if (source === this.pumpingBeam)
+                photonVisible = (this.get('pumpingPhotonViewMode') === Constants.PHOTON_DISCRETE);
+
+            // Set whether the photon's view will be visible
+            photon.set('visible', photonVisible);
+        },
+
+        mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
+            // Regardless of the value of mirrorsEnabled, we should remove the model
+            // elements.  If mirrorsEnabled is true, we want to try remove them
+            // first, so they don't get added twice if they were already there
+            this.removeModel(this.leftMirror);
+            this.removeModel(this.rightMirror);
+
+            if (mirrorsEnabled) {
+                this.addModel(this.leftMirror);
+                this.addModel(this.rightMirror);
+            }
+
+            this.seedBeam.set('enabled', !mirrorsEnabled);
+        },
+
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            if (elementProperties) {
+                this.getMiddleEnergyState().set('meanLifetime', this.defaultMiddleStateMeanLifetime);
+                this.getHighEnergyState().set('meanLifetime', this.defaultHighStateMeanLifetime);
+            }
+        },
+
+        pumpingPhotonViewModeChanged: function(simulation, pumpingPhotonViewMode) {
+            var visible = (pumpingPhotonViewMode === Constants.PHOTON_DISCRETE) ? true : false;
+            var wavelength = this.pumpingBeam.get('wavelength');
+
+            this.setPhotonVisibility(visible, wavelength);
+        },
+
+        lasingPhotonViewModeChanged: function(simulation, lasingPhotonViewMode) {
+            var deltaEnergy = this.getMiddleEnergyState().getEnergyLevel() - this.getGroundState().getEnergyLevel();
+            var wavelength = PhysicsUtil.energyToWavelength(deltaEnergy);
+
+            if (lasingPhotonViewMode === Constants.PHOTON_DISCRETE)
+                this.setPhotonVisibility(true, wavelength);
+            else if (lasingPhotonViewMode === Constants.PHOTON_WAVE)
+                this.setPhotonVisibility(false, wavelength);
+        },
+
+        numLasingPhotonsChanged: function() {
+            if (this.lasingPhotons.length > Constants.KABOOM_THRESHOLD) {
+                this.set('exploded', true);
+                this.pause();
+            }
+        }
+
+    }, Constants.BaseLasersSimulation);
+
+    return BaseLasersSimulation;
+});
+
+define('common/quantum/models/properties-based-atom',['require','underscore','./atom'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var Atom = require('./atom');
+
+    /**
+     * An Atom that gets its model-dependent specification from an ElementProperties object
+     */
+    var PropertiesBasedAtom = Atom.extend({
+
+        defaults: _.extend({}, Atom.prototype.defaults, {
+            isStateLifetimeFixed: true
+        }),
+
+        /**
+         * Required options: {
+         *   simulation: simulation model,
+         *   numStates: number of states,
+         *   elementProperties: ElementProperties object
+         * }
+         */
+        initialize: function(attributes, options) {
+            if (!options.elementProperties)
+                throw 'elementProperties is a required option';
+
+            if (options.elementProperties.getStates().length < 2)
+                throw 'Atom must have at least two states';
+
+            options = _.extend({
+                numStates: options.elementProperties.getStates().length
+            }, options);
+
+            Atom.prototype.initialize.apply(this, [attributes, options]);
+
+            this.energyEmissionStrategy = options.elementProperties.getEnergyEmissionStrategy();
+
+            this.setStates(options.elementProperties.getStates());
+            this.setCurrentState(options.elementProperties.getStates()[0]);
+        },
+
+        /**
+         * Returns the state the atom will be in after it emits a photon. By default,
+         *   this is the ground state.
+         *
+         * @return the state the atom will be in after it emits a photon
+         */
+        getEnergyStateAfterEmission: function() {
+            return this.energyEmissionStrategy.emitEnergy(this);
+        },
+
+        setElementProperties: function(elementProperties) {
+            this.energyEmissionStrategy = elementProperties.getEnergyEmissionStrategy();
+            this.setStates(elementProperties.getStates());
+        }
+
+    });
+
+    return PropertiesBasedAtom;
+});
+define('models/atom',['require','underscore','common/quantum/models/properties-based-atom','constants'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var PropertiesBasedAtom = require('common/quantum/models/properties-based-atom');
+
+    var Constants = require('constants');
+
+    /**
+     * A spherical body with mass and momentum
+     */
+    var LaserAtom = PropertiesBasedAtom.extend({
+
+        defaults: _.extend({}, PropertiesBasedAtom.prototype.defaults, {
+            canCollideInGroundState: true
+        }),
+
+        /**
+         * Initializes the PartialMirror object
+         */
+        initialize: function(attributes, options) {
+            PropertiesBasedAtom.prototype.initialize.apply(this, [attributes, options]);
+
+            this.lifetimeTimer = 0;
+        },
+
+        collideWithPhoton: function(photon) {
+            var canCollide = false;
+
+            if (!this.getCurrentState().equals(this.getGroundState()))
+                canCollide = true;
+            else
+                canCollide = this.get('canCollideInGroundState');
+
+            if (canCollide)
+                PropertiesBasedAtom.prototype.collideWithPhoton.apply(this, arguments);
+        },
+
+        currentStateChanged: function(atom, currentState) {
+            PropertiesBasedAtom.prototype.currentStateChanged.apply(this, arguments);
+
+            if (currentState.equals(this.getGroundState())) {
+                this.set('canCollideInGroundState', false);
+                this.lifetimeTimer = Constants.MINIMUM_GROUND_STATE_LIFETIME;
+            }
+        },
+
+        update: function(time, deltaTime) {
+            PropertiesBasedAtom.prototype.update.apply(this, arguments);
+
+            this.lifetimeTimer -= deltaTime;
+            if (this.lifetimeTimer <= 0 && !this.get('canCollideInGroundState'))
+                this.set('canCollideInGroundState', true);
+        }
+
+    });
+
+    return LaserAtom;
+});
+define('models/simulation/one-atom',['require','exports','module','underscore','models/simulation/base','models/atom','constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var BaseLasersSimulation = require('models/simulation/base');
+    var LaserAtom            = require('models/atom');
+
+    /**
+     * Constants
+     */
+    var Constants = require('constants');
+
+    /**
+     * The simulation model for the One Atom tab
+     */
+    var OneAtomLasersSimulation = BaseLasersSimulation.extend({
+
+        defaults: _.extend({}, BaseLasersSimulation.prototype.defaults, {
+            photonSpeedScale: Constants.ONE_ATOM_PHOTON_SPEED,
+            pumpingPhotonViewMode: Constants.PHOTON_DISCRETE
+        }),
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            BaseLasersSimulation.prototype.initComponents.apply(this, arguments);
+
+            this.initAtom();
+        },
+
+        resetComponents: function() {
+            BaseLasersSimulation.prototype.resetComponents.apply(this, arguments);
+
+            this.seedBeam.set('photonsPerSecond', 1);
+            this.pumpingBeam.set('photonsPerSecond', 1);
+
+            this.seedBeam.set('enabled', true);
+            this.pumpingBeam.set('enabled', false);
+        },
+
+        initAtom: function() {
+            // Add an atom
+            var atom = new LaserAtom({}, {
+                simulation: this,
+                elementProperties: this.get('elementProperties')
+            });
+
+            atom.setPosition(
+                this.laserOrigin.x + this.boxWidth / 2,
+                this.laserOrigin.y + this.boxHeight / 2
+            );
+            atom.setVelocity(0, 0);
+
+            this.addAtom(atom);
+        },
+
+        initBeams: function() {
+            BaseLasersSimulation.prototype.initBeams.apply(this, arguments);
+
+            this.seedBeam.set('beamWidth', 0.5);
+            this.seedBeam.set('photonsPerSecond', 1); // Start the beam with a very slow rate
+
+            this.pumpingBeam.set('fanout', (Math.PI / 180) * Constants.SEED_BEAM_FANOUT * 2 * 1000);
+            this.pumpingBeam.set('beamWidth', this.seedBeam.get('beamWidth') * 100);
+            this.pumpingBeam.set('photonsPerSecond', 1); // Start with the pumping beam turned down all the way
+            this.pumpingBeam.set('maxPhotonsPerSecond', Math.floor(this.pumpingBeam.get('maxPhotonsPerSecond') / 2));
+
+            // Enable only the stimulating beam to start with
+            this.seedBeam.set('enabled', true);
+            this.pumpingBeam.set('enabled', false);
+        },
+
+        getSeedBeamOrigin: function() {
+            return this.seedBeamOrigin.set(
+                this.tube.getBounds().x - 100,
+                this.tube.getBounds().y + this.tube.getBounds().h / 2
+            );
+        },
+
+        getPumpingBeamOrigin: function() {
+            return this.pumpingBeamOrigin.set(
+                this.tube.getBounds().x + this.tube.getBounds().w / 2,
+                this.tube.getBounds().y - 100
+            );
+        }
+
+    });
+
+    return OneAtomLasersSimulation;
+});
+
+/*
+ * Based on a gist from Dan Tello
+ * https://gist.github.com/greypants/3739036
+ */
+
+define('common/v3/updater/updater',['require','pixi'],function (require) {
+
+    'use strict';
+
+    require('pixi');
+
+    var Updater = function() {
+
+        var DORMANCY_THRESHOLD = 333;      // 3Hz in millseconds
+        var DORMANCY_CHECK_INTERVAL = 100; // ms
+
+        var listeners = {
+            update: [],
+            sleep: [],
+            awaken: []
+        };
+        var i;
+
+        var animationFrame;
+        var playing = false;
+        var dormant = false;
+        
+        var last  = 0;
+        var now   = 0;
+        var delta = 0;
+
+        var dormancyCheckInterval = null;
+
+        this.total = 0;
+
+        // Runs every frame and calls listening functions
+        var frame = function() {
+            now   = Date.now();
+            delta = now - last;
+            last  = now;
+            this.total += delta;
+
+            if (!dormant) {
+                for (i = 0; i < listeners.update.length; i++)
+                    listeners.update[i](this.total, delta);    
+            }
+            else if (delta < DORMANCY_THRESHOLD)
+                awaken();
+            
+            animationFrame = window.requestAnimationFrame(frame);
+        }.bind(this);
+
+        /**
+         * Runs at 3Hz with setInterval. If requestAnimationFrame
+         *  has fallen to 3Hz or below, it declares the updater
+         *  asleep and calls listeners of the 'sleep' event.
+         */
+        var dormancyCheck = function() {
+            delta = Date.now() - last;
+            if (!dormant) {
+                if (delta > DORMANCY_THRESHOLD)
+                    sleep();
+            }
+            else {
+                if (delta < DORMANCY_THRESHOLD)
+                    awaken();
+            }
+        }.bind(this);
+
+        var sleep = function() {
+            dormant = true;
+
+            // Call listeners
+            for (i = 0; i < listeners.sleep.length; i++)
+                listeners.sleep[i]();
+        };
+
+        var awaken = function() {
+            dormant = false;
+
+            // Reset the last time so we don't build up time
+            now   = Date.now();
+            delta = now - last;
+            last = now - delta;
+
+            // Call listeners
+            for (i = 0; i < listeners.awaken.length; i++)
+                listeners.awaken[i]();
+        };
+
+        this.play = function() {
+            if (!playing) {
+                playing = true;
+                /*
+                 * Subtract the last delta so we don't do two frames 
+                 * at the same this.total time after unpausing.
+                 */
+                last = Date.now() - delta;
+                clearInterval(dormancyCheckInterval);
+                dormancyCheckInterval = setInterval(dormancyCheck, DORMANCY_CHECK_INTERVAL);
+                frame();
+            }
+            return this;
+        };
+
+        this.pause = function() {
+            window.cancelAnimationFrame(animationFrame);
+            playing = false;
+            return this;
+        };
+
+        this.paused = function() {
+            return !playing;
+        };
+
+        this.reset = function() {
+            this.pause();
+            this.total = 0;
+            return this;
+        };
+
+        this.addEventListener = function(event, listener) {
+            listeners[event].push(listener);
+            return this;
+        };
+    };
+
+    return Updater;
+});
+
+define('common/v3/app/sim',['require','underscore','backbone','../updater/updater'],function (require) {
+
+    'use strict';
+
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+
+    var Updater = require('../updater/updater');
+
+    /**
+     * SimView represents a tab in the simulation.  SimView must be extended
+     *   to create specific simulation views with specific simulation models.
+     *   SimViews interface with a simulation model and contain all necessary
+     *   views for visualizing and interacting with the simulation model.
+     */
+    var SimView = Backbone.View.extend({
+
+        /**
+         * Root element properties
+         */
+        tagName:   'section',
+        className: 'sim-view',
+
+        /**
+         * Sets basic properties and initializes updater and simulation model.
+         */
+        initialize: function(options) {
+            options = _.extend({
+                title: 'Simulation',
+                name: 'sim',
+                link: '',
+                stepDuration: 33, // milliseconds
+                runUpdateOnReset: false
+            }, options);
+
+            this.title = options.title;
+            this.name  = options.name;
+            this.link = options.link;
+            this.stepDuration = options.stepDuration;
+            this.runUpdateOnReset = options.runUpdateOnReset;
+
+            // Updater stuff
+            this.update = _.bind(this.update, this);
+
+            this.updater = new Updater();
+            this.updater.addEventListener('update', this.update);
+
+            // Stepping
+            this._stepFinished = _.bind(this._stepFinished, this);
+
+            // Initialize simulation model
+            this.initSimulation();
+
+            // We want it to start playing when they first open the tab
+            this.resumePaused = false;
+        },
+
+        /**
+         * Initializes the simulation model
+         */
+        initSimulation: function() {
+            this.simulation = null;
+        },
+
+        /**
+         * Called when the view is being removed. Unbinds bound events
+         *   and stops the updater.
+         */
+        remove: function() {
+            Backbone.View.prototype.remove.apply(this);
+            this.unbind();
+            this.updater.pause();
+        },
+
+        /**
+         * Called after every component on the page has rendered to make sure
+         *   things like widths and heights and offsets are correct.
+         */
+        postRender: function() {},
+
+        /**
+         * Click event handler that plays the simulation
+         */
+        play: function(event) {
+            this.simulation.play();
+        },
+
+        /**
+         * Click event handler that pauses the simulation
+         */
+        pause: function(event) {
+            this.simulation.pause();
+        },
+
+        /**
+         * Click event handler that plays the simulation for a specified duration
+         */
+        step: function(event) {
+            // Play until a certain number of milliseconds has elapsed.
+            this.play();
+            setTimeout(this._stepFinished, this.stepDuration);
+        },
+
+        /**
+         * Called after a step through is finished
+         */
+        _stepFinished: function() {
+            this.pause();
+        },
+
+        /**
+         * Click event handler that resets the simulation back to time zero.
+         */
+        reset: function(event) {
+            if (confirm('Are you sure you want to reset everything?'))
+                this.resetSimulation();
+        },
+
+        resetSimulation: function() {
+            // Save whether or not it was paused when we reset
+            var wasPaused = this.simulation.get('paused');
+
+            // Set pause the updater and reset everything
+            this.updater.pause();
+            this.updater.reset();
+            this.resetComponents();
+            this.rerender();
+
+            // Paint the first frame
+            if (this.runUpdateOnReset) {
+                this.simulation.play();
+                this.update(0, 0);
+                this.simulation.pause();
+            }
+
+            // Resume normal function
+            this.updater.play();
+            if (!wasPaused)
+                this.simulation.play();
+        },
+
+        /**
+         * Resets the components when the reset button is pressed
+         */
+        resetComponents: function() {
+            this.simulation.reset();
+        },
+
+        /**
+         * Called during a reset to refresh the visuals.  If it
+         *   is not desireable in the simulation to actually
+         *   rerender the scene, this should be overriden to
+         *   do whatever is necessary to set everything back to
+         *   defaults.
+         */
+        rerender: function() {
+            this.render();
+            this.postRender();
+        },
+
+        /**
+         * If we switch to a new sim, we pause this one,
+         *   but we want to save whether or not it was
+         *   paused already so it doesn't resume when we
+         *   don't want it to.
+         */
+        halt: function() {
+            this.updater.pause();
+        },
+
+        /**
+         * Used from the outside to continue execution but
+         *   paying attention to whether it was already
+         *   paused or not before it was halted.
+         */
+        resume: function() {
+            this.updater.play();
+        },
+
+        /**
+         * This is run every tick of the updater and should
+         *   be used to update the simulation model and the
+         *   views.
+         */
+        update: function(time, delta) {
+            // Update the model
+            this.simulation.update(time, delta);
+        },
+
+        /**
+         * Helper function for setting properties on the waveSimulation without causing a
+         *   loop of updates between the wave simulation model and the view
+         */
+        inputLock: function(callback) {
+            if (this.updatingProperty)
+                return;
+
+            this.inputtingProperty = true;
+            callback.apply(this);
+            this.inputtingProperty = false;
+        },
+
+        /**
+         * Helper function for updating inputs from the wave simulation without causing a
+         *   loop of updates between the wave simulation model and the view
+         */
+        updateLock: function(callback) {
+            if (this.inputtingProperty)
+                return;
+
+            this.updatingProperty = true;
+            callback.apply(this);
+            this.updatingProperty = false;
+        },
+
+    });
+
+    return SimView;
+});
+
+define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','pixi'],function(require) {
+
+    'use strict';
+
+    var $        = require('jquery');
+    var _        = require('underscore');
+    var Backbone = require('backbone');
+    var PIXI     = require('pixi');
+    var version = (PIXI.VERSION || '').replace(/^v/i, '');
+    var majorVersion = parseInt(version.split('.')[0], 10);
+    var useRendererOptionsObject = !isNaN(majorVersion) ? majorVersion >= 5 : !!PIXI.Renderer;
+    var fallbackSceneWidth = 800;
+    var fallbackSceneHeight = 600;
+    var MAX_POST_RENDER_SIZE_ATTEMPTS = 20;
+
+    /**
+     * SceneView is the main focus of the app. 
+     *
+     */
+    var PixiSceneView = Backbone.View.extend({
+        getTargetSize: function() {
+            var width = this.$el.width();
+            var height = this.$el.height();
+            var $parent = this.$el.parent();
+
+            if (!width && $parent.length)
+                width = $parent.width();
+            if (!height && $parent.length)
+                height = $parent.height();
+
+            if (!width && this.renderer && this.renderer.width)
+                width = this.renderer.width;
+            if (!height && this.renderer && this.renderer.height)
+                height = this.renderer.height;
+
+            if (!width)
+                width = fallbackSceneWidth;
+            if (!height)
+                height = fallbackSceneHeight;
+
+            return {
+                width: width,
+                height: height
+            };
+        },
+
+
+        tagName: 'canvas',
+        className: 'scene-view',
+
+        events: {
+            
+        },
+
+        initialize: function(options) {
+            // Save options
+            if (options.simulation)
+                this.simulation = options.simulation;
+            else
+                throw 'PixiSceneView requires a simulation model to render.';
+
+            // Add a separate, disconnected element for hybrid views
+            this.$ui = $('<div class="scene-view-ui">');
+            this.ui = this.$ui[0];
+
+            // Bind events
+            $(window).bind('resize', $.proxy(this.windowResized, this));
+        },
+
+        /**
+         * Renders content and canvas for heatmap
+         */
+        render: function() {
+            this.renderContent();
+            this.initRenderer();
+
+            return this;
+        },
+
+        /**
+         * Renders 
+         */
+        renderContent: function() {
+            
+        },
+
+        /**
+         * Called after every component on the page has rendered to make sure
+         *   things like widths and heights and offsets are correct.
+         */
+        postRender: function() {
+            this.ensureSizedAndInitGraphics(0);
+        },
+
+        ensureSizedAndInitGraphics: function(attempt) {
+            var measuredWidth = this.$el.width();
+            var measuredHeight = this.$el.height();
+            var hasMeasuredSceneSize = measuredWidth > 1 && measuredHeight > 1;
+
+            if (!hasMeasuredSceneSize && attempt < MAX_POST_RENDER_SIZE_ATTEMPTS) {
+                setTimeout(_.bind(function() {
+                    this.ensureSizedAndInitGraphics(attempt + 1);
+                }, this), 0);
+                return;
+            }
+
+            this.resize(true);
+            this.initGraphics();
+        },
+
+        /**
+         * Initializes a renderer
+         */
+        initRenderer: function() {
+            var targetSize = this.getTargetSize();
+            var width = targetSize.width;
+            var height = targetSize.height;
+            var options = {
+                resolution: window.devicePixelRatio ? window.devicePixelRatio : 1,
+                view: this.el,
+                transparent: true,
+                antialias: true
+            };
+
+            if (useRendererOptionsObject) {
+                options.width = width;
+                options.height = height;
+                options.autoDensity = true;
+                this.renderer = PIXI.autoDetectRenderer(options);
+            } else {
+                this.renderer = PIXI.autoDetectRenderer(width, height, options);
+            }
+
+            this.width  = width;
+            this.height = height;
+
+            // Create a stage to hold everything
+            this.stage = new PIXI.Container();
+        },
+
+        initGraphics: function() {
+            
+        },
+
+        /**
+         * Called on a window resize to resize the canvas
+         */
+        windowResized: function(event) {
+            this.resizeOnNextUpdate = true;
+        },
+
+        resize: function(override) {
+            var targetSize = this.getTargetSize();
+            var width = targetSize.width;
+            var height = targetSize.height;
+            this.width  = width;
+            this.height = height;
+            if (override || width != this.renderer.width || height != this.renderer.height) {
+                this.resizeGraphics();
+                this.trigger('resized');
+            }
+            this.resizeOnNextUpdate = false;
+
+            this.offset = this.$el.offset();
+        },
+
+        resizeGraphics: function() {
+            this.renderer.resize(this.width, this.height);
+        },
+
+        reset: function() {
+
+        },
+
+        update: function(time, deltaTime, paused, timeScale) {
+            if (this.resizeOnNextUpdate)
+                this.resize();
+
+            this._update(time, deltaTime, paused, timeScale);
+
+            // Render everything
+            this.renderer.render(this.stage);
+        },
+
+        _update: function(time, deltaTime) {}
+
+    });
+
+    return PixiSceneView;
+});
+
 define('common/math/model-view-transform',['require','underscore','./rectangle','./vector2','./piecewise-curve'],function (require) {
 
     'use strict';
@@ -62672,404 +66131,251 @@ define('common/v3/pixi/view',['require','underscore','backbone','pixi'],function
 
     return PixiView;
 });
-define('common/v3/pixi/view/hybrid',['require','underscore','backbone','pixi','../view'],function(require) {
+define('views/mirror',['require','pixi','common/v3/pixi/view','common/colors/colors','common/math/vector2','constants'],function(require) {
 
     'use strict';
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var PixiView = require('../view');
+    var PIXI = require('pixi');
 
-    /**
-     * Hybrid view also has an $el/el property that behaves
-     *   like the Backbone.View.  Events can be defined for
-     *   the element and its decendents with the htmlEvents
-     *   property.
-     */
-    var HybridView = PixiView.extend({
+    var PixiView = require('common/v3/pixi/view');
+    var Colors   = require('common/colors/colors');
+    var Vector2  = require('common/math/vector2');
 
-        htmlEvents: {},
+    var Constants = require('constants');
 
-        tagName: Backbone.View.prototype.tagName,
-
-        constructor: function() {
-            this.cid = _.uniqueId('view');
-            this._ensureElement();
-            this.delegateHtmlEvents();
-
-            PixiView.apply(this, arguments);
-        },
-
-        _createElement: Backbone.View.prototype._createElement,
-        _setElement:    Backbone.View.prototype._setElement,
-        _setAttributes: Backbone.View.prototype._setAttributes,
-        _ensureElement: Backbone.View.prototype._ensureElement,
-
-        delegateHtmlEvents: function() {
-            Backbone.View.prototype.delegateEvents.apply(this, [ this.htmlEvents ]);
-        },
-
-        delegate:         Backbone.View.prototype.delegate,
-        undelegateEvents: Backbone.View.prototype.undelegateEvents,
-
-        // Backbone >= 1.2 setElement calls delegateEvents(), which fires PixiView's
-        // Pixi event binding before initialize() has created the display objects.
-        // We strip that call out here; Pixi events are delegated by PixiView's
-        // constructor after initialize(), and HTML events by delegateHtmlEvents().
-        setElement: function(element) {
-            this._setElement(element);
-            return this;
-        }
-
-    });
-
-    return HybridView;
-});
-
-
-define('common/colors/colors',['require'],function (require) {
-
-	'use strict';
-
-	// Regex from http://stackoverflow.com/a/5624139, http://stackoverflow.com/a/5624139
-	var hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
-	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-	var _replaceShorthandFunction = function(m, r, g, b) {
-		return r + r + g + g + b + b;
-	};
-
-	/**
-	 * Expands shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-	 */
-	var replaceShorthand = function(hex) {
-		return hex.replace(shorthandRegex, _replaceShorthandFunction);
-	};
-
-
-	var Colors = {
-
-		/**
-		 * 
-		 */
-		parseHex: function(string) {
-			// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-			var fullHex = replaceShorthand(string);
-
-			// Remove the hash sign on the front
-			var numbers = fullHex.replace('#', '');
-
-			// Now we can parse it as hex
-			return parseInt(numbers, 16);
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		rgbToHex: function(r, g, b) {
-			if (typeof r === 'object') {
-				b = r.b;
-				g = r.g;
-				r = r.r;
-			}
-			return '#' + this.rgbToHexInteger(r, g, b).toString(16).slice(1);
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		rgbToHexInteger: function(r, g, b) {
-			if (typeof r === 'object') {
-				b = r.b;
-				g = r.g;
-				r = r.r;
-			}
-			return (1 << 24) + (r << 16) + (g << 8) + b;
-		},
-
-		/**
-		 * http://stackoverflow.com/a/5624139
-		 */
-		hexToRgb: function(hex) {
-			hex = replaceShorthand(hex);
-
-			var result = hexRegex.exec(hex);
-			return result ? {
-				r: parseInt(result[1], 16),
-				g: parseInt(result[2], 16),
-				b: parseInt(result[3], 16)
-			} : null;
-		},
-
-		/**
-		 * 
-		 */
-		hexToValue: function(hex) {
-			hex = replaceShorthand(hex);
-
-			var result = hexRegex.exec(hex);
-			return parseInt(result[1], 16) + parseInt(result[2], 16) + parseInt(result[3], 16);
-		},
-
-		/**
-		 * Parses an rgb/rgba string into its component parts and returns them as an object.
-		 */
-		parseRgba: function(rgbString) {
-			var result = /^rgba?\(\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\s*(?:,\s*([\d\.]+))?\)$/.exec(rgbString);
-			if (result) {
-				if (result[4] !== undefined) {
-					return {
-						r: parseInt(result[1]),
-						g: parseInt(result[2]),
-						b: parseInt(result[3]),
-						a: parseFloat(result[4])
-					};
-				}
-				else {
-					return {
-						r: parseInt(result[1]),
-						g: parseInt(result[2]),
-						b: parseInt(result[3])
-					};
-				}
-			}
-			else
-				return null;
-		},
-
-		/**
-		 * Takes either hex or rgba format and converts it into an rgba string with alpha.
-		 * If alpha isn't specified, defaults to 1.  If alpha is a boolean, it takes the
-		 *   place of return Object.
-		 */
-		toRgba: function(sourceColor, alpha, returnObject) {
-			var rgb = this.hexToRgb(sourceColor);
-
-			if (!rgb)
-				rgb = this.parseRgba(sourceColor);
-
-			if (rgb) {
-				if (alpha !== undefined && alpha !== false && alpha !== true)
-					rgb.a = alpha;
-				if (rgb.a === undefined)
-					rgb.a = 1;
-
-				if (returnObject || alpha === true)
-					return rgb;
-				else
-					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
-			} 
-			else
-				return null;	
-		},
-
-		/**
-		 * Algorithm from http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-		 */
-		darkenRgba: function(rgba, percent) {
-			var type = typeof rgba;
-			if (type !== 'object')
-				rgba = this.toRgba(rgba);
-			var amount = Math.round(255 * percent);
-			rgba.r -= amount;
-			rgba.g -= amount;
-			rgba.b -= amount;
-			if      (rgba.r > 255) rgba.r = 255;
-			else if (rgba.r < 0)   rgba.r = 0;
-			if      (rgba.g > 255) rgba.g = 255;
-			else if (rgba.g < 0)   rgba.g = 0;
-			if      (rgba.b > 255) rgba.b = 255;
-			else if (rgba.b < 0)   rgba.b = 0;
-
-			if (type === 'object')
-				return rgba;
-			else
-				return 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')';
-		},
-
-		darkenHex: function(colorString, percent) {
-			var rgba = this.toRgba(colorString, true);
-			this.darkenRgba(rgba, percent);
-			return this.rgbToHex(rgba.r, rgba.g, rgba.b);
-		},
-
-		lightenRgba: function(rgba, percent) {
-			return this.darkenRgba(rgba, -percent);
-		},
-
-		lightenHex: function(colorString, percent) {
-			return this.darkenHex(colorString, -percent);
-		},
-
-		interpolateRgba: function(rgba1, rgba2, t, rgba) {
-			if (!rgba)
-				rgba = {};
-
-			rgba.r = Math.round((rgba1.r * t) + (rgba2.r * (1 - t)));
-			rgba.g = Math.round((rgba1.g * t) + (rgba2.g * (1 - t)));
-			rgba.b = Math.round((rgba1.b * t) + (rgba2.b * (1 - t)));
-			if (rgba1.a !== undefined && rgba2.a !== undefined)
-				rgba.a = Math.round((rgba1.a * t) + (rgba2.a * (1 - t)));
-
-			return rgba;
-		},
-
-		interpolateHex: function(hex1, hex2, t) {
-			var rgba = this.interpolateRgba(this.hexToRgb(hex1), this.hexToRgb(hex2), t);
-			return this.rgbToHex(rgba);
-		},
-
-		interpolateHexInteger: function(int1, int2, t) {
-			var b1 =  int1 & 255;
-			var g1 = (int1 >> 8) & 255;
-			var r1 = (int1 >> 16) & 255;
-
-			var b2 =  int2 & 255;
-			var g2 = (int2 >> 8) & 255;
-			var r2 = (int2 >> 16) & 255;
-
-			var r = Math.round((r1 * t) + (r2 * (1 - t)));
-			var g = Math.round((g1 * t) + (g2 * (1 - t)));
-			var b = Math.round((b1 * t) + (b2 * (1 - t)));
-
-			return (1 << 24) + (r << 16) + (g << 8) + b;
-		}
-	};
-
-	return Colors;
-});
-
-define('common/v3/pixi/view/arrow',['require','underscore','backbone','pixi','../view','common/colors/colors','common/math/vector2'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-    var PixiView = require('../view');
-
-    var Colors    = require('common/colors/colors');
-    var Vector2   = require('common/math/vector2');
-
-
-    var ArrowViewModel = Backbone.Model.extend({
-        defaults: {
-            originX: 0,
-            originY: 0,
-
-            targetX: 50,
-            targetY: 0,
-
-            minLength: 25,
-            maxLength: null,
-            length: 0
-        },
-
-        initialize: function() {
-            this._settings = {};
-        },
-
-        translate: function(x, y) {
-            this._settings.originX = this.get('originX') + x;
-            this._settings.originY = this.get('originY') + y;
-            this._settings.targetX = this.get('targetX') + x;
-            this._settings.targetY = this.get('targetY') + y;
-            this.set(this._settings);
-        },
-
-        moveTo: function(x, y) {
-            this._settings.originX = x;
-            this._settings.originY = y;
-            this._settings.targetX = x + (this.get('targetX') - this.get('originX'));
-            this._settings.targetY = y + (this.get('targetY') - this.get('originY'));
-            this.set(this._settings);
-        }
-    });
-
-
-    var ArrowView = PixiView.extend({
+    var MirrorView = PixiView.extend({
 
         initialize: function(options) {
-            options = _.extend({
-                tailWidth: 8,
+            this.simulation = options.simulation;
+            this.leftFacing = options.leftFacing;
+            this.modelThickness = Constants.MIRROR_THICKNESS;
+            this.xOffset = (options.leftFacing) ? 0 : -this.modelThickness;
 
-                headWidth: 20,
-                headLength: 20,
-
-                fillColor: '#ff0000',
-                fillAlpha: 1
-            }, options);
-
-            this.tailWidth = options.tailWidth;
-
-            this.headWidth = options.headWidth;
-            this.headLength = options.headLength;
-
-            this.fillColor = Colors.parseHex(options.fillColor);
-            this.fillAlpha = options.fillAlpha;
-
-            this._originVector = new Vector2();
-            this._targetVector = new Vector2();
-            this._direction    = new Vector2();
+            // Cached objects
+            this._position = new Vector2();
 
             this.initGraphics();
+            this.updateMVT(options.mvt);
 
-            this.listenTo(this.model, 'change:originX change:originY change:targetX change:targetY', this.drawArrow);
+            this.listenTo(this.model, 'change:reflectivity', this.reflecivityChanged);
+            this.listenTo(this.simulation, 'change:mirrorsEnabled', this.mirrorsEnabledChanged);
+
+            this.mirrorsEnabledChanged(this.simulation, this.simulation.get('mirrorsEnabled'));
         },
 
         initGraphics: function() {
-            this.tailGraphics = new PIXI.Graphics();
-            this.headGraphics = new PIXI.Graphics();
+            this.graphics = new PIXI.Graphics();
+            this.outlineGraphics = new PIXI.Graphics();
 
-            this.transformFrame = new PIXI.Container();
-            this.transformFrame.addChild(this.tailGraphics);
-            this.transformFrame.addChild(this.headGraphics);
+            var blurFilter = new PIXI.filters.BlurFilter();
+            blurFilter.blur = 20;
 
-            this.displayObject.addChild(this.transformFrame);
+            this.shineMask = new PIXI.Graphics();
 
-            this.drawArrow();
+            this.shineGraphics = new PIXI.Graphics();
+            this.shineGraphics.mask = this.shineMask;
+            this.shineGraphics.filters = [ blurFilter ];
+
+            this.displayObject.addChild(this.graphics);
+            this.displayObject.addChild(this.shineGraphics);
+            this.displayObject.addChild(this.shineMask);
+            this.displayObject.addChild(this.outlineGraphics);
         },
 
-        drawArrow: function() {
-            var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-            var target = this._targetVector.set(this.model.get('targetX'), this.model.get('targetY'));
+        draw: function() {
+            // Calculate position and dimensions
+            var thickness = this.mvt.modelToViewDeltaX(this.modelThickness);
+            var height = this.mvt.modelToViewDeltaY(this.model.getBounds().h);
+            var position = this._position
+                .set(this.mvt.modelToView(this.model.get('position')))
+                .add(-thickness / 2 + this.xOffset, 0);
 
-            var angle  = this._direction.set(target).sub(origin).angle();
-            var scale  = 1;
-            var length = origin.distance(target);
-            if (length < this.headLength) {
-                scale = length / this.headLength;
-                length = this.headLength;
+            // Calculate color
+            var reflectivity = this.model.getReflectivity();
+            var maxGray = 100;
+            var minGray = 220;
+            var grayValue = minGray - Math.floor(reflectivity * (minGray - maxGray));
+            var fillColor = Colors.rgbToHexInteger(grayValue, grayValue, grayValue);
+            var lineGrayValue = Math.floor(grayValue * 0.7);
+            var lineColor = Colors.rgbToHexInteger(lineGrayValue, lineGrayValue, lineGrayValue);
+            var lineWidth = 2;
+
+            // Position everything
+            this.displayObject.x = position.x;
+            this.displayObject.y = position.y;
+
+            var graphics = this.graphics;
+            graphics.clear();
+            graphics.beginFill(fillColor, 1);
+
+            graphics.lineStyle(lineWidth, lineColor, 1);
+            graphics.drawEllipse(thickness * 1.5, height / 2, thickness / 2, height / 2);
+
+            graphics.lineStyle(0, 0, 0);
+            graphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+            graphics.drawRect(thickness / 2, 0, thickness, height);
+
+            graphics.endFill();
+
+            graphics.lineStyle(lineWidth, lineColor, 1);
+            graphics.moveTo(thickness / 2, 0);
+            graphics.lineTo(thickness * 1.5, 0);
+            graphics.moveTo(thickness / 2, height);
+            graphics.lineTo(thickness * 1.5, height);
+
+            var outlineGraphics = this.outlineGraphics;
+            outlineGraphics.lineStyle(lineWidth, lineColor, 1);
+            outlineGraphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+
+            var mask = this.shineMask;
+            mask.clear();
+            mask.beginFill();
+            mask.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+            mask.endFill();
+
+            var shineGraphics = this.shineGraphics;
+            shineGraphics.clear();
+            shineGraphics.lineStyle(2, 0xFFFFFF, 1);
+            shineGraphics.moveTo(0, height);
+            shineGraphics.lineTo(thickness, 0);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.draw();
+        },
+
+        reflecivityChanged: function() {
+            this.draw();
+        },
+
+        mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
+            this.displayObject.visible = mirrorsEnabled;
+        }
+
+    });
+
+    return MirrorView;
+});
+
+define('common/v3/pixi/view/sprite-collection',['require','backbone','pixi','../view','common/math/vector2','common/colors/colors'],function(require) {
+
+    'use strict';
+
+    var Backbone = require('backbone');
+    var PIXI     = require('pixi');
+
+    var PixiView = require('../view');
+
+    var Vector2  = require('common/math/vector2');
+    var Colors   = require('common/colors/colors');
+
+    /**
+     * A view that renders sprites from a Backbone collection or array of models.
+     *   The models must have a "position" attribute that is an object with x and
+     *   y values.  To keep the sprites up to date, call update().
+     */
+    var SpriteCollectionView = PixiView.extend({
+
+        /**
+         * Initializes the new SpriteCollectionView.
+         */
+        initialize: function(options) {
+            this.collection = options.collection;
+
+            this.texture = this.getTexture();
+            this.sprites = [];
+
+            this.updateMVT(options.mvt);
+        },
+
+        /**
+         * Returns texture used for sprites.  Override in child classes.
+         */
+        getTexture: function() {
+            return PIXI.Texture.EMPTY;
+        },
+
+        /**
+         * Returns the texture to be used in a specific sprite instance.  Can
+         *   be overrided in child classes to add things like random textures.
+         */
+        getSpriteTexture: function() {
+            return this.texture;
+        },
+
+        /**
+         * Calculates current scale for sprites.  Override in child classes.
+         */
+        getSpriteScale: function() {
+            return 1;
+        },
+
+        getModels: function() {
+            return (this.collection.models) ? 
+                this.collection.models : 
+                this.collection;
+        },
+
+        /**
+         * Updates the model-view-transform and anything that
+         *   relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.spriteScale = this.getSpriteScale();
+
+            this.update();
+        },
+
+        update: function() {
+            if (!this.displayObject.visible)
+                return;
+
+            var mvt = this.mvt;
+            var sprites = this.sprites;
+            var models = this.getModels();
+
+            for (var i = 0; i < models.length; i++) {
+                if (i === sprites.length)
+                    this.createSprite();
+
+                this.updateSprite(sprites[i], models[i]);
             }
 
-            this.model.set('length', length);
+            if (sprites.length > models.length) {
+                for (var i = models.length; i < sprites.length; i++)
+                    sprites[i].visible = false;
+            }
+        },
 
-            var tail = this.tailGraphics;
-            var head = this.headGraphics;
+        updateSprite: function(sprite, model) {
+            var pos = model.get('position');
+            var x = this.mvt.modelToViewX(pos.x);
+            var y = this.mvt.modelToViewY(pos.y);
+            sprite.visible = true;
+            sprite.x = x;
+            sprite.y = y;
+            sprite.scale.x = this.spriteScale;
+            sprite.scale.y = this.spriteScale;
+        },
 
-            // Draw it pointing straight to the right and then rotate it.
-            tail.clear();
-            head.clear();
-
-            tail.beginFill(this.fillColor, this.fillAlpha);
-            tail.drawRect(0, -this.tailWidth / 2, length - this.headLength, this.tailWidth);
-            tail.endFill();
-
-            head.beginFill(this.fillColor, this.fillAlpha);
-            head.moveTo(length, 0);
-            head.lineTo(length - this.headLength,  this.headWidth / 2);
-            head.lineTo(length - this.headLength, -this.headWidth / 2);
-            head.endFill();
-
-            this.displayObject.x = origin.x;
-            this.displayObject.y = origin.y;
-            this.transformFrame.rotation = angle;
-            this.transformFrame.scale.x = scale;
-            this.transformFrame.scale.y = scale;
+        createSprite: function() {
+            var sprite = new PIXI.Sprite(this.getSpriteTexture());
+            sprite.anchor.x = 0.5;
+            sprite.anchor.y = 0.5;
+            this.sprites.push(sprite);
+            this.displayObject.addChild(sprite);
+            return sprite;
         },
 
         show: function() {
+            this.update();
             this.displayObject.visible = true;
         },
 
@@ -63077,19 +66383,14 @@ define('common/v3/pixi/view/arrow',['require','underscore','backbone','pixi','..
             this.displayObject.visible = false;
         },
 
-        getRotation: function() {
-            return this.transformFrame.rotation;
+        visible: function() {
+            return this.displayObject.visible;
         }
-
-    }, {
-
-        ArrowViewModel: ArrowViewModel
 
     });
 
-    return ArrowView;
+    return SpriteCollectionView;
 });
-
 define('common/v3/pixi/assets',['require','underscore','pixi'],function (require) {
 
     'use strict';
@@ -63410,265 +66711,194 @@ define('assets',['require','common/v3/pixi/assets'],function (require) {
     Assets.Path = 'img/';
 
     Assets.Images = {
-        LADYBUG: 'ladybug',
-        LADYBUG_OPEN_WINGS: 'ladybug-open-wings'
+        SPHERE:             'sphere.png',
+        PHOTON:             'photon.png',
+        PHOTON_COMET:       'photon-comet.png',
+        FLASHLIGHT:         'flashlight.png',
+        EXPLOSION_PARTICLE: 'explosion-particle.png'
     };
 
-    Assets.SpriteSheets = {
-        'ladybug.json': [
-            Assets.Images.LADYBUG,
-            Assets.Images.LADYBUG_OPEN_WINGS,
-        ]
-    };
+    Assets.SpriteSheets = {};
 
     return Assets;
 });
 
-define('views/ladybug',['require','pixi','common/v3/pixi/view/hybrid','common/v3/pixi/view/arrow','assets','constants'],function(require) {
+define('views/photon-collection',['require','common/v3/pixi/view/sprite-collection','common/colors/wavelength','common/colors/colors','models/simulation','assets'],function(require) {
 
     'use strict';
 
-    var PIXI = require('pixi');
+    var SpriteCollectionView = require('common/v3/pixi/view/sprite-collection');
+    var WavelengthColors     = require('common/colors/wavelength');
+    var Colors               = require('common/colors/colors');
 
-    var HybridView = require('common/v3/pixi/view/hybrid');
-    var ArrowView  = require('common/v3/pixi/view/arrow');
-
+    var PEffectSimulation = require('models/simulation');
 
     var Assets = require('assets');
 
-    var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-
     /**
-     * A view that represents the player particle
+     * A view that renders photon sprites for every photon in the sim
      */
-    var LadybugView = HybridView.extend({
-
-        events: {
-            'touchstart      .ladybug': 'dragStart',
-            'mousedown       .ladybug': 'dragStart',
-            'touchmove       .ladybug': 'drag',
-            'mousemove       .ladybug': 'drag',
-            'touchend        .ladybug': 'dragEnd',
-            'mouseup         .ladybug': 'dragEnd',
-            'touchendoutside .ladybug': 'dragEnd',
-            'mouseupoutside  .ladybug': 'dragEnd',
-        },
-
-        tagName: 'button',
-        className: 'btn btn-secondary return-ladybug-btn',
-
-        htmlEvents: {
-            'click': 'returnButtonClicked'
-        },
+    var PhotonCollectionView = SpriteCollectionView.extend({
 
         initialize: function(options) {
-            this.mvt = options.mvt;
+            // A map of wavelengths to colors for caching
+            this.colors = {};
+            this.cometTexture = Assets.Texture(Assets.Images.PHOTON_COMET);
+
+            SpriteCollectionView.prototype.initialize.apply(this, arguments);
+
             this.simulation = options.simulation;
 
-            // Object caches
-            this._dragOffset = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-
-            this.initGraphics();
-
-            this.ladybug.buttonMode = true;
-            this.ladybug.cursor = 'pointer';
-
-            this.listenTo(this.model, 'change:position',     this.updatePosition);
-            this.listenTo(this.model, 'change:velocity',     this.velocityChanged);
-            this.listenTo(this.model, 'change:acceleration', this.accelerationChanged);
-            this.listenTo(this.model, 'change:angle',        this.angleChanged);
-
-            this.$el.html('Return Ladybug');
-            this.$el.hide();
-            this.returnButtonHidden = true;
+            this.listenTo(this.simulation, 'change:viewMode', this.viewModeChanged);
         },
 
-        initGraphics: function() {
-            this.initArrows();
-            this.initSprites();
-
-            this.updateMVT(this.mvt);
-            this.angleChanged(this.model, this.model.get('angle'));
+        /**
+         * Returns texture used for sprites.  Override in child classes.
+         */
+        getTexture: function() {
+            return Assets.Texture(Assets.Images.PHOTON);
         },
 
-        initSprites: function() {
-            var ladybug = Assets.createSprite(Assets.Images.LADYBUG);
-            ladybug.anchor.x = 0.5;
-            ladybug.anchor.y = 0.5;
-            this.ladybugSprite = ladybug;
-
-            var ladybugOpenWings = Assets.createSprite(Assets.Images.LADYBUG_OPEN_WINGS);
-            ladybugOpenWings.anchor.x = 0.5;
-            ladybugOpenWings.anchor.y = 0.5;
-
-            this.ladybug = new PIXI.Container();
-            this.idleWings = new PIXI.Container();
-            this.openWings = new PIXI.Container();
-
-            this.idleWings.addChild(ladybug);
-            this.openWings.addChild(ladybugOpenWings);
-            this.openWings.visible = false;
-
-            this.ladybug.addChild(this.idleWings);
-            this.ladybug.addChild(this.openWings);
-            this.displayObject.addChild(this.ladybug);
-        },
-
-        initArrows: function() {
-            this.velocityArrowModel = new ArrowView.ArrowViewModel({
-                targetX: 0,
-                targetY: 0
-            });
-
-            this.velocityArrowView = new ArrowView({
-                model: this.velocityArrowModel,
-                fillColor: Constants.VELOCITY_COLOR
-            });
-
-            this.accelerationArrowModel = new ArrowView.ArrowViewModel({
-                targetX: 0,
-                targetY: 0
-            });
-
-            this.accelerationArrowView = new ArrowView({
-                model: this.accelerationArrowModel,
-                fillColor: Constants.ACCELERATION_COLOR
-            });
-
-            this.displayObject.addChild(this.velocityArrowView.displayObject);
-            this.displayObject.addChild(this.accelerationArrowView.displayObject);
-        },
-
-        updatePosition: function(model, position) {
-            var viewPos = this.mvt.modelToView(position);
-            this.displayObject.x = viewPos.x;
-            this.displayObject.y = viewPos.y;
-
-            if (this.simulation.ladybugOutOfBounds())
-                this.showReturnButton();
+        /**
+         * Returns the texture to be used in a specific sprite instance.  Can
+         *   be overrided in child classes to add things like random textures.
+         */
+        getSpriteTexture: function() {
+            if (PhotonCollectionView.displayAsComets)
+                return this.cometTexture;
             else
-                this.hideReturnButton();
+                return this.texture;
         },
 
+        /**
+         * Calculates current scale for sprites.  Override in child classes.
+         */
+        getSpriteScale: function() {
+            var targetHeight = this.mvt.modelToViewDeltaX(PhotonCollectionView.modelSize);
+            var scale = targetHeight / this.texture.height;
+            return scale;
+        },
+
+        getColorFromWavelength: function(wavelength) {
+            var key = '' + wavelength;
+            if (this.colors[key] === undefined)
+                this.colors[key] = Colors.parseHex(WavelengthColors.nmToHex(wavelength));
+            return this.colors[key];
+        },
+
+        updateSprite: function(sprite, model) {
+            SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
+
+            sprite.tint = this.getColorFromWavelength(model.get('wavelength'));
+            sprite.visible = model.get('visible');
+            sprite.texture = this.getSpriteTexture();
+            sprite.rotation = model.get('velocity').angle();
+        },
+
+        viewModeChanged: function(simulation, viewMode) {
+            if (viewMode === PEffectSimulation.PHOTON_VIEW)
+                this.show();
+            else
+                this.hide();
+        }
+
+    }, {
+
+        modelSize: 22,
+        displayAsComets: false
+
+    });
+
+    return PhotonCollectionView;
+});
+define('views/tube',['require','underscore','pixi','common/v3/pixi/view','common/colors/colors','../constants'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+    var PixiView = require('common/v3/pixi/view');
+    var Colors   = require('common/colors/colors');
+
+    var Constants = require('../constants');
+
+    /**
+     *
+     */
+    var TubeView = PixiView.extend({
+
+        /**
+         * Overrides PixiView's initializeDisplayObject function
+         */
+        initializeDisplayObject: function() {
+            this.displayObject = new PIXI.Graphics();
+        },
+
+        /**
+         * Initializes the new TubeView.
+         */
+        initialize: function(options) {
+            options = _.extend({
+                color: '#000'
+            }, options);
+
+            this.color = Colors.parseHex(options.color);
+
+            this.updateMVT(options.mvt);
+
+            this.listenTo(this.model, 'change:position', this.updatePosition);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that
+         *   relies on it.
+         */
         updateMVT: function(mvt) {
             this.mvt = mvt;
 
-            this.ladybug.scale.x = this.ladybug.scale.y = this.calculateScale();
-
-            this.updatePosition(this.model, this.model.get('position'));
+            this.draw();
         },
 
-        calculateScale: function() {
-            var targetSpriteHeight = this.mvt.modelToViewDeltaY(this.model.get('length')); // in pixels
-            return targetSpriteHeight / this.ladybugSprite.height;
+        draw: function() {
+            var mirrorPerspecitveWidth = this.mvt.modelToViewDeltaX(Constants.MIRROR_THICKNESS);
+            var minX   = this.mvt.modelToViewX(this.model.getMinX());
+            var minY   = this.mvt.modelToViewY(this.model.getMinY());
+            var maxY   = this.mvt.modelToViewY(this.model.getMaxY());
+            var width  = this.mvt.modelToViewDeltaX(this.model.getWidth());
+            var height = this.mvt.modelToViewDeltaY(this.model.getHeight());
+
+            var graphics = this.displayObject;
+            graphics.clear();
+            graphics.lineStyle(2, this.color, 1);
+
+            graphics.moveTo(minX, minY);
+            graphics.lineTo(minX + width, minY);
+
+            this.fixGraphics(graphics);
+
+            graphics.moveTo(minX, maxY);
+            graphics.lineTo(minX + width, maxY);
+
+            this.fixGraphics(graphics);
+
+            graphics.drawEllipse(minX, (maxY + minY) / 2, mirrorPerspecitveWidth / 2, height / 2);
+
+            this.fixGraphics(graphics);
+
+            graphics.drawEllipse(minX + width, (maxY + minY) / 2, mirrorPerspecitveWidth / 2, height / 2);
         },
 
-        dragStart: function(event) {
-            this.simulation.startSampling();
-
-            if (!this.simulation.get('recording'))
-                this.simulation.set('recording', true);
-
-            if (this.simulation.get('paused'))
-                this.simulation.play();
-
-            this.simulation.set('motionType', 'Manual');
-            this.simulation.set('updateMode', UpdateMode.POSITION);
-
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-
-                var x = this.mvt.viewToModelX(local.x);
-                var y = this.mvt.viewToModelY(local.y);
-
-                this.simulation.setSamplePoint(x, y);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-
-            this.simulation.stopSampling();
-        },
-
-        update: function(time, deltaTime, paused) {
-
-        },
-
-        velocityChanged: function(model, velocity) {
-            if (velocity.length() >= LadybugView.WING_OPEN_VELOCITY) {
-                this.openWings.visible = true;
-                this.idleWings.visible = false;
-            }
-            else {
-                this.idleWings.visible = true;
-                this.openWings.visible = false;
-            }
-
-            this.velocityArrowModel.set('targetX', this.mvt.modelToViewDeltaX(velocity.x));
-            this.velocityArrowModel.set('targetY', this.mvt.modelToViewDeltaY(velocity.y));
-        },
-
-        accelerationChanged: function(model, acceleration) {
-            this.accelerationArrowModel.set('targetX', this.mvt.modelToViewDeltaX(acceleration.x));
-            this.accelerationArrowModel.set('targetY', this.mvt.modelToViewDeltaY(acceleration.y));
-        },
-
-        angleChanged: function(model, angle) {
-            this.ladybug.rotation = angle + Math.PI / 2;
-        },
-
-        returnButtonClicked: function(event) {
-            this.simulation.returnLadybug();
-        },
-
-        hideReturnButton: function() {
-            if (!this.returnButtonHidden) {
-                this.$el.hide();
-                this.returnButtonHidden = true;
-            }
-        },
-
-        showReturnButton: function() {
-            if (this.returnButtonHidden) {
-                this.$el.show();
-                this.returnButtonHidden = false;
-            }
-        },
-
-        reset: function() {
-            this.updateMVT(this.mvt);
-            this.angleChanged(this.model, this.model.get('angle'));
-        },
-
-        showVelocityArrow: function() {
-            this.velocityArrowView.displayObject.visible = true;
-        },
-
-        hideVelocityArrow: function() {
-            this.velocityArrowView.displayObject.visible = false;
-        },
-
-        showAccelerationArrow: function() {
-            this.accelerationArrowView.displayObject.visible = true;
-        },
-
-        hideAccelerationArrow: function() {
-            this.accelerationArrowView.displayObject.visible = false;
+        fixGraphics: function(graphics) {
+            if (graphics.currentPath && graphics.currentPath.shape)
+                graphics.currentPath.shape.closed = false;
         }
 
-    }, Constants.LadybugView);
+    });
 
-    return LadybugView;
+
+    return TubeView;
 });
-
 define('common/v3/pixi/extensions',['require','underscore','pixi','common/math/piecewise-curve','common/colors/colors'],function(require) {
 
     'use strict';
@@ -64125,897 +67355,2295 @@ define('common/v3/pixi/extensions',['require','underscore','pixi','common/math/p
 
     return PIXI;
 });
-define('views/ladybug-trace',['require','underscore','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/colors','constants'],function(require) {
+define('views/laser-curtain',['require','underscore','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/colors','common/colors/wavelength','common/math/rectangle','common/math/piecewise-curve','common/quantum/models/physics-util','constants'],function(require) {
 
     'use strict';
 
-    var _ = require('underscore');
-
+    var _    = require('underscore');
     var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
+                           require('common/v3/pixi/extensions');
+    var PixiView         = require('common/v3/pixi/view');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var Rectangle        = require('common/math/rectangle');
+    var PiecewiseCurve   = require('common/math/piecewise-curve');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
 
     var Constants = require('constants');
 
     /**
-     * A view that represents the player particle
+     * This is a color-filled overlay that increases in opacity as the
+     *   internal laser power increases to show a build-up of energy.
      */
-    var LadybugTraceView = PixiView.extend({
+    var LaserCurtainView = PixiView.extend({
+
+        /**
+         * Overrides PixiView's initializeDisplayObject function
+         */
+        initializeDisplayObject: function() {
+            this.displayObject = new PIXI.Graphics();
+        },
 
         initialize: function(options) {
             options = _.extend({
-                color: '#000',
-                lineWidth: 3
+                maxAlpha: 0.7
             }, options);
 
-            this.lineWidth = options.lineWidth;
-            this.color = options.color;
-            this.colorHex = Colors.parseHex(options.color);
             this.mvt = options.mvt;
-            this.dotsMode = false;
-            this.points = [];
+            this.simulation = options.simulation;
+            this.modelShape = options.modelShape;
+            this.maxAlpha = options.maxAlpha;
 
-            this.initGraphics();
+            this.listenTo(this.simulation.lasingPhotons, 'add remove', this.draw);
+            this.listenTo(this.simulation, 'atomic-states-changed', this.energyLevelsChanged);
+            this.energyLevelsChanged();
 
-            this.listenTo(this.model, 'history-added', this.historyAdded);
-            this.listenTo(this.model, 'history-removed', this.historyRemoved);
+            this.updateMVT(options.mvt);
         },
 
-        initGraphics: function() {
-            this.lines = new PIXI.Graphics();
-            this.displayObject.addChild(this.lines);
-
-            this.dotTexture = PIXI.Texture.generateCircleTexture(this.lineWidth, this.color);
-            this.dots = new PIXI.Container();
-            this.dots.visible = false;
-            this.displayObject.addChild(this.dots);
-            this.lastDotTime = 0;
-
-            this.updateMVT(this.mvt);
+        setMaxAlpha: function(maxAlpha) {
+            this.maxAlpha = maxAlpha;
         },
 
-        drawPoints: function() {
-            var time = this.model.get('time');
-            var history = this.model.culledStateHistory;
-            var start = 0;
-            var end = history.length - 1;
-            var point;
+        draw: function() {
+            // Determine the proper opacity of the shape's fill color
+            var numLasingPhotons = this.simulation.lasingPhotons.length;
+            var level = (numLasingPhotons > Constants.LASING_THRESHOLD) ? numLasingPhotons : 0;
+            var alpha = (level / Constants.KABOOM_THRESHOLD) * this.maxAlpha;
 
-            if (history.length > 0) {
-                if (this.dotsMode) {
-                    var dots = this.dots;
-                    var dot;
-                    var dotTexture = this.dotTexture;
+            // Determine the proper color
+            var deltaEnergy = this.middleState.getEnergyLevel() - this.groundState.getEnergyLevel();
+            var hex = WavelengthColors.nmToHex(PhysicsUtil.energyToWavelength(deltaEnergy));
+            var color = Colors.parseHex(hex);
 
-                    // Add new dots
-                    for (var i = start; i <= end; i += 4) {
-                        if (history[i].time > this.lastDotTime) {
-                            this.lastDotTime = history[i].time;
+            // Determine the bounds in view space
+            var shape = this.mvt.modelToView(this.modelShape);
 
-                            point = this.mvt.modelToView(history[i].position);
-                            dot = new PIXI.Sprite(dotTexture);
-                            dot.anchor.x = dot.anchor.y = 0.5;
-                            dot.x = point.x;
-                            dot.y = point.y;
-                            dot.time = history[i].time;
-                            dots.addChild(dot);
-                        }
-                    }
+            // Draw it
+            var graphics = this.displayObject;
+            graphics.clear();
+            graphics.beginFill(color, alpha);
 
-                    // Update the alpha of each dot
-                    var children = dots.children;
-                    for (var c = 0; c < children.length; c++) {
-                        children[c].alpha = this.calculateOpacityForState(time, children[c].time);
-                    }
-                }
-                else {
-                    var lines = this.lines;
-                    lines.clear();
-                    point = this.mvt.modelToView(history[start].position);
-                    lines.moveTo(point.x, point.y);
+            if (shape instanceof Rectangle)
+                graphics.drawRect(shape.x, shape.y, shape.w, shape.h);
+            else if (shape instanceof PiecewiseCurve)
+                graphics.drawPiecewiseCurve(shape);
 
-                    for (var i = start; i <= end; i++) {
-                        point = this.mvt.modelToView(history[i].position);
-
-                        lines.lineStyle(this.lineWidth, this.colorHex, this.calculateOpacityForState(time, history[i].time));
-                        lines.lineTo(point.x, point.y);
-                    }
-                }
-            }
+            graphics.endFill();
         },
 
-        calculateOpacityForState: function(time, stateTime) {
-            var age = time - stateTime;
-            if (age >= LadybugTraceView.SECONDS_TO_BE_OLD)
-                return LadybugTraceView.OLD_OPACITY;
-            else
-                return LadybugTraceView.NEW_OPACITY_RANGE.lerp(age / LadybugTraceView.SECONDS_TO_BE_OLD);
-        },
-
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
         updateMVT: function(mvt) {
             this.mvt = mvt;
 
-            if (this.displayObject.visible)
-                this.drawPoints();
+            this.draw();
         },
 
-        update: function(time, deltaTime, paused) {},
-
-        historyAdded: function() {
-            if (this.displayObject.visible)
-                this.drawPoints();
-        },
-
-        historyRemoved: function() {
-            this.clearTraces();
-            this.lastDotTime = 0;
-        },
-
-        showDots: function() {
-            this.dotsMode = true;
-            this.dots.visible = true;
-            this.lines.visible = false;
-            this.drawPoints();
-        },
-
-        showLines: function() {
-            this.dotsMode = false;
-            this.lines.visible = true;
-            this.dots.visible = false;
-            this.drawPoints();
-        },
-
-        hide: function() {
-            this.dots.visible = false;
-            this.lines.visible = false;
-        },
-
-        clearTraces: function() {
-            this.lines.clear();
-            this.dots.removeChildren();
-        }
-
-    }, Constants.LadybugTraceView);
-
-    return LadybugTraceView;
-});
-define('common/locks/input',['require'],function (require) {
-
-    'use strict';
-
-	/**
-	 * Helper function for setting properties on a view object without 
-	 *   causing a loop of updates between the model and the view
-	 */
-    var inputLock = function(callback) {
-	    if (this.updatingProperty)
-	        return;
-
-	    this.inputtingProperty = true;
-	    callback.apply(this);
-	    this.inputtingProperty = false;
-	};
-
-	return inputLock;
-
-});
-define('common/locks/update',['require'],function (require) {
-
-    'use strict';
-
-	/**
-	 * Helper function for updating a view's inputs from a model's 
-	 *   attributes without causing a loop of updates between the 
-	 *   model and the view
-	 */
-	var updateLock = function(callback) {
-	    if (this.inputtingProperty)
-	        return;
-
-	    this.updatingProperty = true;
-	    callback.apply(this);
-	    this.updatingProperty = false;
-	};
-
-	return updateLock;
-
-});
-define('common/locks/define-locks',['require','./input','./update'],function (require) {
-
-    'use strict';
-
-    var inputLock = require('./input');
-	var updateLock = require('./update');
-
-    /**
-     * Function that adds the two functions to a constructor's prototype.
-     */
-    var defineInputUpdateLocks = function(constructor) {
-		constructor.prototype.inputLock = inputLock;
-		constructor.prototype.updateLock = updateLock;
-    };
-
-	return defineInputUpdateLocks;
-
-});
-define('common/v3/pixi/view/arrow-draggable',['require','underscore','backbone','pixi','./arrow','common/colors/colors','common/math/vector2'],function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var Backbone = require('backbone');
-    var PIXI     = require('pixi');
-
-    var ArrowView = require('./arrow');
-
-    var Colors  = require('common/colors/colors');
-    var Vector2 = require('common/math/vector2');
-
-    // Default snapping function just snaps to nearest 10 pixels
-    var defaultSnappingFunction = function(coordinateComponent) {
-        return Math.round(coordinateComponent / 10) * 10;
-    };
-
-
-    var DraggableArrowView = ArrowView.extend({
-
-        events: {
-            'touchstart      .tailGraphics': 'dragBodyStart',
-            'mousedown       .tailGraphics': 'dragBodyStart',
-            'touchmove       .tailGraphics': 'dragBody',
-            'mousemove       .tailGraphics': 'dragBody',
-            'touchend        .tailGraphics': 'dragBodyEnd',
-            'mouseup         .tailGraphics': 'dragBodyEnd',
-            'touchendoutside .tailGraphics': 'dragBodyEnd',
-            'mouseupoutside  .tailGraphics': 'dragBodyEnd',
-
-            'touchstart      .headGraphics': 'dragHeadStart',
-            'mousedown       .headGraphics': 'dragHeadStart',
-            'touchmove       .headGraphics': 'dragHead',
-            'mousemove       .headGraphics': 'dragHead',
-            'touchend        .headGraphics': 'dragHeadEnd',
-            'mouseup         .headGraphics': 'dragHeadEnd',
-            'touchendoutside .headGraphics': 'dragHeadEnd',
-            'mouseupoutside  .headGraphics': 'dragHeadEnd',
-
-            'touchstart      .smallDot': 'dragHeadStart',
-            'mousedown       .smallDot': 'dragHeadStart',
-            'touchmove       .smallDot': 'dragHead',
-            'mousemove       .smallDot': 'dragHead',
-            'touchend        .smallDot': 'dragHeadEnd',
-            'mouseup         .smallDot': 'dragHeadEnd',
-            'touchendoutside .smallDot': 'dragHeadEnd',
-            'mouseupoutside  .smallDot': 'dragHeadEnd'
-        },
-
-        initialize: function(options) {
-            options = _.extend({
-                dragFillColor: undefined,
-                dragFillAlpha: undefined,
-
-                bodyDraggingEnabled: true,
-                headDraggingEnabled: true,
-
-                snappingEnabled: false,
-                snappingXFunction: defaultSnappingFunction,
-                snappingYFunction: defaultSnappingFunction,
-
-                useDotWhenSmall: false
-            }, options);
-
-            ArrowView.prototype.initialize.apply(this, [options]);
-
-            this.bodyDraggingEnabled = options.bodyDraggingEnabled;
-            this.headDraggingEnabled = options.headDraggingEnabled;
-
-            this.dragFillColor = options.dragFillColor !== undefined ? Colors.parseHex(options.dragFillColor) : this.fillColor;
-            this.dragFillAlpha = options.dragFillAlpha !== undefined ? options.dragFillAlpha : this.fillAlpha;
-            this.normalFillColor = this.fillColor;
-            this.normalFillAlpha = this.fillAlpha;
-
-            this.snappingEnabled = options.snappingEnabled;
-            this.snappingXFunction = options.snappingXFunction;
-            this.snappingYFunction = options.snappingYFunction;
-
-            this.useDotWhenSmall = options.useDotWhenSmall;
-            this.initSmallDot();
-
-            this._attributes = {};
-            this._dragOffset = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._tipRelativeDragOffset = new PIXI.Point();
-
-            // Has to be done after the graphics get drawn once
-            if (this.bodyDraggingEnabled)
-                this.tailGraphics.buttonMode = true;
-            if (this.headDraggingEnabled)
-                this.headGraphics.buttonMode = true;
-
-            this.tailGraphics.defaultCursor = 'move';
-            this.headGraphics.defaultCursor = 'pointer';
-        },
-
-        initSmallDot: function() {
-            this.smallDot = new PIXI.Graphics();
-            this.smallDot.beginFill(this.fillColor, this.fillAlpha * 0.5);
-            this.smallDot.drawCircle(0, 0, this.headLength / 2);
-            this.smallDot.endFill();
-            this.smallDot.visible = false;
-
-            this.displayObject.addChild(this.smallDot);
-
-            this.listenTo(this.model, 'change', this.modelChanged);
-        },
-
-        dragBodyStart: function(event) {
-            if (!this.bodyDraggingEnabled)
-                return;
-
-            this.setDraggingFill();
-
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.draggingBody = true;
-
-            this.trigger('drag-body-start');
-        },
-
-        dragBody: function(event) {
-            if (this.draggingBody) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                var dx = local.x - this.displayObject.x - this.dragOffset.x;
-                var dy = local.y - this.displayObject.y - this.dragOffset.y;
-
-                if (this.snappingEnabled) {
-                    this._attributes.originX = this.snappingXFunction(this.model.get('originX') + dx);
-                    this._attributes.originY = this.snappingYFunction(this.model.get('originY') + dy);
-                    this._attributes.targetX = this.snappingXFunction(this.model.get('targetX') + dx);
-                    this._attributes.targetY = this.snappingYFunction(this.model.get('targetY') + dy);
-                }
-                else {
-                    this._attributes.originX = this.model.get('originX') + dx;
-                    this._attributes.originY = this.model.get('originY') + dy;
-                    this._attributes.targetX = this.model.get('targetX') + dx;
-                    this._attributes.targetY = this.model.get('targetY') + dy;
-                }
-
-                this.model.set(this._attributes);
-            }
-        },
-
-        dragBodyEnd: function(event) {
-            this.draggingBody = false;
-            this.setNormalFill();
-            this.drawArrow();
-            this.trigger('drag-body-end');
-        },
-
-        dragHeadStart: function(event) {
-            if (!this.headDraggingEnabled)
-                return;
-
-            this.setDraggingFill();
-
-            var pointRelativeToObjectOrigin = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            var pointRelativeToArrowTip = this._tipRelativeDragOffset;
-            pointRelativeToArrowTip.x = pointRelativeToObjectOrigin.x + this.model.get('originX') - this.model.get('targetX');
-            pointRelativeToArrowTip.y = pointRelativeToObjectOrigin.y + this.model.get('originY') - this.model.get('targetY');
-
-            this.dragOffset = pointRelativeToArrowTip;
-            this.draggingHead = true;
-
-            this.trigger('drag-head-start');
-        },
-
-        dragHead: function(event) {
-            if (this.draggingHead) {
-                var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
-                var x = this.model.get('originX') + local.x - this.dragOffset.x;
-                var y = this.model.get('originY') + local.y - this.dragOffset.y;
-
-                delete this._attributes.originX;
-                delete this._attributes.originY;
-                if (this.snappingEnabled) {
-                    this._attributes.targetX = this.snappingXFunction(x);
-                    this._attributes.targetY = this.snappingYFunction(y);
-                }
-                else {
-                    this._attributes.targetX = x;
-                    this._attributes.targetY = y;
-                }
-
-                // Constrain with min and max lengths
-                var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-                var target = this._targetVector.set(this._attributes.targetX, this._attributes.targetY);
-                var length = origin.distance(target);
-
-                if ((this.model.get('minLength') === null || this.model.get('minLength') === undefined || length >= this.model.get('minLength')) &&
-                    (this.model.get('maxLength') === null || this.model.get('maxLength') === undefined || length <= this.model.get('maxLength'))
-                ) {
-                    this.model.set(this._attributes);
-                }
-                else if (!this.snappingEnabled) {
-                    // We will need to scale our desired target offset
-                    var direction = this._direction.set(target).sub(origin);
-
-                    var targetLength;
-                    if (this.model.get('minLength') !== null && this.model.get('minLength') !== undefined && length < this.model.get('minLength'))
-                        targetLength = this.model.get('minLength');
-                    else if (this.model.get('maxLength') !== null && this.model.get('maxLength') !== undefined && length > this.model.get('maxLength'))
-                        targetLength = this.model.get('maxLength');
-
-                    direction.normalize().scale(targetLength);
-
-                    this._attributes.targetX = this.model.get('originX') + direction.x;
-                    this._attributes.targetY = this.model.get('originY') + direction.y;
-                    this.model.set(this._attributes);
-                }
-            }
-        },
-
-        dragHeadEnd: function(event) {
-            this.draggingHead = false;
-            this.setNormalFill();
-            this.drawArrow();
-
-            if (this.useDotWhenSmall && this.smallDotEnabled) {
-                this.smallDot.visible = true;
-            }
-
-            this.trigger('drag-head-end');
-        },
-
-        setDraggingFill: function() {
-            this.fillColor = this.dragFillColor;
-            this.fillAlpha = this.dragFillAlpha;
-        },
-
-        setNormalFill: function() {
-            this.fillColor = this.normalFillColor;
-            this.fillAlpha = this.normalFillAlpha;
-        },
-
-        modelChanged: function() {
-            var origin = this._originVector.set(this.model.get('originX'), this.model.get('originY'));
-            var target = this._targetVector.set(this.model.get('targetX'), this.model.get('targetY'));
-            var length = origin.distance(target);
-
-            if (this.useDotWhenSmall && length < this.headLength) {
-                this.smallDot.x = target.x - origin.x;
-                this.smallDot.y = target.y - origin.y;
-
-                this.smallDot.visible = true;
-            }
-            else {
-                this.smallDot.visible = false;
-            }
-        },
-
-        disableBodyDragging: function() {
-            this.bodyDraggingEnabled = false;
-            this.tailGraphics.buttonMode = false;
-        },
-
-        enableBodyDragging: function() {
-            this.bodyDraggingEnabled = true;
-            this.tailGraphics.buttonMode = true;
-        },
-
-        disableHeadDragging: function() {
-            this.headDraggingEnabled = false;
-            this.headGraphics.buttonMode = false;
-        },
-
-        enableHeadDragging: function() {
-            this.headDraggingEnabled = true;
-            this.headGraphics.buttonMode = true;
+        energyLevelsChanged: function() {
+            if (this.groundState)
+                this.stopListening(this.groundState);
+            if (this.middleState)
+                this.stopListening(this.middleState);
+
+            this.groundState = this.simulation.getGroundState();
+            this.middleState = this.simulation.getMiddleEnergyState();
+
+            this.listenTo(this.groundState, 'change:energyLevel', this.draw);
+            this.listenTo(this.middleState, 'change:energyLevel', this.draw);
         }
 
     });
 
-    return DraggableArrowView;
+    return LaserCurtainView;
 });
 
-define('views/remote-control',['require','underscore','pixi','common/locks/define-locks','common/v3/pixi/view/hybrid','common/colors/colors','common/v3/pixi/view/arrow-draggable','constants'],function(require) {
+define('views/beam-curtain',['require','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/colors','common/colors/wavelength','common/math/rectangle','common/math/piecewise-curve'],function(require) {
 
     'use strict';
 
-    var _ = require('underscore');
+    var PIXI = require('pixi');
+
+                           require('common/v3/pixi/extensions');
+    var PixiView         = require('common/v3/pixi/view');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var Rectangle        = require('common/math/rectangle');
+    var PiecewiseCurve   = require('common/math/piecewise-curve');
+
+    /**
+     * Represents a semi-transparent beam of light coming out of a lamp
+     *   instead of individual photons.
+     */
+    var BeamCurtainView = PixiView.extend({
+
+        /**
+         * Overrides PixiView's initializeDisplayObject function
+         */
+        initializeDisplayObject: function() {
+            this.displayObject = new PIXI.Graphics();
+        },
+
+        initialize: function(options) {
+            this.mvt = options.mvt;
+
+            this.listenTo(this.model, 'change:photonsPerSecond change:wavelength', this.draw);
+
+            this.updateMVT(options.mvt);
+        },
+
+        draw: function() {
+            // Determine the color
+            var rgba = this.getColor();
+            var color = Colors.rgbToHexInteger(rgba);
+            var alpha = rgba.a;
+
+            // Determine the bounds in view space
+            var shape = this.mvt.modelToView(this.model.getBounds());
+
+            // Draw it
+            var graphics = this.displayObject;
+            graphics.clear();
+            graphics.beginFill(color, alpha);
+
+            if (shape instanceof Rectangle)
+                graphics.drawRect(shape.x, shape.y, shape.w, shape.h);
+            else if (shape instanceof PiecewiseCurve)
+                graphics.drawPiecewiseCurve(shape);
+
+            graphics.endFill();
+        },
+
+        getColor: function() {
+            var minLevel = 200;
+            var colorMax = 255;
+            var rate = this.model.get('photonsPerSecond') / this.model.get('maxPhotonsPerSecond');
+            // The power function here controls the ramp-up of actualColor intensity
+            var level = Math.max(minLevel, colorMax - Math.floor((colorMax - minLevel) * Math.pow(rate, 0.3)));
+            var levelRgba = { r: level, g: level, b: level };
+
+            // Get the wave color
+            var waveRgb = WavelengthColors.nmToRgba(this.model.get('wavelength'), 1, true);
+            // Our interpolation value is the color value of the wave as a percent
+            var valuePercent = ((waveRgb.r + waveRgb.g + waveRgb.b) / 3) / 255;
+
+            var finalColor = Colors.interpolateRgba(levelRgba, waveRgb, valuePercent);
+            finalColor.a = (255 - level) / 255;
+
+            return finalColor;
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.draw();
+        }
+
+    });
+
+    return BeamCurtainView;
+});
+
+define('views/wave',['require','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/colors','common/math/vector2','constants'],function(require) {
+
+    'use strict';
 
     var PIXI = require('pixi');
 
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-
-    var HybridView         = require('common/v3/pixi/view/hybrid');
-    var Colors             = require('common/colors/colors');
-    var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
+                   require('common/v3/pixi/extensions');
+    var PixiView = require('common/v3/pixi/view');
+    var Colors   = require('common/colors/colors');
+    var Vector2  = require('common/math/vector2');
 
     var Constants = require('constants');
-    var UpdateMode = Constants.UpdateMode;
-    var TAB_BG_COLOR        = Colors.parseHex(Constants.RemoteControlView.TAB_BG_COLOR);
-    var TAB_ACTIVE_BG_COLOR = Colors.parseHex(Constants.RemoteControlView.TAB_ACTIVE_BG_COLOR);
-    var ARROW_AREA_COLOR    = Colors.parseHex(Constants.RemoteControlView.ARROW_AREA_COLOR);
 
     /**
-     * A tool that allows the user to interact with the ladybug
-     *   indirectly by manipulating and arrow that represents
-     *   its position, velocity, or acceleration.
-     *
-     * Positioning is relative to its lower right corner.
+     * Draws a wave
      */
-    var RemoteControlView = HybridView.extend({
+    var WaveView = PixiView.extend({
 
-        events: {
-            'click .positionTab'     : 'positionSelected',
-            'click .velocityTab'     : 'velocitySelected',
-            'click .accelerationTab' : 'accelerationSelected',
+        /**
+         * Overrides PixiView's initializeDisplayObject function
+         */
+        initializeDisplayObject: function() {
+            this.displayObject = new PIXI.Graphics();
         },
 
-        tagName: 'div',
-        className: 'remote-control-view-header sim-controls',
+        initialize: function(options) {
+            this.mvt = options.mvt;
+            this.simulation = options.simulation;
+            this.origin = options.origin;
+            this.extent = options.extent;
+            this.lambda = options.lambda;
+            this.period = options.period;
+            this.amplitude = options.amplitude;
+            this.tube = options.tube;
+            this.color = options.color;
+            this.thickness = 2;
+
+            // Steps in x for which each piece-wise segment of the standing wave is computed
+            this.dx = 1;
+            this.elapsedTime = 0;
+
+            // Cached objects
+            this._origin = new Vector2();
+
+            this.updateMVT(options.mvt);
+        },
+
+        setColor: function(color) {
+            this.color = color;
+        },
+
+        setAmplitude: function(amplitude) {
+            this.amplitude = amplitude;
+        },
+
+        clear: function() {
+            this.displayObject.clear();
+        },
+
+        draw: function() {
+            var extent = this.mvt.modelToViewDeltaX(this.extent);
+            this.numPoints = Math.floor(extent / this.dx) + 1;
+            this.displayObject.lineStyle(this.thickness, Colors.parseHex(this.color), 1);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.draw();
+        },
+
+        update: function(time, deltaTime, paused) {
+            if (this.simulation.updated()) {
+                this.elapsedTime += Constants.DT;
+                this.clear();
+                if (this.amplitude !== 0)
+                    this.draw();
+            }
+        },
+
+        getMaxInternalAmplitude: function() {
+            return Constants.LASING_THRESHOLD;
+        }
+
+    });
+
+    return WaveView;
+});
+
+define('views/wave/standing',['require','views/wave'],function(require) {
+
+    'use strict';
+
+    var WaveView = require('views/wave');
+
+    /**
+     * A traveling sinusoidal wave
+     */
+    var StandingWaveView = WaveView.extend({
+
+        draw: function() {
+            WaveView.prototype.draw.apply(this, arguments);
+
+            var graphics = this.displayObject;
+            var origin = this._origin.set(this.mvt.modelToView(this.origin));
+            var a = Math.sin((this.elapsedTime / this.period) * Math.PI);
+
+            graphics.moveTo(origin.x, origin.y);
+
+            for (var i = 0; i < this.numPoints; i += 3) {
+                var x = this.dx * i;
+                var y = this.amplitude * (a * Math.sin((x / this.lambda) * Math.PI));
+
+                graphics.lineTo(x + origin.x, y + origin.y);
+            }
+
+            if (graphics.currentPath && graphics.currentPath.shape)
+                graphics.currentPath.shape.closed = false;
+        }
+
+    });
+
+    return StandingWaveView;
+});
+
+define('views/wave/traveling',['require','views/wave'],function(require) {
+
+    'use strict';
+
+
+    var WaveView = require('views/wave');
+
+    /**
+     * A traveling sinusoidal wave
+     */
+    var TravelingWaveView = WaveView.extend({
+
+        draw: function() {
+            WaveView.prototype.draw.apply(this, arguments);
+
+            var graphics = this.displayObject;
+            var origin = this._origin.set(this.mvt.modelToView(this.origin));
+
+            for (var i = 0; i < this.numPoints; i++) {
+                var x = this.dx * i;
+                var y = this.amplitude * Math.sin(((x - this.elapsedTime) / this.lambda) * Math.PI);
+
+                if (i === 0)
+                    graphics.moveTo(x + origin.x, y + origin.y);
+                else
+                    graphics.lineTo(x + origin.x, y + origin.y);
+            }
+
+            if (graphics.currentPath && graphics.currentPath.shape)
+                graphics.currentPath.shape.closed = false;
+        }
+
+    });
+
+    return TravelingWaveView;
+});
+
+define('views/wave/non-lasing',['require','common/math/vector2','views/wave'],function(require) {
+
+    'use strict';
+
+    var Vector2 = require('common/math/vector2');
+
+    var WaveView = require('views/wave');
+
+    /**
+     * A sine wave with randomized phase.
+     */
+    var NonLasingWaveView = WaveView.extend({
 
         initialize: function(options) {
-            this.simulation = options.simulation;
+            this.angle = options.angle;
 
-            this.selectedIndex = 0;
+            // Cached objects
+            this._point = new Vector2();
+
+            WaveView.prototype.initialize.apply(this, [options]);
+        },
+
+        draw: function() {
+            WaveView.prototype.draw.apply(this, arguments);
+
+            var graphics = this.displayObject;
+            var origin = this._origin.set(this.mvt.modelToView(this.origin));
+            var phase = Math.random() * Math.PI;
+            var point = this._point;
+
+            for (var i = 0; i < this.numPoints; i += 3) {
+                point.x = this.dx * i;
+                point.y = this.amplitude * (Math.sin(phase + (point.x / this.lambda) * Math.PI));
+                point.rotate(this.angle);
+
+                if (i === 0)
+                    graphics.moveTo(point.x + origin.x, point.y + origin.y);
+                else
+                    graphics.lineTo(point.x + origin.x, point.y + origin.y);
+            }
+
+            if (graphics.currentPath && graphics.currentPath.shape)
+                graphics.currentPath.shape.closed = false;
+
+            var alpha = Math.min(this.amplitude / 20, 1);
+            if (this.simulation.get('mirrorsEnabled'))
+                alpha *= 1 - this.simulation.rightMirror.getReflectivity();
+
+            graphics.alpha = alpha;
+        }
+
+    });
+
+    return NonLasingWaveView;
+});
+
+define('views/laser-wave',['require','pixi','common/v3/pixi/extensions','common/v3/pixi/view','common/colors/wavelength','common/math/vector2','common/quantum/models/physics-util','views/wave/standing','views/wave/traveling','views/wave/non-lasing','constants'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
+                           require('common/v3/pixi/extensions');
+    var PixiView         = require('common/v3/pixi/view');
+    var WavelengthColors = require('common/colors/wavelength');
+    var Vector2          = require('common/math/vector2');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
+
+    var StandingWaveView     = require('views/wave/standing');
+    var TravelingWaveView    = require('views/wave/traveling');
+    var NonLasingWaveGraphic = require('views/wave/non-lasing');
+
+    var Constants = require('constants');
+
+    /**
+     * A graphic that shows a standing wave whose amplitude is proportional to the number of photons
+     *   that are traveling more-or-less horizontally. It has a separate standing wave for inside the
+     *   cavity and a travelling wave for outside. It doesn't really work as a CompositePhetGraphic,
+     *   however, because it doesn't get added to the ApparatusPanel itself. Its two components do.
+     *   This is necessary because they need to be on different levels.
+     */
+    var LaserWaveView = PixiView.extend({
+
+        // This factor controls the visual amplitude of the waves inside and outside of the cavity
+        scaleFactor: 10,
+        cyclesInCavity: 10,
+        // The waves that are shown when the thins is not lasing
+        numNonLasingExternalWaveGraphics: 5,
+
+        initialize: function(options) {
+            this.mvt = options.mvt;
+            this.simulation = options.simulation;
 
             this.initGraphics();
 
-            this.$el.html('<h2>Remote Control</h2>');
-
-            this.listenTo(this.model, 'change:position',     this.updatePositionArrow);
-            this.listenTo(this.model, 'change:velocity',     this.updateVelocityArrow);
-            this.listenTo(this.model, 'change:acceleration', this.updateAccelerationArrow);
+            this.listenTo(this.simulation, 'atomic-states-changed', this.energyLevelsChanged);
+            this.energyLevelsChanged();
         },
 
         initGraphics: function() {
-            this.initTabbedPanels();
-            this.initArrows();
+            this.backgroundLayer = new PIXI.Container();
+            this.foregroundLayer = new PIXI.Container();
 
-            this.selectTab(this.selectedIndex);
-        },
+            var tube = this.simulation.tube;
+            var internalWaveOrigin = new Vector2(tube.getMinX(), tube.getMinY() + tube.getHeight() / 2);
+            var externalWaveOrigin = new Vector2(tube.getMinX() + tube.getWidth(), tube.getMinY() + tube.getHeight() / 2);
 
-        initTabbedPanels: function() {
-            this.tabs = new PIXI.Container();
-            this.panels = new PIXI.Container();
-            this.areaMask = new PIXI.Graphics();
+            this.internalStandingWaveView = new StandingWaveView({
+                mvt: this.mvt,
+                simulation: this.simulation,
+                origin: internalWaveOrigin,
+                extent: tube.getWidth(),
+                lambda: tube.getWidth() / this.cyclesInCavity,
+                period: 100,
+                amplitude: this.getNumLasingPhotons(),
+                color: '#fff'
+            });
 
-            // Create the objects necessary for each tabbed panel
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                // Create the tab container
-                var tab = new PIXI.Container();
+            this.externalTravelingWaveView = new TravelingWaveView({
+                mvt: this.mvt,
+                simulation: this.simulation,
+                origin: externalWaveOrigin,
+                extent: 400,
+                lambda: tube.getWidth() / this.cyclesInCavity,
+                period: 100,
+                amplitude: this.getNumLasingPhotons(),
+                color: '#fff'
+            });
 
-                // Create the background Graphics object
-                tab.background = new PIXI.Graphics();
-                tab.activeBackground = new PIXI.Graphics();
-                tab.addChild(tab.background);
-                tab.addChild(tab.activeBackground);
+            this.foregroundLayer.addChild(this.internalStandingWaveView.displayObject);
+            this.backgroundLayer.addChild(this.externalTravelingWaveView.displayObject);
 
-                // Create the label text
-                tab.label = new PIXI.Text(RemoteControlView.TABS[i].label, {
-                    font: RemoteControlView.TAB_FONT,
-                    fill: RemoteControlView.TABS[i].color
-                });
-                tab.label.resolution = this.getResolution();
-                tab.addChild(tab.label);
+            // Create the non-lasing wave graphics
+            var dTheta = 20;
+            var dy = tube.getHeight() / this.numNonLasingExternalWaveGraphics;
+            var j = Math.floor(this.numNonLasingExternalWaveGraphics / 2);
+            this.nonLasingExternalWaveViews = [];
 
-                // Add the tab
-                this.tabs.addChild(tab);
+            for (var i = 0; i < this.numNonLasingExternalWaveGraphics; i++) {
+                var theta = (i - j) * dTheta;
+                var yOffset = (i - j) * dy;
 
-                // Create and panel
-                var panel = new PIXI.Container();
+                var nonLasingWaveOrigin = new Vector2(
+                    tube.getMinX() + tube.getWidth(),
+                    tube.getMinY() + (tube.getHeight() / 2) + yOffset
+                );
 
-                // Create panel background
-                panel.background = new PIXI.Graphics();
-                panel.addChild(panel.background);
-
-                panel.controlArea = new PIXI.Graphics();
-                panel.controlArea.touchstart      = _.bind(this.dragStart, this);
-                panel.controlArea.mousedown       = _.bind(this.dragStart, this);
-                panel.controlArea.touchend        = _.bind(this.dragEnd, this);
-                panel.controlArea.mouseup         = _.bind(this.dragEnd, this);
-                panel.controlArea.touchendoutside = _.bind(this.dragEnd, this);
-                panel.controlArea.mouseupoutside  = _.bind(this.dragEnd, this);
-                panel.controlArea.interactive = true;
-                panel.addChild(panel.controlArea);
-
-                this.panels.addChild(panel);
-            }
-
-            this.positionTab     = this.tabs.getChildAt(0).background;
-            this.velocityTab     = this.tabs.getChildAt(1).background;
-            this.accelerationTab = this.tabs.getChildAt(2).background;
-
-            // Draw the backgrounds and position everything
-            this.drawTabbedPanels();
-
-            this.displayObject.addChild(this.tabs);
-            this.displayObject.addChild(this.panels);
-            this.displayObject.addChild(this.areaMask);
-        },
-
-        drawTabbedPanels: function() {
-            var pw = RemoteControlView.PANEL_WIDTH;
-            var ph = RemoteControlView.PANEL_HEIGHT;
-            var aw = RemoteControlView.AREA_WIDTH;
-            var ah = RemoteControlView.AREA_HEIGHT;
-            var tw = RemoteControlView.TAB_WIDTH;
-            var th = RemoteControlView.TAB_HEIGHT;
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                var panel = this.panels.getChildAt(i);
-
-                panel.background.clear();
-                panel.background.beginFill(TAB_ACTIVE_BG_COLOR, RemoteControlView.TAB_ACTIVE_BG_ALPHA);
-                panel.background.drawRect(-pw, -ph, pw, ph);
-                panel.background.endFill();
-
-                panel.controlArea.clear();
-                panel.controlArea.x = -RemoteControlView.AREA_WIDTH  - RemoteControlView.PANEL_PADDING;
-                panel.controlArea.y = -RemoteControlView.AREA_HEIGHT - RemoteControlView.PANEL_PADDING;
-                panel.controlArea.beginFill(ARROW_AREA_COLOR, RemoteControlView.ARROW_AREA_ALPHA);
-                panel.controlArea.drawRect(0, 0, aw, ah);
-                panel.controlArea.endFill();
-
-                var tab = this.tabs.getChildAt(i);
-                tab.x = -pw;
-                tab.y = (i + 1) * -th;
-
-                tab.background.buttonMode = true;
-                tab.background.defaultCursor = 'pointer';
-                tab.background.clear();
-                tab.background.beginFill(TAB_BG_COLOR, RemoteControlView.TAB_BG_ALPHA);
-                tab.background.drawRect(-tw, 0, tw, th);
-                tab.background.endFill();
-
-                tab.activeBackground.clear();
-                tab.activeBackground.beginFill(TAB_ACTIVE_BG_COLOR, RemoteControlView.TAB_ACTIVE_BG_ALPHA);
-                tab.activeBackground.drawRect(-tw, 0, tw, th);
-                tab.activeBackground.endFill();
-
-                tab.label.anchor.x = 1;
-                tab.label.anchor.y = 0.5;
-                tab.label.x = -10;
-                tab.label.y = Math.round(th / 2) + 3;
-            }
-
-            this.areaMask.clear();
-            this.areaMask.x = -RemoteControlView.AREA_WIDTH  - RemoteControlView.PANEL_PADDING;
-            this.areaMask.y = -RemoteControlView.AREA_HEIGHT - RemoteControlView.PANEL_PADDING;
-            this.areaMask.beginFill(0, 1);
-            this.areaMask.drawRect(0, 0, aw, ah);
-            this.areaMask.endFill();
-        },
-
-        initArrows: function() {
-            var models = [];
-            var views = [];
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                var arrowModel = new DraggableArrowView.ArrowViewModel({
-                    originX: 0,
-                    originY: 0,
-                    targetX: 0,
-                    targetY: 0,
-                    minLength: null
+                var waveView = new NonLasingWaveGraphic({
+                    mvt: this.mvt,
+                    simulation: this.simulation,
+                    origin: nonLasingWaveOrigin,
+                    extent: tube.getWidth(),
+                    lambda: tube.getWidth() / this.cyclesInCavity,
+                    period: 100,
+                    amplitude: this.getNumLasingPhotons(),
+                    color: '#fff',
+                    angle: theta * (Math.PI / 180)
                 });
 
-                var arrowView = new DraggableArrowView({
-                    model: arrowModel,
-                    fillColor: RemoteControlView.TABS[i].color,
-                    bodyDraggingEnabled: false,
-                    useDotWhenSmall: true
-                });
-                arrowView.displayObject.mask = this.areaMask;
-                this.panels.getChildAt(i).addChild(arrowView.displayObject);
-
-                models.push(arrowModel);
-                views.push(arrowView);
+                this.nonLasingExternalWaveViews[i] = waveView;
+                this.backgroundLayer.addChild(waveView.displayObject);
             }
 
-            this.arrowModels = models;
-            this.arrowViews = views;
-
-            this.repositionArrows();
-
-            // Listen for position changes
-            this.listenTo(views[0], 'drag-head-start', this.positionDragStart);
-            this.listenTo(views[0], 'drag-head-end',   this.positionDragEnd);
-            this.listenTo(models[0], 'change:targetX change:targetY', this.positionChanged);
-            this.listenTo(models[1], 'change:targetX change:targetY', this.velocityChanged);
-            this.listenTo(models[2], 'change:targetX change:targetY', this.accelerationChanged);
+            this.updateMVT(this.mvt);
         },
 
-        repositionArrows: function(maintainTargetPosition) {
-            this.updateLock(function() {
-                var models = this.arrowModels;
-
-                // Make sure origins are at center
-                for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                    models[i].set('originX', -RemoteControlView.PANEL_WIDTH  / 2);
-                    models[i].set('originY', -RemoteControlView.PANEL_HEIGHT / 2);
-                }
-            });
-
-            this.updatePositionArrow();
-            this.updateVelocityArrow();
-            this.updateAccelerationArrow();
+        getColor: function() {
+            var deltaEnergy = this.middleState.getEnergyLevel() - this.groundState.getEnergyLevel();
+            var hex = WavelengthColors.nmToHex(PhysicsUtil.energyToWavelength(deltaEnergy));
+            return hex;
         },
 
-        updatePositionArrow: function() {
-            if (this.dragging)
-                return;
-
-            this.updateLock(function() {
-                var bounds = this.simulation.getBounds();
-                var xPercent = this.model.get('position').x / bounds.w;
-                var yPercent = this.model.get('position').y / bounds.h;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[0].set('targetX', this.arrowModels[0].get('originX') + x);
-                this.arrowModels[0].set('targetY', this.arrowModels[0].get('originY') + y);
-            });
+        getNumLasingPhotons: function() {
+            return this.simulation.lasingPhotons.length;
         },
 
-        updateVelocityArrow: function() {
-            this.updateLock(function() {
-                var xPercent = this.model.get('velocity').x;
-                var yPercent = this.model.get('velocity').y;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[1].set('targetX', this.arrowModels[1].get('originX') + x);
-                this.arrowModels[1].set('targetY', this.arrowModels[1].get('originY') + y);
-            });
+        getExternalAmplitude: function() {
+            var n = this.getInternalAmplitude();
+            if (this.simulation.rightMirror)
+                return n * Math.sqrt(1 - this.simulation.rightMirror.getReflectivity());
+            else
+                return 0;
         },
 
-        updateAccelerationArrow: function() {
-            this.updateLock(function() {
-                var xPercent = this.model.get('acceleration').x;
-                var yPercent = this.model.get('acceleration').y;
-                var x = xPercent * (RemoteControlView.AREA_WIDTH);
-                var y = yPercent * (RemoteControlView.AREA_HEIGHT);
-                this.arrowModels[2].set('targetX', this.arrowModels[2].get('originX') + x);
-                this.arrowModels[2].set('targetY', this.arrowModels[2].get('originY') + y);
-            });
+        getInternalAmplitude: function() {
+            var n = 4 * Math.sqrt(Math.max(0, this.getNumLasingPhotons() - Constants.LASING_THRESHOLD));
+
+            return n;
+        },
+
+        update: function(time, deltaTime, paused) {
+            this.internalStandingWaveView.setAmplitude(this.getInternalAmplitude());
+            this.externalTravelingWaveView.setAmplitude(this.getExternalAmplitude());
+
+            this.internalStandingWaveView.update(time, deltaTime, paused);
+            this.externalTravelingWaveView.update(time, deltaTime, paused);
+
+            var amp = this.getNumLasingPhotons() > Constants.LASING_THRESHOLD ? 0 : (this.getNumLasingPhotons() / 6);
+            for (var i = 0; i < this.nonLasingExternalWaveViews.length; i++) {
+                this.nonLasingExternalWaveViews[i].setAmplitude(amp);
+                this.nonLasingExternalWaveViews[i].update(time, deltaTime, paused);
+            }
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.internalStandingWaveView.updateMVT(mvt);
+            this.externalTravelingWaveView.updateMVT(mvt);
+        },
+
+        /**
+         * Updates the color to be used for the wave graphics. This is the wavelength
+         *   associated with the energy differential between the ground state and the
+         *   next state up.
+         */
+        updateColor: function() {
+            var color = this.getColor();
+
+            this.internalStandingWaveView.setColor(color);
+            this.externalTravelingWaveView.setColor(color);
+
+            for (var i = 0; i < this.nonLasingExternalWaveViews.length; i++)
+                this.nonLasingExternalWaveViews[i].setColor(color);
+        },
+
+        energyLevelsChanged: function() {
+            if (this.groundState)
+                this.stopListening(this.groundState);
+            if (this.middleState)
+                this.stopListening(this.middleState);
+
+            this.groundState = this.simulation.getGroundState();
+            this.middleState = this.simulation.getMiddleEnergyState();
+
+            this.listenTo(this.groundState, 'change:energyLevel', this.updateColor);
+            this.listenTo(this.middleState, 'change:energyLevel', this.updateColor);
+
+            this.updateColor();
+        },
+
+        show: function() {
+            this.backgroundLayer.visible = true;
+            this.foregroundLayer.visible = true;
+        },
+
+        hide: function() {
+            this.backgroundLayer.visible = false;
+            this.foregroundLayer.visible = false;
+        }
+
+    });
+
+    return LaserWaveView;
+});
+
+define('common/v3/pixi/create-drop-shadow',['require','pixi','common/v3/pixi/extensions','common/math/piecewise-curve'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
+                         require('common/v3/pixi/extensions');
+    var PiecewiseCurve = require('common/math/piecewise-curve');
+
+    /**
+     * 
+     */
+    PIXI.createDropShadow = function(rectangle, width, blur, color, alpha) {
+        if (alpha === undefined)
+            alpha = 0.25;
+        if (color === undefined)
+            color = 'rgba(0,0,0,1)';
+        if (blur === undefined)
+            blur = 11;
+        if (width === undefined)
+            width = 11;
+
+        var r = rectangle;
+
+        // Draw the shadow
+        var outline = new PiecewiseCurve()
+            .moveTo(r.x,       r.y)
+            .lineTo(r.x + r.w, r.y)
+            .lineTo(r.x + r.w, r.y + r.h)
+            .lineTo(r.x,       r.y + r.h)
+            .close();
+
+        var drawStyle = {
+            lineWidth: width,
+            strokeStyle: 'rgba(0,0,0,0)',
+            shadowBlur: blur,
+            fillStyle: color
+        };
+
+        var shadow = PIXI.Sprite.fromPiecewiseCurve(outline, drawStyle);
+        shadow.alpha = alpha;
+
+        var padding = Math.max(width, blur) + 2;
+        var mask = new PIXI.Graphics();
+        mask.beginFill();
+        mask.drawRect(r.x - padding, r.y - padding, r.w + padding * 2, padding); // Top
+        mask.drawRect(r.x - padding, r.y,           padding,           r.h);     // Left
+        mask.drawRect(r.x + r.w,     r.y,           padding,           r.h);     // Right
+        mask.drawRect(r.x - padding, r.y + r.h,     r.w + padding * 2, padding); // Bottom
+        mask.endFill();
+
+        shadow.mask = mask;
+
+        var container = new PIXI.Container();
+        container.addChild(shadow);
+        container.addChild(mask);
+
+        return container;
+    };
+
+    return PIXI;
+});
+define('common/v3/pixi/draw-stick-arrow',['require','pixi','common/math/vector2'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
+    var Vector2 = require('common/math/vector2');
+
+    /**
+     * Draws an arrow shape.
+     */
+    PIXI.Graphics.prototype.drawStickArrow = function(originX, originY, targetX, targetY, headWidth, headLength) {
+        var i;
+
+        // Set up all our necessary variables if they aren't already defined on
+        //   on this graphics object.
+        if (this._arrowPoints === undefined) {
+            this._arrowPoints = [];
+            for (var i = 0; i < 4; i++)
+                this._arrowPoints.push(new Vector2());
+
+            this._originVector = new Vector2();
+            this._targetVector = new Vector2();
+            this._direction    = new Vector2();
+        }
+
+        var points = this._arrowPoints;
+
+        var origin = this._originVector.set(originX, originY);
+        var target = this._targetVector.set(targetX, targetY);
+
+        var angle  = this._direction.set(target).sub(origin).angle();
+        var scale  = false;
+        var length = origin.distance(target);
+
+        // Define all the points as if it were pointing to the right
+        if (length < headLength) {
+            // We're going to find out what the scale should be to be
+            //   able to render it correctly, blow up the length to
+            //   draw it big, and then scale it back down.
+            scale = length / (headLength + 4);
+            length /= scale;
+        }
+        
+        points[0].set(0,                    0);
+        points[1].set(length,               0);
+        points[2].set(length - headLength, -headWidth / 2);
+        points[3].set(length - headLength,  headWidth / 2);
+
+        // Rotate all the points so it points in the right direction
+        for (i = 0; i < points.length; i++)
+            points[i].rotate(angle);
+
+        // Scale it down to the right size if we blew it up 
+        if (scale !== false) {
+            for (i = 0; i < points.length; i++)
+                points[i].scale(scale);
+        }
+
+        // Translate all the points so it starts in the right place
+        for (i = 0; i < points.length; i++)
+            points[i].add(origin);
+
+        // Draw the points
+        this.moveTo(points[0].x, points[0].y);
+        this.lineTo(points[1].x, points[1].y);
+
+        // Hack for current version of PIXI
+        if (this.currentPath && this.currentPath.shape)
+            this.currentPath.shape.closed = false;
+
+        this.moveTo(points[2].x, points[2].y);
+        this.lineTo(points[1].x, points[1].y);
+        this.lineTo(points[3].x, points[3].y);
+        
+        if (this.currentPath && this.currentPath.shape)
+            this.currentPath.shape.closed = false;
+    };
+
+    return PIXI;
+});
+define('common/v3/pixi/draw-arrow',['require','pixi','common/math/vector2'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
+    var Vector2 = require('common/math/vector2');
+
+    /**
+     * Draws an arrow shape.
+     */
+    PIXI.Graphics.prototype.drawArrow = function(originX, originY, targetX, targetY, tailWidth, headWidth, headLength) {
+        var i;
+
+        // Set up all our necessary variables if they aren't already defined on
+        //   on this graphics object.
+        if (this._arrowPoints === undefined) {
+            this._arrowPoints = [];
+            for (var i = 0; i < 7; i++)
+                this._arrowPoints.push(new Vector2());
+
+            this._originVector = new Vector2();
+            this._targetVector = new Vector2();
+            this._direction    = new Vector2();
+        }
+
+        var points = this._arrowPoints;
+
+        var origin = this._originVector.set(originX, originY);
+        var target = this._targetVector.set(targetX, targetY);
+
+        var angle  = this._direction.set(target).sub(origin).angle();
+        var scale  = false;
+        var length = origin.distance(target);
+
+        // Define all the points as if it were pointing to the right
+        if (length < headLength) {
+            // We're going to find out what the scale should be to be
+            //   able to render it correctly, blow up the length to
+            //   draw it big, and then scale it back down.
+            scale = length / (headLength + 4);
+            length /= scale;
+        }
+        
+        points[0].set(length - headLength,  tailWidth / 2);
+        points[1].set(0,                    tailWidth / 2);
+        points[2].set(0,                   -tailWidth / 2);
+        points[3].set(length - headLength, -tailWidth / 2);
+        points[4].set(length - headLength, -headWidth / 2);
+        points[5].set(length,               0);
+        points[6].set(length - headLength,  headWidth / 2);
+
+        // Rotate all the points so it points in the right direction
+        for (i = 0; i < points.length; i++)
+            points[i].rotate(angle);
+
+        // Scale it down to the right size if we blew it up 
+        if (scale !== false) {
+            for (i = 0; i < points.length; i++)
+                points[i].scale(scale);
+        }
+
+        // Translate all the points so it starts in the right place
+        for (i = 0; i < points.length; i++)
+            points[i].add(origin);
+
+        // Draw the points
+        this.moveTo(points[0].x, points[0].y);
+        this.lineTo(points[1].x, points[1].y);
+        this.lineTo(points[2].x, points[2].y);
+        this.lineTo(points[3].x, points[3].y);
+        this.lineTo(points[4].x, points[4].y);
+        this.lineTo(points[5].x, points[5].y);
+        this.lineTo(points[6].x, points[6].y);
+        this.lineTo(points[0].x, points[0].y);
+    };
+
+    return PIXI;
+});
+define('common/math/functions',['require'],function (require) {
+
+    'use strict';
+
+    /**
+     * Source ported from phet.common.phetcommon.math.Function.
+     */
+    var Functions = {};
+
+    Functions.createLinearFunction = function(minInput, maxInput, minOutput, maxOutput) {
+        var func = function(x) {
+            var output = func.t1 + x;
+            output *= func.scale;
+            output += func.t2;
+            return output;
+        };
+
+        func.update = function() {
+            func.t1 = ( -func.minInput );
+            func.scale = ( func.maxOutput - func.minOutput ) / ( func.maxInput - func.minInput );
+            func.t2 = func.minOutput;
+        };
+
+        func.set = function(minInput, maxInput, minOutput, maxOutput) {
+            func.minInput = minInput;
+            func.maxInput = maxInput;
+            func.minOutput = minOutput;
+            func.maxOutput = maxOutput;
+            func.update();
+        };
+
+        func.minInput = minInput;
+        func.maxInput = maxInput;
+        func.minOutput = minOutput;
+        func.maxOutput = maxOutput;
+        func.update();
+
+        func.createInverse = function() {
+            return Functions.createLinearFunction(minOutput, maxOutput, minInput, maxInput);
+        };
+        
+        return func;
+    };
+
+    return Functions;
+
+});
+define('common/v3/pixi/view/slider',['require','underscore','pixi','../extensions','../view','common/colors/colors','common/math/rectangle'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+                    require('../extensions');
+    var PixiView  = require('../view');
+    var Colors    = require('common/colors/colors');
+    var Rectangle = require('common/math/rectangle');
+
+    /**
+     * A view that represents an element model
+     */
+    var SliderView = PixiView.extend({
+
+        events: {
+            'touchstart      .handle': 'dragStart',
+            'mousedown       .handle': 'dragStart',
+            'touchmove       .handle': 'drag',
+            'mousemove       .handle': 'drag',
+            'touchend        .handle': 'dragEnd',
+            'mouseup         .handle': 'dragEnd',
+            'touchendoutside .handle': 'dragEnd',
+            'mouseupoutside  .handle': 'dragEnd',
+
+            'mousedown       .background': 'backgroundTouchStart',
+            'touchstart      .background': 'backgroundTouchStart',
+            'touchend        .background': 'backgroundTouchEnd',
+            'mouseup         .background': 'backgroundTouchEnd',
+            'touchendoutside .background': 'backgroundTouchEnd',
+            'mouseupoutside  .background': 'backgroundTouchEnd',
+        },
+
+        /**
+         *
+         */
+        initialize: function(options) {
+            options = _.extend({
+                start: 5,
+                step: false,
+                range: {
+                    min: 0,
+                    max: 10
+                },
+                orientation: 'horizontal',
+                direction: 'ltr',
+
+                // Settings for generating graphics if the actual DisplayObjects aren't given
+                width: 100,
+                backgroundHeight: 2,
+                backgroundColor: '#ededed',
+                backgroundAlpha: 1,
+                backgroundLineColor: '#000',
+                backgroundLineWidth: 0,
+                backgroundLineAlpha: 1,
+                handleSize: 10,
+                handleColor: '#21366B',
+                handleAlpha: 1,
+                handleLineColor: '#000',
+                handleLineWidth: 0,
+
+                // Optional event listeners
+                onSlide:  function() {},
+                onChange: function() {},
+                onSet:    function() {}
+            }, options);
+
+            this.start = options.start;
+            this.value = options.start;
+            this.step  = options.step;
+            this.range = options.range;
+            this.orientation = options.orientation;
+            this.direction = options.direction;
+
+            options.backgroundColor     = Colors.parseHex(options.backgroundColor);
+            options.backgroundLineColor = Colors.parseHex(options.backgroundLineColor);
+            options.handleColor     = Colors.parseHex(options.handleColor);
+            options.handleLineColor = Colors.parseHex(options.handleLineColor);
+
+            if (options.handle === undefined) {
+                options.handle = new PIXI.Graphics();
+                options.handle.beginFill(options.handleColor, options.handleAlpha);
+                options.handle.lineStyle(options.handleLineWidth, options.handleLineColor, 1);
+                options.handle.drawCircle(0, 0, options.handleSize * 0.8);
+                options.handle.scale.x = options.handle.scale.y = 0.8;
+                this.on('drag-start', function(){
+                    this.handle.scale.x = this.handle.scale.y = 1;
+                });
+                this.on('drag-end', function(){
+                    this.handle.scale.x = this.handle.scale.y = 0.8;
+                });
+            }
+
+            if (options.background === undefined) {
+                options.background = new PIXI.Graphics();
+                options.background.beginFill(options.backgroundColor, options.backgroundAlpha);
+                options.background.lineStyle(options.backgroundLineWidth, options.backgroundLineColor, options.backgroundLineAlpha);
+                if (this.vertical())
+                    options.background.drawRect(-options.backgroundHeight / 2, 0, options.backgroundHeight, options.width);
+                else
+                    options.background.drawRect(0, -options.backgroundHeight / 2, options.width, options.backgroundHeight);
+            }
+
+            this.handle     = options.handle;
+            this.background = options.background;
+
+            this.width  = this.background.width;
+            this.height = this.background.height;
+
+            this.displayObject.addChild(this.background);
+            this.displayObject.addChild(this.handle);
+
+            // Cached objects
+            this._dragBounds     = new Rectangle();
+            this._dragOffset     = new PIXI.Point();
+            this._globalPosition = new PIXI.Point();
+            this._touchLocation  = new PIXI.Point();
+
+            this.positionHandle();
+            this.handle.buttonMode = true;
+
+            this.on('slide',  options.onSlide);
+            this.on('change', options.onChange);
+            this.on('set',    options.onSet);
         },
 
         reset: function() {
-            this.selectTab(0);
+            this.val(this.start);
         },
 
-        positionSelected: function(data) {
-            this.selectTab(0);
+        ltr: function() {
+            return this.direction === 'ltr';
         },
 
-        velocitySelected: function(data) {
-            this.selectTab(1);
+        vertical: function() {
+            return this.orientation !== 'horizontal';
         },
 
-        accelerationSelected: function(data) {
-            this.selectTab(2);
+        positionHandle: function() {
+            var percentage = this.percentage();
+            if (!this.ltr())
+                percentage = 1 - percentage;
+
+            if (this.vertical())
+                this.handle.y = this.height * percentage;
+            else
+                this.handle.x = this.width * percentage;
         },
 
-        selectTab: function(index) {
-            this.repositionArrows();
-
-            this.selectedIndex = index;
-
-            for (var i = 0; i < RemoteControlView.TABS.length; i++) {
-                this.tabs.getChildAt(i).background.visible = true;
-                this.tabs.getChildAt(i).activeBackground.visible = false;
-                this.panels.getChildAt(i).visible = false;
-            }
-
-            this.tabs.getChildAt(index).background.visible = false;
-            this.tabs.getChildAt(index).activeBackground.visible = true;
-            this.panels.getChildAt(index).visible = true;
+        percentage: function() {
+            return (this.value - this.range.min) / (this.range.max - this.range.min);
         },
 
-        dragStart: function(event) {
-            var index = this.getControlAreaTabIndex(event.target);
-            if (!this.arrowViews[index].draggingHead) {
-                var localPoint = event.data.getLocalPosition(event.target.parent, this._dragOffset);
+        dragStart: function(event, dragOffset) {
+            this.dragOffset = dragOffset === undefined ? event.data.getLocalPosition(this.handle, this._dragOffset) : dragOffset;
+            this.dragging = true;
+            this.previousValue = this.value;
+            this.trigger('drag-start', event);
+        },
 
-                this.arrowModels[index].set('targetX', localPoint.x);
-                this.arrowModels[index].set('targetY', localPoint.y);
+        drag: function(event) {
+            if (this.dragging) {
+                var handlePosition = this.handle.toGlobal(this._globalPosition);
+                var percentage;
+                
+                if (this.vertical()) {
+                    var dy = event.data.global.y - handlePosition.y - this.dragOffset.y;
 
-                this.arrowViews[index].dragHeadStart(event);
+                    if (this.handle.y + dy > this.height)
+                        this.handle.y = this.height;
+                    else if (this.handle.y + dy < 0)
+                        this.handle.y = 0;
+                    else
+                        this.handle.y += dy;
+
+                    percentage = this.handle.y / this.height;
+                }
+                else {
+                    var dx = event.data.global.x - handlePosition.x - this.dragOffset.x;
+                    
+                    if (this.handle.x + dx > this.width)
+                        this.handle.x = this.width;
+                    else if (this.handle.x + dx < 0)
+                        this.handle.x = 0;
+                    else
+                        this.handle.x += dx;
+
+                    percentage = this.handle.x / this.width;
+                }
+
+                if (!this.ltr())
+                    percentage = 1 - percentage;
+
+                this.previousValue = this.value;
+                this.value = this._round(percentage * (this.range.max - this.range.min) + this.range.min);
+                this.trigger('slide', this.value, this.previousValue, event);
             }
         },
 
         dragEnd: function(event) {
-            var index = this.getControlAreaTabIndex(event.target);
-            this.arrowViews[index].dragHeadEnd(event);
-        },
-
-        getControlAreaTabIndex: function(controlArea) {
-            for (var i = 0; i < this.panels.children.length; i++) {
-                if (this.panels.children[i].controlArea === controlArea)
-                    return i;
+            if (this.dragging) {
+                this.dragging = false;
+                this.dragData = null;
+                this.trigger('set',    this.value, this.previousValue);
+                this.trigger('change', this.value, this.previousValue);
+                this.trigger('drag-end', event);    
             }
         },
 
-        positionDragStart: function() {
-            this.dragging = true;
-            this.simulation.startSampling();
+        backgroundTouchStart: function(event) {
+            var touchLocation = event.data.getLocalPosition(this.background, this._touchLocation);
+
+            var percentage;
+            if (this.vertical())
+                percentage = touchLocation.y / this.height;
+            else
+                percentage = touchLocation.x / this.width;
+
+            if (!this.ltr())
+                percentage = 1 - percentage;
+
+            this.previousValue = this.value;
+            this.value = this._round(percentage * (this.range.max - this.range.min) + this.range.min);
+            this.positionHandle();
+            this.trigger('slide', this.value, this.previousValue, event);
+
+            var dragOffset = this._dragOffset;
+            dragOffset.x = 0;
+            dragOffset.y = 0;
+            this.dragStart(event, dragOffset);
         },
 
-        positionDragEnd: function() {
-            this.simulation.stopSampling();
-            this.dragging = false;
+        backgroundTouchEnd: function(event) {
+            if (!this.dragging) {
+                this.trigger('set',    this.value, this.previousValue);
+                this.trigger('change', this.value, this.previousValue);
+            }
+            this.dragEnd();
         },
 
-        positionChanged: function(arrowModel) {
-            this.inputLock(function() {
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.POSITION);
-                this.simulation.play();
-
-                var dx = arrowModel.get('targetX') - arrowModel.get('originX');
-                var dy = arrowModel.get('targetY') - arrowModel.get('originY');
-
-                var smallestDimensionValue = Math.min(this.simulation.getBounds().w, this.simulation.getBounds().h);
-                var x = (dx / RemoteControlView.AREA_WIDTH)  * smallestDimensionValue;
-                var y = (dy / RemoteControlView.AREA_HEIGHT) * smallestDimensionValue;
-
-                this.simulation.setSamplePoint(x, y);
-            });
-
+        val: function(val) {
+            if (val !== undefined) {
+                this.previousValue = this.value;
+                this.value = this._round(val);
+                this.positionHandle();
+                this.trigger('set', this.value, this.previousValue);
+            }
+            else
+                return this.value;
         },
 
-        velocityChanged: function(arrowModel) {
-            this.inputLock(function(){
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.VELOCITY);
-                this.simulation.play();
-
-                var xPercent = (arrowModel.get('targetX') - arrowModel.get('originX')) / RemoteControlView.AREA_WIDTH;
-                var yPercent = (arrowModel.get('targetY') - arrowModel.get('originY')) / RemoteControlView.AREA_HEIGHT;
-
-                this.model.setVelocity(xPercent, yPercent);
-            });
-        },
-
-        accelerationChanged: function(arrowModel) {
-            this.inputLock(function(){
-                this.simulation.set('recording', true);
-                this.simulation.set('motionType', 'Manual');
-                this.simulation.set('updateMode', UpdateMode.ACCELERATION);
-                this.simulation.play();
-
-                var xPercent = (arrowModel.get('targetX') - arrowModel.get('originX')) / RemoteControlView.AREA_WIDTH;
-                var yPercent = (arrowModel.get('targetY') - arrowModel.get('originY')) / RemoteControlView.AREA_HEIGHT;
-
-                this.model.setAcceleration(xPercent, yPercent);
-            });
+        _round: function(value) {
+            if (this.step)
+                return Math.round(value / this.step) * this.step;
+            else
+                return value;
         }
 
-    }, Constants.RemoteControlView);
+    });
 
-    defineInputUpdateLocks(RemoteControlView);
-
-    return RemoteControlView;
+    return SliderView;
 });
-
-define('less/less!styles/scene',[],function(){});
-define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app','common/math/model-view-transform','common/math/vector2','views/ladybug','views/ladybug-trace','views/remote-control','constants','less!styles/scene'],function(require) {
+define('views/atom',['require','underscore','pixi','common/v3/pixi/view','common/colors/colors','common/colors/wavelength','common/quantum/models/physics-util','assets'],function(require) {
 
     'use strict';
 
+    var _    = require('underscore');
+    var PIXI = require('pixi');
 
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
+    var PixiView         = require('common/v3/pixi/view');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
+
+    var Assets = require('assets');
+
+    /**
+     *
+     */
+    var AtomView = PixiView.extend({
+
+        /**
+         * Initializes the new AtomView.
+         */
+        initialize: function(options) {
+            options = _.extend({
+                showEnergyLevel: true
+            }, options);
+
+            this.mvt = options.mvt;
+            this.showEnergyLevel = options.showEnergyLevel;
+
+            this.initGraphics();
+
+            this.listenTo(this.model, 'change:position',    this.updatePosition);
+            this.listenTo(this.model, 'change:currentState', this.updateAtomicState);
+        },
+
+        /**
+         * Initializes everything for rendering graphics
+         */
+        initGraphics: function() {
+            this.energyLevelGraphics = new PIXI.Graphics();
+            this.energyLevelGraphics.visible = this.showEnergyLevel;
+
+            this.atomSprite = AtomView.createSprite();
+
+            this.label = new PIXI.Text('1', {
+                font: 'bold 18px Helvetica Neue',
+                fill: '#fff'
+            });
+            this.label.resolution = this.getResolution();
+            this.label.anchor.x = 0.5;
+            this.label.anchor.y = 0.5;
+            this.label.visible = this.showEnergyLevel;
+
+            this.displayObject.addChild(this.energyLevelGraphics);
+            this.displayObject.addChild(this.atomSprite);
+            this.displayObject.addChild(this.label);
+
+            this.updateMVT(this.mvt);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that
+         *   relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            var targetWidth = this.mvt.modelToViewDeltaX(this.model.get('radius') * 2);
+            var scale = targetWidth / this.atomSprite.texture.width;
+            this.atomSprite.scale.x = scale;
+            this.atomSprite.scale.y = scale;
+
+            this.updatePosition(this.model, this.model.get('position'));
+            this.updateAtomicState(this.model, this.model.get('currentState'));
+        },
+
+        updateAtomicState: function(model, currentState) {
+            if (!this.showEnergyLevel)
+                return;
+
+            var graphics = this.energyLevelGraphics;
+
+            graphics.clear();
+            graphics.beginFill(this.getEnergyLevelColor(), 1);
+            graphics.drawCircle(0, 0, this.getEnergyLevelRadius());
+            graphics.endFill();
+
+            var modelRadius = this.mvt.viewToModelDeltaX(this.getEnergyLevelRadius());
+            this.model.set('radius', modelRadius);
+
+            var energyLevelNumber = this.model.getCurrentStateNumber() + 1;
+            this.label.text = energyLevelNumber;
+        },
+
+        updatePosition: function(model, position) {
+            var viewPosition = this.mvt.modelToView(position);
+            this.displayObject.x = viewPosition.x;
+            this.displayObject.y = viewPosition.y;
+        },
+
+        getEnergyLevelColor: function() {
+            var groundStateEnergy = this.model.getGroundState().getEnergyLevel();
+            var energy = this.model.getCurrentState().getEnergyLevel();
+
+            if (energy === groundStateEnergy)
+                return '#000';
+
+            var deltaEnergy = energy - groundStateEnergy;
+            var hex = WavelengthColors.nmToHex(PhysicsUtil.energyToWavelength(deltaEnergy));
+
+            return Colors.parseHex(hex);
+        },
+
+        getEnergyLevelRadius: function() {
+            var atom = this.model;
+
+            var baseAtomRadius = this.atomSprite.width / 2;
+            var highestState = atom.getHighestEnergyState();
+            var groundState = atom.getGroundState();
+            var currentState = atom.getCurrentState();
+
+            return AtomView.getEnergyLevelRadius(baseAtomRadius, groundState, currentState, highestState);
+        }
+
+    }, {
+
+        createSprite: function() {
+            var sprite = new PIXI.Sprite(AtomView.getTexture());
+            sprite.anchor.x = 0.5;
+            sprite.anchor.y = 0.5;
+            sprite.tint = 0xBBBBBB;
+            return sprite;
+        },
+
+        getTexture: function() {
+            return Assets.Texture(Assets.Images.SPHERE);
+        },
+
+        getTextureWidth: function() {
+            return AtomView.getTexture().width;
+        },
+
+        getEnergyLevelRadius: function(baseAtomRadius, groundState, currentState, highestState) {
+            var groundStateRingThickness = 2;
+            var de1 = highestState.getEnergyLevel() - groundState.getEnergyLevel();
+            var de2 = currentState.getEnergyLevel() - groundState.getEnergyLevel();
+            var maxRingThickness = 6;
+            var radius = (de2 === 0) ?
+                groundStateRingThickness + baseAtomRadius :
+                maxRingThickness * de2 / de1 + groundStateRingThickness + baseAtomRadius;
+
+            return radius;
+        }
+
+    });
+
+
+    return AtomView;
+});
+define('views/energy-level',['require','underscore','pixi','common/v3/pixi/draw-arrow','common/v3/pixi/view','common/v3/pixi/view/slider','common/colors/colors','common/colors/wavelength','common/quantum/models/physics-util','views/atom','constants'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+                           require('common/v3/pixi/draw-arrow');
+    var PixiView         = require('common/v3/pixi/view');
+    var SliderView       = require('common/v3/pixi/view/slider');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
+
+    var AtomView = require('views/atom');
+
+    var Constants = require('constants');
+
+    /**
+     *
+     */
+    var EnergyLevelView = PixiView.extend({
+
+        events: {
+            'touchstart      .dragHandle': 'dragStart',
+            'mousedown       .dragHandle': 'dragStart',
+            'touchmove       .dragHandle': 'drag',
+            'mousemove       .dragHandle': 'drag',
+            'touchend        .dragHandle': 'dragEnd',
+            'mouseup         .dragHandle': 'dragEnd',
+            'touchendoutside .dragHandle': 'dragEnd',
+            'mouseupoutside  .dragHandle': 'dragEnd'
+        },
+
+        /**
+         * Initializes the new EnergyLevelView.
+         */
+        initialize: function(options) {
+            options = _.extend({
+                levelNumber: 0,
+                atomRadius: 8,
+                wavelengthChangeEnabled: true,
+                lifetimeChangeEnabled: true
+            }, options);
+
+            this.simulation = options.simulation;
+            this.width = options.width;
+            this.energyToY = options.energyToY;
+            this.yToEnergy = options.yToEnergy ? options.yToEnergy : options.energyToY.createInverse();
+            this.minY = options.minY;
+            this.maxY = options.maxY;
+            this.groundState = options.groundState;
+            this.highestEnergyState = options.highestEnergyState;
+            this.atomRadius = options.atomRadius;
+            this.levelNumber = options.levelNumber;
+            this.wavelengthChangeEnabled = options.wavelengthChangeEnabled;
+            this.lifetimeChangeEnabled = options.lifetimeChangeEnabled;
+            this.paddingLeft = 80;
+            this.minLifetime = options.minLifetime;
+            this.maxLifetime = options.maxLifetime;
+
+            // Initialize the graphics
+            this.initGraphics();
+
+            this.listenTo(this.model, 'change:energyLevel', this.energyLevelChanged);
+            this.energyLevelChanged(this.model, this.model.get('energyLevel'));
+        },
+
+        /**
+         * Initializes everything for rendering graphics
+         */
+        initGraphics: function() {
+            var handleThickness = 20;
+            this.dragHandle = new PIXI.Container();
+            this.dragHandle.hitArea = new PIXI.Rectangle(0, -handleThickness / 2, this.width - this.paddingLeft + 10, handleThickness);
+            if (this.wavelengthChangeEnabled)
+                this.dragHandle.buttonMode = true;
+
+            this.wavelengthColorGraphics = new PIXI.Graphics();
+
+            this.atomSprite = AtomView.createSprite();
+            this.atomSprite.scale.x = this.atomSprite.scale.y = ((this.atomRadius * 2) / this.atomSprite.texture.width);
+            this.atomSprite.x = this.width - this.paddingLeft;
+
+            this.label = new PIXI.Text(this.levelNumber, {
+                font: '11px Helvetica Neue',
+                fill: '#fff'
+            });
+            this.label.resolution = this.getResolution();
+            this.label.anchor.x = 0.43;
+            this.label.anchor.y = 0.5;
+            this.label.x = this.atomSprite.x;
+
+            if (this.wavelengthChangeEnabled) {
+                var arrowX = Math.floor(this.atomSprite.x * 0.85);
+                this.arrowGraphics = new PIXI.Graphics();
+                this.arrowGraphics.beginFill(0xAAAAAA, 1);
+                this.arrowGraphics.drawArrow(arrowX, 0, arrowX, -12, 4, 9, 7);
+                this.arrowGraphics.drawArrow(arrowX, 0, arrowX,  12, 4, 9, 7);
+                this.arrowGraphics.endFill();
+
+                this.displayObject.addChild(this.arrowGraphics);
+            }
+
+            this.displayObject.addChild(this.wavelengthColorGraphics);
+            this.displayObject.addChild(this.atomSprite);
+            this.displayObject.addChild(this.dragHandle);
+            this.displayObject.addChild(this.label);
+
+            if (this.lifetimeChangeEnabled)
+                this.initSlider();
+        },
+
+        initSlider: function() {
+            var minWidth = 30;
+            var maxWidth = 50;
+            var width = minWidth + Math.floor((maxWidth - minWidth) * (this.maxLifetime / Constants.MAXIMUM_STATE_LIFETIME));
+
+            // Create the slider view
+            this.sliderView = new SliderView({
+                start: this.model.get('meanLifetime'),
+                range: {
+                    min: this.minLifetime,
+                    max: this.maxLifetime
+                },
+
+                width: width,
+
+                backgroundHeight: 2,
+                backgroundColor: '#000',
+                backgroundAlpha: 0.12,
+
+                // handleSize: 14
+            });
+            this.sliderView.displayObject.x = this.width - maxWidth;
+            this.sliderView.displayObject.y = 0;
+
+
+            // Bind events
+            this.listenTo(this.sliderView, 'slide', this.slideLifetime);
+
+            // Create the label
+            var text = new PIXI.Text('Lifetime', {
+                font: 'bold 12px Helvetica Neue',
+                fill: '#000'
+            });
+            text.resolution = this.getResolution();
+            text.anchor.x = 0.5;
+            text.anchor.y = 1;
+            text.x = this.sliderView.displayObject.x + width / 2;
+            text.y = -8;
+
+            this.displayObject.addChild(text);
+            this.displayObject.addChild(this.sliderView.displayObject);
+        },
+
+        drawWavelengthColor: function() {
+            var graphics = this.wavelengthColorGraphics;
+            var color = Colors.parseHex(this.getColor());
+            var radius = this.getRadius();
+            var atomCenterX = this.atomSprite.x;
+
+            graphics.clear();
+
+            graphics.beginFill(color, 1);
+            graphics.drawCircle(atomCenterX, 0, radius);
+            graphics.endFill();
+
+            graphics.lineStyle(2, color, 1);
+            graphics.moveTo(0, 0);
+            graphics.lineTo(atomCenterX, 0);
+        },
+
+        getColor: function() {
+            var energy = this.model.getEnergyLevel();
+            if (energy === this.groundState.getEnergyLevel())
+                return '#000';
+
+            var deltaEnergy = energy - this.groundState.getEnergyLevel();
+            return WavelengthColors.nmToHex(PhysicsUtil.energyToWavelength(deltaEnergy));
+        },
+
+        getRadius: function() {
+            var highestState = this.highestEnergyState;
+            var groundState = this.groundState;
+            var currentState = this.model;
+            var baseAtomRadius = this.atomSprite.width / 2;
+
+            return AtomView.getEnergyLevelRadius(baseAtomRadius, groundState, currentState, highestState);
+        },
+
+        setMinY: function(minY) {
+            this.minY = minY;
+        },
+
+        setMaxY: function(maxY) {
+            this.maxY = maxY;
+        },
+
+        dragStart: function(event) {
+            if (!this.wavelengthChangeEnabled)
+                return;
+
+            this.dragging = true;
+
+            this.lastDragY = event.data.global.y;
+        },
+
+        drag: function(event) {
+            if (this.dragging) {
+                var dy = event.data.global.y - this.lastDragY;
+                var newY = this.displayObject.y + dy;
+                if (newY < this.minY)
+                    newY = this.minY;
+                if (newY > this.maxY)
+                    newY = this.maxY;
+                var newEnergy = this.yToEnergy(newY);
+                this.model.set('energyLevel', newEnergy);
+
+                this.lastDragY = event.data.global.y;
+            }
+        },
+
+        dragEnd: function(event) {
+            this.dragging = false;
+        },
+
+        slideLifetime: function(value, prev) {
+            this.model.set('meanLifetime', value);
+        },
+
+        energyLevelChanged: function(model, energyLevel) {
+            this.displayObject.y = this.energyToY(energyLevel);
+            this.drawWavelengthColor();
+        }
+
+    });
+
+
+    return EnergyLevelView;
+});
+define('views/energy-level-panel',['require','underscore','pixi','common/v3/pixi/create-drop-shadow','common/v3/pixi/draw-stick-arrow','common/v3/pixi/draw-arrow','common/v3/pixi/view','common/colors/colors','common/colors/wavelength','common/math/rectangle','common/math/functions','common/quantum/models/physics-util','views/energy-level','views/atom','constants'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+                           require('common/v3/pixi/create-drop-shadow');
+                           require('common/v3/pixi/draw-stick-arrow');
+                           require('common/v3/pixi/draw-arrow');
+    var PixiView         = require('common/v3/pixi/view');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var Rectangle        = require('common/math/rectangle');
+    var Functions        = require('common/math/functions');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
+
+    var EnergyLevelView = require('views/energy-level');
+    var AtomView        = require('views/atom');
+
+    var Constants = require('constants');
+
+    /**
+     *
+     */
+    var EnergyLevelPanelView = PixiView.extend({
+
+        width: 300,
+        height: 200,
+
+        /**
+         * Initializes the new EnergyLevelPanelView.
+         */
+        initialize: function(options) {
+            options = _.extend({
+                padding: 15,
+                bgColor: '#f5f5f5',
+                bgAlpha: 0.75,
+                axisLineColor: '#000',
+                axisLineAlpha: 1,
+
+                averagingPeriod: 0
+            }, options);
+
+            // Required options
+            this.simulation = options.simulation;
+
+            // Optional options
+            this.padding = options.padding;
+            this.bgColor = Colors.parseHex(options.bgColor);
+            this.bgAlpha = options.bgAlpha;
+            this.axisLineColor = Colors.parseHex(options.axisLineColor);
+            this.axisLineAlpha = options.axisLineAlpha;
+            this.averagingPeriod = options.averagingPeriod;
+
+            this.energyLevelViews = [];
+
+            // Init graph parameters
+            this.minY = this.padding + 16;
+            this.maxY = this.height - this.padding - 10;
+            this.atomDiameter = 10;
+            this.squiggleAmplitude = this.atomDiameter; // Amplitude of the squiggle waves
+
+            var groundStateEnergy = this.simulation.getGroundState().getEnergyLevel();
+            this.energyToY = Functions.createLinearFunction(
+                groundStateEnergy + PhysicsUtil.wavelengthToEnergy(WavelengthColors.MIN_WAVELENGTH),
+                groundStateEnergy,
+                this.minY,
+                this.maxY
+            );
+
+            this.atomCounts = [0, 0, 0];
+            this.numAtomsInLevel = [0, 0, 0];
+            this.numUpdatesToAverage = 0;
+            this.timeSinceLastUpdate = 0;
+
+            // Initialize the graphics
+            this.initGraphics();
+
+            this.listenTo(this.simulation, 'atomic-states-changed', this.energyLevelsChanged);
+            this.listenTo(this.simulation.seedBeam,    'change:wavelength change:photonsPerSecond', this.beamChanged);
+            this.listenTo(this.simulation.pumpingBeam, 'change:wavelength change:photonsPerSecond', this.beamChanged);
+            this.listenTo(this.simulation.seedBeam,    'change:enabled', this.seedBeamEnabledChanged);
+            this.listenTo(this.simulation.pumpingBeam, 'change:enabled', this.pumpingBeamEnabledChanged);
+        },
+
+        /**
+         * Initializes everything for rendering graphics
+         */
+        initGraphics: function() {
+            this.initPanel();
+            this.initAxis();
+            this.initAtoms();
+            this.initSquiggles();
+            this.drawSquiggles();
+            this.initHelpLabels();
+
+            this.energyLevelsLayer = new PIXI.Container();
+            this.displayObject.addChild(this.energyLevelsLayer);
+
+            this.createEnergyLevels();
+        },
+
+        initPanel: function() {
+            // Draw the shadow
+            var rectangle = new Rectangle(0, 0, this.width, this.height);
+            var shadow = PIXI.createDropShadow(rectangle);
+            this.displayObject.addChild(shadow);
+
+            // Draw the panel
+            var graphics = new PIXI.Graphics();
+            graphics.beginFill(this.bgColor, this.bgAlpha);
+            graphics.drawRect(0, 0, this.width, this.height);
+            graphics.endFill();
+
+            this.displayObject.addChild(graphics);
+        },
+
+        initAxis: function() {
+            var labelWidth = 15;
+            var x = this.padding + labelWidth;
+            var y0 = this.height - this.padding;
+            var y1 = this.padding;
+            var graphics = new PIXI.Graphics();
+            graphics.lineStyle(2, this.axisLineColor, this.axisLineAlpha);
+            graphics.drawStickArrow(x, y0, x, y1, 12, 10);
+
+            var text = new PIXI.Text('Energy (eV)', {
+                font: 'bold 12px Helvetica Neue',
+                fill: '#000'
+            });
+            text.resolution = this.getResolution();
+            text.rotation = -Math.PI / 2;
+            text.anchor.y = 0;
+            text.anchor.x = 0.5;
+            text.x = this.padding - 5;
+            text.y = this.height / 2;
+
+            this.displayObject.addChild(graphics);
+            this.displayObject.addChild(text);
+
+            this.axisOriginX = x;
+        },
+
+        initAtoms: function() {
+            this.atomSprites = [];
+            var scale = this.atomDiameter / AtomView.getTextureWidth();
+
+            for (var i = 0; i < this.simulation.atoms.length; i++) {
+                var sprite = AtomView.createSprite();
+                sprite.anchor.x = 0;
+                sprite.anchor.y = 1;
+                sprite.scale.x = scale;
+                sprite.scale.y = scale;
+
+                this.atomSprites.push(sprite);
+                this.displayObject.addChild(sprite);
+            }
+        },
+
+        initSquiggles: function() {
+            this.seedSquiggle = new PIXI.Graphics();
+            this.pumpSquiggle = new PIXI.Graphics();
+
+            this.seedSquiggle.x = this.axisOriginX + this.squiggleAmplitude * 2;
+            this.pumpSquiggle.x = this.axisOriginX + this.squiggleAmplitude;
+            this.seedSquiggle.y = this.maxY;
+            this.pumpSquiggle.y = this.maxY;
+            this.seedSquiggle.rotation = -Math.PI / 2;
+            this.pumpSquiggle.rotation = -Math.PI / 2;
+
+            this.displayObject.addChild(this.seedSquiggle);
+            this.displayObject.addChild(this.pumpSquiggle);
+
+            this.seedBeamEnabledChanged(null, this.simulation.seedBeam.get('enabled'));
+            this.pumpingBeamEnabledChanged(null, this.simulation.pumpingBeam.get('enabled'));
+        },
+
+        initHelpLabels: function() {
+            var settings = {
+                font: 'bold 12px Helvetica Neue',
+                fill: '#000'
+            };
+
+            var text1 = new PIXI.Text('Energy level can be\nadjusted up and\ndown by dragging', settings);
+            text1.resolution = this.getResolution();
+            text1.x = this.axisOriginX + 10;
+            text1.y = this.padding + 20;
+
+            var text2 = new PIXI.Text('Slider adjusts\nlifetime of\nenergy state', settings);
+            text2.resolution = this.getResolution();
+            text2.x = this.axisOriginX + 180;
+            text2.y = this.padding + 100;
+
+            this.helpLayer = new PIXI.Container();
+            this.helpLayer.addChild(text1);
+            this.helpLayer.addChild(text2);
+
+            this.displayObject.addChild(this.helpLayer);
+
+            this.hideHelp();
+        },
+
+        drawSquiggles: function() {
+            this.drawSquiggle(this.seedSquiggle, this.simulation.seedBeam);
+            this.drawSquiggle(this.pumpSquiggle, this.simulation.pumpingBeam);
+        },
+
+        drawSquiggle: function(graphics, beam) {
+            // Calculate all our rendering variables
+            var wavelength = beam.get('wavelength')
+            var color = Colors.parseHex(WavelengthColors.nmToHex(wavelength));
+            var beamEnergy = PhysicsUtil.wavelengthToEnergy(wavelength);
+            var groundStateEnergy = this.simulation.getGroundState().getEnergyLevel();
+            var y0 = this.energyToY(groundStateEnergy);
+            var y1 = this.energyToY(groundStateEnergy + beamEnergy);
+            var length = y0 - y1;
+            var amp = this.squiggleAmplitude;
+            var intensity = beam.get('photonsPerSecond') / beam.get('maxPhotonsPerSecond');
+            var alpha = Math.sqrt(intensity);
+            var arrowHeight = amp;
+            // So that the tip of the arrow will just touch an energy level line when it is supposed to
+            //   match the line, we need to subtract 1 from the length of the squiggle
+            var actualLength = length - 1;
+
+            graphics.clear();
+            graphics.lineStyle(1, color, alpha);
+
+            // Draw squiggle
+            var phaseAngle = 0;
+            var freqFactor = 15 * wavelength / 680;
+
+            for (var i = 0; i <= actualLength - arrowHeight * 2; i++) {
+                var k = Math.floor(Math.sin(phaseAngle + i * Math.PI * 2 / freqFactor) * amp / 2 + amp / 2);
+                for (var j = 0; j < amp; j++) {
+                    if (j === k) {
+                        if (i === 0)
+                            graphics.moveTo(i + arrowHeight, k);
+                        else
+                            graphics.lineTo(i + arrowHeight, k);
+                    }
+                }
+            }
+
+            // Draw arrows
+            graphics.lineStyle(0, 0, 0);
+            graphics.beginFill(color, alpha);
+
+            var tailWidth = 2;
+            var headWidth = amp * 1.2;
+            graphics.drawArrow(arrowHeight, amp / 2, 0, amp / 2, tailWidth, headWidth, arrowHeight);
+            graphics.drawArrow(actualLength - arrowHeight, amp / 2, actualLength, amp / 2, tailWidth, headWidth, arrowHeight);
+
+            graphics.endFill();
+        },
+
+        createEnergyLevels: function() {
+            // Remove old ones
+            for (var j = this.energyLevelViews.length - 1; j >= 0; j--) {
+                this.stopListening(this.energyLevelViews[j].model);
+                this.energyLevelViews[j].remove();
+                this.energyLevelViews.splice(j, 1);
+            }
+
+            var x = this.axisOriginX + 10;
+            var width = this.width - x - this.padding;
+
+            var states = this.simulation.getStates();
+            for (var i = 0; i < states.length; i++) {
+                // Set the minimum lifetime to be two clock ticks, so we will always see an energy halo.
+                var minLifetime = Constants.DT * 2;
+                var maxLifetime = (i === 1) ? Constants.MAXIMUM_STATE_LIFETIME : Constants.MAXIMUM_STATE_LIFETIME / 4;
+                if (i > 0)
+                    states[i].set('meanLifetime', maxLifetime);
+
+                var energyLevelView = new EnergyLevelView({
+                    simulation: this.simulation,
+                    model: states[i],
+                    groundState: states[0],
+                    highestEnergyState: states[states.length - 1],
+                    energyToY: this.energyToY,
+                    minY: this.minY,
+                    maxY: this.maxY,
+                    width: width,
+                    levelNumber: i + 1,
+                    wavelengthChangeEnabled: (i > 0),
+                    lifetimeChangeEnabled: (i > 0),
+                    minLifetime: minLifetime,
+                    maxLifetime: maxLifetime
+                });
+                energyLevelView.displayObject.x = x;
+
+                this.listenTo(states[i], 'change:energyLevel', this.energyLevelChanged);
+
+                this.energyLevelViews.push(energyLevelView);
+                this.energyLevelsLayer.addChild(energyLevelView.displayObject);
+            }
+
+            for (var k = 0; k < states.length; k++)
+                this.energyLevelChanged(states[k], states[k].get('energyLevel'));
+        },
+
+        update: function(time, deltaTime, paused) {
+            this.updateAtomCounts(time, deltaTime, paused);
+        },
+
+        updateAtomCounts: function(time, deltaTime, paused) {
+            this.atomCounts[0] += this.simulation.getNumGroundStateAtoms();
+            this.atomCounts[1] += this.simulation.getNumMiddleStateAtoms();
+            this.atomCounts[2] += this.simulation.getNumHighStateAtoms();
+
+            this.numUpdatesToAverage++;
+            this.timeSinceLastUpdate += deltaTime;
+            if (this.timeSinceLastUpdate >= this.averagingPeriod) {
+                // Compute the average number of atoms in each state. Take care to round off rather than truncate.
+                this.numAtomsInLevel[0] = Math.floor(0.5 + this.atomCounts[0] / this.numUpdatesToAverage);
+                this.numAtomsInLevel[1] = Math.floor(0.5 + this.atomCounts[1] / this.numUpdatesToAverage);
+                this.numAtomsInLevel[2] = Math.floor(0.5 + this.atomCounts[2] / this.numUpdatesToAverage);
+                this.atomCounts[0] = 0;
+                this.atomCounts[1] = 0;
+                this.atomCounts[2] = 0;
+                this.numUpdatesToAverage = 0;
+                this.timeSinceLastUpdate = 0;
+
+                // Move atoms
+                var currentLevelCount;
+                var currentLevel = 0;
+                var offsetX = this.squiggleAmplitude * 2 + 4;
+                var width = this.atomDiameter / 2;
+                var i = 0;
+
+                while (i < this.atomSprites.length && currentLevel < 3) {
+                    currentLevelCount = this.numAtomsInLevel[currentLevel];
+                    for (var j = 0; j < currentLevelCount; j++) {
+                        var energyLevelX = this.energyLevelViews[currentLevel].displayObject.x;
+                        var energyLevelY = this.energyLevelViews[currentLevel].displayObject.y;
+
+                        this.atomSprites[i].x = energyLevelX + offsetX + j * width;
+                        this.atomSprites[i].y = energyLevelY - 1;
+
+                        i++;
+                    }
+                    currentLevel++;
+                }
+            }
+        },
+
+        showHelp: function() {
+            this.helpLayer.visible = true;
+        },
+
+        hideHelp: function() {
+            this.helpLayer.visible = false;
+        },
+
+        energyLevelsChanged: function() {
+            this.createEnergyLevels();
+        },
+
+        beamChanged: function(model, wavelength) {
+            if (model === this.simulation.seedBeam)
+                this.drawSquiggle(this.seedSquiggle, model);
+            else
+                this.drawSquiggle(this.pumpSquiggle, model);
+        },
+
+        seedBeamEnabledChanged: function(model, enabled) {
+            this.seedSquiggle.visible = enabled;
+        },
+
+        pumpingBeamEnabledChanged: function(model, enabled) {
+            this.pumpSquiggle.visible = enabled;
+        },
+
+        energyLevelChanged: function(model, energyLevel) {
+            var margin = 20;
+            var energyLevelY = this.energyToY(energyLevel);
+
+            for (var i = 0; i < this.energyLevelViews.length; i++) {
+                if (this.energyLevelViews[i].model !== model) {
+                    if (this.energyLevelViews[i].displayObject.y > energyLevelY)
+                        this.energyLevelViews[i].setMinY(Math.max(this.minY, energyLevelY + margin));
+                    else
+                        this.energyLevelViews[i].setMaxY(Math.min(this.maxY, energyLevelY - margin));
+                }
+            }
+        }
+
+    }, Constants.EnergyLevelPanelView);
+
+
+    return EnergyLevelPanelView;
+});
+define('common/math/range',['require'],function (require) {
+
+    'use strict';
+
+    /**
+     * A function that takes a range object in the format
+     *   { min: <number>, max: <number> } and adds helper
+     *   functions to it that perform common tasks related
+     *   to ranges.
+     */
+    var range = function(rangeObject) {
+        rangeObject.random = function() {
+            return (this.max - this.min) * Math.random() + this.min;
+        };
+
+        rangeObject.lerp = function(percent) {
+            return this.length() * percent + this.min;
+        };
+
+        rangeObject.percent = function(x) {
+            return (x - this.min) / this.length();
+        };
+
+        rangeObject.constrainedPercent = function(x) {
+            return this.percent(Math.max(this.min, Math.min(this.max, x)));
+        };
+
+        rangeObject.contains = function(x) {
+            return x <= this.max && x >= this.min;
+        };
+
+        rangeObject.length = function() {
+            return this.max - this.min;
+        };
+
+        rangeObject.center = function() {
+            return this.min + (this.length() / 2);
+        };
+
+        return rangeObject;
+    };
+
+    return range;
+
+});
+define('views/laser-explosion',['require','pixi','common/v3/app/app','common/v3/pixi/view','common/colors/colors','common/colors/wavelength','common/math/range','common/math/vector2','common/math/rectangle','common/quantum/models/physics-util','assets'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
+    var AppView          = require('common/v3/app/app');
+    var PixiView         = require('common/v3/pixi/view');
+    var Colors           = require('common/colors/colors');
+    var WavelengthColors = require('common/colors/wavelength');
+    var range            = require('common/math/range');
+    var Vector2          = require('common/math/vector2');
+    var Rectangle        = require('common/math/rectangle');
+    var PhysicsUtil      = require('common/quantum/models/physics-util');
+
+    var Assets = require('assets');
+
+    var NUM_PARTICLES = 600;
+    var PARTICLE_ALPHA = 1;
+    var PARTICLE_INITIAL_VELOCITY_RANGE = range({ min: 200, max: 300 });
+    var PARTICLE_INITIAL_VELOCITY_2_RANGE = range({ min: 300, max: 800});
+    var PARTICLE_LIFE_SPAN = range({ min: 1, max: 3 });
+    var PARTICLE_EMISSION_FREQUENCY = 0.001;
+    var PARTICLE_FADE_POINT = 0.6;
+
+    var TEXT_FADE_TIME = 1;
+
+    /**
+     * Animates a particle explosion for the laser
+     */
+    var LaserExplosionView = PixiView.extend({
+
+        /**
+         * Initializes the new LaserExplosionView.
+         */
+        initialize: function(options) {
+            this.mvt = options.mvt;
+            this.simulation = options.simulation;
+            this.repeating = false;
+            this.time = 0;
+
+            // Cached objects
+            this._vec = new Vector2();
+
+            this.initGraphics();
+
+            this.listenTo(this.simulation, 'change:exploded', this.explodedChanged);
+        },
+
+        /**
+         * Initializes everything for rendering graphics
+         */
+        initGraphics: function() {
+            this.text = new PIXI.Text('Your laser blew up!\nIt was producing more power\nthan it could handle.', {
+                fill: '#FF3838',
+                font: '22px Helvetica Neue',
+                align: 'center'
+            });
+            this.text.resolution = this.getResolution();
+            this.text.anchor.x = 0.5;
+            this.text.anchor.y = 0.5;
+            this.text.visible = false;
+
+            this.displayObject.addChild(this.text);
+
+            var texture = Assets.Texture(Assets.Images.EXPLOSION_PARTICLE);
+
+            this.activeParticles = [];
+            this.dormantParticles = [];
+            this.usedParticles = [];
+
+            var particle;
+
+            // Create particles
+            for (var i = 0; i < NUM_PARTICLES; i++) {
+                particle = new PIXI.Sprite(texture);
+                particle.visible = false;
+                particle.anchor.x = particle.anchor.y = 0.5;
+                particle.velocity = new Vector2();
+                particle.acceleration = new Vector2();
+                particle.blendMode = PIXI.BLEND_MODES.SCREEN;
+
+                this.displayObject.addChild(particle);
+                this.dormantParticles.push(particle);
+            }
+
+            this.updateMVT(this.mvt);
+        },
+
+        update: function(time, deltaTime, paused) {
+            this.updateParticles(time, deltaTime);
+            this.updateText(time, deltaTime);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that
+         *   relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            this.startingBounds = new Rectangle(this.mvt.modelToView(this.simulation.tube.getBounds()));
+            this.center = this.startingBounds.center();
+
+            if (AppView.windowIsShort()) {
+                this.particleRadiusRange = range({
+                    min: 10,
+                    max: 30
+                });
+            }
+            else {
+                this.particleRadiusRange = range({
+                    min: 15,
+                    max: 45
+                });
+            }
+
+            this.text.x = this.center.x;
+            this.text.y = this.center.y;
+        },
+
+        updateText: function(time, deltaTime) {
+            if (!this._emittingParticles)
+                return;
+
+            this._textFadeTimer += deltaTime;
+            var alpha = Math.min(this._textFadeTimer / TEXT_FADE_TIME, 1);
+            this.text.alpha = alpha;
+        },
+
+        updateParticles: function(time, deltaTime) {
+            // Update internal time
+            this.time += deltaTime;
+
+            if (this._emittingParticles) {
+                this._emissionTimer += deltaTime;
+                while (this._emissionTimer >= PARTICLE_EMISSION_FREQUENCY) {
+                    this._emissionTimer -= PARTICLE_EMISSION_FREQUENCY;
+                    this.emitParticle();
+                }
+            }
+
+            var particle;
+            var percentLifeLeft;
+            var percentLifeSpent;
+            var radius;
+            for (var i = this.activeParticles.length - 1; i >= 0; i--) {
+                particle = this.activeParticles[i];
+
+                // Clean up dead particles
+                if (this.time >= particle.lifeEndsAt) {
+                    particle.visible = false;
+                    this.activeParticles.splice(i, 1);
+                    if (this.repeating)
+                        this.dormantParticles.push(particle);
+                    else
+                        this.usedParticles.push(particle);
+                }
+
+                // Move particles
+                particle.x += particle.velocity.x * deltaTime;
+                particle.y += particle.velocity.y * deltaTime;
+
+                // Change velocity to drift
+                particle.velocity.add(this._vec.set(particle.acceleration).scale(deltaTime));
+
+                // To use in linear interpolation functions
+                percentLifeLeft = ((particle.lifeEndsAt - this.time) / particle.timeToLive);
+                percentLifeSpent = 1 - percentLifeLeft;
+
+                // Grow particles
+                radius = this.particleRadiusRange.lerp(1 - Math.min(percentLifeSpent, 1));
+                particle.scale.x = particle.scale.y = radius / (particle.texture.width / 2);
+
+                particle.tint = Colors.interpolateHexInteger(0x000000, this.startingColor, percentLifeSpent);
+
+                // Fade particles out when they reach the end of their lives
+                if (percentLifeLeft < (1 - PARTICLE_FADE_POINT)) {
+                    var t = (percentLifeLeft / (1 - PARTICLE_FADE_POINT));
+                    particle.alpha = t * PARTICLE_ALPHA;
+                }
+            }
+        },
+
+        emitParticle: function() {
+            if (!this.dormantParticles.length)
+                return null;
+
+            var particle = this.dormantParticles.pop();
+            if (particle) {
+                particle.x = Math.random() * this.startingBounds.w + this.startingBounds.x;
+                particle.y = Math.random() * this.startingBounds.h + this.startingBounds.y;
+
+                var scale = this.particleRadiusRange.max / (particle.texture.width / 2);
+                var angle = this._vec
+                    .set(particle.x, particle.y)
+                    .sub(this.center)
+                    .angle();
+
+                particle.scale.x = particle.scale.y = scale;
+                particle.alpha = PARTICLE_ALPHA;
+                particle.tint = this.startingColor;
+                particle.visible = true;
+                particle.timeToLive = PARTICLE_LIFE_SPAN.random();
+                particle.lifeEndsAt = this.time + particle.timeToLive;
+
+                if (Math.random() < 0.4)
+                    particle.velocity.set(PARTICLE_INITIAL_VELOCITY_RANGE.random(), 0).rotate(angle);
+                else
+                    particle.velocity.set(PARTICLE_INITIAL_VELOCITY_2_RANGE.random(), 0).rotate(angle);
+                particle.acceleration.set(-particle.velocity.x, -particle.velocity.y).scale(0.6);
+
+                this.displayObject.removeChild(particle);
+                this.displayObject.addChildAt(particle, 0);
+
+                this.activeParticles.push(particle);
+            }
+
+            return particle;
+        },
+
+        updateColor: function() {
+            var groundState = this.simulation.getGroundState();
+            var middleState = this.simulation.getMiddleEnergyState();
+            var deltaEnergy = middleState.getEnergyLevel() - groundState.getEnergyLevel();
+            var hex = WavelengthColors.nmToHex(PhysicsUtil.energyToWavelength(deltaEnergy));
+            this.startingColor = Colors.parseHex(hex);
+        },
+
+        start: function() {
+            this.updateColor();
+            this.text.visible = true;
+
+            this._emittingParticles = true;
+            this._emissionTimer = 0;
+            this._textFadeTimer = 0;
+        },
+
+        stop: function() {
+            this._emittingParticles = false;
+        },
+
+        clear: function() {
+            var particle;
+            var i;
+            for (i = this.activeParticles.length - 1; i >= 0; i--) {
+                particle = this.activeParticles[i];
+                particle.visible = false;
+                this.activeParticles.splice(i, 1);
+                this.dormantParticles.push(particle);
+            }
+
+            for (i = this.usedParticles.length - 1; i >= 0; i--) {
+                particle = this.usedParticles[i];
+                particle.visible = false;
+                this.usedParticles.splice(i, 1);
+                this.dormantParticles.push(particle);
+            }
+
+            this.text.visible = false;
+        },
+
+        explodedChanged: function(simulation, exploded) {
+            if (exploded) {
+                this.start();
+            }
+            else {
+                this.stop();
+                this.clear();
+            }
+        }
+
+    });
+
+
+    return LaserExplosionView;
+});
+
+define('less/less!styles/scene',[],function(){});
+define('views/scene',['require','pixi','common/v3/app/app','common/v3/pixi/view/scene','common/math/model-view-transform','common/math/piecewise-curve','common/math/rectangle','views/mirror','views/photon-collection','views/tube','views/laser-curtain','views/beam-curtain','views/laser-wave','views/energy-level-panel','views/laser-explosion','constants','less!styles/scene'],function(require) {
+
+    'use strict';
+
+    var PIXI = require('pixi');
+
     var AppView            = require('common/v3/app/app');
+    var PixiSceneView      = require('common/v3/pixi/view/scene');
     var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+    var PiecewiseCurve     = require('common/math/piecewise-curve');
+    var Rectangle          = require('common/math/rectangle');
 
-    var LadybugView       = require('views/ladybug');
-    var LadybugTraceView  = require('views/ladybug-trace');
-    var RemoteControlView = require('views/remote-control');
-
+    var MirrorView           = require('views/mirror');
+    var PhotonCollectionView = require('views/photon-collection');
+    var TubeView             = require('views/tube');
+    var LaserCurtainView     = require('views/laser-curtain');
+    var BeamCurtainView      = require('views/beam-curtain');
+    var LaserWaveView        = require('views/laser-wave');
+    var EnergyLevelPanelView = require('views/energy-level-panel');
+    var LaserExplosionView   = require('views/laser-explosion');
 
     // Constants
     var Constants = require('constants');
@@ -65026,7 +69654,7 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
     /**
      *
      */
-    var LadybugMotionSceneView = PixiSceneView.extend({
+    var LasersSceneView = PixiSceneView.extend({
 
         events: {
 
@@ -65034,9 +69662,11 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
 
         initialize: function(options) {
             PixiSceneView.prototype.initialize.apply(this, arguments);
+
+            this.listenTo(this.simulation, 'change:exploded', this.explodedChanged);
         },
 
-        renderContent: function() {
+        reset: function() {
 
         },
 
@@ -65044,102 +69674,216 @@ define('views/scene',['require','common/v3/pixi/view/scene','common/v3/app/app',
             PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
             this.initMVT();
-            this.initLadybugTraceView();
-            this.initLadybugView();
-            this.initRemoteControlView();
+            this.initLayers();
+            this.initPhotons();
+            this.initTube();
+            this.initMirrors();
+            this.initLaserCurtainViews();
+            this.initBeamCurtainView();
+            this.initLaserWaveView();
+            this.initEnergyLevelPanel();
+            this.initExplosion();
         },
 
         initMVT: function() {
-            // Use whichever dimension is smaller
-            var usableWidth = this.width - RemoteControlView.PANEL_WIDTH - RemoteControlView.RIGHT;
-            var usableHeight = this.height - 62 - 8;
-
-            if (AppView.windowIsShort())
-                usableWidth -= RemoteControlView.PANEL_WIDTH + RemoteControlView.RIGHT;
-
-            var scale;
-            if (usableWidth < usableHeight)
-                scale = usableWidth / Constants.MIN_SCENE_DIAMETER;
-            else
-                scale = usableHeight / Constants.MIN_SCENE_DIAMETER;
-
-            if (AppView.windowIsShort()) {
-                // Center between the two columns
-                this.viewOriginX = Math.round(this.width / 2);
-                this.viewOriginY = Math.round(usableHeight / 2);
-            }
-            else {
-                // Center in the usable area on the left
-                this.viewOriginX = Math.round(usableWidth / 2);
-                this.viewOriginY = Math.round(usableHeight / 2);
-            }
-
-            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-
-            this.simulation.setBounds(
-                this.mvt.viewToModelX(this.viewOriginX - usableWidth  / 2),
-                this.mvt.viewToModelY(this.viewOriginY - usableHeight / 2),
-                this.mvt.viewToModelX(this.viewOriginX + usableWidth  / 2),
-                this.mvt.viewToModelY(this.viewOriginY + usableHeight / 2)
-            );
+            // TODO: Remove this
+            this.mvt = ModelViewTransform.createScaleMapping(1);
         },
 
-        initLadybugView: function() {
-            this.ladybugView = new LadybugView({
-                model: this.simulation.ladybug,
+        initLayers: function() {
+            this.backgroundLayer     = new PIXI.Container();
+            this.atomLayer           = new PIXI.Container();
+            this.tubeLayer           = new PIXI.Container();
+            this.photonElectronLayer = new PIXI.Container();
+            this.foregroundLayer     = new PIXI.Container();
+            this.lampLayer           = new PIXI.Container();
+            this.effectsLayer        = new PIXI.Container();
+            this.controlsLayer       = new PIXI.Container();
+
+            this.stage.addChild(this.backgroundLayer);
+            this.stage.addChild(this.atomLayer);
+            this.stage.addChild(this.tubeLayer);
+            this.stage.addChild(this.photonElectronLayer);
+            this.stage.addChild(this.foregroundLayer);
+            this.stage.addChild(this.lampLayer);
+            this.stage.addChild(this.effectsLayer);
+            this.stage.addChild(this.controlsLayer);
+        },
+
+        initPhotons: function() {
+            this.photonsView = new PhotonCollectionView({
+                collection: this.simulation.photons,
                 simulation: this.simulation,
                 mvt: this.mvt
             });
-            this.stage.addChild(this.ladybugView.displayObject);
-            this.$ui.append(this.ladybugView.el);
+
+            this.photonElectronLayer.addChild(this.photonsView.displayObject);
         },
 
-        initLadybugTraceView: function() {
-            this.ladybugTraceView = new LadybugTraceView({
-                model: this.simulation,
+        initTube: function() {
+            this.tubeView = new TubeView({
+                model: this.simulation.tube,
                 mvt: this.mvt
             });
-            this.stage.addChild(this.ladybugTraceView.displayObject);
+
+            this.tubeLayer.addChild(this.tubeView.displayObject);
         },
 
-        initRemoteControlView: function() {
-            this.remoteControlView = new RemoteControlView({
-                model: this.simulation.ladybug,
+        initMirrors: function() {
+            this.rightMirrorView = new MirrorView({
+                mvt: this.mvt,
+                model: this.simulation.rightMirror,
+                simulation: this.simulation,
+                leftFacing: true
+            });
+
+            this.leftMirrorView = new MirrorView({
+                mvt: this.mvt,
+                model: this.simulation.leftMirror,
+                simulation: this.simulation,
+                leftFacing: false
+            });
+
+            this.backgroundLayer.addChild(this.rightMirrorView.displayObject);
+            this.foregroundLayer.addChild(this.leftMirrorView.displayObject);
+        },
+
+        initBeamCurtainView: function() {
+            this.beamCurtainView = new BeamCurtainView({
+                mvt: this.mvt,
+                model: this.simulation.pumpingBeam
+            });
+
+            this.backgroundLayer.addChildAt(this.beamCurtainView.displayObject, 0);
+
+            this.determineBeamCurtainViewVisibility();
+        },
+
+        initLaserCurtainViews: function() {
+            var tubeBounds = this.simulation.tube.getBounds();
+            var lensRadius = Constants.MIRROR_THICKNESS / 2 + 3;
+            var internalShape = new PiecewiseCurve()
+                .moveTo(tubeBounds.right(), tubeBounds.top())
+                .lineTo(tubeBounds.left(),  tubeBounds.top())
+                .lineTo(tubeBounds.left(),  tubeBounds.bottom())
+                .lineTo(tubeBounds.right(), tubeBounds.bottom())
+                .curveTo(
+                    tubeBounds.right() + lensRadius, tubeBounds.bottom(),
+                    tubeBounds.right() + lensRadius, tubeBounds.top(),
+                    tubeBounds.right(),              tubeBounds.top()
+                );
+
+            this.internalLaserCurtainView = new LaserCurtainView({
+                mvt: this.mvt,
+                simulation: this.simulation,
+                modelShape: internalShape
+            });
+
+            var externalShape = new Rectangle(tubeBounds.right(), tubeBounds.y, 500, tubeBounds.h);
+
+            this.externalLaserCurtainView = new LaserCurtainView({
+                mvt: this.mvt,
+                simulation: this.simulation,
+                modelShape: externalShape
+            });
+
+            // Create a listener that will adjust the maximum alpha of the external beam based on
+            //   the reflectivity of the right-hand mirror
+            this.listenTo(this.simulation.rightMirror, 'change:reflectivity', this.rightMirrorReflectivityChanged);
+            this.rightMirrorReflectivityChanged(this.simulation.rightMirror, this.simulation.rightMirror.get('reflectivity'));
+
+            this.foregroundLayer.addChildAt(this.internalLaserCurtainView.displayObject, 0);
+            this.backgroundLayer.addChildAt(this.externalLaserCurtainView.displayObject, 0);
+        },
+
+        initLaserWaveView: function() {
+            this.laserWaveView = new LaserWaveView({
+                mvt: this.mvt,
                 simulation: this.simulation
             });
-            this.remoteControlView.displayObject.x = this.width  - RemoteControlView.RIGHT;
-            this.remoteControlView.displayObject.y = this.height - RemoteControlView.BOTTOM;
-            this.stage.addChild(this.remoteControlView.displayObject);
-            this.$ui.append(this.remoteControlView.el);
-            this.remoteControlView.$el.css({
-                'top': (this.height - RemoteControlView.BOTTOM - RemoteControlView.PANEL_HEIGHT) + 'px'
-            });
+
+            this.tubeLayer.addChild(this.laserWaveView.foregroundLayer);
+            this.backgroundLayer.addChildAt(this.laserWaveView.backgroundLayer, 0);
         },
 
-        reset: function() {
-            this.ladybugTraceView.clearTraces();
-            this.ladybugView.reset();
+        initEnergyLevelPanel: function() {
+            this.energyLevelPanelView = new EnergyLevelPanelView({
+                simulation: this.simulation,
+                averagingPeriod: 0
+            });
+
+            if (AppView.windowIsShort()) {
+                this.energyLevelPanelView.displayObject.x = 12;
+                this.energyLevelPanelView.displayObject.y = 12;
+            }
+            else {
+                this.energyLevelPanelView.displayObject.x = 20;
+                this.energyLevelPanelView.displayObject.y = 20;
+            }
+
+            this.controlsLayer.addChild(this.energyLevelPanelView.displayObject);
+        },
+
+        initExplosion: function() {
+            this.explosionView = new LaserExplosionView({
+                mvt: this.mvt,
+                simulation: this.simulation
+            });
+
+            this.effectsLayer.addChild(this.explosionView.displayObject);
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
-
+            this.photonsView.update(time, deltaTime, paused);
+            this.energyLevelPanelView.update(time, deltaTime, paused);
+            this.laserWaveView.update(time, deltaTime, paused);
+            this.explosionView.update(time, deltaTime, paused);
         },
+
+        showHelp: function() {
+            this.energyLevelPanelView.showHelp();
+        },
+
+        hideHelp: function() {
+            this.energyLevelPanelView.hideHelp();
+        },
+
+        rightMirrorReflectivityChanged: function(mirror, reflectivity) {
+            this.externalLaserCurtainView.setMaxAlpha(1 - (Math.pow(reflectivity, 1.5)));
+        },
+
+        explodedChanged: function(simulation, exploded) {
+            if (exploded) {
+                this.backgroundLayer.visible = false;
+                this.atomLayer.visible = false;
+                this.tubeLayer.visible = false;
+                this.photonElectronLayer.visible = false;
+                this.foregroundLayer.visible = false;
+            }
+            else {
+                this.backgroundLayer.visible = true;
+                this.atomLayer.visible = true;
+                this.tubeLayer.visible = true;
+                this.photonElectronLayer.visible = true;
+                this.foregroundLayer.visible = true;
+            }
+        },
+
+        photonSizeChanged: function() {
+            this.photonsView.updateMVT(this.mvt);
+        }
 
     });
 
-    return LadybugMotionSceneView;
+    return LasersSceneView;
 });
 
 
-define('less/less!styles/seek-bar',[],function(){});
+define('text!templates/laser-power.html',[],function () { return '<h2>Laser Power</h2>\r\n\r\n<div class="power-meter-wrapper internal-power-wrapper">\r\n    <label>Internal Power</label>\r\n    <div class="power-meter internal-power-meter">\r\n    \t<label class="lasing-label">Lasing</label>\r\n    \t<label class="danger-label">Danger!</label>\r\n    </div>\r\n</div>\r\n\r\n<div class="power-meter-wrapper output-power-wrapper">\r\n    <label>Output Power</label>\r\n    <div class="power-meter output-power-meter"></div>\r\n</div>';});
 
-define('text!templates/seek-bar.html',[],function () { return '<div class="seek-bar-progress">\r\n\t<div class="seek-bar-overwritten"></div>\r\n\t<div class="seek-bar-handle"></div>\r\n</div>';});
 
-define('views/seek-bar',['require','jquery','underscore','backbone','common/locks/define-locks','less!styles/seek-bar','text!templates/seek-bar.html'],function(require) {
+define('less/less!styles/laser-power',[],function(){});
+define('views/laser-power',['require','jquery','underscore','backbone','constants','text!templates/laser-power.html','less!styles/laser-power'],function(require) {
 
     'use strict';
 
@@ -65147,188 +69891,137 @@ define('views/seek-bar',['require','jquery','underscore','backbone','common/lock
     var _        = require('underscore');
     var Backbone = require('backbone'); Backbone.$ = $;
 
-    var defineInputUpdateLocks = require('common/locks/define-locks');
+    var Constants = require('constants');
 
-    require('less!styles/seek-bar');
+    var html = require('text!templates/laser-power.html');
 
-    var html = require('text!templates/seek-bar.html');
+    require('less!styles/laser-power');
 
     /**
      *
      */
-    var SeekBarView = Backbone.View.extend({
+    var LaserPowerView = Backbone.View.extend({
 
-        className: 'seek-bar-view',
+        className: 'sim-controls laser-power-panel',
 
-        events: {
-            'mousedown' : 'dragStart',
-            'touchstart' : 'dragStart',
-        },
+        template: _.template(html),
 
         initialize: function(options) {
-            $('body')
-                .bind('mousemove touchmove', _.bind(this.drag,    this))
-                .bind('mouseup touchend',    _.bind(this.dragEnd, this));
+            this.simulation = options.simulation;
 
-            this.listenTo(this.model, 'change:time',                 this.timeChanged);
-            this.listenTo(this.model, 'change:furthestRecordedTime', this.furthestRecordedTimeChanged);
-            this.listenTo(this.model, 'change:paused',               this.pausedChanged);
-            this.listenTo(this.model, 'change:recording',            this.recordingChanged);
+            this.listenTo(this.simulation.lasingPhotons, 'add remove', this.lasingPhotonCountChanged);
         },
 
         /**
-         * Renders the contents of the view
+         * Renders content and canvas for heatmap
          */
         render: function() {
-            this.$el.html(html);
-            this.$progress = this.$('.seek-bar-progress');
-            this.$handle   = this.$('.seek-bar-handle');
-            this.$overwritten = this.$('.seek-bar-overwritten');
+            // Render the base template
+            this.$el.append(this.template({
+                unique: this.cid
+            }));
 
-            this.determineHandleVisibility();
-            this.timeChanged(this.model, this.model.get('time'));
-            this.furthestRecordedTimeChanged(this.model, this.model.get('furthestRecordedTime'));
-            this.setInitialOverwrittenWidth();
+            this.$internalPowerMeter = this.$('.internal-power-meter');
+            this.$outputPowerMeter = this.$('.output-power-meter');
 
             return this;
         },
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
         postRender: function() {
-            this.resize();
+            this.renderBars(this.$internalPowerMeter);
+            this.renderBars(this.$outputPowerMeter);
         },
 
-        resize: function() {
-            this.barOffset = this.$el.offset();
-            this.barWidth = this.$el.width();
-            this.handleWidth = this.$handle.width();
+        renderBars: function($container) {
+            var width = $container.width();
+            var segmentWidth = 3;
+            var segmentMargin = 1;
+            var numSegments = Math.floor(width / (segmentWidth + segmentMargin));
+
+            var segmentHtml = '<div class="power-meter-segment"></div>';
+            var segments = [];
+
+            for (var i = 0; i < numSegments; i++) {
+                var $segment = $(segmentHtml);
+                segments.push($segment);
+                $container.append($segment);
+            }
+
+            $container.segments = segments;
+
+            var $lasing = $container.find('.lasing-label');
+            var $danger = $container.find('.danger-label');
+            if ($lasing.length) {
+                var lasingWidth = Math.round($container.width() * (this.getDangerPercent() - this.getLasingPercent()));
+                var lasingLeft = Math.round($container.width() * this.getLasingPercent()) + 4;
+                $lasing.css({
+                    width: lasingWidth + 'px',
+                    left: lasingLeft + 'px'
+                });
+
+                var dangerWidth = Math.round($container.width() * (1 - this.getDangerPercent()));
+                var dangerLeft = Math.round($container.width() * this.getDangerPercent()) + 4;
+                $danger.css({
+                    width: dangerWidth + 'px',
+                    left: dangerLeft + 'px'
+                });
+            }
         },
 
-        dragStart: function(event) {
-            // Don't let the user drag the seek bar while it's recording
-            if (!this.model.get('paused') && this.model.get('recording'))
+        updateBar: function($container, percent, simple) {
+            if (percent === 0)
                 return;
 
-            event.preventDefault();
-            this.fixTouchEvents(event);
+            var segments = $container.segments;
+            var lasingPercent = this.getLasingPercent();
+            var dangerPercent = this.getDangerPercent();
 
-            if (event.currentTarget === this.$handle[0]) {
-                this.draggingOffsetX = event.pageX - this.$handle.offset().left - this.handleWidth / 2;
-
-                this.dragging = true;
-            }
-            else {
-                // They just clicked somewhere on the bar, so move the slider
-                this.draggingOffsetX = 0;
-                this.dragging = true;
-
-                var x = event.pageX - this.barOffset.left;
-                this.seekToX(x);
-            }
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                this.fixTouchEvents(event);
-
-                // The x location of the handle relative to the seek bar
-                var x = event.pageX - this.barOffset.left - this.draggingOffsetX;
-                this.seekToX(x);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-        fixTouchEvents: function(event) {
-            if (event.pageX === undefined) {
-                event.pageX = event.originalEvent.touches[0].pageX;
-                event.pageY = event.originalEvent.touches[0].pageY;
+            for (var i = 0; i < segments.length; i++) {
+                var segmentPercent = (i / segments.length);
+                if (simple) {
+                    if (segmentPercent > percent)
+                        segments[i].removeClass('filled');
+                    else
+                        segments[i].addClass('filled');
+                }
+                else {
+                    if (segmentPercent > percent) {
+                        segments[i].removeClass('filled filled-lasing filled-danger');
+                    }
+                    else if (segmentPercent >= dangerPercent) {
+                        segments[i].addClass('filled-danger');
+                    }
+                    else if (segmentPercent >= lasingPercent) {
+                        segments[i].addClass('filled-lasing');
+                    }
+                    else {
+                        segments[i].addClass('filled');
+                    }
+                }
             }
         },
 
-        seekToX: function(x) {
-            // Keep it within bounds
-            var progressWidth = this.$progress.width();
-            x = Math.max(0, Math.min(progressWidth, x));
-
-            this.inputLock(function() {
-                var percent = x / this.barWidth;
-                this.model.setTime(percent * this.getMaxTime());
-            });
-
-            var percent = x / progressWidth;
-            this.$handle.css('left', (percent * 100) + '%');
-
-            var overwrittenWidth = progressWidth - x;
-            this.$overwritten.width(overwrittenWidth);
+        getLasingPercent: function() {
+            return Constants.LASING_THRESHOLD / Constants.KABOOM_THRESHOLD;
         },
 
-        getMaxTime: function() {
-            return Math.max(this.model.get('furthestRecordedTime'), this.model.get('maxRecordingTime'));
+        getDangerPercent: function() {
+            return 0.75;
         },
 
-        timeChanged: function(simulation, time) {
-            var percent = Math.min(1, (time / simulation.get('furthestRecordedTime')));
-            this.$handle.css('left', (percent * 100) + '%');
-        },
+        lasingPhotonCountChanged: function(photon, lasingPhotons) {
+            var count = lasingPhotons.length;
+            var internalPowerPercent = count / Constants.KABOOM_THRESHOLD;
+            var outputPowerPercent = (count / Constants.KABOOM_THRESHOLD) * (1 - this.simulation.rightMirror.getReflectivity());
 
-        furthestRecordedTimeChanged: function(simulation, furthestRecordedTime) {
-            var percent = Math.min(1, (furthestRecordedTime / this.getMaxTime()));
-            this.$progress.css('width', (percent * 100) + '%');
-        },
-
-        pausedChanged: function(simulation, paused) {
-            if (!paused)
-                this.$overwritten.width(0).hide();
-            else
-                this.setInitialOverwrittenWidth();
-
-            this.determineHandleVisibility();
-            this.determineOverwrittenVisibility();
-        },
-
-        recordingChanged: function(simulation, recording) {
-            this.determineHandleVisibility();
-            this.determineOverwrittenVisibility();
-        },
-
-        determineHandleVisibility: function() {
-            if (this.model.get('paused') || !this.model.get('recording'))
-                this.$handle.show();
-            else
-                this.$handle.hide();
-        },
-
-        determineOverwrittenVisibility: function() {
-            if (this.model.get('paused') && this.model.get('recording'))
-                this.$overwritten.show();
-            else
-                this.$overwritten.hide();
-        },
-
-        setInitialOverwrittenWidth: function() {
-            if (this.model.get('time') < this.model.get('furthestRecordedTime')) {
-                var percent = 1 - (this.model.get('time')  / this.model.get('furthestRecordedTime'));
-                this.$overwritten.css('width', (percent * 100) + '%');
-            }
-        },
-
-        update: function() {
-            this.setInitialOverwrittenWidth();
+            this.updateBar(this.$internalPowerMeter, internalPowerPercent, false);
+            this.updateBar(this.$outputPowerMeter, outputPowerPercent, true);
         }
 
     });
 
 
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(SeekBarView);
-
-    return SeekBarView;
+    return LaserPowerView;
 });
 
 /*! noUiSlider - 7.0.10 - 2014-12-27 14:50:47 */
@@ -68572,18 +73265,23 @@ define('less/less!styles/sim',[],function(){});
 
 define('less/less!styles/playback-controls',[],function(){});
 
+define('less/less!styles/laser-picture-dialog',[],function(){});
+
 define('less/less!common/styles/slider',[],function(){});
 
 define('less/less!common/styles/radio',[],function(){});
 
 define('less/less!bootstrap-select-less',[],function(){});
 
-define('text!templates/sim.html',[],function () { return '\r\n<span class="scene-view-placeholder"></span>\r\n\r\n<div class="sim-controls-column">\r\n    <div class="sim-controls">\r\n        <h2>Vectors</h2>\r\n\r\n        <ul class="checkbox">\r\n            <li>\r\n                <input type="checkbox" id="show-velocity-check">\r\n                <label for="show-velocity-check">Show Velocity</label>\r\n            </li>\r\n            <li>\r\n                <input type="checkbox" id="show-acceleration-check">\r\n                <label for="show-acceleration-check">Show Acceleration</label>\r\n            </li>\r\n        </ul>\r\n\r\n        <h2>Motion</h2>\r\n\r\n        <ul class="radio">\r\n        <% _.each(motions, function(option, index){ %>\r\n            <li>\r\n                <input type="radio" name="motion" value="<%= option %>" class="motion-type" id="motion-<%= index %>" <% if (index === 0) { %>checked<% } %>>\r\n                <label  for="motion-<%= index %>"><%= option %></label>\r\n            </li>\r\n        <% }); %>\r\n        </ul>\r\n\r\n        <h2>Trace</h2>\r\n\r\n        <ul class="radio">\r\n            <li>\r\n                <input type="radio" name="trace" value="line" id="trace-line" checked>\r\n                <label for="trace-line">Line</label>\r\n            </li>\r\n            <li>\r\n                <input type="radio" name="trace" value="dots" id="trace-dots">\r\n                <label for="trace-dots">Dots</label>\r\n            </li>\r\n            <li>\r\n                <input type="radio" name="trace" value="off" id="trace-off">\r\n                <label for="trace-off">Off</label>\r\n            </li>\r\n        </ul>\r\n        \r\n    </div>\r\n</div>';});
+define('text!templates/playback-controls.html',[],function () { return '<div class="playback-controls-wrapper">\r\n\t<button class="btn view-laser-picture-btn"><span class="fa fa-picture-o"></span> View Picture of Actual Laser</button>\r\n\r\n    <div class="playback-center-buttons-wrapper">\r\n        <button class="playback-btn play-btn"   title="Resume"><span class="fa fa-play"></span></button>\r\n        <button class="playback-btn pause-btn"  title="Pause"><span class="fa fa-pause"></span></button>\r\n        <button class="playback-btn step-btn"   title="Step forward"><span class="fa fa-step-forward"></span></button>\r\n    </div>\r\n    \r\n    <button class="btn btn-normal reset-btn" title="Reset All">Reset All</button>\r\n</div>';});
 
 
-define('text!templates/playback-controls.html',[],function () { return '<div class="playback-controls-wrapper">\r\n    <button class="btn btn-normal clear-btn" title="Clear history">Clear</button>\r\n\r\n    <div class="btn-group playback-mode-wrapper" data-toggle="buttons">\r\n        <label class="btn active">\r\n            <input type="radio" name="options" id="record-mode" autocomplete="off" checked> Record\r\n        </label>\r\n        <label class="btn">\r\n            <input type="radio" name="options" id="playback-mode" autocomplete="off"> Playback\r\n        </label>\r\n    </div>\r\n    \r\n    <div class="playback-center-buttons-wrapper">\r\n        <button class="playback-btn rewind-btn" title="Rewind to last change"><span class="fa fa-fast-backward"></span></button>\r\n        <button class="playback-btn play-btn"   title="Resume"><span class="fa fa-play"></span></button>\r\n        <button class="playback-btn record-btn" title="Record"><span class="fa fa-circle"></span></button>\r\n        <button class="playback-btn pause-btn"  title="Pause"><span class="fa fa-pause"></span></button>\r\n        <button class="playback-btn step-btn"   title="Step"><span class="fa fa-step-forward"></span></button>\r\n    </div>\r\n    \r\n    <button class="btn btn-normal reset-btn" title="Reset All">Reset All</button>\r\n</div>';});
+define('text!templates/options.html',[],function () { return '<div class="sim-controls one-atom-options-panel">\r\n    <h2>Options</h2>\r\n\r\n    <label>Energy Levels</label>\r\n    <select class="energy-levels-select">\r\n        <% var twoSelected = (simulation.get(\'elementProperties\') === simulation.twoLevelProperties); %>\r\n        <option value="2" <% if (twoSelected) { %>selected<% } %>>Two Levels</option>\r\n        <option value="3" <% if (!twoSelected) { %>selected<% } %>>Three Levels</option>\r\n    </select>\r\n\r\n    <label class="<% if (!alwaysShowLampViewOptions) { %>three-level-options<% } %>">Lamp View</label>\r\n    <select class="lamp-view-select <% if (!alwaysShowLampViewOptions) { %>three-level-options<% } %>">\r\n        <% var photonsSelected = (simulation.get(\'pumpingPhotonViewMode\') === Constants.PHOTON_DISCRETE); %>\r\n        <option value="photons" <% if (photonsSelected) { %>selected<% } %>>Photons</option>\r\n        <option value="beam" <% if (!photonsSelected) { %>selected<% } %>>Beam</option>\r\n    </select>\r\n\r\n    <label class="three-level-options">Lower Transition</label>\r\n    <select class="lower-transition-select three-level-options">\r\n        <option value="photons">Photons</option>\r\n        <option value="wave">Wave View</option>\r\n    </select>\r\n\r\n    <ul class="checkboxes">\r\n        <li>\r\n            <input type="checkbox" class="enable-mirrors-check" id="enable-mirrors-check-<%= unique %>">\r\n            <label for="enable-mirrors-check-<%= unique %>">Enable mirrors</label>\r\n        </li>\r\n    </ul>\r\n\r\n    <div class="mirror-options">\r\n        <label class="slider-header"><span class="reflectivity-title">Mirror Reflectivity</span> <span class="slider-value reflectivity-value">100%</span></label>\r\n        <div class="reflectivity-slider-wrapper">\r\n            <div class="slider reflectivity-slider"></div>\r\n        </div>\r\n    </div>\r\n\r\n    <ul class="checkboxes three-level-options">\r\n        <li class="three-level-option">\r\n            <input type="checkbox" class="display-high-level-emitted-photons-check" id="display-high-level-emitted-photons-check-<%= unique %>">\r\n            <label for="display-high-level-emitted-photons-check-<%= unique %>">Display photons emitted from upper energy state</label>\r\n        </li>\r\n    </ul>\r\n</div>';});
 
-define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/simulation','models/ladybug-mover','views/scene','views/seek-bar','constants','nouislider','bootstrap','bootstrap-select','less!styles/sim','less!styles/playback-controls','less!common/styles/slider','less!common/styles/radio','less!bootstrap-select-less','text!templates/sim.html','text!templates/playback-controls.html'],function (require) {
+
+define('text!templates/laser-picture-dialog.html',[],function () { return '\r\n<div class="modal picture-dialog">\r\n    <div class="modal-dialog">\r\n        <div class="modal-content">\r\n            <div class="modal-header">\r\n                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>\r\n                <h4 class="modal-title">Picture of an Actual Laser</h4>\r\n            </div>\r\n            <div class="modal-body">\r\n                \r\n                <div id="laser-picture"></div>\r\n\r\n            </div>\r\n            <div class="modal-footer">\r\n                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\r\n            </div>\r\n        </div><!-- /.modal-content -->\r\n    </div><!-- /.modal-dialog -->\r\n</div><!-- /.modal -->';});
+
+define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/simulation','views/scene','views/laser-power','constants','assets','nouislider','bootstrap','bootstrap-select','less!styles/sim','less!styles/playback-controls.less','less!styles/laser-picture-dialog','less!common/styles/slider','less!common/styles/radio','less!bootstrap-select-less','text!templates/playback-controls.html','text!templates/options.html','text!templates/laser-picture-dialog.html'],function (require) {
 
     'use strict';
 
@@ -68592,13 +73290,13 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
     var SimView = require('common/v3/app/sim');
 
-    var LadybugMotionSimulation = require('models/simulation');
-    var LadybugMover            = require('models/ladybug-mover');
+    var LasersSimulation = require('models/simulation');
 
-    var LadybugMotionSceneView = require('views/scene');
-    var SeekBarView            = require('views/seek-bar');
+    var LasersSceneView = require('views/scene');
+    var LaserPowerView  = require('views/laser-power');
 
     var Constants = require('constants');
+    var Assets = require('assets');
 
     require('nouislider');
     require('bootstrap');
@@ -68606,56 +73304,51 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
     // CSS
     require('less!styles/sim');
-    require('less!styles/playback-controls');
+    require('less!styles/playback-controls.less');
+    require('less!styles/laser-picture-dialog');
     require('less!common/styles/slider');
     require('less!common/styles/radio');
     require('less!bootstrap-select-less');
 
     // HTML
-    var simHtml              = require('text!templates/sim.html');
     var playbackControlsHtml = require('text!templates/playback-controls.html');
+    var optionsHtml          = require('text!templates/options.html');
+    var pictureDialogHtml    = require('text!templates/laser-picture-dialog.html');
 
     /**
-     * A view that determines the contents of the one and only tab
+     * This is the umbrella view for everything in a simulation tab.  It
+     *   will be extended by both the One Atom and the Multiple Atom tab.
      */
-    var LadybugMotionSimView = SimView.extend({
-
-        runUpdateOnReset: true,
+    var LasersSimView = SimView.extend({
 
         /**
          * Root element properties
          */
         tagName:   'section',
-        className: 'sim-view record-mode',
+        className: 'sim-view',
 
         /**
          * Template for rendering the basic scaffolding
          */
-        template: _.template(simHtml),
+        template: _.template(''),
+        optionsTemplate: _.template(optionsHtml),
 
         /**
          * Dom event listeners
          */
         events: {
-            'click .play-btn'   : 'play',
-            'click .record-btn' : 'play',
-            'click .pause-btn'  : 'pause',
-            'click .step-btn'   : 'step',
-            'click .rewind-btn' : 'rewind',
-            'click .reset-btn'  : 'reset',
-            'click .clear-btn'  : 'clear',
+            'click .play-btn'  : 'play',
+            'click .pause-btn' : 'pause',
+            'click .step-btn'  : 'step',
+            'click .reset-btn' : 'reset',
+            'click .view-laser-picture-btn' : 'viewLaserPictureDialog',
 
-            'change #record-mode'   : 'recordModeClicked',
-            'change #playback-mode' : 'playbackModeClicked',
-
-            'click .motion-type' : 'motionTypeClicked',
-
-            'click #trace-line' : 'traceLineClicked',
-            'click #trace-dots' : 'traceDotsClicked',
-            'click #trace-off'  : 'traceOffClicked',
-
-            'click #show-velocity-check'     : 'showVelocityClicked',
-            'click #show-acceleration-check' : 'showAccelerationClicked'
+            'change .energy-levels-select'    : 'changeEnergyLevels',
+            'change .lamp-view-select'        : 'changeLampViewMode',
+            'change .lower-transition-select' : 'changeLowerTransitionViewMode',
+            'click .enable-mirrors-check'     : 'toggleMirrors',
+            'slide .reflectivity-slider'      : 'changeReflectivity',
+            'click .display-high-level-emitted-photons-check' : 'toggleHighLevelEmittedPhotons'
         },
 
         /**
@@ -68665,19 +73358,23 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          */
         initialize: function(options) {
             options = _.extend({
-                title: 'Ladybug Motion',
-                name: 'ladybug-motion',
-                link: 'ladybug-motion-2d'
+                title: 'Lasers',
+                name: 'lasers',
+                link: 'legacy/lasers',
+                alwaysShowLampViewOptions: false
             }, options);
+
+            this.alwaysShowLampViewOptions = options.alwaysShowLampViewOptions;
 
             SimView.prototype.initialize.apply(this, [options]);
 
             this.initSceneView();
-            this.initSeekBarView();
+            this.initLaserPowerView();
 
-            this.listenTo(this.simulation, 'change:motionType', this.motionTypeChanged);
-            this.listenTo(this.simulation, 'change:recording', this.recordingChanged);
-            this.listenTo(this.simulation, 'change:paused',    this.pausedChanged);
+            this.listenTo(this.simulation, 'change:paused',           this.pausedChanged);
+            this.listenTo(this.simulation, 'change:mirrorsEnabled',   this.mirrorsEnabledChanged);
+            this.listenTo(this.simulation, 'change:elementProperties', this.elementPropertiesChanged);
+
             this.pausedChanged(this.simulation, this.simulation.get('paused'));
         },
 
@@ -68685,21 +73382,21 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          * Initializes the Simulation.
          */
         initSimulation: function() {
-            this.simulation = new LadybugMotionSimulation();
+            this.simulation = new LasersSimulation();
         },
 
         /**
          * Initializes the SceneView.
          */
         initSceneView: function() {
-            this.sceneView = new LadybugMotionSceneView({
+            this.sceneView = new LasersSceneView({
                 simulation: this.simulation
             });
         },
 
-        initSeekBarView: function() {
-            this.seekBarView = new SeekBarView({
-                model: this.simulation
+        initLaserPowerView: function() {
+            this.laserPowerView = new LaserPowerView({
+                simulation: this.simulation
             });
         },
 
@@ -68711,7 +73408,10 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
             this.renderScaffolding();
             this.renderSceneView();
-            this.renderSeekBarView();
+            this.renderPlaybackControls();
+            this.renderLaserPower();
+
+            this.$el.append(pictureDialogHtml);
 
             return this;
         },
@@ -68722,14 +73422,35 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
         renderScaffolding: function() {
             var data = {
                 Constants: Constants,
+                Assets: Assets,
                 simulation: this.simulation,
-                motions: _.keys(LadybugMover.MOTION_TYPES)
+                unique: this.cid,
+                alwaysShowLampViewOptions: this.alwaysShowLampViewOptions
             };
-            this.$el.html(this.template(data));
 
-            this.$el.append(playbackControlsHtml);
+            this.$el.html(this.template(data));
+            this.$('.sim-controls-right').append(this.optionsTemplate(data));
 
             this.$('select').selectpicker();
+
+            this.$reflectivitySlider = this.$('.reflectivity-slider');
+            this.$reflectivitySlider.noUiSlider({
+                start: 100,
+                range: {
+                    min: 0,
+                    max: 100
+                },
+                connect: 'lower'
+            });
+
+            this.$reflectivityValue = this.$('.reflectivity-value');
+        },
+
+        /**
+         * Renders playback controls bar
+         */
+        renderPlaybackControls: function() {
+            this.$el.append(playbackControlsHtml);
         },
 
         /**
@@ -68738,12 +73459,14 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
         renderSceneView: function() {
             this.sceneView.render();
             this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-            this.$el.append(this.sceneView.ui);
         },
 
-        renderSeekBarView: function() {
-            this.seekBarView.render();
-            this.$('.playback-controls-wrapper').append(this.seekBarView.el);
+        /**
+         * Renders the laser controls view
+         */
+        renderLaserPower: function() {
+            this.laserPowerView.render();
+            this.$el.append(this.laserPowerView.el);
         },
 
         /**
@@ -68752,45 +73475,47 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
          */
         postRender: function() {
             this.sceneView.postRender();
-            this.seekBarView.postRender();
-            this.sceneView.ladybugView.hideVelocityArrow();
-            this.sceneView.ladybugView.hideAccelerationArrow();
+            this.laserPowerView.postRender();
+
+            this.mirrorsEnabledChanged(this.simulation, this.simulation.get('mirrorsEnabled'));
+            this.elementPropertiesChanged(this.simulation, this.simulation.get('elementProperties'));
+        },
+
+        resetSimulation: function() {
+            // Set pause the updater and reset everything
+            this.updater.pause();
+            this.updater.reset();
+            this.resetComponents();
+            this.resetControls();
+
+            // Resume normal function
+            this.updater.play();
+            this.play();
+            this.pausedChanged();
         },
 
         /**
-         * Overrides so that we don't rerender on a reset.
+         * Resets all the controls back to their default state.
          */
-        rerender: function() {
+        resetControls: function() {
+            this.$('select.energy-levels-select').val((this.simulation.get('elementProperties') === this.simulation.twoLevelProperties) ? 2 : 3);
+            this.$('.lamp-view-select').val((this.simulation.get('pumpingPhotonViewMode') === Constants.PHOTON_DISCRETE) ? 'photons' : 'beam');
+            this.$('.lower-transition-select').val('photons');
+            this.$('.enable-mirrors-check').prop('checked', this.simulation.get('mirrorsEnabled'));
+            this.$reflectivitySlider.val(this.simulation.rightMirror.getReflectivity() * 100);
+            this.updateReflectivityLabel(this.simulation.rightMirror.getReflectivity() * 100);
+            this.$('.display-high-level-emitted-photons-check').prop('checked', false);
+
+            this.$('select').selectpicker('refresh');
+        },
+
+        /**
+         * Resets all the components of the view.
+         */
+        resetComponents: function() {
+            SimView.prototype.resetComponents.apply(this);
+
             this.sceneView.reset();
-        },
-
-        /**
-         * Overrides to remove the confirmation dialog because it's
-         *   not important in this sim.
-         */
-        reset: function() {
-            this.resetSimulation();
-            this.simulation.pause();
-            this.$('#trace-line').click();
-            this.$('#show-velocity-check').prop('checked', true);
-            this.$('#show-acceleration-check').prop('checked', true);
-        },
-
-        /**
-         * Rewinds the simulation.
-         */
-        rewind: function() {
-            this.pause();
-            this.simulation.rewind();
-            this.seekBarView.update();
-        },
-
-        /**
-         * Clears the sim's history.
-         */
-        clear: function() {
-            this.simulation.clear();
-            this.seekBarView.update();
         },
 
         /**
@@ -68808,40 +73533,60 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
             this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
         },
 
-        /**
-         * Sets sim to record mode
-         */
-        recordModeClicked: function() {
+        viewLaserPictureDialog: function() {
+            this.$('.picture-dialog').modal('show');
+        },
+
+        changeEnergyLevels: function(event) {
+            var numLevels = parseInt($(event.target).val());
+            this.simulation.setNumEnergyLevels(numLevels);
+        },
+
+        changeLampViewMode: function(event) {
+            if ($(event.target).val() === 'beam')
+                this.simulation.set('pumpingPhotonViewMode', Constants.PHOTON_CURTAIN);
+            else
+                this.simulation.set('pumpingPhotonViewMode', Constants.PHOTON_DISCRETE);
+        },
+
+        changeLowerTransitionViewMode: function(event) {
+            if ($(event.target).val() === 'wave')
+                this.simulation.set('lasingPhotonViewMode', Constants.PHOTON_WAVE);
+            else
+                this.simulation.set('lasingPhotonViewMode', Constants.PHOTON_DISCRETE);
+        },
+
+        toggleMirrors: function(event) {
+            if ($(event.target).is(':checked'))
+                this.simulation.set('mirrorsEnabled', true);
+            else
+                this.simulation.set('mirrorsEnabled', false);
+        },
+
+        changeReflectivity: function(event) {
             this.inputLock(function() {
-                this.simulation.set('recording', true);
+                var percent = parseFloat(this.$('.reflectivity-slider').val());
+                this.updateReflectivityLabel(percent);
+                this.simulation.rightMirror.set('reflectivity', percent / 100);
             });
         },
 
-        /**
-         * Sets sim to playback mode
-         */
-        playbackModeClicked: function() {
-            this.inputLock(function() {
-                this.simulation.set('recording', false);
-            });
+        updateReflectivityLabel: function(percent) {
+            this.$reflectivityValue.text(Math.round(percent) + '%');
         },
 
-        /**
-         * The simulation changed its recording state.
-         */
-        recordingChanged: function() {
-            if (this.simulation.get('recording')) {
-                this.$el.addClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#record-mode').click();
-                });
-            }
-            else {
-                this.$el.removeClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#playback-mode').click();
-                });
-            }
+        toggleHighLevelEmittedPhotons: function(event) {
+            if ($(event.target).is(':checked'))
+                this.simulation.set('displayHighLevelEmissions', true);
+            else
+                this.simulation.set('displayHighLevelEmissions', false);
+        },
+
+        mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
+            if (mirrorsEnabled)
+                this.$('.mirror-options').show();
+            else
+                this.$('.mirror-options').hide();
         },
 
         /**
@@ -68854,84 +73599,1587 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
                 this.$el.addClass('playing');
         },
 
-        /**
-         * Sets the simulation's automated motion type
-         */
-        motionTypeClicked: function(event) {
-            var key = $(event.target).val();
-            this.inputLock(function() {
-                this.simulation.set('motionType', key);
-            });
-        },
-
-        /**
-         * Responds to changes in simulation's automated motion type
-         */
-        motionTypeChanged: function(simulation, motionTypeKey) {
-            this.updateLock(function() {
-                this.$('.motion-type').each(function() {
-                    if ($(this).val() === motionTypeKey)
-                        $(this).click();
-                })
-            });
-        },
-
-        traceLineClicked: function() {
-            this.sceneView.ladybugTraceView.showLines();
-        },
-
-        traceDotsClicked: function() {
-            this.sceneView.ladybugTraceView.showDots();
-        },
-
-        traceOffClicked: function() {
-            this.sceneView.ladybugTraceView.hide();
-        },
-
-        showVelocityClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showVelocityArrow();
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            if (elementProperties === simulation.twoLevelProperties)
+                this.$('.three-level-options').hide();
             else
-                this.sceneView.ladybugView.hideVelocityArrow();
+                this.$('.three-level-options').show();
         },
 
-        showAccelerationClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showAccelerationArrow();
-            else
-                this.sceneView.ladybugView.hideAccelerationArrow();
+        photonSizeChanged: function() {
+            this.sceneView.photonSizeChanged();
+        },
+
+        showHelp: function() {
+            this.sceneView.showHelp();
+        },
+
+        hideHelp: function() {
+            this.sceneView.hideHelp();
         }
 
     });
 
-    return LadybugMotionSimView;
+    return LasersSimView;
+});
+
+define('views/lamp',['require','underscore','pixi','common/v3/pixi/view','common/colors/wavelength','common/colors/colors','assets'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+    var PixiView         = require('common/v3/pixi/view');
+    var WavelengthColors = require('common/colors/wavelength');
+    var Colors           = require('common/colors/colors');
+
+    var Assets = require('assets');
+
+    var LampView = PixiView.extend({
+
+        initialize: function(options) {
+            options = _.extend({
+                modelWidth: 100
+            }, options);
+
+            this.mvt = options.mvt;
+            this.modelWidth = options.modelWidth;
+
+            this.initGraphics();
+
+            this.listenTo(this.model, 'change:wavelength',       this.drawLight);
+            this.listenTo(this.model, 'change:photonsPerSecond', this.drawLight);
+        },
+
+        initGraphics: function() {
+            this.lampLightGraphics = new PIXI.Graphics();
+
+            this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
+            this.flashlight.anchor.x = 1;
+            this.flashlight.anchor.y = 0.5;
+
+            this.flashlightLayer = new PIXI.Container();
+            this.flashlightLayer.addChild(this.lampLightGraphics);
+            this.flashlightLayer.addChild(this.flashlight);
+
+            this.displayObject.addChild(this.flashlightLayer);
+
+            this.updateMVT(this.mvt);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            // Position and rotation of the flashlight layer
+            this.updatePosition(this.model, this.model.get('position'));
+            this.updateRotation();
+
+            // Update the flashlight position and scale relative to the flashlight layer
+            var targetWidth = this.mvt.modelToViewDeltaX(this.modelWidth);
+            var scale = targetWidth / this.flashlight.texture.width;
+            this.flashlight.scale.x = scale;
+            this.flashlight.scale.y = scale;
+            this.flashlight.x = this.getLampRadiusA();
+
+            this.drawLight();
+        },
+
+        updatePosition: function(model, position) {
+            var viewPosition = this.mvt.modelToView(position);
+            this.flashlightLayer.x = viewPosition.x;
+            this.flashlightLayer.y = viewPosition.y;
+        },
+
+        updateRotation: function() {
+            this.flashlightLayer.rotation = this.model.getDirection();
+        },
+
+        drawLight: function() {
+            var color = Colors.parseHex(WavelengthColors.nmToHex(this.model.get('wavelength')));
+
+            this.lampLightGraphics.clear();
+
+            // Draw the ellipse filling the flashlight with full saturation.
+            var radiusA = this.getLampRadiusA();
+            this.lampLightGraphics.beginFill(color, 1);
+            this.lampLightGraphics.drawEllipse(0, 0, radiusA, this.flashlight.height / 2);
+            this.lampLightGraphics.endFill();
+        },
+
+        getLampRadiusA: function() {
+            return this.flashlight.width * (6 / 161);
+        }
+
+    });
+
+    return LampView;
+});
+
+define('views/scene/one-atom',['require','common/v3/app/app','common/math/model-view-transform','common/math/vector2','views/scene','views/lamp','views/atom','constants'],function(require) {
+
+    'use strict';
+
+    var AppView            = require('common/v3/app/app');
+    var ModelViewTransform = require('common/math/model-view-transform');
+    var Vector2            = require('common/math/vector2');
+
+    var LasersSceneView      = require('views/scene');
+    var LampView             = require('views/lamp');
+    var AtomView             = require('views/atom');
+
+    // Constants
+    var Constants = require('constants');
+
+    /**
+     *
+     */
+    var OneAtomSceneView = LasersSceneView.extend({
+
+        initialize: function(options) {
+            LasersSceneView.prototype.initialize.apply(this, arguments);
+
+            this.listenTo(this.simulation, 'change:elementProperties',     this.elementPropertiesChanged);
+            this.listenTo(this.simulation, 'change:pumpingPhotonViewMode', this.determineBeamCurtainViewVisibility);
+            this.listenTo(this.simulation, 'change:lasingPhotonViewMode',  this.determineLaserWaveViewVisibility);
+        },
+
+        renderContent: function() {
+
+        },
+
+        initGraphics: function() {
+            LasersSceneView.prototype.initGraphics.apply(this, arguments);
+
+            this.initAtom();
+            this.initLamps();
+
+            this.determineLaserWaveViewVisibility();
+
+            this.elementPropertiesChanged(this.simulation, this.simulation.get('elementProperties'));
+        },
+
+        initMVT: function() {
+            var scale;
+
+            if (AppView.windowIsShort()) {
+                this.viewOriginX = 294;
+                this.viewOriginY = 90;
+                scale = 0.76;
+            }
+            else {
+                this.viewOriginX = 150;
+                this.viewOriginY = 80;
+                scale = 0.98;
+            }
+
+            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
+                new Vector2(0, 0),
+                new Vector2(this.viewOriginX, this.viewOriginY),
+                scale
+            );
+        },
+
+        initAtom: function() {
+            this.atomView = new AtomView({
+                model: this.simulation.atoms.first(),
+                mvt: this.mvt
+            });
+
+            this.atomLayer.addChild(this.atomView.displayObject);
+        },
+
+        initLamps: function() {
+            this.lamp1View = new LampView({
+                model: this.simulation.seedBeam,
+                mvt: this.mvt
+            });
+
+            this.lamp2View = new LampView({
+                model: this.simulation.pumpingBeam,
+                mvt: this.mvt
+            });
+
+            this.lampLayer.addChild(this.lamp1View.displayObject);
+            this.lampLayer.addChild(this.lamp2View.displayObject);
+        },
+
+        _update: function(time, deltaTime, paused, timeScale) {
+            LasersSceneView.prototype._update.apply(this, arguments);
+
+
+        },
+
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            if (elementProperties === simulation.twoLevelProperties)
+                this.lamp2View.hide();
+            else
+                this.lamp2View.show();
+            this.determineBeamCurtainViewVisibility();
+            this.determineLaserWaveViewVisibility();
+        },
+
+        determineBeamCurtainViewVisibility: function() {
+            if (this.simulation.get('elementProperties') === this.simulation.threeLevelProperties &&
+                this.simulation.get('pumpingPhotonViewMode') === Constants.PHOTON_CURTAIN
+            ) {
+                this.beamCurtainView.show();
+            }
+            else {
+                this.beamCurtainView.hide();
+            }
+        },
+
+        determineLaserWaveViewVisibility: function() {
+            if (this.simulation.get('elementProperties') === this.simulation.threeLevelProperties &&
+                this.simulation.get('lasingPhotonViewMode') === Constants.PHOTON_WAVE
+            ) {
+                this.laserWaveView.show();
+            }
+            else {
+                this.laserWaveView.hide();
+            }
+        }
+
+    });
+
+    return OneAtomSceneView;
+});
+
+define('common/locks/input',['require'],function (require) {
+
+    'use strict';
+
+	/**
+	 * Helper function for setting properties on a view object without 
+	 *   causing a loop of updates between the model and the view
+	 */
+    var inputLock = function(callback) {
+	    if (this.updatingProperty)
+	        return;
+
+	    this.inputtingProperty = true;
+	    callback.apply(this);
+	    this.inputtingProperty = false;
+	};
+
+	return inputLock;
+
+});
+define('common/locks/update',['require'],function (require) {
+
+    'use strict';
+
+	/**
+	 * Helper function for updating a view's inputs from a model's 
+	 *   attributes without causing a loop of updates between the 
+	 *   model and the view
+	 */
+	var updateLock = function(callback) {
+	    if (this.inputtingProperty)
+	        return;
+
+	    this.updatingProperty = true;
+	    callback.apply(this);
+	    this.updatingProperty = false;
+	};
+
+	return updateLock;
+
+});
+define('common/locks/define-locks',['require','./input','./update'],function (require) {
+
+    'use strict';
+
+    var inputLock = require('./input');
+	var updateLock = require('./update');
+
+    /**
+     * Function that adds the two functions to a constructor's prototype.
+     */
+    var defineInputUpdateLocks = function(constructor) {
+		constructor.prototype.inputLock = inputLock;
+		constructor.prototype.updateLock = updateLock;
+    };
+
+	return defineInputUpdateLocks;
+
+});
+
+define('less/less!common/controls/wavelength-slider',[],function(){});
+define('common/controls/wavelength-slider',['require','jquery','underscore','backbone','../locks/define-locks','../colors/wavelength','nouislider','less!./wavelength-slider'],function(require) {
+
+    'use strict';
+
+    var $        = require('jquery');
+    var _        = require('underscore');
+    var Backbone = require('backbone'); Backbone.$ = $;
+
+    var defineInputUpdateLocks = require('../locks/define-locks');
+    var WavelengthColors       = require('../colors/wavelength');
+    
+    require('nouislider');
+    require('less!./wavelength-slider');
+
+    /**
+     * This is a wrapper view for a slider control for wavelengths.
+     *   Give it the minimum wavelength (in nanometers) and maximum
+     *   wavelength, and it will handle all the color rendering and
+     *   updating.  Note that this view needs postRender to be
+     *   called during the sim's postRender operation in order for
+     *   it to show up with the right dimensions.
+     */
+    var WavelengthSliderView = Backbone.View.extend({
+
+        /**
+         * Root element properties
+         */
+        tagName:   'div',
+        className: 'slider wavelength-slider',
+
+        events: {
+            'slide' : 'changeWavelength'
+        },
+
+        initialize: function(options) {
+            options = _.extend({
+                minWavelength: WavelengthColors.MIN_WAVELENGTH,
+                maxWavelength: WavelengthColors.MAX_WAVELENGTH,
+                defaultWavelength: Math.floor((WavelengthColors.MAX_WAVELENGTH - WavelengthColors.MIN_WAVELENGTH) / 2) + WavelengthColors.MIN_WAVELENGTH,
+                invisibleSpectrumAlpha: 1,
+                invisibleSpectrumColor: '#bbb'
+            }, options);
+
+            this.minWavelength = options.minWavelength;
+            this.maxWavelength = options.maxWavelength;
+            this.defaultWavelength = options.defaultWavelength;
+            this.invisibleSpectrumAlpha = options.invisibleSpectrumAlpha;
+            this.invisibleSpectrumColor = options.invisibleSpectrumColor;
+        },
+
+        reset: function() {
+            this.val(this.defaultWavelength);
+        },
+
+        /**
+         * Renders content and canvas for heatmap
+         */
+        render: function() {
+            this.$el.noUiSlider({
+                start: this.defaultWavelength, // Convert between SI and nanometers
+                range: {
+                    min: this.minWavelength,
+                    max: this.maxWavelength
+                }
+            });
+
+            // Create a canvas background for the wavelength slider
+            this.$wavelengthSliderCanvas = $('<canvas class="wavelength-slider-canvas">').prependTo(this.$el);
+
+            // Need to add an element to the handle because it's difficult to modify the css for a pseudo-element.
+            this.$wavelengthSliderHandle = $('<div class="handle-content">').appendTo(this.$el.find('.noUi-handle'));
+
+            return this;
+        },
+
+        /**
+         * Called after every component on the page has rendered to make sure
+         *   things like widths and heights and offsets are correct.
+         */
+        postRender: function() {
+            // Resize the wavelength slider canvas
+            var height = 16;
+            var width  = this.$el.width() + height;
+            this.$wavelengthSliderCanvas[0].width  = width;
+            this.$wavelengthSliderCanvas[0].height = height;
+            this.$wavelengthSliderCanvas.width(width);
+
+            // Set up canvas rendering
+            this.ctx = this.$wavelengthSliderCanvas[0].getContext('2d');
+            this.canvasWidth  = this.$wavelengthSliderCanvas.width();
+            this.canvasHeight = this.$wavelengthSliderCanvas.height();
+
+            // Paint the spectrum colors
+            this.paintVisibleLightSpectrum();
+
+            // Set the starting color
+            this.$el.trigger('slide');
+        },
+
+        /**
+         * Draws the visible light spectrum to a canvas.  Interpolates
+         *   wavelength values from MIN_WAVELENGTH to MAX_WAVELENGTH
+         *   across the width of the element just like PhET in their
+         *   SSRWavelengthSlider class.
+         */
+        paintVisibleLightSpectrum: function() {
+            var ctx = this.ctx;
+            var width  = this.canvasWidth;
+            var height = this.canvasHeight;
+            var percentage;
+            var wavelength;
+            var color;
+
+            for (var i = 0; i < width; i++) {
+                // Perform linear interpolation
+                percentage = i / width;
+                wavelength = this.minWavelength * (1 - percentage) + this.maxWavelength * percentage;
+
+                // Convert wavelength to rgb and apply to fill style
+                color = WavelengthColors.nmToHex(wavelength);
+                if (color === '#000000') {
+                    ctx.globalAlpha = this.invisibleSpectrumAlpha;
+                    ctx.fillStyle   = this.invisibleSpectrumColor;
+                }
+                else {
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = color;
+                }
+                ctx.fillRect(i, 0, 1, height);
+            }
+        },
+
+        /**
+         * Handles wavelength slider slide events
+         */
+        changeWavelength: function(event) {
+            this.updateColor();
+        },
+
+        updateColor: function() {
+            var color = WavelengthColors.nmToHex(this.val());
+            this.$wavelengthSliderHandle.css('background-color', color);
+        },
+
+        disable: function() {
+            this.$el.attr('disabled', 'disabled');
+        },
+
+        enable: function() {
+            this.$el.removeAttr('disabled');
+        },
+
+        val: function(wavelength) {
+            if (wavelength === undefined)
+                return this.$el.val();
+            else {
+                this.$el.val(wavelength);
+                this.updateColor();
+            } 
+        }
+
+    });
+
+
+    // Add input/update locking functionality to the prototype
+    defineInputUpdateLocks(WavelengthSliderView);
+    
+
+    return WavelengthSliderView;
+});
+
+
+define('text!templates/laser-controls.html',[],function () { return '<h2>Lamp <%= number %> Controls</h2>\r\n\r\n<div class="intensity-slider-container">\r\n    <label class="slider-header"><span class="intensity-title">Intensity</span> <span class="slider-value intensity-value">0%</span></label>\r\n    <div class="intensity-slider-wrapper">\r\n        <div class="slider intensity-slider"></div>\r\n    </div>\r\n</div>\r\n\r\n<div class="wavelength-slider-container">\r\n    <label class="slider-header">Wavelength <span class="slider-value wavelength-value">400nm</span></label>\r\n    <div class="wavelength-slider-wrapper"></div>\r\n</div>';});
+
+
+define('less/less!styles/laser-controls',[],function(){});
+define('views/laser-controls',['require','jquery','underscore','backbone','common/controls/wavelength-slider','common/quantum/config','common/locks/define-locks','text!templates/laser-controls.html','less!styles/laser-controls'],function(require) {
+
+    'use strict';
+
+    var $        = require('jquery');
+    var _        = require('underscore');
+    var Backbone = require('backbone'); Backbone.$ = $;
+
+    var WavelengthSliderView   = require('common/controls/wavelength-slider');
+    var QuantumConfig          = require('common/quantum/config');
+    var defineInputUpdateLocks = require('common/locks/define-locks');
+
+    var html = require('text!templates/laser-controls.html');
+
+    require('less!styles/laser-controls');
+
+    /**
+     *
+     */
+    var LaserControlsView = Backbone.View.extend({
+
+        className: 'sim-controls beam-controls',
+
+        template: _.template(html),
+
+        events: {
+            'slide .wavelength-slider' : 'changeWavelength',
+            'slide .intensity-slider'  : 'changeIntensity'
+        },
+
+        initialize: function(options) {
+            options = _.extend({
+                number: ''
+            }, options);
+
+            this.number = options.number;
+
+            this.wavelengthSliderView = new WavelengthSliderView({
+                defaultWavelength: this.model.get('wavelength'),
+                minWavelength: QuantumConfig.MIN_WAVELENGTH,
+                maxWavelength: QuantumConfig.MAX_WAVELENGTH
+            });
+        },
+
+        reset: function() {
+            this.updateLock(function() {
+                this.wavelengthSliderView.val(this.model.get('wavelength'));
+                this.$wavelengthValue.text(this.model.get('wavelength') + 'nm');
+                this.$('.intensity-slider').val(this.model.get('photonsPerSecond'));
+                this.updateIntensityLabel(this.model.get('photonsPerSecond'));
+            });
+        },
+
+        /**
+         * Renders content and canvas for heatmap
+         */
+        render: function() {
+            // Render the base template
+            this.$el.append(this.template({
+                unique: this.cid,
+                number: this.number
+            }));
+
+            // Add a class to help position it
+            if (this.number)
+                this.$el.addClass('laser-' + this.number);
+
+            // Create the intensity slider
+            this.$('.intensity-slider').noUiSlider({
+                start: this.model.get('photonsPerSecond'),
+                range: {
+                    min: 0,
+                    max: this.model.get('maxPhotonsPerSecond')
+                },
+                connect: 'lower'
+            });
+
+            // Create the wavelength slider
+            this.wavelengthSliderView.render();
+            this.$('.wavelength-slider-wrapper').prepend(this.wavelengthSliderView.el);
+
+            // Save the label elements for each slider header
+            this.$intensityValue = this.$('.intensity-value');
+            this.$wavelengthValue = this.$('.wavelength-value');
+
+            // Set default values
+            this.updateIntensityLabel(this.model.get('photonsPerSecond'));
+
+            return this;
+        },
+
+        postRender: function() {
+            this.wavelengthSliderView.postRender();
+        },
+
+        changeWavelength: function(event) {
+            this.inputLock(function() {
+                var wavelength = parseInt($(event.target).val());
+                this.$wavelengthValue.text(wavelength + 'nm');
+                this.model.set('wavelength', wavelength);
+            });
+        },
+
+        changeIntensity: function(event) {
+            this.inputLock(function() {
+                var photonsPerSecond = parseInt(this.$('.intensity-slider').val());
+                this.updateIntensityLabel(photonsPerSecond);
+                this.model.set('photonsPerSecond', photonsPerSecond);
+            });
+        },
+
+        updateIntensityLabel: function(photonsPerSecond) {
+            var percent = Math.round((photonsPerSecond / this.model.get('maxPhotonsPerSecond')) * 100);
+            this.$intensityValue.text(percent + '%');
+        },
+
+        show: function() {
+            this.$el.show();
+        },
+
+        hide: function() {
+            this.$el.hide();
+        }
+
+    });
+
+
+    // Add input/update locking functionality to the prototype
+    defineInputUpdateLocks(LaserControlsView);
+
+
+    return LaserControlsView;
+});
+
+define('common/v3/pixi/pixi-to-image',['require','underscore','pixi'],function(require) {
+
+    'use strict';
+
+    var _    = require('underscore');
+    var PIXI = require('pixi');
+
+    /*
+     * Canvas initialization
+     */
+    var _renderer = PIXI.autoDetectRenderer(200, 200, { transparent: true, antialias: true });
+    var _canvas = _renderer.view;
+    var _stage = new PIXI.Container();
+
+    /**
+     * Static functions
+     */
+    var PixiToImage = {
+
+        /**
+         * Takes a Pixi DisplayObject, renders it to a canvas,
+         *   and generates and returns an image data URI.
+         */
+        displayObjectToDataURI: function(displayObject, padding) {
+            var canvas = this.displayObjectToCanvas(displayObject, padding, _renderer);
+
+            // Return the image imprinted on the canvas
+            return canvas.toDataURL('image/png');
+        },
+
+        displayObjectToCanvas: function(displayObject, padding, renderer) {
+            var canvas = _canvas;
+            if (renderer === undefined) {
+                renderer = PIXI.autoDetectRenderer(200, 200, { transparent: true, antialias: true });
+                canvas = renderer.view;
+            }
+
+            var wrapper = this._wrapDisplayObject(displayObject, padding, renderer);
+            _stage.addChild(wrapper);
+
+            // Render to the canvas
+            renderer.render(_stage);
+
+            // Set the displayObject loose again
+            wrapper.removeChild(displayObject);
+            _stage.removeChild(wrapper);
+
+            return canvas;
+        },
+
+        _wrapDisplayObject: function(displayObject, padding, renderer) {
+            if (padding === undefined)
+                padding = 0;
+            
+            // Resize the canvas to make sure it fits.
+            renderer.resize(
+                displayObject.width + padding * 2,
+                displayObject.height + padding * 2
+            );
+
+            // Wrap the display object in a container so we can 
+            //   move it and fit it in the canvas.
+            var wrapper = new PIXI.Container();
+            var bounds = displayObject.getBounds();
+            var xShift = 0 - bounds.x * displayObject.scale.x + padding;
+            var yShift = 0 - bounds.y * displayObject.scale.y + padding;
+            wrapper.addChild(displayObject);
+            wrapper.x = xShift;
+            wrapper.y = yShift;
+            
+            return wrapper;
+        }
+
+    };
+
+
+    return PixiToImage;
+});
+
+define('less/less!styles/legend',[],function(){});
+
+define('text!templates/legend.html',[],function () { return '<% _.each(items, function(item) { %>\r\n   <div class="legend-symbol">\r\n       <div class="legend-img-wrapper" style="width: <%= item.containerWidth %>px">\r\n           <img src="<%= item.img %>" width="<%= item.width %>" height="<%= item.height %>">\r\n       </div>\r\n       <span><%= item.label %></span>\r\n   </div>\r\n<% }); %>';});
+
+define('views/legend',['require','jquery','underscore','backbone','pixi','common/v3/pixi/pixi-to-image','common/math/model-view-transform','common/math/vector2','common/collections/vanilla','common/quantum/models/atom','common/quantum/models/photon','views/atom','views/photon-collection','less!styles/legend','text!templates/legend.html'],function(require) {
+
+    'use strict';
+
+    var $        = require('jquery');
+    var _        = require('underscore');
+    var Backbone = require('backbone'); Backbone.$ = $;
+    var PIXI     = require('pixi');
+
+    var PixiToImage        = require('common/v3/pixi/pixi-to-image');
+    var ModelViewTransform = require('common/math/model-view-transform');
+    var Vector2            = require('common/math/vector2');
+    var VanillaCollection  = require('common/collections/vanilla');
+    var Atom               = require('common/quantum/models/atom');
+    var Photon             = require('common/quantum/models/photon');
+
+    var AtomView             = require('views/atom');
+    var PhotonCollectionView = require('views/photon-collection');
+
+    // CSS
+    require('less!styles/legend');
+
+    // HTML
+    var templateHtml = require('text!templates/legend.html');
+
+    /**
+     *
+     */
+    var LegendView = Backbone.View.extend({
+
+        className: 'legend-view',
+
+        template: _.template(templateHtml),
+
+        initialize: function(options) {
+            // Just to keep the models happy
+            this.simulation = options.simulation;
+        },
+
+        /**
+         * Creates the views and labels that will be used to render the legend
+         */
+        initItems: function() {
+            var items = [];
+
+            // Atom
+            var atomMVT = new ModelViewTransform.createScaleMapping(0.8);
+            var atomModel = new Atom({}, {
+                simulation: this.simulation
+            });
+            var atomView = new AtomView({
+                mvt: atomMVT,
+                model: atomModel
+            });
+
+            items.push({
+                label: 'Atom',
+                displayObject: atomView.displayObject
+            });
+
+            // Photon
+            var photonMVT = new ModelViewTransform.createScaleMapping(1);
+            var photons = new VanillaCollection();
+            photons.add(new Photon({ position: new Vector2(-20, 0), visible: true, wavelength: Photon.RED }));
+            photons.add(new Photon({ position: new Vector2(  0, 0), visible: true, wavelength: Photon.BLUE }));
+
+            var photonCollectionView = new PhotonCollectionView({
+                mvt: photonMVT,
+                collection: photons,
+                simulation: this.simulation
+            });
+            photonCollectionView.update(0, 0);
+
+            items.push({
+                label: 'Photon',
+                displayObject: photonCollectionView.displayObject
+            });
+
+            this.items = items;
+        },
+
+        /**
+         * Renders content and canvas for heatmap
+         */
+        render: function() {
+            this.initItems();
+
+            var widestItem = _.max(this.items, function(item) {
+                if (item.width)
+                    return item.width;
+                else
+                    return item.displayObject.width * item.displayObject.scale.x;
+            });
+            // Need to grab value now because when the widest item gets mapped to and updates,
+            // the width on widestItem updates as well.
+            var widestWidth = widestItem.width ?
+                widestItem.width :
+                Math.ceil(widestItem.displayObject.width * widestItem.displayObject.scale.x);
+
+            var items = _.map(this.items, function(item) {
+                var width  = item.width ? item.width : item.displayObject.width;
+                var height = item.height ? item.height : item.displayObject.height;
+
+                var container = new PIXI.Container();
+                container.addChild(item.displayObject);
+                container.scale.x = 2;
+                container.scale.y = 2;
+
+                return {
+                    label: item.label,
+                    img: PixiToImage.displayObjectToDataURI(container, 1),
+                    width: width,
+                    height: height,
+                    containerWidth: widestWidth
+                };
+            });
+
+            this.$el.html(this.template({ items: items }));
+
+            return this;
+        },
+
+        getMVT: function() {
+            return this.mvt;
+        }
+
+    });
+
+    return LegendView;
+});
+
+
+define('text!templates/one-atom-sim.html',[],function () { return '\r\n<span class="scene-view-placeholder"></span>\r\n\r\n<div class="sim-controls-wrapper">\r\n    <div class="sim-controls-right">\r\n        <div class="sim-controls legend-panel">\r\n            <h2>Legend</h2>\r\n        </div>\r\n    </div>\r\n</div>\r\n\r\n';});
+
+define('views/sim/one-atom',['require','underscore','models/simulation/one-atom','views/sim','views/scene/one-atom','views/laser-controls','views/legend','text!templates/one-atom-sim.html'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var OneAtomLaserSimulation = require('models/simulation/one-atom');
+
+    var LasersSimView     = require('views/sim');
+    var OneAtomSceneView  = require('views/scene/one-atom');
+    var LaserControlsView = require('views/laser-controls');
+    var LegendView        = require('views/legend');
+
+    // HTML
+    var simHtml = require('text!templates/one-atom-sim.html');
+
+    /**
+     *
+     */
+    var OneAtomSimView = LasersSimView.extend({
+
+        template: _.template(simHtml),
+
+        /**
+         * Dom event listeners
+         */
+        events: _.extend({}, LasersSimView.prototype.events, {
+
+        }),
+
+        /**
+         * Inits simulation, views, and variables.
+         *
+         * @params options
+         */
+        initialize: function(options) {
+            options = _.extend({
+                title: 'One Atom (Absorption and Emission)',
+                name: 'one-atom'
+            }, options);
+
+            LasersSimView.prototype.initialize.apply(this, [options]);
+
+            this.initLaserControlsView();
+            this.initLegendView();
+        },
+
+        /**
+         * Initializes the Simulation.
+         */
+        initSimulation: function() {
+            this.simulation = new OneAtomLaserSimulation();
+        },
+
+        /**
+         * Initializes the SceneView.
+         */
+        initSceneView: function() {
+            this.sceneView = new OneAtomSceneView({
+                simulation: this.simulation
+            });
+        },
+
+        initLaserControlsView: function() {
+            this.laser1ControlsView = new LaserControlsView({
+                model: this.simulation.seedBeam,
+                number: 1
+            });
+
+            this.laser2ControlsView = new LaserControlsView({
+                model: this.simulation.pumpingBeam,
+                number: 2
+            });
+        },
+
+        initLegendView: function() {
+            this.legendView = new LegendView({
+                renderer: this.sceneView.renderer,
+                simulation: this.simulation
+            });
+        },
+
+        /**
+         * Renders everything
+         */
+        render: function() {
+            LasersSimView.prototype.render.apply(this, arguments);
+
+            this.renderLaserControls();
+
+            return this;
+        },
+
+        /**
+         * Renders the laser controls view
+         */
+        renderLaserControls: function() {
+            this.laser1ControlsView.render();
+            this.laser2ControlsView.render();
+            this.$el.append(this.laser1ControlsView.el);
+            this.$el.append(this.laser2ControlsView.el);
+        },
+
+        renderLegend: function() {
+            this.legendView.render();
+            this.$('.legend-panel').append(this.legendView.el);
+        },
+
+        /**
+         * Called after every component on the page has rendered to make sure
+         *   things like widths and heights and offsets are correct.
+         */
+        postRender: function() {
+            LasersSimView.prototype.postRender.apply(this);
+
+            this.laser1ControlsView.postRender();
+            this.laser2ControlsView.postRender();
+            this.renderLegend();
+        },
+
+        /**
+         * Resets all the components of the view.
+         */
+        resetComponents: function() {
+            LasersSimView.prototype.resetComponents.apply(this);
+
+            this.laser1ControlsView.reset();
+            this.laser2ControlsView.reset();
+        },
+
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            LasersSimView.prototype.elementPropertiesChanged.apply(this, arguments);
+
+            if (elementProperties === simulation.twoLevelProperties)
+                this.laser2ControlsView.hide();
+            else
+                this.laser2ControlsView.show();
+        }
+
+    });
+
+    return OneAtomSimView;
+});
+
+define('models/simulation/multiple-atoms',['require','exports','module','underscore','models/simulation/base','models/atom','constants'],function (require, exports, module) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+
+    var BaseLasersSimulation = require('models/simulation/base');
+    var LaserAtom            = require('models/atom');
+
+    /**
+     * Constants
+     */
+    var Constants = require('constants');
+
+    /**
+     * The simulation model for the One Atom tab
+     */
+    var MultipleAtomsLaserSimulation = BaseLasersSimulation.extend({
+
+        defaults: _.extend({}, BaseLasersSimulation.prototype.defaults, {
+            photonSpeedScale: Constants.MULTI_ATOM_PHOTON_SPEED,
+            pumpingPhotonViewMode: Constants.PHOTON_CURTAIN
+        }),
+
+        initialize: function(attributes, options) {
+            BaseLasersSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+
+        },
+
+        /**
+         * Initializes the models used in the simulation
+         */
+        initComponents: function() {
+            BaseLasersSimulation.prototype.initComponents.apply(this, arguments);
+
+            this.initAtoms();
+
+            this.setNumEnergyLevels(3);
+        },
+
+        resetComponents: function() {
+            BaseLasersSimulation.prototype.resetComponents.apply(this, arguments);
+
+            this.seedBeam.set('photonsPerSecond', 1);
+            this.pumpingBeam.set('photonsPerSecond', 0);
+
+            this.seedBeam.set('enabled', false);
+            this.pumpingBeam.set('enabled', true);
+
+            this.setNumEnergyLevels(3);
+        },
+
+        initAtoms: function() {
+            var numAtoms = 30;
+            var maxSpeed = 0.1;
+            var tubeBounds = this.tube.getBounds();
+
+            for (var i = 0; i < numAtoms; i++) {
+                var atom = new LaserAtom({}, {
+                    simulation: this,
+                    elementProperties: this.get('elementProperties')
+                });
+
+                var diameter = atom.get('radius') * 2;
+
+                atom.setPosition(
+                    tubeBounds.x + Math.random() * (tubeBounds.w - diameter * 2) + diameter,
+                    tubeBounds.y + Math.random() * (tubeBounds.h - diameter * 2) + diameter
+                );
+
+                atom.setVelocity(
+                    (Math.random() - 0.5) * maxSpeed,
+                    (Math.random() - 0.5) * maxSpeed
+                );
+
+                this.addAtom(atom);
+            }
+        },
+
+        initBeams: function() {
+            BaseLasersSimulation.prototype.initBeams.apply(this, arguments);
+
+            this.seedBeam.set('beamWidth', this.boxHeight);
+            this.seedBeam.set('photonsPerSecond', 1);
+
+            this.pumpingBeam.set('beamWidth', this.tube.getWidth());
+            this.pumpingBeam.set('photonsPerSecond', 0); // Start with the pumping beam turned down all the way
+            this.pumpingBeam.set('maxPhotonsPerSecond', Constants.MAXIMUM_PUMPING_PHOTON_RATE);
+
+            // Only the pump beam is enabled
+            this.seedBeam.set('enabled', false);
+            this.pumpingBeam.set('enabled', true);
+        },
+
+        getSeedBeamOrigin: function() {
+            return this.seedBeamOrigin.set(this.origin);
+        },
+
+        getPumpingBeamOrigin: function() {
+            return this.pumpingBeamOrigin.set(
+                this.tube.getBounds().x + this.tube.getBounds().w / 2,
+                this.tube.getBounds().y - 100
+            );
+        },
+
+        _update: function(time, deltaTime) {
+            BaseLasersSimulation.prototype._update.apply(this, arguments);
+
+
+        }
+
+    });
+
+    return MultipleAtomsLaserSimulation;
+});
+
+define('views/lamp-array',['require','common/v3/pixi/view','views/lamp'],function(require) {
+
+    'use strict';
+
+    var PixiView = require('common/v3/pixi/view');
+
+    var LampView = require('views/lamp');
+
+
+    /**
+     * Create a different version of the LampView that doesn't control its own position
+     */
+    var ArrayLampView = LampView.extend({
+
+        updatePosition: function(model, position) {
+            // Let the LampArrayView handle positioning
+        }
+
+    });
+
+    var LampArrayView = PixiView.extend({
+
+        numLamps: 8,
+
+        initialize: function(options) {
+            this.mvt = options.mvt;
+
+            this.initGraphics();
+        },
+
+        initGraphics: function() {
+            this.lampViews = [];
+
+            for (var i = 0; i < this.numLamps; i++) {
+                var lampView = new ArrayLampView({
+                    model: this.model,
+                    mvt: this.mvt,
+                    modelWidth: 74
+                });
+
+                this.lampViews.push(lampView);
+                this.displayObject.addChild(lampView.displayObject);
+            }
+
+            this.updateMVT(this.mvt);
+        },
+
+        /**
+         * Updates the model-view-transform and anything that relies on it.
+         */
+        updateMVT: function(mvt) {
+            this.mvt = mvt;
+
+            for (var i = 0; i < this.lampViews.length; i++)
+                this.lampViews[i].updateMVT(mvt);
+
+            this.updatePosition(this.model, this.model.get('position'));
+        },
+
+        updatePosition: function(model, position) {
+            var viewPosition = this.mvt.modelToView(position);
+            var width = this.lampViews[0].displayObject.width;
+
+            for (var i = 0; i < this.lampViews.length; i++) {
+                var displayObject = this.lampViews[i].displayObject;
+                displayObject.x = viewPosition.x + (i - this.numLamps / 2 + 0.5) * width;
+                displayObject.y = viewPosition.y;
+            }
+        },
+
+    });
+
+    return LampArrayView;
+});
+
+define('views/scene/multiple-atoms',['require','common/v3/app/app','common/math/model-view-transform','common/math/vector2','views/scene','views/lamp-array','views/atom','constants'],function(require) {
+
+    'use strict';
+
+    var AppView            = require('common/v3/app/app');
+    var ModelViewTransform = require('common/math/model-view-transform');
+    var Vector2            = require('common/math/vector2');
+
+    var LasersSceneView = require('views/scene');
+    var LampArrayView   = require('views/lamp-array');
+    var AtomView        = require('views/atom');
+
+    // Constants
+    var Constants = require('constants');
+
+    /**
+     *
+     */
+    var MultipleAtomsSceneView = LasersSceneView.extend({
+
+        initialize: function(options) {
+            LasersSceneView.prototype.initialize.apply(this, arguments);
+
+            this.listenTo(this.simulation, 'change:elementProperties',     this.elementPropertiesChanged);
+            this.listenTo(this.simulation, 'change:pumpingPhotonViewMode', this.determineBeamCurtainViewVisibility);
+            this.listenTo(this.simulation, 'change:lasingPhotonViewMode',  this.determineLaserWaveViewVisibility);
+        },
+
+        renderContent: function() {
+
+        },
+
+        initGraphics: function() {
+            LasersSceneView.prototype.initGraphics.apply(this, arguments);
+
+            this.initAtoms();
+            this.initLamps();
+
+
+            this.determineLaserWaveViewVisibility();
+
+            this.elementPropertiesChanged(this.simulation, this.simulation.get('elementProperties'));
+        },
+
+        initMVT: function() {
+            var scale;
+
+            if (AppView.windowIsShort()) {
+                this.viewOriginX = 294;
+                this.viewOriginY = 90;
+                scale = 0.76;
+            }
+            else {
+                this.viewOriginX = 150;
+                this.viewOriginY = 80;
+                scale = 0.98;
+            }
+
+            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
+                new Vector2(0, 0),
+                new Vector2(this.viewOriginX, this.viewOriginY),
+                scale
+            );
+        },
+
+        initAtoms: function() {
+            this.atomViews = [];
+
+            for (var i = 0; i < this.simulation.atoms.length; i++) {
+                var atomView = new AtomView({
+                    model: this.simulation.atoms.at(i),
+                    mvt: this.mvt
+                });
+
+                this.atomViews.push(atomView);
+                this.atomLayer.addChild(atomView.displayObject);
+            }
+        },
+
+        initLamps: function() {
+            this.lampArrayView = new LampArrayView({
+                model: this.simulation.pumpingBeam,
+                mvt: this.mvt
+            })
+
+            this.lampLayer.addChild(this.lampArrayView.displayObject);
+        },
+
+        _update: function(time, deltaTime, paused, timeScale) {
+            LasersSceneView.prototype._update.apply(this, arguments);
+        },
+
+        elementPropertiesChanged: function(simulation, elementProperties) {
+            this.determineBeamCurtainViewVisibility();
+            this.determineLaserWaveViewVisibility();
+        },
+
+        determineBeamCurtainViewVisibility: function() {
+            if (this.simulation.get('pumpingPhotonViewMode') === Constants.PHOTON_CURTAIN) {
+                this.beamCurtainView.show();
+            }
+            else {
+                this.beamCurtainView.hide();
+            }
+        },
+
+        determineLaserWaveViewVisibility: function() {
+            if (this.simulation.get('lasingPhotonViewMode') === Constants.PHOTON_WAVE) {
+                this.laserWaveView.show();
+            }
+            else {
+                this.laserWaveView.hide();
+            }
+        }
+
+    });
+
+    return MultipleAtomsSceneView;
+});
+
+
+define('text!templates/multiple-atoms-sim.html',[],function () { return '\r\n<span class="scene-view-placeholder"></span>\r\n\r\n<div class="sim-controls-wrapper">\r\n    <div class="sim-controls-right">\r\n        \r\n    </div>\r\n</div>';});
+
+define('views/sim/multiple-atoms',['require','underscore','models/simulation/multiple-atoms','views/sim','views/scene/multiple-atoms','views/laser-controls','text!templates/multiple-atoms-sim.html'],function (require) {
+
+    'use strict';
+
+    var _ = require('underscore');
+
+    var MultipleAtomsLaserSimulation = require('models/simulation/multiple-atoms');
+
+    var LasersSimView          = require('views/sim');
+    var MultipleAtomsSceneView = require('views/scene/multiple-atoms');
+    var LaserControlsView      = require('views/laser-controls');
+
+    // HTML
+    var simHtml = require('text!templates/multiple-atoms-sim.html');
+
+    /**
+     *
+     */
+    var MultipleAtomsSimView = LasersSimView.extend({
+
+        template: _.template(simHtml),
+
+        /**
+         * Dom event listeners
+         */
+        events: _.extend({}, LasersSimView.prototype.events, {
+
+        }),
+
+        /**
+         * Inits simulation, views, and variables.
+         *
+         * @params options
+         */
+        initialize: function(options) {
+            options = _.extend({
+                title: 'Multiple Atoms (Lasing)',
+                name: 'multiple-atoms',
+                alwaysShowLampViewOptions: true
+            }, options);
+
+            LasersSimView.prototype.initialize.apply(this, [options]);
+
+            this.initLaserControlsView();
+        },
+
+        /**
+         * Initializes the Simulation.
+         */
+        initSimulation: function() {
+            this.simulation = new MultipleAtomsLaserSimulation();
+        },
+
+        /**
+         * Initializes the SceneView.
+         */
+        initSceneView: function() {
+            this.sceneView = new MultipleAtomsSceneView({
+                simulation: this.simulation
+            });
+        },
+
+        initLaserControlsView: function() {
+            this.laserControlsView = new LaserControlsView({
+                model: this.simulation.pumpingBeam
+            });
+        },
+
+        /**
+         * Renders everything
+         */
+        render: function() {
+            LasersSimView.prototype.render.apply(this, arguments);
+
+            this.renderLaserControls();
+
+            return this;
+        },
+
+        /**
+         * Renders the laser controls view
+         */
+        renderLaserControls: function() {
+            this.laserControlsView.render();
+            this.$el.append(this.laserControlsView.el);
+        },
+
+        /**
+         * Called after every component on the page has rendered to make sure
+         *   things like widths and heights and offsets are correct.
+         */
+        postRender: function() {
+            LasersSimView.prototype.postRender.apply(this);
+
+            this.laserControlsView.postRender();
+        },
+
+        /**
+         * Resets all the components of the view.
+         */
+        resetComponents: function() {
+            LasersSimView.prototype.resetComponents.apply(this);
+
+            this.laserControlsView.reset();
+        },
+
+    });
+
+    return MultipleAtomsSimView;
 });
 
 
 define('less/less!styles/font-awesome',[],function(){});
-define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','less!styles/font-awesome'],function(require) {
+
+define('less/less!styles/app',[],function(){});
+
+define('text!templates/settings-dialog.html',[],function () { return '<div class="settings-btn-wrapper">\r\n    <button class="settings-btn" title="Additional Options" data-toggle="modal" data-target="#settings-dialog"><span class="fa fa-cogs"></span></button>\r\n    <button class="help-btn" title="Toggle Help"><span class="fa fa-question"></span></button>\r\n</div>\r\n\r\n<div class="modal" id="settings-dialog">\r\n    <div class="modal-dialog">\r\n        <div class="modal-content">\r\n            <div class="modal-header">\r\n                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>\r\n                <h4 class="modal-title">Additional Options</h4>\r\n            </div>\r\n            <div class="modal-body">\r\n                <div class="row">\r\n                    <div class="col-md-5">\r\n                        <div class="control-wrapper">\r\n                            <label class="slider-header"><span class="stimulation-probability-title">Stimulation Probability</span> <span class="slider-value stimulation-probability-value">1</span></label>\r\n                            <div class="stimulation-probability-slider-wrapper">\r\n                                <div class="slider stimulation-probability-slider"></div>\r\n                            </div>\r\n                        </div>\r\n\r\n                        <div class="control-wrapper">\r\n                            <label class="slider-header"><span class="pair-separation-title">Pair Separation</span> <span class="slider-value pair-separation-value">18</span></label>\r\n                            <div class="pair-separation-slider-wrapper">\r\n                                <div class="slider pair-separation-slider"></div>\r\n                            </div>\r\n                        </div>\r\n\r\n                        <div class="control-wrapper">\r\n                            <label class="slider-header"><span class="photon-diameter-title">Photon Diameter</span> <span class="slider-value photon-diameter-value">18</span></label>\r\n                            <div class="photon-diameter-slider-wrapper">\r\n                                <div class="slider photon-diameter-slider"></div>\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                    <div class="col-md-6 col-md-offset-1">\r\n                        <div class="control-wrapper">\r\n                            <input type="checkbox" class="show-all-stimulated-emissions-check" id="show-all-stimulated-emissions-check-<%= unique %>" checked>\r\n                            <label for="show-all-stimulated-emissions-check-<%= unique %>">Show all simulated emissions</label>\r\n                        </div>\r\n\r\n                        <div class="control-wrapper">\r\n                            <input type="checkbox" class="show-comets-check" id="show-comets-check-<%= unique %>">\r\n                            <label for="show-comets-check-<%= unique %>">Show photons as comets</label>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n            <div class="modal-footer">\r\n                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\r\n            </div>\r\n        </div><!-- /.modal-content -->\r\n    </div><!-- /.modal-dialog -->\r\n</div><!-- /.modal -->';});
+
+define('views/app',['require','underscore','jquery','common/v3/pixi/view/app','common/quantum/config','common/quantum/models/atomic-state','common/quantum/models/stimulated-photon','views/sim/one-atom','views/sim/multiple-atoms','views/photon-collection','assets','less!styles/font-awesome','less!styles/app','text!templates/settings-dialog.html'],function(require) {
 
     'use strict';
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    var _ = require('underscore');
+    var $ = require('jquery');
 
-    var LadybugMotionSimView = require('views/sim');
+    var PixiAppView      = require('common/v3/pixi/view/app');
+    var QuantumConfig    = require('common/quantum/config');
+    var AtomicState      = require('common/quantum/models/atomic-state');
+    var StimulatedPhoton = require('common/quantum/models/stimulated-photon');
+
+    var OneAtomSimView       = require('views/sim/one-atom');
+    var MultipleAtomsSimView = require('views/sim/multiple-atoms');
+    var PhotonCollectionView = require('views/photon-collection');
 
     var Assets = require('assets');
 
+    // Styles
     require('less!styles/font-awesome');
+    require('less!styles/app');
 
-    var LadybugMotionAppView = PixiAppView.extend({
+    // HTML
+    var settingsDialogHtml = require('text!templates/settings-dialog.html');
+
+    /**
+     * AppView for the Lasers simulation
+     */
+    var LasersAppView = PixiAppView.extend({
 
         assets: Assets.getAssetList(),
 
         simViewConstructors: [
-            LadybugMotionSimView
-        ]
+            OneAtomSimView,
+            MultipleAtomsSimView
+        ],
+
+        events: _.extend({}, PixiAppView.prototype.events, {
+            'click .help-btn' : 'toggleHelp',
+            'slide .stimulation-probability-slider' : 'changeStimulationProbability',
+            'slide .pair-separation-slider' : 'changePairSeparation',
+            'slide .photon-diameter-slider' : 'changePhotonDiameter',
+            'click .show-all-stimulated-emissions-check' : 'toggleShowAllStimulatedEmissions',
+            'click .show-comets-check' : 'toggleShowComets'
+        }),
+
+        render: function() {
+            PixiAppView.prototype.render.apply(this);
+
+            this.$el.append(settingsDialogHtml);
+
+            this.$stimulationProbabilityValue  = this.$('.stimulation-probability-value');
+            this.$stimulationProbabilitySlider = this.$('.stimulation-probability-slider');
+            this.$pairSeparationValue          = this.$('.pair-separation-value');
+            this.$pairSeparationSlider         = this.$('.pair-separation-slider');
+            this.$photonDiameterValue          = this.$('.photon-diameter-value');
+            this.$photonDiameterSlider         = this.$('.photon-diameter-slider');
+
+            this.$stimulationProbabilitySlider.noUiSlider({
+                start: AtomicState.STIMULATION_LIKELIHOOD,
+                range: {
+                    min: 0,
+                    max: 1
+                },
+                connect: 'lower'
+            });
+
+            this.$pairSeparationSlider.noUiSlider({
+                start: StimulatedPhoton.separation,
+                range: {
+                    min: 0,
+                    max: 100
+                },
+                connect: 'lower'
+            });
+
+            this.$photonDiameterSlider.noUiSlider({
+                start: PhotonCollectionView.modelSize,
+                range: {
+                    min: 8,
+                    max: 50
+                },
+                connect: 'lower'
+            });
+
+            this.updateStimulationProbabilityValue();
+            this.updatePairSeparationValue();
+            this.updatePhotonDiameterValue();
+        },
+
+        __TODO_settingSet: function(event) {
+            _.each(this.simViews, function(simView) {
+
+            });
+        },
+
+        updateStimulationProbabilityValue: function() {
+            this.$stimulationProbabilityValue.text(AtomicState.STIMULATION_LIKELIHOOD.toFixed(2));
+        },
+
+        updatePairSeparationValue: function() {
+            this.$pairSeparationValue.text(StimulatedPhoton.separation);
+        },
+
+        updatePhotonDiameterValue: function() {
+            this.$photonDiameterValue.text(PhotonCollectionView.modelSize);
+        },
+
+        changeStimulationProbability: function(event) {
+            var probability = parseFloat(this.$stimulationProbabilitySlider.val());
+            AtomicState.STIMULATION_LIKELIHOOD = probability;
+            this.updateStimulationProbabilityValue();
+        },
+
+        changePairSeparation: function(event) {
+            var separation = parseInt(this.$pairSeparationSlider.val());
+            StimulatedPhoton.separation = separation;
+            this.updatePairSeparationValue();
+        },
+
+        changePhotonDiameter: function(event) {
+            var diameter = parseInt(this.$photonDiameterSlider.val());
+            PhotonCollectionView.modelSize = diameter;
+            this.updatePhotonDiameterValue();
+            _.each(this.simViews, function(simView) {
+                simView.photonSizeChanged();
+            });
+        },
+
+        toggleShowAllStimulatedEmissions: function() {
+            if ($(event.target).is(':checked'))
+                QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+            else
+                QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = false;
+        },
+
+        toggleShowComets: function() {
+            if ($(event.target).is(':checked'))
+                PhotonCollectionView.displayAsComets = true;
+            else
+                PhotonCollectionView.displayAsComets = false;
+        },
+
+        toggleHelp: function() {
+            this.$('.help-btn').toggleClass('active');
+
+            if (this.$('.help-btn').hasClass('active'))
+                this.showHelp();
+            else
+                this.hideHelp();
+        },
+
+        showHelp: function() {
+            for (var i = 0; i < this.simViews.length; i++)
+                this.simViews[i].showHelp();
+        },
+
+        hideHelp: function() {
+            for (var i = 0; i < this.simViews.length; i++)
+                this.simViews[i].hideHelp();
+        }
 
     });
 
-    return LadybugMotionAppView;
+    return LasersAppView;
 });
 
 (function () {
@@ -68939,10 +75187,10 @@ define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','le
 
     // Load the config
     require(['config'], function () {
-        require(['jquery', 'views/app'], function($, LadybugMotionAppView) {
+        require(['jquery', 'views/app'], function($, LasersAppView) {
 
             $(function(){
-                var appView = new LadybugMotionAppView();
+                var appView = new LasersAppView();
 
                 // Append to body
                 $('body').append(appView.el);
@@ -68960,4 +75208,4 @@ define("main", function(){});
 
 
 (function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})
-('/*!\n * Bootstrap v3.4.1 (https://getbootstrap.com/)\n * Copyright 2011-2019 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:none;text-decoration:underline dotted}b,strong{font-weight:700}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-.5em}sub{bottom:-.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=checkbox],input[type=radio]{box-sizing:border-box;padding:0}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{height:auto}input[type=search]{-webkit-appearance:textfield;box-sizing:content-box}input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{border:0}textarea{overflow:auto}optgroup{font-weight:700}table{border-collapse:collapse;border-spacing:0}legend,td,th{padding:0}\n/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */\n@-webkit-keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-moz-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-o-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-moz-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-o-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-webkit-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-moz-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-o-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-webkit-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-moz-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-o-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-webkit-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-moz-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-o-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes bs-notify-fadeOut{0%{opacity:.9}to{opacity:0}}@media print{*,:after,:before{color:#000!important;text-shadow:none!important;background:0 0!important;box-shadow:none!important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\"attr(href)\")\"}abbr[title]:after{content:\" (\"attr(title)\")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}blockquote,pre{border:1px solid #999}thead{display:table-header-group}blockquote,img,pre,tr{page-break-inside:avoid}img{max-width:100%!important}h2,h3,p{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000!important}.label{border:1px solid #000}.table{border-collapse:collapse!important}.table td,.table th{background-color:#fff!important}.table-bordered td,.table-bordered th{border:1px solid #ddd!important}}@font-face{font-family:\"Glyphicons Halflings\";src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot);src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot?#iefix)format(\"embedded-opentype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff2)format(\"woff2\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff)format(\"woff\"),url(../../common/v3/fonts/glyphicons-halflings-regular.ttf)format(\"truetype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular)format(\"svg\")}.glyphicon{position:relative;top:1px;display:inline-block;font-family:\"Glyphicons Halflings\";font-style:normal;font-weight:400;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.glyphicon-asterisk:before{content:\"*\"}.glyphicon-plus:before{content:\"+\"}.glyphicon-eur:before,.glyphicon-euro:before{content:\"€\"}.glyphicon-minus:before,.sim-tabs>ul>li>a.active>.tab-title::after{content:\"−\"}.glyphicon-cloud:before{content:\"☁\"}.glyphicon-envelope:before{content:\"✉\"}.glyphicon-pencil:before{content:\"✏\"}.glyphicon-glass:before{content:\"\"}.glyphicon-music:before{content:\"\"}.glyphicon-search:before{content:\"\"}.glyphicon-heart:before{content:\"\"}.glyphicon-star:before{content:\"\"}.glyphicon-star-empty:before{content:\"\"}.glyphicon-user:before{content:\"\"}.glyphicon-film:before{content:\"\"}.glyphicon-th-large:before{content:\"\"}.glyphicon-th:before{content:\"\"}.glyphicon-th-list:before{content:\"\"}.glyphicon-ok:before{content:\"\"}.glyphicon-remove:before{content:\"\"}.glyphicon-zoom-in:before{content:\"\"}.glyphicon-zoom-out:before{content:\"\"}.glyphicon-off:before{content:\"\"}.glyphicon-signal:before{content:\"\"}.glyphicon-cog:before{content:\"\"}.glyphicon-trash:before{content:\"\"}.glyphicon-home:before{content:\"\"}.glyphicon-file:before{content:\"\"}.glyphicon-time:before{content:\"\"}.glyphicon-road:before{content:\"\"}.glyphicon-download-alt:before{content:\"\"}.glyphicon-download:before{content:\"\"}.glyphicon-upload:before{content:\"\"}.glyphicon-inbox:before{content:\"\"}.glyphicon-play-circle:before{content:\"\"}.glyphicon-repeat:before{content:\"\"}.glyphicon-refresh:before{content:\"\"}.glyphicon-list-alt:before{content:\"\"}.glyphicon-lock:before{content:\"\"}.glyphicon-flag:before{content:\"\"}.glyphicon-headphones:before{content:\"\"}.glyphicon-volume-off:before{content:\"\"}.glyphicon-volume-down:before{content:\"\"}.glyphicon-volume-up:before{content:\"\"}.glyphicon-qrcode:before{content:\"\"}.glyphicon-barcode:before{content:\"\"}.glyphicon-tag:before{content:\"\"}.glyphicon-tags:before{content:\"\"}.glyphicon-book:before{content:\"\"}.glyphicon-bookmark:before{content:\"\"}.glyphicon-print:before{content:\"\"}.glyphicon-camera:before{content:\"\"}.glyphicon-font:before{content:\"\"}.glyphicon-bold:before{content:\"\"}.glyphicon-italic:before{content:\"\"}.glyphicon-text-height:before{content:\"\"}.glyphicon-text-width:before{content:\"\"}.glyphicon-align-left:before{content:\"\"}.glyphicon-align-center:before{content:\"\"}.glyphicon-align-right:before{content:\"\"}.glyphicon-align-justify:before{content:\"\"}.glyphicon-list:before{content:\"\"}.glyphicon-indent-left:before{content:\"\"}.glyphicon-indent-right:before{content:\"\"}.glyphicon-facetime-video:before{content:\"\"}.glyphicon-picture:before{content:\"\"}.glyphicon-map-marker:before{content:\"\"}.glyphicon-adjust:before{content:\"\"}.glyphicon-tint:before{content:\"\"}.glyphicon-edit:before{content:\"\"}.glyphicon-share:before{content:\"\"}.glyphicon-check:before{content:\"\"}.glyphicon-move:before{content:\"\"}.glyphicon-step-backward:before{content:\"\"}.glyphicon-fast-backward:before{content:\"\"}.glyphicon-backward:before{content:\"\"}.glyphicon-play:before{content:\"\"}.glyphicon-pause:before{content:\"\"}.glyphicon-stop:before{content:\"\"}.glyphicon-forward:before{content:\"\"}.glyphicon-fast-forward:before{content:\"\"}.glyphicon-step-forward:before{content:\"\"}.glyphicon-eject:before{content:\"\"}.glyphicon-chevron-left:before{content:\"\"}.glyphicon-chevron-right:before{content:\"\"}.glyphicon-plus-sign:before{content:\"\"}.glyphicon-minus-sign:before{content:\"\"}.glyphicon-remove-sign:before{content:\"\"}.glyphicon-ok-sign:before{content:\"\"}.glyphicon-question-sign:before{content:\"\"}.glyphicon-info-sign:before{content:\"\"}.glyphicon-screenshot:before{content:\"\"}.glyphicon-remove-circle:before{content:\"\"}.glyphicon-ok-circle:before{content:\"\"}.glyphicon-ban-circle:before{content:\"\"}.glyphicon-arrow-left:before{content:\"\"}.glyphicon-arrow-right:before{content:\"\"}.glyphicon-arrow-up:before{content:\"\"}.glyphicon-arrow-down:before{content:\"\"}.glyphicon-share-alt:before{content:\"\"}.glyphicon-resize-full:before{content:\"\"}.glyphicon-resize-small:before{content:\"\"}.glyphicon-exclamation-sign:before{content:\"\"}.glyphicon-gift:before{content:\"\"}.glyphicon-leaf:before{content:\"\"}.glyphicon-fire:before{content:\"\"}.glyphicon-eye-open:before{content:\"\"}.glyphicon-eye-close:before{content:\"\"}.glyphicon-warning-sign:before{content:\"\"}.glyphicon-plane:before{content:\"\"}.glyphicon-calendar:before{content:\"\"}.glyphicon-random:before{content:\"\"}.glyphicon-comment:before{content:\"\"}.glyphicon-magnet:before{content:\"\"}.glyphicon-chevron-up:before{content:\"\"}.glyphicon-chevron-down:before{content:\"\"}.glyphicon-retweet:before{content:\"\"}.glyphicon-shopping-cart:before{content:\"\"}.glyphicon-folder-close:before{content:\"\"}.glyphicon-folder-open:before{content:\"\"}.glyphicon-resize-vertical:before{content:\"\"}.glyphicon-resize-horizontal:before{content:\"\"}.glyphicon-hdd:before{content:\"\"}.glyphicon-bullhorn:before{content:\"\"}.glyphicon-bell:before{content:\"\"}.glyphicon-certificate:before{content:\"\"}.glyphicon-thumbs-up:before{content:\"\"}.glyphicon-thumbs-down:before{content:\"\"}.glyphicon-hand-right:before{content:\"\"}.glyphicon-hand-left:before{content:\"\"}.glyphicon-hand-up:before{content:\"\"}.glyphicon-hand-down:before{content:\"\"}.glyphicon-circle-arrow-right:before{content:\"\"}.glyphicon-circle-arrow-left:before{content:\"\"}.glyphicon-circle-arrow-up:before{content:\"\"}.glyphicon-circle-arrow-down:before{content:\"\"}.glyphicon-globe:before{content:\"\"}.glyphicon-wrench:before{content:\"\"}.glyphicon-tasks:before{content:\"\"}.glyphicon-filter:before{content:\"\"}.glyphicon-briefcase:before{content:\"\"}.glyphicon-fullscreen:before{content:\"\"}.glyphicon-dashboard:before{content:\"\"}.glyphicon-paperclip:before{content:\"\"}.glyphicon-heart-empty:before{content:\"\"}.glyphicon-link:before{content:\"\"}.glyphicon-phone:before{content:\"\"}.glyphicon-pushpin:before{content:\"\"}.glyphicon-usd:before{content:\"\"}.glyphicon-gbp:before{content:\"\"}.glyphicon-sort:before{content:\"\"}.glyphicon-sort-by-alphabet:before{content:\"\"}.glyphicon-sort-by-alphabet-alt:before{content:\"\"}.glyphicon-sort-by-order:before{content:\"\"}.glyphicon-sort-by-order-alt:before{content:\"\"}.glyphicon-sort-by-attributes:before{content:\"\"}.glyphicon-sort-by-attributes-alt:before{content:\"\"}.glyphicon-unchecked:before{content:\"\"}.glyphicon-expand:before{content:\"\"}.glyphicon-collapse-down:before{content:\"\"}.glyphicon-collapse-up:before{content:\"\"}.glyphicon-log-in:before{content:\"\"}.glyphicon-flash:before{content:\"\"}.glyphicon-log-out:before{content:\"\"}.glyphicon-new-window:before{content:\"\"}.glyphicon-record:before{content:\"\"}.glyphicon-save:before{content:\"\"}.glyphicon-open:before{content:\"\"}.glyphicon-saved:before{content:\"\"}.glyphicon-import:before{content:\"\"}.glyphicon-export:before{content:\"\"}.glyphicon-send:before{content:\"\"}.glyphicon-floppy-disk:before{content:\"\"}.glyphicon-floppy-saved:before{content:\"\"}.glyphicon-floppy-remove:before{content:\"\"}.glyphicon-floppy-save:before{content:\"\"}.glyphicon-floppy-open:before{content:\"\"}.glyphicon-credit-card:before{content:\"\"}.glyphicon-transfer:before{content:\"\"}.glyphicon-cutlery:before{content:\"\"}.glyphicon-header:before{content:\"\"}.glyphicon-compressed:before{content:\"\"}.glyphicon-earphone:before{content:\"\"}.glyphicon-phone-alt:before{content:\"\"}.glyphicon-tower:before{content:\"\"}.glyphicon-stats:before{content:\"\"}.glyphicon-sd-video:before{content:\"\"}.glyphicon-hd-video:before{content:\"\"}.glyphicon-subtitles:before{content:\"\"}.glyphicon-sound-stereo:before{content:\"\"}.glyphicon-sound-dolby:before{content:\"\"}.glyphicon-sound-5-1:before{content:\"\"}.glyphicon-sound-6-1:before{content:\"\"}.glyphicon-sound-7-1:before{content:\"\"}.glyphicon-copyright-mark:before{content:\"\"}.glyphicon-registration-mark:before{content:\"\"}.glyphicon-cloud-download:before{content:\"\"}.glyphicon-cloud-upload:before{content:\"\"}.glyphicon-tree-conifer:before{content:\"\"}.glyphicon-tree-deciduous:before{content:\"\"}.glyphicon-cd:before{content:\"\"}.glyphicon-save-file:before{content:\"\"}.glyphicon-open-file:before{content:\"\"}.glyphicon-level-up:before{content:\"\"}.glyphicon-copy:before{content:\"\"}.glyphicon-paste:before{content:\"\"}.glyphicon-alert:before{content:\"\"}.glyphicon-equalizer:before{content:\"\"}.glyphicon-king:before{content:\"\"}.glyphicon-queen:before{content:\"\"}.glyphicon-pawn:before{content:\"\"}.glyphicon-bishop:before{content:\"\"}.glyphicon-knight:before{content:\"\"}.glyphicon-baby-formula:before{content:\"\"}.glyphicon-tent:before{content:\"⛺\"}.glyphicon-blackboard:before{content:\"\"}.glyphicon-bed:before{content:\"\"}.glyphicon-apple:before{content:\"\"}.glyphicon-erase:before{content:\"\"}.glyphicon-hourglass:before{content:\"⌛\"}.glyphicon-lamp:before{content:\"\"}.glyphicon-duplicate:before{content:\"\"}.glyphicon-piggy-bank:before{content:\"\"}.glyphicon-scissors:before{content:\"\"}.glyphicon-bitcoin:before,.glyphicon-btc:before,.glyphicon-xbt:before{content:\"\"}.glyphicon-jpy:before,.glyphicon-yen:before{content:\"¥\"}.glyphicon-rub:before,.glyphicon-ruble:before{content:\"₽\"}.glyphicon-scale:before{content:\"\"}.glyphicon-ice-lolly:before{content:\"\"}.glyphicon-ice-lolly-tasted:before{content:\"\"}.glyphicon-education:before{content:\"\"}.glyphicon-option-horizontal:before{content:\"\"}.glyphicon-option-vertical:before{content:\"\"}.glyphicon-menu-hamburger:before{content:\"\"}.glyphicon-modal-window:before{content:\"\"}.glyphicon-oil:before{content:\"\"}.glyphicon-grain:before{content:\"\"}.glyphicon-sunglasses:before{content:\"\"}.glyphicon-text-size:before{content:\"\"}.glyphicon-text-color:before{content:\"\"}.glyphicon-text-background:before{content:\"\"}.glyphicon-object-align-top:before{content:\"\"}.glyphicon-object-align-bottom:before{content:\"\"}.glyphicon-object-align-horizontal:before{content:\"\"}.glyphicon-object-align-left:before{content:\"\"}.glyphicon-object-align-vertical:before{content:\"\"}.glyphicon-object-align-right:before{content:\"\"}.glyphicon-triangle-right:before{content:\"\"}.glyphicon-triangle-left:before{content:\"\"}.glyphicon-triangle-bottom:before{content:\"\"}.glyphicon-triangle-top:before{content:\"\"}.glyphicon-console:before{content:\"\"}.glyphicon-superscript:before{content:\"\"}.glyphicon-subscript:before{content:\"\"}.glyphicon-menu-left:before{content:\"\"}.glyphicon-menu-right:before{content:\"\"}.glyphicon-menu-down:before{content:\"\"}.glyphicon-menu-up:before{content:\"\"}*,:after,:before{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:transparent}body{font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#21366b;text-decoration:none}a:focus,a:hover{color:#0f1831;text-decoration:underline}a:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.carousel-inner>.item>a>img,.carousel-inner>.item>img,.img-responsive,.thumbnail a>img,.thumbnail>img{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #dcdcdc}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=button]{cursor:pointer}.h1,.h2,.h3,.h4,.h5,.h6,h1,h2,h3,h4,h5,h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-weight:400;line-height:1;color:#cdcdcd}.h1,.h2,.h3,h1,h2,h3{margin-top:20px;margin-bottom:10px}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small{font-size:65%}.h4,.h5,.h6,h4,h5,h6{margin-top:10px;margin-bottom:10px}.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-size:75%}.h1,h1{font-size:36px}.h2,h2{font-size:30px}.h3,h3{font-size:24px}.h4,h4{font-size:18px}.h5,h5{font-size:14px}.h6,h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}.small,small{font-size:85%}.mark,mark{padding:.2em;background-color:#fcf8e3}.text-left,th{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#cdcdcd}.text-primary{color:#21366b}a.text-primary:focus,a.text-primary:hover{color:#152244}.text-success{color:#3c763d}a.text-success:focus,a.text-success:hover{color:#2b542c}.text-info{color:#31708f}a.text-info:focus,a.text-info:hover{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:focus,a.text-warning:hover{color:#66512c}.text-danger{color:#a94442}a.text-danger:focus,a.text-danger:hover{color:#843534}.bg-primary{color:#fff;background-color:#21366b}a.bg-primary:focus,a.bg-primary:hover{background-color:#152244}.bg-success{background-color:#dff0d8}a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #dcdcdc}dl,ol,ul{margin-top:0;margin-bottom:10px}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}.list-inline,.list-unstyled{padding-left:0;list-style:none}.list-inline{margin-left:-5px}.list-inline>li{display:inline-block;padding-right:5px;padding-left:5px}dl{margin-bottom:20px}dd,dt{line-height:1.42857143}dt{font-weight:700}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[data-original-title],abbr[title]{cursor:help}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #dcdcdc}blockquote ol:last-child,blockquote p:last-child,blockquote ul:last-child{margin-bottom:0}blockquote .small,blockquote footer,blockquote small{display:block;font-size:80%;line-height:1.42857143;color:#cdcdcd}blockquote .small:before,blockquote footer:before,blockquote small:before{content:\"— \"}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;text-align:right;border-right:5px solid #dcdcdc;border-left:0}.blockquote-reverse .small:before,.blockquote-reverse footer:before,.blockquote-reverse small:before,.sim-tabs>ul>li>a.singleton.active>.tab-title::after,.sim-tabs>ul>li>a.singleton>.tab-title::after,blockquote.pull-right .small:before,blockquote.pull-right footer:before,blockquote.pull-right small:before{content:\"\"}.blockquote-reverse .small:after,.blockquote-reverse footer:after,.blockquote-reverse small:after,blockquote.pull-right .small:after,blockquote.pull-right footer:after,blockquote.pull-right small:after{content:\" —\"}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}code,kbd,pre,samp{font-family:Menlo,Monaco,Consolas,\"Courier New\",monospace}code,kbd,pre{padding:2px 4px;font-size:90%;color:#c7254e;background-color:#f9f2f4;border-radius:4px}kbd{color:#fff;background-color:#333;border-radius:3px;box-shadow:inset 0-1px 0 rgba(0,0,0,.25)}kbd kbd{padding:0;font-size:100%;font-weight:700;box-shadow:none}pre{display:block;padding:9.5px;margin:0 0 10px;font-size:13px;line-height:1.42857143;color:#333;word-break:break-all;word-wrap:break-word;background-color:#f5f5f5;border:1px solid #ccc}pre code{padding:0;font-size:inherit;color:inherit;white-space:pre-wrap;border-radius:0}.pre-scrollable{max-height:340px;overflow-y:scroll}.container{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}@media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}@media (min-width:1200px){.container{width:1170px}}.container-fluid{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}.row{margin-right:-15px;margin-left:-15px}.row-no-gutters{margin-right:0;margin-left:0}.row-no-gutters [class*=col-]{padding-right:0;padding-left:0}.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{position:relative;min-height:1px;padding-right:15px;padding-left:15px}.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{float:left}.col-xs-12{width:100%}.col-xs-11{width:91.66666667%}.col-xs-10{width:83.33333333%}.col-xs-9{width:75%}.col-xs-8{width:66.66666667%}.col-xs-7{width:58.33333333%}.col-xs-6{width:50%}.col-xs-5{width:41.66666667%}.col-xs-4{width:33.33333333%}.col-xs-3{width:25%}.col-xs-2{width:16.66666667%}.col-xs-1{width:8.33333333%}.col-xs-pull-12{right:100%}.col-xs-pull-11{right:91.66666667%}.col-xs-pull-10{right:83.33333333%}.col-xs-pull-9{right:75%}.col-xs-pull-8{right:66.66666667%}.col-xs-pull-7{right:58.33333333%}.col-xs-pull-6{right:50%}.col-xs-pull-5{right:41.66666667%}.col-xs-pull-4{right:33.33333333%}.col-xs-pull-3{right:25%}.col-xs-pull-2{right:16.66666667%}.col-xs-pull-1{right:8.33333333%}.col-xs-pull-0{right:auto}.col-xs-push-12{left:100%}.col-xs-push-11{left:91.66666667%}.col-xs-push-10{left:83.33333333%}.col-xs-push-9{left:75%}.col-xs-push-8{left:66.66666667%}.col-xs-push-7{left:58.33333333%}.col-xs-push-6{left:50%}.col-xs-push-5{left:41.66666667%}.col-xs-push-4{left:33.33333333%}.col-xs-push-3{left:25%}.col-xs-push-2{left:16.66666667%}.col-xs-push-1{left:8.33333333%}.col-xs-push-0{left:auto}.col-xs-offset-12{margin-left:100%}.col-xs-offset-11{margin-left:91.66666667%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-0{margin-left:0}@media (min-width:768px){.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9{float:left}.col-sm-12{width:100%}.col-sm-11{width:91.66666667%}.col-sm-10{width:83.33333333%}.col-sm-9{width:75%}.col-sm-8{width:66.66666667%}.col-sm-7{width:58.33333333%}.col-sm-6{width:50%}.col-sm-5{width:41.66666667%}.col-sm-4{width:33.33333333%}.col-sm-3{width:25%}.col-sm-2{width:16.66666667%}.col-sm-1{width:8.33333333%}.col-sm-pull-12{right:100%}.col-sm-pull-11{right:91.66666667%}.col-sm-pull-10{right:83.33333333%}.col-sm-pull-9{right:75%}.col-sm-pull-8{right:66.66666667%}.col-sm-pull-7{right:58.33333333%}.col-sm-pull-6{right:50%}.col-sm-pull-5{right:41.66666667%}.col-sm-pull-4{right:33.33333333%}.col-sm-pull-3{right:25%}.col-sm-pull-2{right:16.66666667%}.col-sm-pull-1{right:8.33333333%}.col-sm-pull-0{right:auto}.col-sm-push-12{left:100%}.col-sm-push-11{left:91.66666667%}.col-sm-push-10{left:83.33333333%}.col-sm-push-9{left:75%}.col-sm-push-8{left:66.66666667%}.col-sm-push-7{left:58.33333333%}.col-sm-push-6{left:50%}.col-sm-push-5{left:41.66666667%}.col-sm-push-4{left:33.33333333%}.col-sm-push-3{left:25%}.col-sm-push-2{left:16.66666667%}.col-sm-push-1{left:8.33333333%}.col-sm-push-0{left:auto}.col-sm-offset-12{margin-left:100%}.col-sm-offset-11{margin-left:91.66666667%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-0{margin-left:0}}@media (min-width:992px){.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9{float:left}.col-md-12{width:100%}.col-md-11{width:91.66666667%}.col-md-10{width:83.33333333%}.col-md-9{width:75%}.col-md-8{width:66.66666667%}.col-md-7{width:58.33333333%}.col-md-6{width:50%}.col-md-5{width:41.66666667%}.col-md-4{width:33.33333333%}.col-md-3{width:25%}.col-md-2{width:16.66666667%}.col-md-1{width:8.33333333%}.col-md-pull-12{right:100%}.col-md-pull-11{right:91.66666667%}.col-md-pull-10{right:83.33333333%}.col-md-pull-9{right:75%}.col-md-pull-8{right:66.66666667%}.col-md-pull-7{right:58.33333333%}.col-md-pull-6{right:50%}.col-md-pull-5{right:41.66666667%}.col-md-pull-4{right:33.33333333%}.col-md-pull-3{right:25%}.col-md-pull-2{right:16.66666667%}.col-md-pull-1{right:8.33333333%}.col-md-pull-0{right:auto}.col-md-push-12{left:100%}.col-md-push-11{left:91.66666667%}.col-md-push-10{left:83.33333333%}.col-md-push-9{left:75%}.col-md-push-8{left:66.66666667%}.col-md-push-7{left:58.33333333%}.col-md-push-6{left:50%}.col-md-push-5{left:41.66666667%}.col-md-push-4{left:33.33333333%}.col-md-push-3{left:25%}.col-md-push-2{left:16.66666667%}.col-md-push-1{left:8.33333333%}.col-md-push-0{left:auto}.col-md-offset-12{margin-left:100%}.col-md-offset-11{margin-left:91.66666667%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-9{margin-left:75%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-6{margin-left:50%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-3{margin-left:25%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-0{margin-left:0}}@media (min-width:1200px){.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9{float:left}.col-lg-12{width:100%}.col-lg-11{width:91.66666667%}.col-lg-10{width:83.33333333%}.col-lg-9{width:75%}.col-lg-8{width:66.66666667%}.col-lg-7{width:58.33333333%}.col-lg-6{width:50%}.col-lg-5{width:41.66666667%}.col-lg-4{width:33.33333333%}.col-lg-3{width:25%}.col-lg-2{width:16.66666667%}.col-lg-1{width:8.33333333%}.col-lg-pull-12{right:100%}.col-lg-pull-11{right:91.66666667%}.col-lg-pull-10{right:83.33333333%}.col-lg-pull-9{right:75%}.col-lg-pull-8{right:66.66666667%}.col-lg-pull-7{right:58.33333333%}.col-lg-pull-6{right:50%}.col-lg-pull-5{right:41.66666667%}.col-lg-pull-4{right:33.33333333%}.col-lg-pull-3{right:25%}.col-lg-pull-2{right:16.66666667%}.col-lg-pull-1{right:8.33333333%}.col-lg-pull-0{right:auto}.col-lg-push-12{left:100%}.col-lg-push-11{left:91.66666667%}.col-lg-push-10{left:83.33333333%}.col-lg-push-9{left:75%}.col-lg-push-8{left:66.66666667%}.col-lg-push-7{left:58.33333333%}.col-lg-push-6{left:50%}.col-lg-push-5{left:41.66666667%}.col-lg-push-4{left:33.33333333%}.col-lg-push-3{left:25%}.col-lg-push-2{left:16.66666667%}.col-lg-push-1{left:8.33333333%}.col-lg-push-0{left:auto}.col-lg-offset-12{margin-left:100%}.col-lg-offset-11{margin-left:91.66666667%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-0{margin-left:0}}pre code,table{background-color:transparent}table col[class*=col-]{position:static;display:table-column;float:none}table td[class*=col-],table th[class*=col-]{position:static;display:table-cell;float:none}caption{padding-top:8px;padding-bottom:8px;color:#cdcdcd;text-align:left}.table{width:100%;max-width:100%;margin-bottom:20px}.table>thead>tr>th{padding:8px;line-height:1.42857143;border-top:1px solid #ddd}.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}.panel>.table>tbody:first-child>tr:first-child td,.panel>.table>tbody:first-child>tr:first-child th,.table>caption+thead>tr:first-child>td,.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>td,.table>thead:first-child>tr:first-child>th{border-top:0}.table>tbody+tbody{border-top:2px solid #ddd}.table .table{background-color:#fff}.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:5px}.table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}.table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}.table-hover>tbody>tr:hover,.table>tbody>tr.active>td,.table>tbody>tr.active>th,.table>tbody>tr>td.active,.table>tbody>tr>th.active,.table>tfoot>tr.active>td,.table>tfoot>tr.active>th,.table>tfoot>tr>td.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>thead>tr.active>th,.table>thead>tr>td.active,.table>thead>tr>th.active{background-color:#f5f5f5}.table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr.active:hover>th,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover{background-color:#e8e8e8}.table>tbody>tr.success>td,.table>tbody>tr.success>th,.table>tbody>tr>td.success,.table>tbody>tr>th.success,.table>tfoot>tr.success>td,.table>tfoot>tr.success>th,.table>tfoot>tr>td.success,.table>tfoot>tr>th.success,.table>thead>tr.success>td,.table>thead>tr.success>th,.table>thead>tr>td.success,.table>thead>tr>th.success{background-color:#dff0d8}.table-hover>tbody>tr.success:hover>td,.table-hover>tbody>tr.success:hover>th,.table-hover>tbody>tr:hover>.success,.table-hover>tbody>tr>td.success:hover,.table-hover>tbody>tr>th.success:hover{background-color:#d0e9c6}.table>tbody>tr.info>td,.table>tbody>tr.info>th,.table>tbody>tr>td.info,.table>tbody>tr>th.info,.table>tfoot>tr.info>td,.table>tfoot>tr.info>th,.table>tfoot>tr>td.info,.table>tfoot>tr>th.info,.table>thead>tr.info>td,.table>thead>tr.info>th,.table>thead>tr>td.info,.table>thead>tr>th.info{background-color:#d9edf7}.table-hover>tbody>tr.info:hover>td,.table-hover>tbody>tr.info:hover>th,.table-hover>tbody>tr:hover>.info,.table-hover>tbody>tr>td.info:hover,.table-hover>tbody>tr>th.info:hover{background-color:#c4e3f3}.table>tbody>tr.warning>td,.table>tbody>tr.warning>th,.table>tbody>tr>td.warning,.table>tbody>tr>th.warning,.table>tfoot>tr.warning>td,.table>tfoot>tr.warning>th,.table>tfoot>tr>td.warning,.table>tfoot>tr>th.warning,.table>thead>tr.warning>td,.table>thead>tr.warning>th,.table>thead>tr>td.warning,.table>thead>tr>th.warning{background-color:#fcf8e3}.table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr.warning:hover>th,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover{background-color:#faf2cc}.table>tbody>tr.danger>td,.table>tbody>tr.danger>th,.table>tbody>tr>td.danger,.table>tbody>tr>th.danger,.table>tfoot>tr.danger>td,.table>tfoot>tr.danger>th,.table>tfoot>tr>td.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>thead>tr.danger>th,.table>thead>tr>td.danger,.table>thead>tr>th.danger{background-color:#f2dede}.table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr.danger:hover>th,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover{background-color:#ebcccc}.table-responsive{min-height:.01%;overflow-x:auto}@media screen and (max-width:767px){.table-responsive{width:100%;margin-bottom:15px;overflow-y:hidden;-ms-overflow-style:-ms-autohiding-scrollbar;border:1px solid #ddd}.table-responsive>.table{margin-bottom:0}.table-responsive>.table>tbody>tr>td,.table-responsive>.table>tbody>tr>th,.table-responsive>.table>tfoot>tr>td,.table-responsive>.table>tfoot>tr>th,.table-responsive>.table>thead>tr>td,.table-responsive>.table>thead>tr>th{white-space:nowrap}.table-responsive>.table-bordered{border:0}.table-responsive>.table-bordered>tbody>tr>td:first-child,.table-responsive>.table-bordered>tbody>tr>th:first-child,.table-responsive>.table-bordered>tfoot>tr>td:first-child,.table-responsive>.table-bordered>tfoot>tr>th:first-child,.table-responsive>.table-bordered>thead>tr>td:first-child,.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.table-responsive>.table-bordered>tbody>tr>td:last-child,.table-responsive>.table-bordered>tbody>tr>th:last-child,.table-responsive>.table-bordered>tfoot>tr>td:last-child,.table-responsive>.table-bordered>tfoot>tr>th:last-child,.table-responsive>.table-bordered>thead>tr>td:last-child,.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.table-responsive>.table-bordered>tbody>tr:last-child>td,.table-responsive>.table-bordered>tbody>tr:last-child>th,.table-responsive>.table-bordered>tfoot>tr:last-child>td,.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}}fieldset,legend{padding:0;border:0}fieldset{min-width:0;margin:0}legend{display:block;width:100%;margin-bottom:20px;font-size:21px;line-height:inherit;color:#333;border-bottom:1px solid #e5e5e5}label{display:inline-block;max-width:100%;margin-bottom:5px;font-weight:700}input[type=search]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-appearance:none;appearance:none}input[type=checkbox],input[type=radio]{margin:4px 0 0;margin-top:1px \\9;line-height:normal}fieldset[disabled] input[type=checkbox],fieldset[disabled] input[type=radio],input[type=checkbox].disabled,input[type=checkbox][disabled],input[type=radio].disabled,input[type=radio][disabled]{cursor:not-allowed}input[type=file]{display:block}input[type=range]{display:block;width:100%}.form-group-sm select[multiple].form-control,.form-group-sm textarea.form-control,select[multiple],select[multiple].input-sm,select[size],textarea.form-control,textarea.input-sm{height:auto}input[type=checkbox]:focus,input[type=file]:focus,input[type=radio]:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.form-control,output{display:block;font-size:14px;line-height:1.42857143;color:#555}output{padding-top:7px}.form-control{width:100%;height:34px;padding:6px 12px;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075);-webkit-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}.form-control:focus{border-color:#66afe9;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)}.form-control::-moz-placeholder{color:#999;opacity:1}.form-control:-ms-input-placeholder{color:#999}.form-control::-webkit-input-placeholder{color:#999}.form-control::-ms-expand{background-color:transparent;border:0}.form-control[disabled],.form-control[readonly],fieldset[disabled] .form-control{background-color:#dcdcdc;opacity:1}.checkbox.disabled label,.form-control[disabled],.radio.disabled label,fieldset[disabled] .checkbox label,fieldset[disabled] .form-control,fieldset[disabled] .radio label{cursor:not-allowed}@media screen and (-webkit-min-device-pixel-ratio:0){input[type=date].form-control,input[type=datetime-local].form-control,input[type=month].form-control,input[type=time].form-control{line-height:34px}.input-group-sm input[type=date],.input-group-sm input[type=datetime-local],.input-group-sm input[type=month],.input-group-sm input[type=time],input[type=date].input-sm,input[type=datetime-local].input-sm,input[type=month].input-sm,input[type=time].input-sm{line-height:30px}.input-group-lg input[type=date],.input-group-lg input[type=datetime-local],.input-group-lg input[type=month],.input-group-lg input[type=time],input[type=date].input-lg,input[type=datetime-local].input-lg,input[type=month].input-lg,input[type=time].input-lg{line-height:46px}}.form-group{margin-bottom:15px}.checkbox,.radio{position:relative;display:block;margin-top:10px;margin-bottom:10px}.checkbox label,.checkbox-inline,.radio label,.radio-inline{padding-left:20px;margin-bottom:0;font-weight:400;cursor:pointer}.checkbox label,.radio label{min-height:20px}.checkbox input[type=checkbox],.checkbox-inline input[type=checkbox],.radio input[type=radio],.radio-inline input[type=radio]{position:absolute;margin-top:4px \\9;margin-left:-20px}.checkbox+.checkbox,.radio+.radio{margin-top:-5px}.checkbox-inline,.radio-inline{position:relative;display:inline-block;vertical-align:middle}.checkbox-inline.disabled,.radio-inline.disabled,fieldset[disabled] .checkbox-inline,fieldset[disabled] .radio-inline{cursor:not-allowed}.checkbox-inline+.checkbox-inline,.radio-inline+.radio-inline{margin-top:0;margin-left:10px}.form-control-static{min-height:34px;padding-top:7px;padding-bottom:7px;margin-bottom:0}.form-control-static.input-lg,.form-control-static.input-sm{padding-right:0;padding-left:0}.form-group-sm .form-control,.input-sm{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.form-group-sm select.form-control,select.input-sm{height:30px;line-height:30px}.form-group-sm .form-control-static{height:30px;min-height:32px;padding:6px 10px;font-size:12px;line-height:1.5}.form-group-lg .form-control,.input-lg{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.form-group-lg select[multiple].form-control,.form-group-lg textarea.form-control,select[multiple].input-lg,textarea.input-lg{height:auto}.form-group-lg select.form-control,select.input-lg{height:46px;line-height:46px}.form-group-lg .form-control-static{height:46px;min-height:38px;padding:11px 16px;font-size:18px;line-height:1.3333333}.has-feedback{position:relative}.has-feedback .form-control{padding-right:42.5px}.form-control-feedback{position:absolute;top:0;right:0;z-index:2;display:block;width:34px;height:34px;line-height:34px;text-align:center;pointer-events:none}.form-group-lg .form-control+.form-control-feedback,.input-group-lg+.form-control-feedback,.input-lg+.form-control-feedback{width:46px;height:46px;line-height:46px}.form-group-sm .form-control+.form-control-feedback,.input-group-sm+.form-control-feedback,.input-sm+.form-control-feedback{width:30px;height:30px;line-height:30px}.has-success .checkbox,.has-success .checkbox-inline,.has-success .control-label,.has-success .help-block,.has-success .radio,.has-success .radio-inline,.has-success.checkbox label,.has-success.checkbox-inline label,.has-success.radio label,.has-success.radio-inline label{color:#3c763d}.has-success .form-control{border-color:#3c763d;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-success .form-control:focus{border-color:#2b542c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168}.has-success .input-group-addon{color:#3c763d;background-color:#dff0d8;border-color:#3c763d}.has-success .form-control-feedback{color:#3c763d}.has-warning .checkbox,.has-warning .checkbox-inline,.has-warning .control-label,.has-warning .help-block,.has-warning .radio,.has-warning .radio-inline,.has-warning.checkbox label,.has-warning.checkbox-inline label,.has-warning.radio label,.has-warning.radio-inline label{color:#8a6d3b}.has-warning .form-control{border-color:#8a6d3b;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-warning .form-control:focus{border-color:#66512c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b}.has-warning .input-group-addon{color:#8a6d3b;background-color:#fcf8e3;border-color:#8a6d3b}.has-warning .form-control-feedback{color:#8a6d3b}.has-error .checkbox,.has-error .checkbox-inline,.has-error .control-label,.has-error .help-block,.has-error .radio,.has-error .radio-inline,.has-error.checkbox label,.has-error.checkbox-inline label,.has-error.radio label,.has-error.radio-inline label{color:#a94442}.has-error .form-control{border-color:#a94442;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-error .form-control:focus{border-color:#843534;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483}.has-error .input-group-addon{color:#a94442;background-color:#f2dede;border-color:#a94442}.has-error .form-control-feedback{color:#a94442}.has-feedback label~.form-control-feedback{top:25px}.has-feedback label.sr-only~.form-control-feedback{top:0}.help-block{display:block;margin-top:5px;margin-bottom:10px;color:#737373}@media (min-width:768px){.form-inline .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.form-inline .form-control{display:inline-block;width:auto;vertical-align:middle}.form-inline .form-control-static{display:inline-block}.form-inline .input-group{display:inline-table;vertical-align:middle}.form-inline .input-group .form-control,.form-inline .input-group .input-group-addon,.form-inline .input-group .input-group-btn{width:auto}.form-inline .input-group>.form-control{width:100%}.form-inline .control-label{margin-bottom:0;vertical-align:middle}.form-inline .checkbox,.form-inline .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.form-inline .checkbox label,.form-inline .radio label{padding-left:0}.form-inline .checkbox input[type=checkbox],.form-inline .radio input[type=radio]{position:relative;margin-left:0}.form-inline .has-feedback .form-control-feedback{top:0}}.form-horizontal .checkbox,.form-horizontal .checkbox-inline,.form-horizontal .radio,.form-horizontal .radio-inline{padding-top:7px;margin-top:0;margin-bottom:0}.form-horizontal .checkbox,.form-horizontal .radio{min-height:27px}.form-horizontal .form-group{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.form-horizontal .control-label{padding-top:7px;margin-bottom:0;text-align:right}}.form-horizontal .has-feedback .form-control-feedback{right:15px}@media (min-width:768px){.form-horizontal .form-group-lg .control-label{padding-top:11px;font-size:18px}.form-horizontal .form-group-sm .control-label{padding-top:6px;font-size:12px}}.btn{display:inline-block;margin-bottom:0;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;touch-action:manipulation;cursor:pointer;background-image:none;border:1px solid transparent;padding:6px 12px;font-size:14px;line-height:1.42857143;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.btn.active.focus,.btn.active:focus,.btn.focus,.btn:active.focus,.btn:active:focus,.btn:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.btn.focus,.btn:focus,.btn:hover{color:#333;text-decoration:none}.btn.active,.btn:active{background-image:none;outline:0;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn.disabled,.btn[disabled],fieldset[disabled] .btn{cursor:not-allowed;filter:alpha(opacity=65);opacity:.65;-webkit-box-shadow:none;box-shadow:none}a.btn.disabled,fieldset[disabled] a.btn{pointer-events:none}.btn-default{color:#333;background-color:#fff;border-color:#ccc}.btn-default.focus,.btn-default:focus{color:#333;background-color:#e6e6e6;border-color:#8c8c8c}.btn-default:hover{color:#333;background-color:#e6e6e6;border-color:#adadad}.btn-default.active,.btn-default:active,.open>.dropdown-toggle.btn-default{color:#333;background-color:#e6e6e6;background-image:none;border-color:#adadad}.btn-default.active.focus,.btn-default.active:focus,.btn-default.active:hover,.btn-default:active.focus,.btn-default:active:focus,.btn-default:active:hover,.open>.dropdown-toggle.btn-default.focus,.open>.dropdown-toggle.btn-default:focus,.open>.dropdown-toggle.btn-default:hover{color:#333;background-color:#d4d4d4;border-color:#8c8c8c}.btn-default.disabled.focus,.btn-default.disabled:focus,.btn-default.disabled:hover,.btn-default[disabled].focus,.btn-default[disabled]:focus,.btn-default[disabled]:hover,fieldset[disabled] .btn-default.focus,fieldset[disabled] .btn-default:focus,fieldset[disabled] .btn-default:hover{background-color:#fff;border-color:#ccc}.btn-default .badge{color:#fff;background-color:#333}.btn-primary{color:#fff;background-color:#21366b;border-color:#1b2c58}.btn-primary.focus,.btn-primary:focus{color:#fff;background-color:#152244;border-color:#000}.btn-primary:hover{color:#fff;background-color:#152244;border-color:#0d1529}.btn-primary.active,.btn-primary:active,.open>.dropdown-toggle.btn-primary{color:#fff;background-color:#152244;background-image:none;border-color:#0d1529}.btn-primary.active.focus,.btn-primary.active:focus,.btn-primary.active:hover,.btn-primary:active.focus,.btn-primary:active:focus,.btn-primary:active:hover,.open>.dropdown-toggle.btn-primary.focus,.open>.dropdown-toggle.btn-primary:focus,.open>.dropdown-toggle.btn-primary:hover{color:#fff;background-color:#0d1529;border-color:#000}.btn-primary.disabled.focus,.btn-primary.disabled:focus,.btn-primary.disabled:hover,.btn-primary[disabled].focus,.btn-primary[disabled]:focus,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary.focus,fieldset[disabled] .btn-primary:focus,fieldset[disabled] .btn-primary:hover{background-color:#21366b;border-color:#1b2c58}.btn-primary .badge{color:#21366b;background-color:#fff}.btn-success{color:#fff;background-color:#5cb85c;border-color:#4cae4c}.btn-success.focus,.btn-success:focus{color:#fff;background-color:#449d44;border-color:#255625}.btn-success:hover{color:#fff;background-color:#449d44;border-color:#398439}.btn-success.active,.btn-success:active,.open>.dropdown-toggle.btn-success{color:#fff;background-color:#449d44;background-image:none;border-color:#398439}.btn-success.active.focus,.btn-success.active:focus,.btn-success.active:hover,.btn-success:active.focus,.btn-success:active:focus,.btn-success:active:hover,.open>.dropdown-toggle.btn-success.focus,.open>.dropdown-toggle.btn-success:focus,.open>.dropdown-toggle.btn-success:hover{color:#fff;background-color:#398439;border-color:#255625}.btn-success.disabled.focus,.btn-success.disabled:focus,.btn-success.disabled:hover,.btn-success[disabled].focus,.btn-success[disabled]:focus,.btn-success[disabled]:hover,fieldset[disabled] .btn-success.focus,fieldset[disabled] .btn-success:focus,fieldset[disabled] .btn-success:hover{background-color:#5cb85c;border-color:#4cae4c}.btn-success .badge{color:#5cb85c;background-color:#fff}.btn-info{color:#fff;background-color:#5bc0de;border-color:#46b8da}.btn-info.focus,.btn-info:focus{color:#fff;background-color:#31b0d5;border-color:#1b6d85}.btn-info:hover{color:#fff;background-color:#31b0d5;border-color:#269abc}.btn-info.active,.btn-info:active,.open>.dropdown-toggle.btn-info{color:#fff;background-color:#31b0d5;background-image:none;border-color:#269abc}.btn-info.active.focus,.btn-info.active:focus,.btn-info.active:hover,.btn-info:active.focus,.btn-info:active:focus,.btn-info:active:hover,.open>.dropdown-toggle.btn-info.focus,.open>.dropdown-toggle.btn-info:focus,.open>.dropdown-toggle.btn-info:hover{color:#fff;background-color:#269abc;border-color:#1b6d85}.btn-info.disabled.focus,.btn-info.disabled:focus,.btn-info.disabled:hover,.btn-info[disabled].focus,.btn-info[disabled]:focus,.btn-info[disabled]:hover,fieldset[disabled] .btn-info.focus,fieldset[disabled] .btn-info:focus,fieldset[disabled] .btn-info:hover{background-color:#5bc0de;border-color:#46b8da}.btn-info .badge{color:#5bc0de;background-color:#fff}.btn-warning{color:#fff;background-color:#f0ad4e;border-color:#eea236}.btn-warning.focus,.btn-warning:focus{color:#fff;background-color:#ec971f;border-color:#985f0d}.btn-warning:hover{color:#fff;background-color:#ec971f;border-color:#d58512}.btn-warning.active,.btn-warning:active,.open>.dropdown-toggle.btn-warning{color:#fff;background-color:#ec971f;background-image:none;border-color:#d58512}.btn-warning.active.focus,.btn-warning.active:focus,.btn-warning.active:hover,.btn-warning:active.focus,.btn-warning:active:focus,.btn-warning:active:hover,.open>.dropdown-toggle.btn-warning.focus,.open>.dropdown-toggle.btn-warning:focus,.open>.dropdown-toggle.btn-warning:hover{color:#fff;background-color:#d58512;border-color:#985f0d}.btn-warning.disabled.focus,.btn-warning.disabled:focus,.btn-warning.disabled:hover,.btn-warning[disabled].focus,.btn-warning[disabled]:focus,.btn-warning[disabled]:hover,fieldset[disabled] .btn-warning.focus,fieldset[disabled] .btn-warning:focus,fieldset[disabled] .btn-warning:hover{background-color:#f0ad4e;border-color:#eea236}.btn-warning .badge{color:#f0ad4e;background-color:#fff}.btn-danger{color:#fff;background-color:#d9534f;border-color:#d43f3a}.btn-danger.focus,.btn-danger:focus{color:#fff;background-color:#c9302c;border-color:#761c19}.btn-danger:hover{color:#fff;background-color:#c9302c;border-color:#ac2925}.btn-danger.active,.btn-danger:active,.open>.dropdown-toggle.btn-danger{color:#fff;background-color:#c9302c;background-image:none;border-color:#ac2925}.btn-danger.active.focus,.btn-danger.active:focus,.btn-danger.active:hover,.btn-danger:active.focus,.btn-danger:active:focus,.btn-danger:active:hover,.open>.dropdown-toggle.btn-danger.focus,.open>.dropdown-toggle.btn-danger:focus,.open>.dropdown-toggle.btn-danger:hover{color:#fff;background-color:#ac2925;border-color:#761c19}.btn-danger.disabled.focus,.btn-danger.disabled:focus,.btn-danger.disabled:hover,.btn-danger[disabled].focus,.btn-danger[disabled]:focus,.btn-danger[disabled]:hover,fieldset[disabled] .btn-danger.focus,fieldset[disabled] .btn-danger:focus,fieldset[disabled] .btn-danger:hover{background-color:#d9534f;border-color:#d43f3a}.btn-danger .badge{color:#d9534f;background-color:#fff}.btn-link{font-weight:400;color:#21366b;border-radius:0}.btn-link,.btn-link.active,.btn-link:active,.btn-link[disabled],fieldset[disabled] .btn-link{background-color:transparent;-webkit-box-shadow:none;box-shadow:none}.btn-link,.btn-link:active,.btn-link:focus,.btn-link:hover{border-color:transparent}.btn-link:focus,.btn-link:hover{color:#0f1831;text-decoration:underline;background-color:transparent}.btn-link[disabled]:focus,.btn-link[disabled]:hover,fieldset[disabled] .btn-link:focus,fieldset[disabled] .btn-link:hover{color:#cdcdcd;text-decoration:none}.btn-group-lg>.btn,.btn-lg{padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.btn-group-sm>.btn,.btn-group-xs>.btn,.btn-sm,.btn-xs{padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.btn-group-xs>.btn,.btn-xs{padding:1px 5px}.btn-block{display:block;width:100%}.alert>p+p,.btn-block+.btn-block{margin-top:5px}input[type=button].btn-block,input[type=reset].btn-block,input[type=submit].btn-block{width:100%}.fade{opacity:0;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear}.fade.in{opacity:1}.collapse{display:none}.collapse.in{display:block}tr.collapse.in{display:table-row}tbody.collapse.in{display:table-row-group}.collapsing{position:relative;height:0;overflow:hidden;-webkit-transition-property:height,visibility;transition-property:height,visibility;-webkit-transition-duration:.35s;transition-duration:.35s;-webkit-transition-timing-function:ease;transition-timing-function:ease}.caret{display:inline-block;width:0;height:0;margin-left:2px;vertical-align:middle;border-top:4px dashed;border-top:4px solid \\9;border-right:4px solid transparent;border-left:4px solid transparent}.dropdown,.dropup{position:relative}.dropdown-toggle:focus{outline:0}.dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;font-size:14px;text-align:left;list-style:none;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175)}.dropdown-menu-right,.dropdown-menu.pull-right{right:0;left:auto}.dropdown-menu .divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.dropdown-menu>li>a{display:block;padding:3px 20px;clear:both;font-weight:400;line-height:1.42857143;color:#333;white-space:nowrap}.dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{color:#262626;text-decoration:none;background-color:#f5f5f5}.dropdown-menu>.active>a,.dropdown-menu>.active>a:focus,.dropdown-menu>.active>a:hover{color:#fff;text-decoration:none;background-color:#21366b;outline:0}.dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{color:#cdcdcd}.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{text-decoration:none;cursor:not-allowed;background-color:transparent;background-image:none;filter:progid:DXImageTransform.Microsoft.gradient(enabled = false)}.open>.dropdown-menu{display:block}.open>a{outline:0}.dropdown-menu-left{right:auto;left:0}.dropdown-header{display:block;padding:3px 20px;font-size:12px;line-height:1.42857143;color:#cdcdcd;white-space:nowrap}.dropdown-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:990}.pull-right>.dropdown-menu{right:0;left:auto}.dropup .caret,.navbar-fixed-bottom .dropdown .caret{content:\"\";border-top:0;border-bottom:4px dashed;border-bottom:4px solid \\9}.dropup .dropdown-menu,.navbar-fixed-bottom .dropdown .dropdown-menu{top:auto;bottom:100%;margin-bottom:2px}@media (min-width:768px){.navbar-right .dropdown-menu{right:0;left:auto}.navbar-right .dropdown-menu-left{right:auto;left:0}}.btn-group,.btn-group-vertical{position:relative;display:inline-block;vertical-align:middle}.btn-group>.btn{float:left}.btn-group-vertical>.btn,.btn-group>.btn{position:relative}.btn-group-vertical>.btn.active,.btn-group-vertical>.btn:active,.btn-group-vertical>.btn:focus,.btn-group-vertical>.btn:hover,.btn-group>.btn.active,.btn-group>.btn:active,.btn-group>.btn:focus,.btn-group>.btn:hover{z-index:2}.btn-group .btn+.btn,.btn-group .btn+.btn-group,.btn-group .btn-group+.btn,.btn-group .btn-group+.btn-group{margin-left:-1px}.btn-toolbar{margin-left:-5px}.btn-toolbar .btn,.btn-toolbar .btn-group,.btn-toolbar .input-group{float:left}.btn-toolbar>.btn,.btn-toolbar>.btn-group,.btn-toolbar>.input-group{margin-left:5px}.btn-group>.btn:not(:first-child):not(:last-child):not(.dropdown-toggle){border-radius:0}.btn-group>.btn:first-child{margin-left:0}.btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn:last-child:not(:first-child),.btn-group>.dropdown-toggle:not(:first-child){border-top-left-radius:0;border-bottom-left-radius:0}.btn-group>.btn-group{float:left}.btn-group>.btn-group:not(:first-child):not(:last-child)>.btn{border-radius:0}.btn-group>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-bottom-left-radius:0}.btn-group .dropdown-toggle:active,.btn-group.open .dropdown-toggle{outline:0}.btn-group>.btn+.dropdown-toggle{padding-right:8px;padding-left:8px}.btn-group>.btn-lg+.dropdown-toggle{padding-right:12px;padding-left:12px}.btn-group.open .dropdown-toggle{-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn-group.open .dropdown-toggle.btn-link{-webkit-box-shadow:none;box-shadow:none}.btn .caret{margin-left:0}.btn-lg .caret{border-width:5px 5px 0}.dropup .btn-lg .caret{border-width:0 5px 5px}.btn-group-vertical>.btn,.btn-group-vertical>.btn-group,.btn-group-vertical>.btn-group>.btn{display:block;width:100%;max-width:100%;float:none}.nav-tabs.nav-justified>li{float:none}.btn-group-vertical>.btn+.btn,.btn-group-vertical>.btn+.btn-group,.btn-group-vertical>.btn-group+.btn,.btn-group-vertical>.btn-group+.btn-group{margin-top:-1px;margin-left:0}.btn-group-vertical>.btn-group:not(:first-child):not(:last-child)>.btn,.btn-group-vertical>.btn:not(:first-child):not(:last-child){border-radius:0}.btn-group-vertical>.btn:first-child:not(:last-child){border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn:last-child:not(:first-child){border-top-left-radius:0;border-top-right-radius:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.btn-group-vertical>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group-vertical>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-top-right-radius:0}.btn-group-justified,.input-group{display:table;border-collapse:separate}.btn-group-justified{width:100%;table-layout:fixed}.btn-group-justified>.btn,.btn-group-justified>.btn-group{display:table-cell;float:none;width:1%}.btn-group-justified>.btn-group .btn{width:100%}.btn-group-justified>.btn-group .dropdown-menu{left:auto}[data-toggle=buttons]>.btn input[type=checkbox],[data-toggle=buttons]>.btn input[type=radio],[data-toggle=buttons]>.btn-group>.btn input[type=checkbox],[data-toggle=buttons]>.btn-group>.btn input[type=radio]{position:absolute;clip:rect(0,0,0,0);pointer-events:none}.input-group{position:relative}.input-group[class*=col-]{float:none;padding-right:0;padding-left:0}.input-group .form-control{position:relative;z-index:2;float:left;width:100%;margin-bottom:0}.input-group .form-control:focus{z-index:3}.input-group-lg>.form-control,.input-group-lg>.input-group-addon,.input-group-lg>.input-group-btn>.btn{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}select.input-group-lg>.form-control,select.input-group-lg>.input-group-addon,select.input-group-lg>.input-group-btn>.btn{height:46px;line-height:46px}select[multiple].input-group-lg>.form-control,select[multiple].input-group-lg>.input-group-addon,select[multiple].input-group-lg>.input-group-btn>.btn,textarea.input-group-lg>.form-control,textarea.input-group-lg>.input-group-addon,textarea.input-group-lg>.input-group-btn>.btn{height:auto}.input-group-sm>.form-control,.input-group-sm>.input-group-addon,.input-group-sm>.input-group-btn>.btn{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}select.input-group-sm>.form-control,select.input-group-sm>.input-group-addon,select.input-group-sm>.input-group-btn>.btn{height:30px;line-height:30px}select[multiple].input-group-sm>.form-control,select[multiple].input-group-sm>.input-group-addon,select[multiple].input-group-sm>.input-group-btn>.btn,textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon,textarea.input-group-sm>.input-group-btn>.btn{height:auto}.input-group .form-control,.input-group-addon,.input-group-btn{display:table-cell}.input-group .form-control:not(:first-child):not(:last-child),.input-group-addon:not(:first-child):not(:last-child),.input-group-btn:not(:first-child):not(:last-child){border-radius:0}.input-group-addon{white-space:nowrap}.input-group-addon,.input-group-btn{width:1%;vertical-align:middle}.input-group-addon{padding:6px 12px;font-size:14px;font-weight:400;line-height:1;color:#555;text-align:center;background-color:#dcdcdc;border:1px solid #ccc;border-radius:4px}.input-group-addon.input-sm{padding:5px 10px;font-size:12px;border-radius:3px}.input-group-addon.input-lg{padding:10px 16px;font-size:18px;border-radius:6px}.input-group-addon input[type=checkbox],.input-group-addon input[type=radio]{margin-top:0}.input-group .form-control:first-child,.input-group-addon:first-child,.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group>.btn,.input-group-btn:first-child>.dropdown-toggle,.input-group-btn:last-child>.btn-group:not(:last-child)>.btn,.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.input-group-addon:first-child{border-right:0}.input-group .form-control:last-child,.input-group-addon:last-child,.input-group-btn:first-child>.btn-group:not(:first-child)>.btn,.input-group-btn:first-child>.btn:not(:first-child),.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group>.btn,.input-group-btn:last-child>.dropdown-toggle{border-top-left-radius:0;border-bottom-left-radius:0}.input-group-addon:last-child{border-left:0}.input-group-btn{font-size:0;white-space:nowrap}.input-group-btn,.input-group-btn>.btn{position:relative}.input-group-btn>.btn+.btn{margin-left:-1px}.input-group-btn>.btn:active,.input-group-btn>.btn:focus,.input-group-btn>.btn:hover{z-index:2}.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group{margin-right:-1px}.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group{z-index:2;margin-left:-1px}.nav{padding-left:0;margin-bottom:0;list-style:none}.nav>li,.nav>li>a{position:relative;display:block}.nav>li>a{padding:10px 15px}.nav>li>a:focus,.nav>li>a:hover{text-decoration:none;background-color:#dcdcdc}.nav>li.disabled>a{color:#cdcdcd}.nav>li.disabled>a:focus,.nav>li.disabled>a:hover{color:#cdcdcd;text-decoration:none;cursor:not-allowed;background-color:transparent}.nav .open>a,.nav .open>a:focus,.nav .open>a:hover{background-color:#dcdcdc;border-color:#21366b}.nav .nav-divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.nav>li>a>img{max-width:none}.nav-tabs{border-bottom:1px solid #ddd}.nav-tabs>li{float:left;margin-bottom:-1px}.nav-tabs>li>a{margin-right:2px;line-height:1.42857143;border:1px solid transparent;border-radius:4px 4px 0 0}.nav-tabs>li>a:hover{border-color:#dcdcdc #dcdcdc #ddd}.nav-tabs>li.active>a,.nav-tabs>li.active>a:focus,.nav-tabs>li.active>a:hover{color:#555;cursor:default;background-color:#fff;border:1px solid #ddd;border-bottom-color:transparent}.nav-tabs.nav-justified{width:100%;border-bottom:0}.nav-tabs.nav-justified>li>a{margin-bottom:5px;text-align:center}.nav-justified>.dropdown .dropdown-menu,.nav-tabs.nav-justified>.dropdown .dropdown-menu{top:auto;left:auto}@media (min-width:768px){.nav-tabs.nav-justified>li{display:table-cell;width:1%}.nav-tabs.nav-justified>li>a{margin-bottom:0}}.nav-tabs.nav-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs.nav-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border-bottom-color:#fff}}.nav-pills>li{float:left}.nav-pills>li>a{border-radius:4px}.nav-pills>li+li{margin-left:2px}.nav-pills>li.active>a,.nav-pills>li.active>a:focus,.nav-pills>li.active>a:hover{color:#fff;background-color:#21366b}.nav-justified>li,.nav-stacked>li{float:none}.nav-stacked>li+li{margin-top:2px;margin-left:0}.nav-justified{width:100%}.nav-justified>li>a{margin-bottom:5px;text-align:center}@media (min-width:768px){.nav-justified>li{display:table-cell;width:1%}.nav-justified>li>a{margin-bottom:0}}.nav-tabs-justified{border-bottom:0}.nav-tabs-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border-bottom-color:#fff}}.tab-content>.tab-pane{display:none}.navbar-brand>img,.tab-content>.active{display:block}.nav-tabs .dropdown-menu{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}.navbar{position:relative;min-height:50px;margin-bottom:20px;border:1px solid transparent}@media (min-width:768px){.navbar{border-radius:4px}.navbar-header{float:left}}.navbar-collapse{padding-right:15px;padding-left:15px;overflow-x:visible;border-top:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);-webkit-overflow-scrolling:touch}.navbar-collapse.in{overflow-y:auto}@media (min-width:768px){.navbar-collapse{width:auto;border-top:0;box-shadow:none}.navbar-collapse.collapse{display:block!important;height:auto!important;padding-bottom:0;overflow:visible!important}.navbar-collapse.in{overflow-y:visible}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse,.navbar-static-top .navbar-collapse{padding-right:0;padding-left:0}}.navbar-fixed-bottom,.navbar-fixed-top{position:fixed;right:0;left:0;z-index:1030}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:340px}@media (max-device-width:480px) and (orientation:landscape){.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:200px}}@media (min-width:768px){.navbar-fixed-bottom,.navbar-fixed-top{border-radius:0}}.navbar-fixed-top{top:0;border-width:0 0 1px}.navbar-fixed-bottom{bottom:0;margin-bottom:0;border-width:1px 0 0}.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:0;margin-left:0}}.navbar-static-top{z-index:1000;border-width:0 0 1px}@media (min-width:768px){.navbar-static-top{border-radius:0}}.navbar-brand{float:left;height:50px;padding:15px;font-size:18px;line-height:20px}.navbar-brand:focus,.navbar-brand:hover,.sim-tabs>ul>li>a:active,.sim-tabs>ul>li>a:focus,.sim-tabs>ul>li>a:hover,.sim-tabs>ul>li>a:visited{text-decoration:none}@media (min-width:768px){.navbar>.container .navbar-brand,.navbar>.container-fluid .navbar-brand{margin-left:-15px}}.navbar-toggle{position:relative;float:right;padding:9px 10px;margin-right:15px;margin-top:8px;margin-bottom:8px;background-color:transparent;background-image:none;border:1px solid transparent;border-radius:4px}.navbar-toggle:focus{outline:0}.navbar-toggle .icon-bar{display:block;width:22px;height:2px;border-radius:1px}.navbar-toggle .icon-bar+.icon-bar{margin-top:4px}@media (min-width:768px){.navbar-toggle{display:none}}.navbar-nav{margin:7.5px -15px}.navbar-nav>li>a{padding-top:10px;padding-bottom:10px;line-height:20px}@media (max-width:767px){.navbar-nav .open .dropdown-menu{position:static;float:none;width:auto;margin-top:0;background-color:transparent;border:0;box-shadow:none}.navbar-nav .open .dropdown-menu .dropdown-header,.navbar-nav .open .dropdown-menu>li>a{padding:5px 15px 5px 25px}.navbar-nav .open .dropdown-menu>li>a{line-height:20px}.navbar-nav .open .dropdown-menu>li>a:focus,.navbar-nav .open .dropdown-menu>li>a:hover{background-image:none}}@media (min-width:768px){.navbar-nav{float:left;margin:0}.navbar-nav>li{float:left}.navbar-nav>li>a{padding-top:15px;padding-bottom:15px}}.navbar-form{padding:10px 15px;border-top:1px solid transparent;border-bottom:1px solid transparent;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);margin:8px -15px}@media (min-width:768px){.navbar-form .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.navbar-form .form-control{display:inline-block;width:auto;vertical-align:middle}.navbar-form .form-control-static{display:inline-block}.navbar-form .input-group{display:inline-table;vertical-align:middle}.navbar-form .input-group .form-control,.navbar-form .input-group .input-group-addon,.navbar-form .input-group .input-group-btn{width:auto}.navbar-form .input-group>.form-control{width:100%}.navbar-form .control-label{margin-bottom:0;vertical-align:middle}.navbar-form .checkbox,.navbar-form .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.navbar-form .checkbox label,.navbar-form .radio label{padding-left:0}.navbar-form .checkbox input[type=checkbox],.navbar-form .radio input[type=radio]{position:relative;margin-left:0}.navbar-form .has-feedback .form-control-feedback{top:0}}@media (max-width:767px){.navbar-form .form-group{margin-bottom:5px}.navbar-form .form-group:last-child{margin-bottom:0}}@media (min-width:768px){.navbar-form{width:auto;padding-top:0;padding-bottom:0;margin-right:0;margin-left:0;border:0;-webkit-box-shadow:none;box-shadow:none}}.navbar-nav>li>.dropdown-menu{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}.navbar-fixed-bottom .navbar-nav>li>.dropdown-menu{margin-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.navbar-btn{margin-top:8px;margin-bottom:8px}.navbar-btn.btn-sm{margin-top:10px;margin-bottom:10px}.navbar-btn.btn-xs{margin-top:14px;margin-bottom:14px}.navbar-text{margin-top:15px;margin-bottom:15px}@media (min-width:768px){.navbar-text{float:left;margin-right:15px;margin-left:15px}.navbar-left{float:left!important}.navbar-right{float:right!important;margin-right:-15px}.navbar-right~.navbar-right{margin-right:0}}.navbar-default{background-color:#f8f8f8;border-color:#e7e7e7}.navbar-default .navbar-brand,.navbar-default .navbar-nav>li>a,.navbar-default .navbar-text{color:#777}.navbar-default .navbar-brand:focus,.navbar-default .navbar-brand:hover{color:#5e5e5e;background-color:transparent}.navbar-default .navbar-nav>li>a:focus,.navbar-default .navbar-nav>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:focus,.navbar-default .navbar-nav>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav>.disabled>a,.navbar-default .navbar-nav>.disabled>a:focus,.navbar-default .navbar-nav>.disabled>a:hover{color:#ccc;background-color:transparent}.navbar-default .navbar-nav>.open>a,.navbar-default .navbar-nav>.open>a:focus,.navbar-default .navbar-nav>.open>a:hover{color:#555;background-color:#e7e7e7}@media (max-width:767px){.navbar-default .navbar-nav .open .dropdown-menu>li>a{color:#777}.navbar-default .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav .open .dropdown-menu>.active>a,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#ccc;background-color:transparent}}.navbar-default .navbar-toggle{border-color:#ddd}.navbar-default .navbar-toggle:focus,.navbar-default .navbar-toggle:hover{background-color:#ddd}.navbar-default .navbar-toggle .icon-bar{background-color:#888}.navbar-default .navbar-collapse,.navbar-default .navbar-form{border-color:#e7e7e7}.navbar-default .btn-link,.navbar-default .navbar-link{color:#777}.navbar-default .navbar-link:hover,a.list-group-item .list-group-item-heading,button.list-group-item .list-group-item-heading{color:#333}.navbar-default .btn-link:focus,.navbar-default .btn-link:hover{color:#333}.navbar-default .btn-link[disabled]:focus,.navbar-default .btn-link[disabled]:hover,fieldset[disabled] .navbar-default .btn-link:focus,fieldset[disabled] .navbar-default .btn-link:hover{color:#ccc}.navbar-inverse{background-color:#222;border-color:#080808}.navbar-inverse .navbar-brand,.navbar-inverse .navbar-nav>li>a,.navbar-inverse .navbar-text{color:#f3f3f3}.navbar-inverse .navbar-brand:focus,.navbar-inverse .navbar-brand:hover,.navbar-inverse .navbar-nav>li>a:focus,.navbar-inverse .navbar-nav>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav>.active>a,.navbar-inverse .navbar-nav>.active>a:focus,.navbar-inverse .navbar-nav>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav>.disabled>a,.navbar-inverse .navbar-nav>.disabled>a:focus,.navbar-inverse .navbar-nav>.disabled>a:hover{color:#444;background-color:transparent}.navbar-inverse .navbar-nav>.open>a,.navbar-inverse .navbar-nav>.open>a:focus,.navbar-inverse .navbar-nav>.open>a:hover{color:#fff;background-color:#080808}@media (max-width:767px){.navbar-inverse .navbar-nav .open .dropdown-menu>.dropdown-header{border-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu .divider{background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a{color:#f3f3f3}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#444;background-color:transparent}}.navbar-inverse .navbar-toggle{border-color:#333}.navbar-inverse .navbar-toggle:focus,.navbar-inverse .navbar-toggle:hover{background-color:#333}.navbar-inverse .navbar-toggle .icon-bar{background-color:#fff}.navbar-inverse .navbar-collapse,.navbar-inverse .navbar-form{border-color:#101010}.navbar-inverse .btn-link,.navbar-inverse .navbar-link{color:#f3f3f3}.navbar-inverse .navbar-link:hover{color:#fff}.navbar-inverse .btn-link:focus,.navbar-inverse .btn-link:hover{color:#fff}.navbar-inverse .btn-link[disabled]:focus,.navbar-inverse .btn-link[disabled]:hover,fieldset[disabled] .navbar-inverse .btn-link:focus,fieldset[disabled] .navbar-inverse .btn-link:hover{color:#444}.breadcrumb{padding:8px 15px;margin-bottom:20px;list-style:none;background-color:#f5f5f5;border-radius:4px}.breadcrumb>li,.pagination{display:inline-block}.breadcrumb>li+li:before{padding:0 5px;color:#ccc;content:\"/ \"}.breadcrumb>.active{color:#cdcdcd}.pagination{padding-left:0;margin:20px 0;border-radius:4px}.pager li,.pagination>li{display:inline}.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:6px 12px;margin-left:-1px;line-height:1.42857143;color:#21366b;text-decoration:none;background-color:#fff;border:1px solid #ddd}.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:2;color:#0f1831;background-color:#dcdcdc;border-color:#ddd}.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:3;color:#fff;cursor:default;background-color:#21366b;border-color:#21366b}.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#cdcdcd;cursor:not-allowed;background-color:#fff;border-color:#ddd}.pagination-lg>li>a,.pagination-lg>li>span{padding:10px 16px;font-size:18px;line-height:1.3333333}.pagination-lg>li:first-child>a,.pagination-lg>li:first-child>span{border-top-left-radius:6px;border-bottom-left-radius:6px}.pagination-lg>li:last-child>a,.pagination-lg>li:last-child>span{border-top-right-radius:6px;border-bottom-right-radius:6px}.pagination-sm>li>a,.pagination-sm>li>span{padding:5px 10px;font-size:12px;line-height:1.5}.pagination-sm>li:first-child>a,.pagination-sm>li:first-child>span{border-top-left-radius:3px;border-bottom-left-radius:3px}.pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-top-right-radius:3px;border-bottom-right-radius:3px}.pager{padding-left:0;margin:20px 0;text-align:center;list-style:none}.pager li>a,.pager li>span{display:inline-block;padding:5px 14px;background-color:#fff;border:1px solid #ddd;border-radius:15px}.pager li>a:focus,.pager li>a:hover{text-decoration:none;background-color:#dcdcdc}.pager .next>a,.pager .next>span{float:right}.pager .previous>a,.pager .previous>span{float:left}.pager .disabled>a,.pager .disabled>a:focus,.pager .disabled>a:hover,.pager .disabled>span{color:#cdcdcd;cursor:not-allowed;background-color:#fff}.label{display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em}a.badge:focus,a.badge:hover,a.label:focus,a.label:hover{color:#fff;text-decoration:none;cursor:pointer}.label:empty{display:none}.btn .label{position:relative;top:-1px}.label-default{background-color:#cdcdcd}.label-default[href]:focus,.label-default[href]:hover{background-color:#b4b4b4}.label-primary{background-color:#21366b}.label-primary[href]:focus,.label-primary[href]:hover{background-color:#152244}.label-success{background-color:#5cb85c}.label-success[href]:focus,.label-success[href]:hover{background-color:#449d44}.label-info{background-color:#5bc0de}.label-info[href]:focus,.label-info[href]:hover{background-color:#31b0d5}.label-warning{background-color:#f0ad4e}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f}.label-danger{background-color:#d9534f}.label-danger[href]:focus,.label-danger[href]:hover{background-color:#c9302c}.badge{display:inline-block;min-width:10px;padding:3px 7px;font-size:12px;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:middle;background-color:#cdcdcd;border-radius:10px}.badge:empty{display:none}.btn .badge{position:relative;top:-1px}.btn-group-xs>.btn .badge,.btn-xs .badge{top:0;padding:1px 5px}.list-group-item.active>.badge,.nav-pills>.active>a>.badge{color:#21366b;background-color:#fff}.list-group-item>.badge{float:right}.list-group-item>.badge+.badge{margin-right:5px}.nav-pills>li>a>.badge{margin-left:3px}.jumbotron{padding-top:30px;padding-bottom:30px;margin-bottom:30px;background-color:#dcdcdc}.jumbotron,.jumbotron .h1,.jumbotron h1,a.list-group-item-danger .list-group-item-heading,a.list-group-item-info .list-group-item-heading,a.list-group-item-success .list-group-item-heading,a.list-group-item-warning .list-group-item-heading,button.list-group-item-danger .list-group-item-heading,button.list-group-item-info .list-group-item-heading,button.list-group-item-success .list-group-item-heading,button.list-group-item-warning .list-group-item-heading{color:inherit}.jumbotron p{margin-bottom:15px;font-size:21px;font-weight:200}.jumbotron>hr{border-top-color:#c3c3c3}.container .jumbotron,.container-fluid .jumbotron{padding-right:15px;padding-left:15px;border-radius:6px}.jumbotron .container{max-width:100%}@media screen and (min-width:768px){.jumbotron{padding-top:48px;padding-bottom:48px}.container .jumbotron,.container-fluid .jumbotron{padding-right:60px;padding-left:60px}.jumbotron .h1,.jumbotron h1{font-size:63px}}.thumbnail{display:block;padding:4px;margin-bottom:20px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:border .2s ease-in-out;-o-transition:border .2s ease-in-out;transition:border .2s ease-in-out}.thumbnail a>img,.thumbnail>img{margin-right:auto;margin-left:auto}a.thumbnail.active,a.thumbnail:focus,a.thumbnail:hover{border-color:#21366b}.thumbnail .caption{padding:9px;color:#333}.alert{padding:15px;margin-bottom:20px;border:1px solid transparent;border-radius:4px}.alert h4{margin-top:0;color:inherit}.alert .alert-link,.sim-controls ul.checkbox li label,.sim-controls ul.radio li label{font-weight:700}.alert>p,.alert>ul{margin-bottom:0}.alert-dismissable,.alert-dismissible{padding-right:35px}.alert-dismissable .close,.alert-dismissible .close{position:relative;top:-2px;right:-21px;color:inherit}.alert-success{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.alert-success hr{border-top-color:#c9e2b3}.alert-success .alert-link{color:#2b542c}.alert-info{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.alert-info hr{border-top-color:#a6e1ec}.alert-info .alert-link{color:#245269}.alert-warning{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.alert-warning hr{border-top-color:#f7e1b5}.alert-warning .alert-link{color:#66512c}.alert-danger{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.alert-danger hr{border-top-color:#e4b9c0}.alert-danger .alert-link{color:#843534}.progress{height:20px;margin-bottom:20px;overflow:hidden;background-color:#f5f5f5;border-radius:4px;-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.progress-bar{float:left;width:0%;height:100%;font-size:12px;line-height:20px;color:#fff;text-align:center;background-color:#21366b;-webkit-box-shadow:inset 0-1px 0 rgba(0,0,0,.15);box-shadow:inset 0-1px 0 rgba(0,0,0,.15);-webkit-transition:width .6s ease;-o-transition:width .6s ease;transition:width .6s ease}.progress-bar-striped,.progress-striped .progress-bar{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:40px 40px}.progress-bar.active,.progress.active .progress-bar{-webkit-animation:progress-bar-stripes 2s linear infinite;-o-animation:progress-bar-stripes 2s linear infinite;animation:progress-bar-stripes 2s linear infinite}.progress-bar-success{background-color:#5cb85c}.progress-striped .progress-bar-danger,.progress-striped .progress-bar-info,.progress-striped .progress-bar-success,.progress-striped .progress-bar-warning{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)}.progress-bar-info{background-color:#5bc0de}.progress-bar-warning{background-color:#f0ad4e}.progress-bar-danger{background-color:#d9534f}.media{margin-top:15px}.media:first-child{margin-top:0}.media,.media-body{overflow:hidden;zoom:1}.media-body{width:10000px}.media-object{display:block}.media-object.img-thumbnail{max-width:none}.media-right,.media>.pull-right{padding-left:10px}.media-left,.media>.pull-left{padding-right:10px}.media-body,.media-left,.media-right{display:table-cell;vertical-align:top}.media-middle{vertical-align:middle}.media-bottom{vertical-align:bottom}.media-heading{margin-top:0;margin-bottom:5px}.media-list{padding-left:0;list-style:none}.list-group{padding-left:0;margin-bottom:20px}.list-group-item{position:relative;display:block;padding:10px 15px;margin-bottom:-1px;background-color:#fff;border:1px solid #ddd}.list-group-item:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.list-group-item:last-child{margin-bottom:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.list-group-item.disabled,.list-group-item.disabled:focus,.list-group-item.disabled:hover{color:#cdcdcd;cursor:not-allowed;background-color:#dcdcdc}.list-group-item.disabled .list-group-item-heading,.list-group-item.disabled:focus .list-group-item-heading,.list-group-item.disabled:hover .list-group-item-heading{color:inherit}.list-group-item.disabled .list-group-item-text,.list-group-item.disabled:focus .list-group-item-text,.list-group-item.disabled:hover .list-group-item-text{color:#cdcdcd}.list-group-item.active,.list-group-item.active:focus,.list-group-item.active:hover{z-index:2;color:#fff;background-color:#21366b;border-color:#21366b}.list-group-item.active .list-group-item-heading,.list-group-item.active .list-group-item-heading>.small,.list-group-item.active .list-group-item-heading>small,.list-group-item.active:focus .list-group-item-heading,.list-group-item.active:focus .list-group-item-heading>.small,.list-group-item.active:focus .list-group-item-heading>small,.list-group-item.active:hover .list-group-item-heading,.list-group-item.active:hover .list-group-item-heading>.small,.list-group-item.active:hover .list-group-item-heading>small{color:inherit}.list-group-item.active .list-group-item-text,.list-group-item.active:focus .list-group-item-text,.list-group-item.active:hover .list-group-item-text{color:#8099d8}a.list-group-item,button.list-group-item{color:#555}a.list-group-item:focus,a.list-group-item:hover,button.list-group-item:focus,button.list-group-item:hover{color:#555;text-decoration:none;background-color:#f5f5f5}button.list-group-item{width:100%;text-align:left}.list-group-item-success{color:#3c763d;background-color:#dff0d8}a.list-group-item-success,button.list-group-item-success{color:#3c763d}a.list-group-item-success:focus,a.list-group-item-success:hover,button.list-group-item-success:focus,button.list-group-item-success:hover{color:#3c763d;background-color:#d0e9c6}a.list-group-item-success.active,a.list-group-item-success.active:focus,a.list-group-item-success.active:hover,button.list-group-item-success.active,button.list-group-item-success.active:focus,button.list-group-item-success.active:hover{color:#fff;background-color:#3c763d;border-color:#3c763d}.list-group-item-info{color:#31708f;background-color:#d9edf7}a.list-group-item-info,button.list-group-item-info{color:#31708f}a.list-group-item-info:focus,a.list-group-item-info:hover,button.list-group-item-info:focus,button.list-group-item-info:hover{color:#31708f;background-color:#c4e3f3}a.list-group-item-info.active,a.list-group-item-info.active:focus,a.list-group-item-info.active:hover,button.list-group-item-info.active,button.list-group-item-info.active:focus,button.list-group-item-info.active:hover{color:#fff;background-color:#31708f;border-color:#31708f}.list-group-item-warning{color:#8a6d3b;background-color:#fcf8e3}a.list-group-item-warning,button.list-group-item-warning{color:#8a6d3b}a.list-group-item-warning:focus,a.list-group-item-warning:hover,button.list-group-item-warning:focus,button.list-group-item-warning:hover{color:#8a6d3b;background-color:#faf2cc}a.list-group-item-warning.active,a.list-group-item-warning.active:focus,a.list-group-item-warning.active:hover,button.list-group-item-warning.active,button.list-group-item-warning.active:focus,button.list-group-item-warning.active:hover{color:#fff;background-color:#8a6d3b;border-color:#8a6d3b}.list-group-item-danger{color:#a94442;background-color:#f2dede}a.list-group-item-danger,button.list-group-item-danger{color:#a94442}a.list-group-item-danger:focus,a.list-group-item-danger:hover,button.list-group-item-danger:focus,button.list-group-item-danger:hover{color:#a94442;background-color:#ebcccc}a.list-group-item-danger.active,a.list-group-item-danger.active:focus,a.list-group-item-danger.active:hover,button.list-group-item-danger.active,button.list-group-item-danger.active:focus,button.list-group-item-danger.active:hover{color:#fff;background-color:#a94442;border-color:#a94442}.list-group-item-heading{margin-top:0;margin-bottom:5px}.list-group-item-text{margin-bottom:0;line-height:1.3}.panel{margin-bottom:20px;background-color:#fff;border:1px solid transparent;border-radius:4px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}.panel-body{padding:15px}.panel-heading{padding:10px 15px;border-bottom:1px solid transparent;border-top-left-radius:3px;border-top-right-radius:3px}.panel-heading>.dropdown .dropdown-toggle,.panel-title,.panel-title>.small,.panel-title>.small>a,.panel-title>a,.panel-title>small,.panel-title>small>a{color:inherit}.panel-title{margin-top:0;margin-bottom:0;font-size:16px}.panel-footer{padding:10px 15px;background-color:#f5f5f5;border-top:1px solid #ddd;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.list-group,.panel>.panel-collapse>.list-group{margin-bottom:0}.panel>.list-group .list-group-item,.panel>.panel-collapse>.list-group .list-group-item{border-width:1px 0;border-radius:0}.panel>.list-group:first-child .list-group-item:first-child,.panel>.panel-collapse>.list-group:first-child .list-group-item:first-child{border-top:0;border-top-left-radius:3px;border-top-right-radius:3px}.panel>.list-group:last-child .list-group-item:last-child,.panel>.panel-collapse>.list-group:last-child .list-group-item:last-child{border-bottom:0;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.panel-heading+.panel-collapse>.list-group .list-group-item:first-child{border-top-left-radius:0;border-top-right-radius:0}.panel-heading+.list-group .list-group-item:first-child{border-top-width:0}.list-group+.panel-footer{border-top-width:0}.panel>.panel-collapse>.table,.panel>.table,.panel>.table-responsive>.table{margin-bottom:0}.panel>.panel-collapse>.table caption,.panel>.table caption,.panel>.table-responsive>.table caption{padding-right:15px;padding-left:15px}.panel>.table-responsive:first-child>.table:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child,.panel>.table:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child,.panel>.table:first-child>thead:first-child>tr:first-child{border-top-left-radius:3px;border-top-right-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table:first-child>thead:first-child>tr:first-child th:first-child{border-top-left-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table:first-child>thead:first-child>tr:first-child th:last-child{border-top-right-radius:3px}.panel>.table-responsive:last-child>.table:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child,.panel>.table:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child{border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:first-child{border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:last-child{border-bottom-right-radius:3px}.panel-group .panel-heading+.panel-collapse>.list-group,.panel-group .panel-heading+.panel-collapse>.panel-body,.panel>.panel-body+.table,.panel>.panel-body+.table-responsive,.panel>.table+.panel-body,.panel>.table-responsive+.panel-body{border-top:1px solid #ddd}.panel>.table-bordered,.panel>.table-responsive>.table-bordered{border:0}.panel>.table-bordered>tbody>tr>td:first-child,.panel>.table-bordered>tbody>tr>th:first-child,.panel>.table-bordered>tfoot>tr>td:first-child,.panel>.table-bordered>tfoot>tr>th:first-child,.panel>.table-bordered>thead>tr>td:first-child,.panel>.table-bordered>thead>tr>th:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:first-child,.panel>.table-responsive>.table-bordered>thead>tr>td:first-child,.panel>.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.panel>.table-bordered>tbody>tr>td:last-child,.panel>.table-bordered>tbody>tr>th:last-child,.panel>.table-bordered>tfoot>tr>td:last-child,.panel>.table-bordered>tfoot>tr>th:last-child,.panel>.table-bordered>thead>tr>td:last-child,.panel>.table-bordered>thead>tr>th:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:last-child,.panel>.table-responsive>.table-bordered>thead>tr>td:last-child,.panel>.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.panel>.table-bordered>tbody>tr:first-child>td,.panel>.table-bordered>tbody>tr:first-child>th,.panel>.table-bordered>thead>tr:first-child>td,.panel>.table-bordered>thead>tr:first-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>th,.panel>.table-responsive>.table-bordered>thead>tr:first-child>td,.panel>.table-responsive>.table-bordered>thead>tr:first-child>th{border-bottom:0}.panel>.table-bordered>tbody>tr:last-child>td,.panel>.table-bordered>tbody>tr:last-child>th,.panel>.table-bordered>tfoot>tr:last-child>td,.panel>.table-bordered>tfoot>tr:last-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>th,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>td,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}.panel>.table-responsive{margin-bottom:0;border:0}.panel-group{margin-bottom:20px}.panel-group .panel{margin-bottom:0;border-radius:4px}.panel-group .panel+.panel{margin-top:5px}.panel-group .panel-heading{border-bottom:0}.panel-group .panel-footer{border-top:0}.panel-group .panel-footer+.panel-collapse .panel-body{border-bottom:1px solid #ddd}.panel-default,.well blockquote{border-color:#ddd}.panel-default>.panel-heading{color:#333;background-color:#f5f5f5;border-color:#ddd}.panel-default>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ddd}.panel-default>.panel-heading .badge{color:#f5f5f5;background-color:#333}.panel-default>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ddd}.panel-primary{border-color:#21366b}.panel-primary>.panel-heading{color:#fff;background-color:#21366b;border-color:#21366b}.panel-primary>.panel-heading+.panel-collapse>.panel-body{border-top-color:#21366b}.panel-primary>.panel-heading .badge{color:#21366b;background-color:#fff}.panel-primary>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#21366b}.panel-success{border-color:#d6e9c6}.panel-success>.panel-heading{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.panel-success>.panel-heading+.panel-collapse>.panel-body{border-top-color:#d6e9c6}.panel-success>.panel-heading .badge{color:#dff0d8;background-color:#3c763d}.panel-success>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#d6e9c6}.panel-info{border-color:#bce8f1}.panel-info>.panel-heading{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.panel-info>.panel-heading+.panel-collapse>.panel-body{border-top-color:#bce8f1}.panel-info>.panel-heading .badge{color:#d9edf7;background-color:#31708f}.panel-info>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#bce8f1}.panel-warning{border-color:#faebcc}.panel-warning>.panel-heading{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.panel-warning>.panel-heading+.panel-collapse>.panel-body{border-top-color:#faebcc}.panel-warning>.panel-heading .badge{color:#fcf8e3;background-color:#8a6d3b}.panel-warning>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#faebcc}.panel-danger{border-color:#ebccd1}.panel-danger>.panel-heading{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.panel-danger>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ebccd1}.panel-danger>.panel-heading .badge{color:#f2dede;background-color:#a94442}.panel-danger>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ebccd1}.embed-responsive{position:relative;display:block;height:0;padding:0;overflow:hidden}.embed-responsive .embed-responsive-item,.embed-responsive embed,.embed-responsive iframe,.embed-responsive object,.embed-responsive video{position:absolute;top:0;bottom:0;left:0;width:100%;height:100%;border:0}.embed-responsive-16by9{padding-bottom:56.25%}.embed-responsive-4by3{padding-bottom:75%}.well{min-height:20px;padding:19px;margin-bottom:20px;background-color:#f5f5f5;border:1px solid #e3e3e3;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,.05)}.well blockquote{border-color:rgba(0,0,0,.15)}.well-lg{padding:24px;border-radius:6px}.well-sm{padding:9px;border-radius:3px}.close{float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0#fff;filter:alpha(opacity=20);opacity:.2}.close:focus,.close:hover{color:#000;text-decoration:none;cursor:pointer;filter:alpha(opacity=50);opacity:.5}button.close{padding:0;cursor:pointer;background:0 0;border:0;-webkit-appearance:none;appearance:none}.modal,.modal-open{overflow:hidden}.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1050;display:none;-webkit-overflow-scrolling:touch;outline:0}.modal.fade .modal-dialog{-webkit-transform:translate(0,-25%);-ms-transform:translate(0,-25%);-o-transform:translate(0,-25%);transform:translate(0,-25%);-webkit-transition:-webkit-transform .3s ease-out;-moz-transition:-moz-transform .3s ease-out;-o-transition:-o-transform .3s ease-out;transition:transform .3s ease-out}.modal.in .modal-dialog{-webkit-transform:translate(0,0);-ms-transform:translate(0,0);-o-transform:translate(0,0);transform:translate(0,0)}.modal-open .modal{overflow-x:hidden;overflow-y:auto}.modal-dialog{position:relative;width:auto;margin:10px}.modal-content{position:relative;background-color:#fff;background-clip:padding-box;border:1px solid #999;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 3px 9px rgba(0,0,0,.5);box-shadow:0 3px 9px rgba(0,0,0,.5);outline:0}.modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1040;background-color:#000}.modal-backdrop.fade{filter:alpha(opacity=0);opacity:0}.modal-backdrop.in{filter:alpha(opacity=50);opacity:.5}.modal-header{padding:15px;border-bottom:1px solid #e5e5e5}.modal-header .close{margin-top:-2px}.modal-title{margin:0;line-height:1.42857143}.modal-body{position:relative;padding:15px}.modal-footer{padding:15px;text-align:right;border-top:1px solid #e5e5e5}.modal-footer .btn+.btn{margin-bottom:0;margin-left:5px}.modal-footer .btn-group .btn+.btn{margin-left:-1px}.modal-footer .btn-block+.btn-block{margin-left:0}.modal-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}@media (min-width:768px){.modal-dialog{width:600px;margin:30px auto}.modal-content{-webkit-box-shadow:0 5px 15px rgba(0,0,0,.5);box-shadow:0 5px 15px rgba(0,0,0,.5)}.modal-sm{width:300px}}@media (min-width:992px){.modal-lg{width:900px}}.tooltip{position:absolute;z-index:1070;display:block;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:12px;filter:alpha(opacity=0);opacity:0}.tooltip.in{filter:alpha(opacity=90);opacity:.9}.tooltip.top{padding:5px 0;margin-top:-3px}.tooltip.right{padding:0 5px;margin-left:3px}.tooltip.bottom{padding:5px 0;margin-top:3px}.tooltip.left{padding:0 5px;margin-left:-3px}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow,.tooltip.top-right .tooltip-arrow{bottom:0;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{right:5px}.tooltip.top-right .tooltip-arrow{left:5px}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:14px;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,.2);box-shadow:0 5px 10px rgba(0,0,0,.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover>.arrow,.popover>.arrow:after{border-width:11px;position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}.popover>.arrow:after{content:\"\";border-width:10px}.popover.top>.arrow{bottom:-11px;left:50%;margin-left:-11px;border-top-color:#999;border-top-color:rgba(0,0,0,.25);border-bottom-width:0}.popover.top>.arrow:after{bottom:1px;margin-left:-10px;content:\" \";border-top-color:#fff;border-bottom-width:0}.popover.right>.arrow{top:50%;left:-11px;margin-top:-11px;border-right-color:#999;border-right-color:rgba(0,0,0,.25);border-left-width:0}.popover.right>.arrow:after{bottom:-10px;left:1px;content:\" \";border-right-color:#fff;border-left-width:0}.popover.bottom>.arrow{top:-11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#999;border-bottom-color:rgba(0,0,0,.25)}.popover.bottom>.arrow:after{top:1px;margin-left:-10px;content:\" \";border-top-width:0;border-bottom-color:#fff}.popover.left>.arrow{top:50%;right:-11px;margin-top:-11px;border-right-width:0;border-left-color:#999;border-left-color:rgba(0,0,0,.25)}.popover.left>.arrow:after{right:1px;bottom:-10px;content:\" \";border-right-width:0;border-left-color:#fff}.popover-title{padding:8px 14px;margin:0;font-size:14px;background-color:#f7f7f7;border-bottom:1px solid #ebebeb;border-radius:5px 5px 0 0}.popover-content{padding:9px 14px}.carousel,.carousel-inner{position:relative}.carousel-inner{width:100%;overflow:hidden}.carousel-inner>.item{position:relative;display:none;-webkit-transition:.6s ease-in-out left;-o-transition:.6s ease-in-out left;transition:.6s ease-in-out left}.carousel-inner>.item>a>img,.carousel-inner>.item>img{line-height:1}@media all and (transform-3d),(-webkit-transform-3d){.carousel-inner>.item{-webkit-transition:-webkit-transform .6s ease-in-out;-moz-transition:-moz-transform .6s ease-in-out;-o-transition:-o-transform .6s ease-in-out;transition:transform .6s ease-in-out;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;-webkit-perspective:1000px;-moz-perspective:1000px;perspective:1000px}.carousel-inner>.item.active.right,.carousel-inner>.item.next{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);left:0}.carousel-inner>.item.active.left,.carousel-inner>.item.prev{-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0);left:0}.carousel-inner>.item.active,.carousel-inner>.item.next.left,.carousel-inner>.item.prev.right{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);left:0}}.carousel-inner>.active,.carousel-inner>.next,.carousel-inner>.prev{display:block}.carousel-inner>.active,.carousel-inner>.next.left,.carousel-inner>.prev.right{left:0}.carousel-control,.carousel-inner>.next,.carousel-inner>.prev{position:absolute;top:0;width:100%}.carousel-inner>.next{left:100%}.carousel-inner>.active.left,.carousel-inner>.prev{left:-100%}.carousel-inner>.active.right{left:100%}.carousel-control{bottom:0;left:0;width:15%;font-size:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6);background-color:transparent;filter:alpha(opacity=50);opacity:.5}.carousel-control.left{background-image:-webkit-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#80000000\', endColorstr=\'#00000000\', GradientType=1);background-repeat:repeat-x}.carousel-control.right{right:0;left:auto;background-image:-webkit-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#00000000\', endColorstr=\'#80000000\', GradientType=1);background-repeat:repeat-x}.carousel-control:focus,.carousel-control:hover{color:#fff;text-decoration:none;outline:0;filter:alpha(opacity=90);opacity:.9}.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{position:absolute;top:50%;z-index:5;display:inline-block;margin-top:-10px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{left:50%;margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{right:50%;margin-right:-10px}.carousel-control .icon-next,.carousel-control .icon-prev{width:20px;height:20px;font-family:serif;line-height:1}.carousel-control .icon-prev:before{content:\"‹\"}.carousel-control .icon-next:before{content:\"›\"}.carousel-indicators{position:absolute;bottom:10px;left:50%;z-index:15;width:60%;padding-left:0;margin-left:-30%;text-align:center;list-style:none}.carousel-indicators li{display:inline-block;width:10px;height:10px;margin:1px;text-indent:-999px;cursor:pointer;background-color:#000 \\9;background-color:transparent;border:1px solid #fff;border-radius:10px}.carousel-indicators .active{width:12px;height:12px;margin:0;background-color:#fff}.carousel-caption{position:absolute;right:15%;bottom:20px;left:15%;z-index:10;padding-top:20px;padding-bottom:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}.carousel-caption .btn{text-shadow:none}@media screen and (min-width:768px){.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{width:30px;height:30px;margin-top:-10px;font-size:30px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{margin-right:-10px}.carousel-caption{right:20%;left:20%;padding-bottom:30px}.carousel-indicators{bottom:20px}}.btn-group-vertical>.btn-group:after,.btn-group-vertical>.btn-group:before,.btn-toolbar:after,.btn-toolbar:before,.clearfix:after,.clearfix:before,.container-fluid:after,.container-fluid:before,.container:after,.container:before,.dl-horizontal dd:after,.dl-horizontal dd:before,.form-horizontal .form-group:after,.form-horizontal .form-group:before,.modal-footer:after,.modal-footer:before,.modal-header:after,.modal-header:before,.nav:after,.nav:before,.navbar-collapse:after,.navbar-collapse:before,.navbar-header:after,.navbar-header:before,.navbar:after,.navbar:before,.pager:after,.pager:before,.panel-body:after,.panel-body:before,.row:after,.row:before{display:table;content:\" \"}.btn-group-vertical>.btn-group:after,.btn-toolbar:after,.clearfix:after,.container-fluid:after,.container:after,.dl-horizontal dd:after,.form-horizontal .form-group:after,.modal-footer:after,.modal-header:after,.nav:after,.navbar-collapse:after,.navbar-header:after,.navbar:after,.pager:after,.panel-body:after,.row:after{clear:both}.center-block{display:block;margin-right:auto;margin-left:auto}.pull-right{float:right!important}.pull-left{float:left!important}.hide{display:none!important}.show{display:block!important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none!important}.affix{position:fixed}@-ms-viewport{width:device-width}.visible-lg,.visible-lg-block,.visible-lg-inline,.visible-lg-inline-block,.visible-md,.visible-md-block,.visible-md-inline,.visible-md-inline-block,.visible-sm,.visible-sm-block,.visible-sm-inline,.visible-sm-inline-block,.visible-xs,.visible-xs-block,.visible-xs-inline,.visible-xs-inline-block{display:none!important}@media (max-width:767px){.visible-xs,.visible-xs-block{display:block!important}table.visible-xs{display:table!important}tr.visible-xs{display:table-row!important}td.visible-xs,th.visible-xs{display:table-cell!important}.visible-xs-inline{display:inline!important}.visible-xs-inline-block{display:inline-block!important}}@media (min-width:768px) and (max-width:991px){.visible-sm,.visible-sm-block{display:block!important}table.visible-sm{display:table!important}tr.visible-sm{display:table-row!important}td.visible-sm,th.visible-sm{display:table-cell!important}.visible-sm-inline{display:inline!important}.visible-sm-inline-block{display:inline-block!important}}@media (min-width:992px) and (max-width:1199px){.visible-md,.visible-md-block{display:block!important}table.visible-md{display:table!important}tr.visible-md{display:table-row!important}td.visible-md,th.visible-md{display:table-cell!important}.visible-md-inline{display:inline!important}.visible-md-inline-block{display:inline-block!important}}@media (min-width:1200px){.visible-lg,.visible-lg-block{display:block!important}table.visible-lg{display:table!important}tr.visible-lg{display:table-row!important}td.visible-lg,th.visible-lg{display:table-cell!important}.visible-lg-inline{display:inline!important}.visible-lg-inline-block{display:inline-block!important}}@media (max-width:767px){.hidden-xs{display:none!important}}@media (min-width:768px) and (max-width:991px){.hidden-sm{display:none!important}}@media (min-width:992px) and (max-width:1199px){.hidden-md{display:none!important}}@media (min-width:1200px){.hidden-lg{display:none!important}}.visible-print{display:none!important}@media print{.visible-print{display:block!important}table.visible-print{display:table!important}tr.visible-print{display:table-row!important}td.visible-print,th.visible-print{display:table-cell!important}}.visible-print-block{display:none!important}@media print{.visible-print-block{display:block!important}}.visible-print-inline{display:none!important}@media print{.visible-print-inline{display:inline!important}}.bootstrap-select>select.bs-select-hidden,.visible-print-inline-block,select.bs-select-hidden,select.selectpicker{display:none!important}@media print{.visible-print-inline-block{display:inline-block!important}.hidden-print{display:none!important}}body,html{width:100%;height:100%;margin:0}.app-view{position:relative;margin:10px auto 0;max-width:960px;width:100%}@media screen and (max-height:560px){.app-view{margin-top:0}}.app-view .loading-screen{position:fixed;z-index:1200;left:0;top:0;width:100%;height:100%;min-height:600px;background-color:#fff}.app-view .loading-screen .beaker{border-radius:10px;border-top-right-radius:0;border-top-left-radius:0;display:inline-block;height:75px;left:50%;margin-left:-50px;position:absolute;top:50%;margin-top:-60px;width:100px;background-color:#ededed;box-sizing:content-box}.app-view .loading-screen .beaker:after,.app-view .loading-screen .beaker:before{content:\"\";box-sizing:content-box;position:absolute;top:-45px}.app-view .loading-screen .beaker:before{border-left:10px solid #ededed;border-radius:10px;border-right:10px solid #ededed;height:10px;left:-5px;width:90px}.app-view .loading-screen .beaker:after{border-left:10px solid #ededed;border-right:10px solid #ededed;height:45px;width:80px}.app-view .loading-screen .beaker .bubbles{position:absolute;left:10px;right:10px;bottom:75px;height:1000px;overflow:hidden}.app-view .loading-screen .beaker .bubbles .bubble{position:absolute;bottom:0;border-radius:50%;background-color:#575c5f;width:10px;height:10px;-webkit-animation-name:bubble;animation-name:bubble;-webkit-animation-duration:1600ms;animation-duration:1600ms;-webkit-animation-iteration-count:infinite;animation-iteration-count:infinite;-webkit-animation-timing-function:linear;animation-timing-function:linear;-webkit-transform:translateY(1em);-moz-transform:translateY(1em);-ms-transform:translateY(1em);transform:translateY(1em)}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(1){left:5%}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(2){background-color:#20356b;width:7px;height:7px;left:12%;bottom:-45px;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(3){background-color:#f0cf31;width:16px;height:16px;left:26%;-webkit-animation-duration:2000ms;animation-duration:2000ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(4){background-color:#71b653;width:9px;height:9px;left:46%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:400ms;animation-delay:400ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(5){background-color:#f47b4d;width:12px;height:12px;left:59%;bottom:-22.5px;-webkit-animation-delay:-100ms;animation-delay:-100ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(6){background-color:#20356b;width:14px;height:14px;left:77%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(7){background-color:#f47b4d;width:6px;height:6px;left:13%;bottom:-37.5px;-webkit-animation-delay:800ms;animation-delay:800ms}.sims{position:relative}.sim-content.rendering{position:absolute;top:0;left:0}.sim-view{height:100%;width:100%}.footer{position:absolute;margin:16px 0 10px;float:left;clear:both;width:100%;font-size:16px;color:#222}.footer .footer-left{float:left;margin-left:16px}.footer .footer-left img{opacity:.7}.footer .footer-right{float:right;margin-right:16px}.footer .footer-right span{width:88px;display:inline-block;padding-right:8px;line-height:14px;vertical-align:bottom;color:#b5b5b5;text-transform:lowercase;text-align:right;font-size:12px}.footer .footer-right a{display:inline-block;padding-bottom:2px}.footer img{max-height:32px;display:inline-block}.sim-tabs>ul{margin:0;padding:0 0 0 30px;font-size:0;list-style-type:none;color:#21366b;border-bottom:2px solid #21366b}.sim-tabs>ul>li{display:inline-block;margin-right:3px}.sim-tabs>ul>li>a{display:block;padding:7px 10px;font-size:1.4rem;background-color:#ededed;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sim-tabs>ul>li>a.singleton{cursor:default}.sim-tabs>ul>li>a>.tab-title{margin-left:2px;vertical-align:middle}.sim-tabs>ul>li>a>.tab-title::after{font-weight:700;margin-left:5px;vertical-align:top;content:\"+\"}.sim-tabs>ul>li>a.active{color:#ededed;background-color:#21366b}.sim-tabs>ul>li>a.disabled{cursor:not-allowed;pointer-events:none;opacity:.65}.sim-content{display:none;width:100%;min-height:600px;position:relative;top:0;left:0}.sim-content.active{display:block}.scene-view{width:100%;height:100%;max-height:682px;background:url(img/symphony-green.png)}@media screen and (max-height:560px){.scene-view{height:463px}}.scene-view-ui{position:absolute;top:0;left:0;width:100%;height:0}.return-ladybug-btn{font-weight:500;color:#fff;background-color:#78b04a;border:0;position:absolute;top:293px;left:50%;margin-left:-63px}.return-ladybug-btn:hover{color:#fff;opacity:.9}.return-ladybug-btn:active,.return-ladybug-btn:focus:active{color:#fff;background:#608c3b;outline:0;-webkit-box-shadow:none;box-shadow:none}.return-ladybug-btn:focus{outline:0;color:#fff}.return-ladybug-btn.disabled,.return-ladybug-btn.disabled.active,.return-ladybug-btn.disabled:active,.return-ladybug-btn.disabled:focus,.return-ladybug-btn.disabled:hover,.return-ladybug-btn[disabled],.return-ladybug-btn[disabled].active,.return-ladybug-btn[disabled]:active,.return-ladybug-btn[disabled]:focus,.return-ladybug-btn[disabled]:hover,fieldset[disabled] .return-ladybug-btn,fieldset[disabled] .return-ladybug-btn.active,fieldset[disabled] .return-ladybug-btn:active,fieldset[disabled] .return-ladybug-btn:focus,fieldset[disabled] .return-ladybug-btn:hover{background-color:#78b04a}.sim-controls.remote-control-view-header{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;background:0 0;position:absolute;right:20px;padding-bottom:0}.sim-controls.remote-control-view-header h2{border-bottom:none;margin-bottom:0}.seek-bar-view{width:100%;height:8px;background:rgba(0,0,0,.06);box-shadow:inset 0 0 4px rgba(0,0,0,.29);clip:rect(-4px auto 12px 0);cursor:pointer}.seek-bar-view .seek-bar-progress{position:relative;height:100%;width:50%;background:rgba(33,54,107,.7)}.seek-bar-view .seek-bar-handle{width:16px;height:16px;position:absolute;left:100%;margin-left:-8px;margin-top:-4px;background:#bdcccf;border:1px solid rgba(111,121,147,.54);border-radius:50%}.seek-bar-view .seek-bar-overwritten{position:absolute;right:0;height:100%;background:rgba(255,0,0,.36)}body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sims .sim-content{min-height:inherit}.sim-controls-column{position:absolute;right:20px;top:20px}@media screen and (max-height:560px){.sim-controls-column{left:20px;right:inherit}}.sim-controls{background:rgba(255,255,255,.5);padding:15px;position:relative;margin-bottom:12px;width:186px}.sim-controls input.form-control{background:rgba(255,255,255,.27);border-color:rgba(0,0,0,.1);position:relative}.sim-controls input.form-control::-webkit-inner-spin-button,.sim-controls input.form-control::-webkit-outer-spin-button{right:4px;margin-top:2px;position:absolute}.sim-controls h2{font-size:16px;font-weight:400;color:rgba(51,51,51,.8);margin-top:0;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.09)}.sim-controls h2:not(:first-child){margin-top:14px}.sim-controls ul.checkbox,.sim-controls ul.radio{list-style:none;padding:0;margin:0}.sim-controls ul.checkbox:last-child,.sim-controls ul.radio:last-child{margin-bottom:-2px}.sim-controls ul.checkbox li,.sim-controls ul.radio li{text-align:left;list-style-image:none}.btn.active:focus,.btn:active:focus,.btn:focus{outline:0!important}.btn-zoom-in,.btn-zoom-out,.btn.btn-zoom-in,.btn.btn-zoom-out{background:0 0;padding:0;opacity:.8;font-weight:400}.btn-zoom-in:focus,.btn-zoom-out:focus,.btn.btn-zoom-in:focus,.btn.btn-zoom-out:focus{outline:0;color:inherit}.btn-zoom-in:hover,.btn-zoom-out:hover,.btn.btn-zoom-in:hover,.btn.btn-zoom-out:hover{color:inherit;opacity:1}.btn-zoom-in:active,.btn-zoom-out:active,.btn.btn-zoom-in:active,.btn.btn-zoom-out:active{color:inherit;-webkit-box-shadow:none;box-shadow:none}.btn-zoom-in>.fa,.btn-zoom-out>.fa,.btn.btn-zoom-in>.fa,.btn.btn-zoom-out>.fa{position:relative;font-size:20px}.btn-zoom-in>.fa>.fa,.btn-zoom-out>.fa>.fa,.btn.btn-zoom-in>.fa>.fa,.btn.btn-zoom-out>.fa>.fa{font-size:10px;position:absolute;top:5px;left:4px}.playback-controls-wrapper{position:absolute;bottom:5px;width:100%;height:62px;padding:10px;background:rgba(255,255,255,.5);text-align:center;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.playback-controls-wrapper .playback-btn{display:inline-block;background:rgba(33,54,107,.2);color:#21366b;outline:0;border:0;border-radius:50%;width:28px;height:28px;text-align:center}.playback-controls-wrapper .playback-btn:hover{opacity:.9}.playback-controls-wrapper .playback-btn:active{background:#21366b;color:#fff}.bootstrap-select .dropdown-menu li a span.check-mark,.playback-controls-wrapper .playback-btn.pause-btn,.playback-controls-wrapper .playback-btn.play-btn,.playback-controls-wrapper .playback-btn.record-btn,input[type=checkbox],input[type=radio]{display:none}.sim-view.record-mode:not(.playing) .playback-controls-wrapper .playback-btn.record-btn,.sim-view:not(.record-mode):not(.playing) .playback-controls-wrapper .playback-btn.play-btn{display:inline-block}.bootstrap-select .dropdown-menu li a span.text,.sim-view.playing .playback-controls-wrapper .playback-btn.pause-btn{display:inline-block}.playback-controls-wrapper .playback-btn.pause-btn,.playback-controls-wrapper .playback-btn.play-btn,.playback-controls-wrapper .playback-btn.record-btn{width:42px;height:42px;font-size:16px}.playback-controls-wrapper .playback-btn.play-btn{padding-left:10px}.playback-controls-wrapper .btn-normal{font-weight:500;color:#21366b;background-color:rgba(33,54,107,.2);border:0;margin:5px 5px 0}.playback-controls-wrapper .btn-normal:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .btn-normal:active,.playback-controls-wrapper .btn-normal:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .btn-normal:focus{outline:0;color:#21366b}.playback-controls-wrapper .btn-normal.disabled,.playback-controls-wrapper .btn-normal.disabled.active,.playback-controls-wrapper .btn-normal.disabled:active,.playback-controls-wrapper .btn-normal.disabled:focus,.playback-controls-wrapper .btn-normal.disabled:hover,.playback-controls-wrapper .btn-normal[disabled],.playback-controls-wrapper .btn-normal[disabled].active,.playback-controls-wrapper .btn-normal[disabled]:active,.playback-controls-wrapper .btn-normal[disabled]:focus,.playback-controls-wrapper .btn-normal[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .btn-normal,fieldset[disabled] .playback-controls-wrapper .btn-normal.active,fieldset[disabled] .playback-controls-wrapper .btn-normal:active,fieldset[disabled] .playback-controls-wrapper .btn-normal:focus,fieldset[disabled] .playback-controls-wrapper .btn-normal:hover{background-color:rgba(33,54,107,.2)}.playback-controls-wrapper .clear-btn{float:left}.playback-controls-wrapper .reset-btn{float:right}.playback-controls-wrapper .playback-mode-wrapper{position:absolute;left:170px;top:15px}.playback-controls-wrapper .playback-mode-wrapper .btn{font-weight:500;color:#21366b;background-color:rgba(33,54,107,.2);border:0}.playback-controls-wrapper .playback-mode-wrapper .btn:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .playback-mode-wrapper .btn:active,.playback-controls-wrapper .playback-mode-wrapper .btn:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .playback-mode-wrapper .btn:focus{outline:0;color:#21366b}.playback-controls-wrapper .playback-mode-wrapper .btn.disabled,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled.active,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:active,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:focus,.playback-controls-wrapper .playback-mode-wrapper .btn.disabled:hover,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled],.playback-controls-wrapper .playback-mode-wrapper .btn[disabled].active,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:active,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:focus,.playback-controls-wrapper .playback-mode-wrapper .btn[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn.active,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:active,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:focus,fieldset[disabled] .playback-controls-wrapper .playback-mode-wrapper .btn:hover{background-color:rgba(33,54,107,.2)}.playback-controls-wrapper .playback-mode-wrapper .btn.active{-webkit-box-shadow:none;box-shadow:none;background:rgba(33,54,107,.7);color:#fff}.playback-controls-wrapper .playback-center-buttons-wrapper{width:250px;position:absolute;left:50%;margin-left:-125px;top:0;height:100%;padding:10px;text-align:center}.playback-controls-wrapper .seek-bar-view{position:absolute;bottom:100%;left:0}.bootstrap-select .dropdown-menu li,.slider{position:relative}.slider.noUi-target,.slider.noUi-target *,input[type=checkbox]+label,input[type=radio]+label{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.slider.noUi-target,.slider.noUi-target *{-ms-touch-action:none;-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-base{width:100%;height:100%;position:relative}.slider .noUi-origin{position:absolute;right:0;top:0;left:0;bottom:0}.slider .noUi-handle{position:relative;z-index:1}.slider .noUi-stacking .noUi-handle{z-index:10}.slider .noUi-stacking+.noUi-origin{*z-index:-1}.slider.noUi-state-tap .noUi-origin{-webkit-transition:left .3s,top .3s;transition:left .3s,top .3s}.slider.noUi-state-drag *{cursor:inherit!important}.slider.noUi-horizontal{height:2px;margin-top:12px;margin-bottom:12px}.slider.noUi-horizontal .noUi-base:after,.slider.noUi-horizontal .noUi-base:before{content:\"\";position:absolute;height:14px;left:0;width:100%}.slider.noUi-horizontal .noUi-base:before{bottom:2px}.slider.noUi-horizontal .noUi-base:after{top:2px}.slider .noUi-handle:after,.slider.noUi-vertical .noUi-base:after,.slider.noUi-vertical .noUi-base:before{content:\"\";position:absolute;width:14px;top:0;height:100%}.slider.noUi-vertical .noUi-base:before{right:2px}.slider.noUi-vertical .noUi-base:after{left:2px}.slider.noUi-horizontal .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-horizontal.noUi-extended{padding:0 15px}.slider.noUi-horizontal.noUi-extended .noUi-origin{right:-15px}.slider.noUi-vertical{width:2px}.slider.noUi-vertical .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-vertical.noUi-extended{padding:15px 0}.slider.noUi-vertical.noUi-extended .noUi-origin{bottom:-15px}.slider .noUi-background{background:#fafafa}.slider.noUi-connect{background:#21366b;-webkit-transition:background 450ms ease;-o-transition:background 450ms ease;transition:background 450ms ease}.slider .noUi-dragable{cursor:w-resize}.slider.noUi-vertical .noUi-dragable{cursor:n-resize}.slider .noUi-handle{text-align:center}.slider .noUi-handle:after{display:block;width:12px;height:12px;top:50%;left:50%;margin-top:-6px;margin-left:-6px;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease}.slider .noUi-active:after{width:100%;height:100%;margin-top:-50%;margin-left:-50%}.slider[disabled] .noUi-connect,.slider[disabled] .noUi-handle:after,.slider[disabled] .noUi-handle:before,.slider[disabled].noUi-connect{background:#b8b8b8}.slider[disabled] .noUi-handle{cursor:not-allowed}.slider.pipped{margin-bottom:30px}.slider .noUi-pips,.slider .noUi-pips *{-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-pips{position:absolute;font:400 12px Arial;color:#999}.slider .noUi-value{width:40px;position:absolute;text-align:center}.slider .noUi-value-sub{color:#ccc;font-size:10px}.slider .noUi-marker{position:absolute;background:#afafaf}.slider .noUi-marker-sub{background:#ddd}.slider .noUi-marker-large{background:#ccc}.slider .noUi-pips-horizontal{padding:8px 0;height:50px;top:100%;left:0;width:100%}.slider .noUi-value-horizontal{margin-left:-20px;padding-top:16px}.slider .noUi-value-horizontal.noUi-value-sub{padding-top:12px}.slider .noUi-marker-horizontal.noUi-marker{margin-left:-1px;width:2px;height:4px}.slider .noUi-marker-horizontal.noUi-marker-sub{height:8px}.slider .noUi-marker-horizontal.noUi-marker-large{height:12px}.slider .noUi-pips-vertical{padding:0 8px;height:100%;top:0;left:100%}.slider .noUi-value-vertical{width:15px;margin-left:20px;margin-top:-5px}.slider .noUi-marker-vertical.noUi-marker{width:5px;height:2px;margin-top:-1px}.slider .noUi-marker-vertical.noUi-marker-sub{width:10px}.slider .noUi-marker-vertical.noUi-marker-large{width:15px}input[type=checkbox]+label,input[type=radio]+label{display:inline-block;position:relative;padding-left:26px;margin-bottom:12px;line-height:16px;user-select:none}input[type=checkbox]+label:last-child,input[type=radio]+label:last-child{margin-bottom:0}input[type=checkbox]+label:before,input[type=radio]+label:before{content:\"\";position:absolute;top:0;left:0;width:16px;height:16px;background:#fff;border:2px solid #333;cursor:pointer}input[type=radio]+label:before{border-radius:50%}input[type=radio]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease}input[type=radio]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px}input[type=checkbox]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);-o-transform:rotate(90deg);transform:rotate(90deg);-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;cursor:pointer}input[type=checkbox]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px;-webkit-transform:rotate(0);-ms-transform:rotate(0);-o-transform:rotate(0);transform:rotate(0)}.bootstrap-select{width:220px \\0;vertical-align:middle}.bootstrap-select>.dropdown-toggle{position:relative;width:100%;text-align:right;white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between}.bootstrap-select>.dropdown-toggle:after{margin-top:-1px}.bootstrap-select>.dropdown-toggle.bs-placeholder,.bootstrap-select>.dropdown-toggle.bs-placeholder:active,.bootstrap-select>.dropdown-toggle.bs-placeholder:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder:hover{color:#999}.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:hover{color:rgba(255,255,255,.5)}.bootstrap-select>select{position:absolute!important;bottom:0;left:50%;display:block!important;width:.5px!important;height:100%!important;padding:0!important;opacity:0!important;border:0;z-index:0!important}.bootstrap-select>select.mobile-device{top:0;left:0;display:block!important;width:100%!important;z-index:2!important}.bootstrap-select.is-invalid .dropdown-toggle,.error .bootstrap-select .dropdown-toggle,.has-error .bootstrap-select .dropdown-toggle,.was-validated .bootstrap-select select:invalid+.dropdown-toggle{border-color:#b94a48}.bootstrap-select.is-valid .dropdown-toggle,.was-validated .bootstrap-select select:valid+.dropdown-toggle{border-color:#28a745}.bootstrap-select.fit-width{width:auto!important}.bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn){width:220px}.bootstrap-select .dropdown-toggle:focus,.bootstrap-select>select.mobile-device:focus+.dropdown-toggle{outline:thin dotted #333!important;outline:5px auto -webkit-focus-ring-color!important;outline-offset:-2px}.bootstrap-select.form-control{margin-bottom:0;padding:0;border:0;height:auto}:not(.input-group)>.bootstrap-select.form-control:not([class*=col-]){width:100%}.bootstrap-select.form-control.input-group-btn{float:none;z-index:auto}.form-inline .bootstrap-select,.form-inline .bootstrap-select.form-control:not([class*=col-]){width:auto}.bootstrap-select:not(.input-group-btn),.bootstrap-select[class*=col-]{float:none;display:inline-block;margin-left:0}.bootstrap-select.dropdown-menu-right,.bootstrap-select[class*=col-].dropdown-menu-right,.row .bootstrap-select[class*=col-].dropdown-menu-right{float:right}.form-group .bootstrap-select,.form-horizontal .bootstrap-select,.form-inline .bootstrap-select{margin-bottom:0}.form-group-lg .bootstrap-select.form-control,.form-group-sm .bootstrap-select.form-control{padding:0}.form-group-lg .bootstrap-select.form-control .dropdown-toggle,.form-group-sm .bootstrap-select.form-control .dropdown-toggle{height:100%;font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-lg .dropdown-toggle,.bootstrap-select.form-control-sm .dropdown-toggle{font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-sm .dropdown-toggle{padding:.25rem .5rem}.bootstrap-select.form-control-lg .dropdown-toggle{padding:.5rem 1rem}.form-inline .bootstrap-select .form-control{width:100%}.bootstrap-select .dropdown-menu li.disabled a,.bootstrap-select.disabled,.bootstrap-select>.disabled{cursor:not-allowed}.bootstrap-select.disabled:focus,.bootstrap-select>.disabled:focus{outline:0!important}.bootstrap-select.bs-container{position:absolute;top:0;left:0;height:0!important;padding:0!important}.bootstrap-select.bs-container .dropdown-menu{z-index:1060}.bootstrap-select .dropdown-toggle .filter-option{position:static;top:0;left:0;float:left;height:100%;width:100%;text-align:left;overflow:hidden;flex:0 1 auto}.bs3.bootstrap-select .dropdown-toggle .filter-option,.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option .filter-option-inner{padding-right:inherit}.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option{position:absolute;padding-top:inherit;padding-bottom:inherit;padding-left:inherit;float:none}.bootstrap-select .dropdown-toggle .filter-option-inner-inner{overflow:hidden}.bootstrap-select .dropdown-toggle .filter-expand{width:0!important;float:left;opacity:0!important;overflow:hidden}.bootstrap-select .dropdown-toggle .caret{position:absolute;top:50%;right:12px;margin-top:-2px;vertical-align:middle}.input-group .bootstrap-select.form-control .dropdown-toggle{border-radius:inherit}.bootstrap-select[class*=col-] .dropdown-toggle{width:100%}.bootstrap-select .dropdown-menu{min-width:100%;box-sizing:border-box}.bootstrap-select .dropdown-menu>.inner:focus{outline:0!important}.bootstrap-select .dropdown-menu.inner{position:static;float:none;border:0;padding:0;margin:0;border-radius:0;box-shadow:none}.bootstrap-select .dropdown-menu li.active small{color:rgba(255,255,255,.5)!important}.bootstrap-select .dropdown-menu li a{cursor:pointer;user-select:none}.bootstrap-select .dropdown-menu li a.opt{position:relative;padding-left:2.25em}.bootstrap-select .dropdown-menu li small{padding-left:.5em}.bootstrap-select .dropdown-menu .notify{position:absolute;bottom:5px;width:96%;margin:0 2%;min-height:26px;padding:3px 5px;background:#f5f5f5;border:1px solid #e3e3e3;box-shadow:inset 0 1px 1px rgba(0,0,0,.05);pointer-events:none;opacity:.9;box-sizing:border-box}.bootstrap-select .dropdown-menu .notify.fadeOut{animation:300ms linear 750ms forwards bs-notify-fadeOut}.bootstrap-select .no-results{padding:3px;background:#f5f5f5;margin:0 5px;white-space:nowrap}.bootstrap-select.fit-width .dropdown-toggle .filter-option{position:static;display:inline;padding:0}.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner,.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner-inner{display:inline}.bootstrap-select.fit-width .dropdown-toggle .bs-caret:before{content:\" \"}.bootstrap-select.fit-width .dropdown-toggle .caret{position:static;top:auto;margin-top:-1px}.bootstrap-select.show-tick .dropdown-menu .selected span.check-mark{position:absolute;display:inline-block;right:15px;top:5px}.bootstrap-select.show-tick .dropdown-menu li a span.text{margin-right:34px}.bootstrap-select .bs-ok-default:after{content:\"\";display:block;width:.5em;height:1em;border-style:solid;border-width:0 .26em .26em 0;transform-style:preserve-3d;transform:rotate(45deg)}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle{z-index:1061}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:before{content:\"\";border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:7px solid rgba(204,204,204,.2);position:absolute;bottom:-4px;left:9px;display:none}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:after{content:\"\";border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #fff;position:absolute;bottom:-4px;left:10px;display:none}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:before{bottom:auto;top:-4px;border-top:7px solid rgba(204,204,204,.2);border-bottom:0}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:after{bottom:auto;top:-4px;border-top:6px solid #fff;border-bottom:0}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:before{right:12px;left:auto}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:after{right:13px;left:auto}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:before,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:before{display:block}.bs-actionsbox,.bs-donebutton,.bs-searchbox{padding:4px 8px}.bs-actionsbox,.bs-donebutton{width:100%;box-sizing:border-box}.bs-actionsbox .btn-group button{width:50%}.bs-donebutton{float:left}.bs-donebutton .btn-group button{width:100%}.bs-searchbox+.bs-actionsbox{padding:0 8px 4px}.bs-searchbox .form-control{margin-bottom:0;width:100%;float:none}\n/*!\n *  Font Awesome 4.7.0 by @davegandy - http://fontawesome.io - @fontawesome\n *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)\n */\n@-webkit-keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@font-face{font-family:\"FontAwesome\";src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?v=4.7.0);src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0)format(\"embedded-opentype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0)format(\"woff2\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0)format(\"woff\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0)format(\"truetype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular)format(\"svg\");font-weight:400;font-style:normal}.fa{display:inline-block;font:14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.fa-lg{font-size:1.33333333em;line-height:.75em;vertical-align:-15%}.fa-2x{font-size:2em}.fa-3x{font-size:3em}.fa-4x{font-size:4em}.fa-5x{font-size:5em}.fa-fw{width:1.28571429em;text-align:center}.fa-ul{padding-left:0;margin-left:2.14285714em;list-style-type:none}.fa-ul>li{position:relative}.fa-li{position:absolute;left:-2.14285714em;width:2.14285714em;top:.14285714em;text-align:center}.fa-li.fa-lg{left:-1.85714286em}.fa-border{padding:.2em .25em .15em;border:solid .08em #eee;border-radius:.1em}.fa-pull-left{float:left}.fa-pull-right,.pull-right{float:right}.fa.fa-pull-left{margin-right:.3em}.fa.fa-pull-right{margin-left:.3em}.pull-left{float:left}.fa.pull-left{margin-right:.3em}.fa.pull-right{margin-left:.3em}.fa-spin{-webkit-animation:fa-spin 2s infinite linear;animation:fa-spin 2s infinite linear}.fa-pulse{-webkit-animation:fa-spin 1s infinite steps(8);animation:fa-spin 1s infinite steps(8)}.fa-rotate-90{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=1)\";-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.fa-rotate-180{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2)\";-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.fa-rotate-270{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=3)\";-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.fa-flip-horizontal{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1)\";-webkit-transform:scale(-1,1);-ms-transform:scale(-1,1);transform:scale(-1,1)}.fa-flip-vertical{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1)\";-webkit-transform:scale(1,-1);-ms-transform:scale(1,-1);transform:scale(1,-1)}:root .fa-flip-horizontal,:root .fa-flip-vertical,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-rotate-90{filter:none}.fa-stack{position:relative;display:inline-block;width:2em;height:2em;line-height:2em;vertical-align:middle}.fa-stack-1x,.fa-stack-2x{position:absolute;left:0;width:100%;text-align:center}.fa-stack-1x{line-height:inherit}.fa-stack-2x{font-size:2em}.fa-inverse{color:#fff}.fa-glass:before{content:\"\"}.fa-music:before{content:\"\"}.fa-search:before{content:\"\"}.fa-envelope-o:before{content:\"\"}.fa-heart:before{content:\"\"}.fa-star:before{content:\"\"}.fa-star-o:before{content:\"\"}.fa-user:before{content:\"\"}.fa-film:before{content:\"\"}.fa-th-large:before{content:\"\"}.fa-th:before{content:\"\"}.fa-th-list:before{content:\"\"}.fa-check:before{content:\"\"}.fa-close:before,.fa-remove:before,.fa-times:before{content:\"\"}.fa-search-plus:before{content:\"\"}.fa-search-minus:before{content:\"\"}.fa-power-off:before{content:\"\"}.fa-signal:before{content:\"\"}.fa-cog:before,.fa-gear:before{content:\"\"}.fa-trash-o:before{content:\"\"}.fa-home:before{content:\"\"}.fa-file-o:before{content:\"\"}.fa-clock-o:before{content:\"\"}.fa-road:before{content:\"\"}.fa-download:before{content:\"\"}.fa-arrow-circle-o-down:before{content:\"\"}.fa-arrow-circle-o-up:before{content:\"\"}.fa-inbox:before{content:\"\"}.fa-play-circle-o:before{content:\"\"}.fa-repeat:before,.fa-rotate-right:before{content:\"\"}.fa-refresh:before{content:\"\"}.fa-list-alt:before{content:\"\"}.fa-lock:before{content:\"\"}.fa-flag:before{content:\"\"}.fa-headphones:before{content:\"\"}.fa-volume-off:before{content:\"\"}.fa-volume-down:before{content:\"\"}.fa-volume-up:before{content:\"\"}.fa-qrcode:before{content:\"\"}.fa-barcode:before{content:\"\"}.fa-tag:before{content:\"\"}.fa-tags:before{content:\"\"}.fa-book:before{content:\"\"}.fa-bookmark:before{content:\"\"}.fa-print:before{content:\"\"}.fa-camera:before{content:\"\"}.fa-font:before{content:\"\"}.fa-bold:before{content:\"\"}.fa-italic:before{content:\"\"}.fa-text-height:before{content:\"\"}.fa-text-width:before{content:\"\"}.fa-align-left:before{content:\"\"}.fa-align-center:before{content:\"\"}.fa-align-right:before{content:\"\"}.fa-align-justify:before{content:\"\"}.fa-list:before{content:\"\"}.fa-dedent:before,.fa-outdent:before{content:\"\"}.fa-indent:before{content:\"\"}.fa-video-camera:before{content:\"\"}.fa-image:before,.fa-photo:before,.fa-picture-o:before{content:\"\"}.fa-pencil:before{content:\"\"}.fa-map-marker:before{content:\"\"}.fa-adjust:before{content:\"\"}.fa-tint:before{content:\"\"}.fa-edit:before,.fa-pencil-square-o:before{content:\"\"}.fa-share-square-o:before{content:\"\"}.fa-check-square-o:before{content:\"\"}.fa-arrows:before{content:\"\"}.fa-step-backward:before{content:\"\"}.fa-fast-backward:before{content:\"\"}.fa-backward:before{content:\"\"}.fa-play:before{content:\"\"}.fa-pause:before{content:\"\"}.fa-stop:before{content:\"\"}.fa-forward:before{content:\"\"}.fa-fast-forward:before{content:\"\"}.fa-step-forward:before{content:\"\"}.fa-eject:before{content:\"\"}.fa-chevron-left:before{content:\"\"}.fa-chevron-right:before{content:\"\"}.fa-plus-circle:before{content:\"\"}.fa-minus-circle:before{content:\"\"}.fa-times-circle:before{content:\"\"}.fa-check-circle:before{content:\"\"}.fa-question-circle:before{content:\"\"}.fa-info-circle:before{content:\"\"}.fa-crosshairs:before{content:\"\"}.fa-times-circle-o:before{content:\"\"}.fa-check-circle-o:before{content:\"\"}.fa-ban:before{content:\"\"}.fa-arrow-left:before{content:\"\"}.fa-arrow-right:before{content:\"\"}.fa-arrow-up:before{content:\"\"}.fa-arrow-down:before{content:\"\"}.fa-mail-forward:before,.fa-share:before{content:\"\"}.fa-expand:before{content:\"\"}.fa-compress:before{content:\"\"}.fa-plus:before{content:\"\"}.fa-minus:before{content:\"\"}.fa-asterisk:before{content:\"\"}.fa-exclamation-circle:before{content:\"\"}.fa-gift:before{content:\"\"}.fa-leaf:before{content:\"\"}.fa-fire:before{content:\"\"}.fa-eye:before{content:\"\"}.fa-eye-slash:before{content:\"\"}.fa-exclamation-triangle:before,.fa-warning:before{content:\"\"}.fa-plane:before{content:\"\"}.fa-calendar:before{content:\"\"}.fa-random:before{content:\"\"}.fa-comment:before{content:\"\"}.fa-magnet:before{content:\"\"}.fa-chevron-up:before{content:\"\"}.fa-chevron-down:before{content:\"\"}.fa-retweet:before{content:\"\"}.fa-shopping-cart:before{content:\"\"}.fa-folder:before{content:\"\"}.fa-folder-open:before{content:\"\"}.fa-arrows-v:before{content:\"\"}.fa-arrows-h:before{content:\"\"}.fa-bar-chart-o:before,.fa-bar-chart:before{content:\"\"}.fa-twitter-square:before{content:\"\"}.fa-facebook-square:before{content:\"\"}.fa-camera-retro:before{content:\"\"}.fa-key:before{content:\"\"}.fa-cogs:before,.fa-gears:before{content:\"\"}.fa-comments:before{content:\"\"}.fa-thumbs-o-up:before{content:\"\"}.fa-thumbs-o-down:before{content:\"\"}.fa-star-half:before{content:\"\"}.fa-heart-o:before{content:\"\"}.fa-sign-out:before{content:\"\"}.fa-linkedin-square:before{content:\"\"}.fa-thumb-tack:before{content:\"\"}.fa-external-link:before{content:\"\"}.fa-sign-in:before{content:\"\"}.fa-trophy:before{content:\"\"}.fa-github-square:before{content:\"\"}.fa-upload:before{content:\"\"}.fa-lemon-o:before{content:\"\"}.fa-phone:before{content:\"\"}.fa-square-o:before{content:\"\"}.fa-bookmark-o:before{content:\"\"}.fa-phone-square:before{content:\"\"}.fa-twitter:before{content:\"\"}.fa-facebook-f:before,.fa-facebook:before{content:\"\"}.fa-github:before{content:\"\"}.fa-unlock:before{content:\"\"}.fa-credit-card:before{content:\"\"}.fa-feed:before,.fa-rss:before{content:\"\"}.fa-hdd-o:before{content:\"\"}.fa-bullhorn:before{content:\"\"}.fa-bell:before{content:\"\"}.fa-certificate:before{content:\"\"}.fa-hand-o-right:before{content:\"\"}.fa-hand-o-left:before{content:\"\"}.fa-hand-o-up:before{content:\"\"}.fa-hand-o-down:before{content:\"\"}.fa-arrow-circle-left:before{content:\"\"}.fa-arrow-circle-right:before{content:\"\"}.fa-arrow-circle-up:before{content:\"\"}.fa-arrow-circle-down:before{content:\"\"}.fa-globe:before{content:\"\"}.fa-wrench:before{content:\"\"}.fa-tasks:before{content:\"\"}.fa-filter:before{content:\"\"}.fa-briefcase:before{content:\"\"}.fa-arrows-alt:before{content:\"\"}.fa-group:before,.fa-users:before{content:\"\"}.fa-chain:before,.fa-link:before{content:\"\"}.fa-cloud:before{content:\"\"}.fa-flask:before{content:\"\"}.fa-cut:before,.fa-scissors:before{content:\"\"}.fa-copy:before,.fa-files-o:before{content:\"\"}.fa-paperclip:before{content:\"\"}.fa-floppy-o:before,.fa-save:before{content:\"\"}.fa-square:before{content:\"\"}.fa-bars:before,.fa-navicon:before,.fa-reorder:before{content:\"\"}.fa-list-ul:before{content:\"\"}.fa-list-ol:before{content:\"\"}.fa-strikethrough:before{content:\"\"}.fa-underline:before{content:\"\"}.fa-table:before{content:\"\"}.fa-magic:before{content:\"\"}.fa-truck:before{content:\"\"}.fa-pinterest:before{content:\"\"}.fa-pinterest-square:before{content:\"\"}.fa-google-plus-square:before{content:\"\"}.fa-google-plus:before{content:\"\"}.fa-money:before{content:\"\"}.fa-caret-down:before{content:\"\"}.fa-caret-up:before{content:\"\"}.fa-caret-left:before{content:\"\"}.fa-caret-right:before{content:\"\"}.fa-columns:before{content:\"\"}.fa-sort:before,.fa-unsorted:before{content:\"\"}.fa-sort-desc:before,.fa-sort-down:before{content:\"\"}.fa-sort-asc:before,.fa-sort-up:before{content:\"\"}.fa-envelope:before{content:\"\"}.fa-linkedin:before{content:\"\"}.fa-rotate-left:before,.fa-undo:before{content:\"\"}.fa-gavel:before,.fa-legal:before{content:\"\"}.fa-dashboard:before,.fa-tachometer:before{content:\"\"}.fa-comment-o:before{content:\"\"}.fa-comments-o:before{content:\"\"}.fa-bolt:before,.fa-flash:before{content:\"\"}.fa-sitemap:before{content:\"\"}.fa-umbrella:before{content:\"\"}.fa-clipboard:before,.fa-paste:before{content:\"\"}.fa-lightbulb-o:before{content:\"\"}.fa-exchange:before{content:\"\"}.fa-cloud-download:before{content:\"\"}.fa-cloud-upload:before{content:\"\"}.fa-user-md:before{content:\"\"}.fa-stethoscope:before{content:\"\"}.fa-suitcase:before{content:\"\"}.fa-bell-o:before{content:\"\"}.fa-coffee:before{content:\"\"}.fa-cutlery:before{content:\"\"}.fa-file-text-o:before{content:\"\"}.fa-building-o:before{content:\"\"}.fa-hospital-o:before{content:\"\"}.fa-ambulance:before{content:\"\"}.fa-medkit:before{content:\"\"}.fa-fighter-jet:before{content:\"\"}.fa-beer:before{content:\"\"}.fa-h-square:before{content:\"\"}.fa-plus-square:before{content:\"\"}.fa-angle-double-left:before{content:\"\"}.fa-angle-double-right:before{content:\"\"}.fa-angle-double-up:before{content:\"\"}.fa-angle-double-down:before{content:\"\"}.fa-angle-left:before{content:\"\"}.fa-angle-right:before{content:\"\"}.fa-angle-up:before{content:\"\"}.fa-angle-down:before{content:\"\"}.fa-desktop:before{content:\"\"}.fa-laptop:before{content:\"\"}.fa-tablet:before{content:\"\"}.fa-mobile-phone:before,.fa-mobile:before{content:\"\"}.fa-circle-o:before{content:\"\"}.fa-quote-left:before{content:\"\"}.fa-quote-right:before{content:\"\"}.fa-spinner:before{content:\"\"}.fa-circle:before{content:\"\"}.fa-mail-reply:before,.fa-reply:before{content:\"\"}.fa-github-alt:before{content:\"\"}.fa-folder-o:before{content:\"\"}.fa-folder-open-o:before{content:\"\"}.fa-smile-o:before{content:\"\"}.fa-frown-o:before{content:\"\"}.fa-meh-o:before{content:\"\"}.fa-gamepad:before{content:\"\"}.fa-keyboard-o:before{content:\"\"}.fa-flag-o:before{content:\"\"}.fa-flag-checkered:before{content:\"\"}.fa-terminal:before{content:\"\"}.fa-code:before{content:\"\"}.fa-mail-reply-all:before,.fa-reply-all:before{content:\"\"}.fa-star-half-empty:before,.fa-star-half-full:before,.fa-star-half-o:before{content:\"\"}.fa-location-arrow:before{content:\"\"}.fa-crop:before{content:\"\"}.fa-code-fork:before{content:\"\"}.fa-chain-broken:before,.fa-unlink:before{content:\"\"}.fa-question:before{content:\"\"}.fa-info:before{content:\"\"}.fa-exclamation:before{content:\"\"}.fa-superscript:before{content:\"\"}.fa-subscript:before{content:\"\"}.fa-eraser:before{content:\"\"}.fa-puzzle-piece:before{content:\"\"}.fa-microphone:before{content:\"\"}.fa-microphone-slash:before{content:\"\"}.fa-shield:before{content:\"\"}.fa-calendar-o:before{content:\"\"}.fa-fire-extinguisher:before{content:\"\"}.fa-rocket:before{content:\"\"}.fa-maxcdn:before{content:\"\"}.fa-chevron-circle-left:before{content:\"\"}.fa-chevron-circle-right:before{content:\"\"}.fa-chevron-circle-up:before{content:\"\"}.fa-chevron-circle-down:before{content:\"\"}.fa-html5:before{content:\"\"}.fa-css3:before{content:\"\"}.fa-anchor:before{content:\"\"}.fa-unlock-alt:before{content:\"\"}.fa-bullseye:before{content:\"\"}.fa-ellipsis-h:before{content:\"\"}.fa-ellipsis-v:before{content:\"\"}.fa-rss-square:before{content:\"\"}.fa-play-circle:before{content:\"\"}.fa-ticket:before{content:\"\"}.fa-minus-square:before{content:\"\"}.fa-minus-square-o:before{content:\"\"}.fa-level-up:before{content:\"\"}.fa-level-down:before{content:\"\"}.fa-check-square:before{content:\"\"}.fa-pencil-square:before{content:\"\"}.fa-external-link-square:before{content:\"\"}.fa-share-square:before{content:\"\"}.fa-compass:before{content:\"\"}.fa-caret-square-o-down:before,.fa-toggle-down:before{content:\"\"}.fa-caret-square-o-up:before,.fa-toggle-up:before{content:\"\"}.fa-caret-square-o-right:before,.fa-toggle-right:before{content:\"\"}.fa-eur:before,.fa-euro:before{content:\"\"}.fa-gbp:before{content:\"\"}.fa-dollar:before,.fa-usd:before{content:\"\"}.fa-inr:before,.fa-rupee:before{content:\"\"}.fa-cny:before,.fa-jpy:before,.fa-rmb:before,.fa-yen:before{content:\"\"}.fa-rouble:before,.fa-rub:before,.fa-ruble:before{content:\"\"}.fa-krw:before,.fa-won:before{content:\"\"}.fa-bitcoin:before,.fa-btc:before{content:\"\"}.fa-file:before{content:\"\"}.fa-file-text:before{content:\"\"}.fa-sort-alpha-asc:before{content:\"\"}.fa-sort-alpha-desc:before{content:\"\"}.fa-sort-amount-asc:before{content:\"\"}.fa-sort-amount-desc:before{content:\"\"}.fa-sort-numeric-asc:before{content:\"\"}.fa-sort-numeric-desc:before{content:\"\"}.fa-thumbs-up:before{content:\"\"}.fa-thumbs-down:before{content:\"\"}.fa-youtube-square:before{content:\"\"}.fa-youtube:before{content:\"\"}.fa-xing:before{content:\"\"}.fa-xing-square:before{content:\"\"}.fa-youtube-play:before{content:\"\"}.fa-dropbox:before{content:\"\"}.fa-stack-overflow:before{content:\"\"}.fa-instagram:before{content:\"\"}.fa-flickr:before{content:\"\"}.fa-adn:before{content:\"\"}.fa-bitbucket:before{content:\"\"}.fa-bitbucket-square:before{content:\"\"}.fa-tumblr:before{content:\"\"}.fa-tumblr-square:before{content:\"\"}.fa-long-arrow-down:before{content:\"\"}.fa-long-arrow-up:before{content:\"\"}.fa-long-arrow-left:before{content:\"\"}.fa-long-arrow-right:before{content:\"\"}.fa-apple:before{content:\"\"}.fa-windows:before{content:\"\"}.fa-android:before{content:\"\"}.fa-linux:before{content:\"\"}.fa-dribbble:before{content:\"\"}.fa-skype:before{content:\"\"}.fa-foursquare:before{content:\"\"}.fa-trello:before{content:\"\"}.fa-female:before{content:\"\"}.fa-male:before{content:\"\"}.fa-gittip:before,.fa-gratipay:before{content:\"\"}.fa-sun-o:before{content:\"\"}.fa-moon-o:before{content:\"\"}.fa-archive:before{content:\"\"}.fa-bug:before{content:\"\"}.fa-vk:before{content:\"\"}.fa-weibo:before{content:\"\"}.fa-renren:before{content:\"\"}.fa-pagelines:before{content:\"\"}.fa-stack-exchange:before{content:\"\"}.fa-arrow-circle-o-right:before{content:\"\"}.fa-arrow-circle-o-left:before{content:\"\"}.fa-caret-square-o-left:before,.fa-toggle-left:before{content:\"\"}.fa-dot-circle-o:before{content:\"\"}.fa-wheelchair:before{content:\"\"}.fa-vimeo-square:before{content:\"\"}.fa-try:before,.fa-turkish-lira:before{content:\"\"}.fa-plus-square-o:before{content:\"\"}.fa-space-shuttle:before{content:\"\"}.fa-slack:before{content:\"\"}.fa-envelope-square:before{content:\"\"}.fa-wordpress:before{content:\"\"}.fa-openid:before{content:\"\"}.fa-bank:before,.fa-institution:before,.fa-university:before{content:\"\"}.fa-graduation-cap:before,.fa-mortar-board:before{content:\"\"}.fa-yahoo:before{content:\"\"}.fa-google:before{content:\"\"}.fa-reddit:before{content:\"\"}.fa-reddit-square:before{content:\"\"}.fa-stumbleupon-circle:before{content:\"\"}.fa-stumbleupon:before{content:\"\"}.fa-delicious:before{content:\"\"}.fa-digg:before{content:\"\"}.fa-pied-piper-pp:before{content:\"\"}.fa-pied-piper-alt:before{content:\"\"}.fa-drupal:before{content:\"\"}.fa-joomla:before{content:\"\"}.fa-language:before{content:\"\"}.fa-fax:before{content:\"\"}.fa-building:before{content:\"\"}.fa-child:before{content:\"\"}.fa-paw:before{content:\"\"}.fa-spoon:before{content:\"\"}.fa-cube:before{content:\"\"}.fa-cubes:before{content:\"\"}.fa-behance:before{content:\"\"}.fa-behance-square:before{content:\"\"}.fa-steam:before{content:\"\"}.fa-steam-square:before{content:\"\"}.fa-recycle:before{content:\"\"}.fa-automobile:before,.fa-car:before{content:\"\"}.fa-cab:before,.fa-taxi:before{content:\"\"}.fa-tree:before{content:\"\"}.fa-spotify:before{content:\"\"}.fa-deviantart:before{content:\"\"}.fa-soundcloud:before{content:\"\"}.fa-database:before{content:\"\"}.fa-file-pdf-o:before{content:\"\"}.fa-file-word-o:before{content:\"\"}.fa-file-excel-o:before{content:\"\"}.fa-file-powerpoint-o:before{content:\"\"}.fa-file-image-o:before,.fa-file-photo-o:before,.fa-file-picture-o:before{content:\"\"}.fa-file-archive-o:before,.fa-file-zip-o:before{content:\"\"}.fa-file-audio-o:before,.fa-file-sound-o:before{content:\"\"}.fa-file-movie-o:before,.fa-file-video-o:before{content:\"\"}.fa-file-code-o:before{content:\"\"}.fa-vine:before{content:\"\"}.fa-codepen:before{content:\"\"}.fa-jsfiddle:before{content:\"\"}.fa-life-bouy:before,.fa-life-buoy:before,.fa-life-ring:before,.fa-life-saver:before,.fa-support:before{content:\"\"}.fa-circle-o-notch:before{content:\"\"}.fa-ra:before,.fa-rebel:before,.fa-resistance:before{content:\"\"}.fa-empire:before,.fa-ge:before{content:\"\"}.fa-git-square:before{content:\"\"}.fa-git:before{content:\"\"}.fa-hacker-news:before,.fa-y-combinator-square:before,.fa-yc-square:before{content:\"\"}.fa-tencent-weibo:before{content:\"\"}.fa-qq:before{content:\"\"}.fa-wechat:before,.fa-weixin:before{content:\"\"}.fa-paper-plane:before,.fa-send:before{content:\"\"}.fa-paper-plane-o:before,.fa-send-o:before{content:\"\"}.fa-history:before{content:\"\"}.fa-circle-thin:before{content:\"\"}.fa-header:before{content:\"\"}.fa-paragraph:before{content:\"\"}.fa-sliders:before{content:\"\"}.fa-share-alt:before{content:\"\"}.fa-share-alt-square:before{content:\"\"}.fa-bomb:before{content:\"\"}.fa-futbol-o:before,.fa-soccer-ball-o:before{content:\"\"}.fa-tty:before{content:\"\"}.fa-binoculars:before{content:\"\"}.fa-plug:before{content:\"\"}.fa-slideshare:before{content:\"\"}.fa-twitch:before{content:\"\"}.fa-yelp:before{content:\"\"}.fa-newspaper-o:before{content:\"\"}.fa-wifi:before{content:\"\"}.fa-calculator:before{content:\"\"}.fa-paypal:before{content:\"\"}.fa-google-wallet:before{content:\"\"}.fa-cc-visa:before{content:\"\"}.fa-cc-mastercard:before{content:\"\"}.fa-cc-discover:before{content:\"\"}.fa-cc-amex:before{content:\"\"}.fa-cc-paypal:before{content:\"\"}.fa-cc-stripe:before{content:\"\"}.fa-bell-slash:before{content:\"\"}.fa-bell-slash-o:before{content:\"\"}.fa-trash:before{content:\"\"}.fa-copyright:before{content:\"\"}.fa-at:before{content:\"\"}.fa-eyedropper:before{content:\"\"}.fa-paint-brush:before{content:\"\"}.fa-birthday-cake:before{content:\"\"}.fa-area-chart:before{content:\"\"}.fa-pie-chart:before{content:\"\"}.fa-line-chart:before{content:\"\"}.fa-lastfm:before{content:\"\"}.fa-lastfm-square:before{content:\"\"}.fa-toggle-off:before{content:\"\"}.fa-toggle-on:before{content:\"\"}.fa-bicycle:before{content:\"\"}.fa-bus:before{content:\"\"}.fa-ioxhost:before{content:\"\"}.fa-angellist:before{content:\"\"}.fa-cc:before{content:\"\"}.fa-ils:before,.fa-shekel:before,.fa-sheqel:before{content:\"\"}.fa-meanpath:before{content:\"\"}.fa-buysellads:before{content:\"\"}.fa-connectdevelop:before{content:\"\"}.fa-dashcube:before{content:\"\"}.fa-forumbee:before{content:\"\"}.fa-leanpub:before{content:\"\"}.fa-sellsy:before{content:\"\"}.fa-shirtsinbulk:before{content:\"\"}.fa-simplybuilt:before{content:\"\"}.fa-skyatlas:before{content:\"\"}.fa-cart-plus:before{content:\"\"}.fa-cart-arrow-down:before{content:\"\"}.fa-diamond:before{content:\"\"}.fa-ship:before{content:\"\"}.fa-user-secret:before{content:\"\"}.fa-motorcycle:before{content:\"\"}.fa-street-view:before{content:\"\"}.fa-heartbeat:before{content:\"\"}.fa-venus:before{content:\"\"}.fa-mars:before{content:\"\"}.fa-mercury:before{content:\"\"}.fa-intersex:before,.fa-transgender:before{content:\"\"}.fa-transgender-alt:before{content:\"\"}.fa-venus-double:before{content:\"\"}.fa-mars-double:before{content:\"\"}.fa-venus-mars:before{content:\"\"}.fa-mars-stroke:before{content:\"\"}.fa-mars-stroke-v:before{content:\"\"}.fa-mars-stroke-h:before{content:\"\"}.fa-neuter:before{content:\"\"}.fa-genderless:before{content:\"\"}.fa-facebook-official:before{content:\"\"}.fa-pinterest-p:before{content:\"\"}.fa-whatsapp:before{content:\"\"}.fa-server:before{content:\"\"}.fa-user-plus:before{content:\"\"}.fa-user-times:before{content:\"\"}.fa-bed:before,.fa-hotel:before{content:\"\"}.fa-viacoin:before{content:\"\"}.fa-train:before{content:\"\"}.fa-subway:before{content:\"\"}.fa-medium:before{content:\"\"}.fa-y-combinator:before,.fa-yc:before{content:\"\"}.fa-optin-monster:before{content:\"\"}.fa-opencart:before{content:\"\"}.fa-expeditedssl:before{content:\"\"}.fa-battery-4:before,.fa-battery-full:before,.fa-battery:before{content:\"\"}.fa-battery-3:before,.fa-battery-three-quarters:before{content:\"\"}.fa-battery-2:before,.fa-battery-half:before{content:\"\"}.fa-battery-1:before,.fa-battery-quarter:before{content:\"\"}.fa-battery-0:before,.fa-battery-empty:before{content:\"\"}.fa-mouse-pointer:before{content:\"\"}.fa-i-cursor:before{content:\"\"}.fa-object-group:before{content:\"\"}.fa-object-ungroup:before{content:\"\"}.fa-sticky-note:before{content:\"\"}.fa-sticky-note-o:before{content:\"\"}.fa-cc-jcb:before{content:\"\"}.fa-cc-diners-club:before{content:\"\"}.fa-clone:before{content:\"\"}.fa-balance-scale:before{content:\"\"}.fa-hourglass-o:before{content:\"\"}.fa-hourglass-1:before,.fa-hourglass-start:before{content:\"\"}.fa-hourglass-2:before,.fa-hourglass-half:before{content:\"\"}.fa-hourglass-3:before,.fa-hourglass-end:before{content:\"\"}.fa-hourglass:before{content:\"\"}.fa-hand-grab-o:before,.fa-hand-rock-o:before{content:\"\"}.fa-hand-paper-o:before,.fa-hand-stop-o:before{content:\"\"}.fa-hand-scissors-o:before{content:\"\"}.fa-hand-lizard-o:before{content:\"\"}.fa-hand-spock-o:before{content:\"\"}.fa-hand-pointer-o:before{content:\"\"}.fa-hand-peace-o:before{content:\"\"}.fa-trademark:before{content:\"\"}.fa-registered:before{content:\"\"}.fa-creative-commons:before{content:\"\"}.fa-gg:before{content:\"\"}.fa-gg-circle:before{content:\"\"}.fa-tripadvisor:before{content:\"\"}.fa-odnoklassniki:before{content:\"\"}.fa-odnoklassniki-square:before{content:\"\"}.fa-get-pocket:before{content:\"\"}.fa-wikipedia-w:before{content:\"\"}.fa-safari:before{content:\"\"}.fa-chrome:before{content:\"\"}.fa-firefox:before{content:\"\"}.fa-opera:before{content:\"\"}.fa-internet-explorer:before{content:\"\"}.fa-television:before,.fa-tv:before{content:\"\"}.fa-contao:before{content:\"\"}.fa-500px:before{content:\"\"}.fa-amazon:before{content:\"\"}.fa-calendar-plus-o:before{content:\"\"}.fa-calendar-minus-o:before{content:\"\"}.fa-calendar-times-o:before{content:\"\"}.fa-calendar-check-o:before{content:\"\"}.fa-industry:before{content:\"\"}.fa-map-pin:before{content:\"\"}.fa-map-signs:before{content:\"\"}.fa-map-o:before{content:\"\"}.fa-map:before{content:\"\"}.fa-commenting:before{content:\"\"}.fa-commenting-o:before{content:\"\"}.fa-houzz:before{content:\"\"}.fa-vimeo:before{content:\"\"}.fa-black-tie:before{content:\"\"}.fa-fonticons:before{content:\"\"}.fa-reddit-alien:before{content:\"\"}.fa-edge:before{content:\"\"}.fa-credit-card-alt:before{content:\"\"}.fa-codiepie:before{content:\"\"}.fa-modx:before{content:\"\"}.fa-fort-awesome:before{content:\"\"}.fa-usb:before{content:\"\"}.fa-product-hunt:before{content:\"\"}.fa-mixcloud:before{content:\"\"}.fa-scribd:before{content:\"\"}.fa-pause-circle:before{content:\"\"}.fa-pause-circle-o:before{content:\"\"}.fa-stop-circle:before{content:\"\"}.fa-stop-circle-o:before{content:\"\"}.fa-shopping-bag:before{content:\"\"}.fa-shopping-basket:before{content:\"\"}.fa-hashtag:before{content:\"\"}.fa-bluetooth:before{content:\"\"}.fa-bluetooth-b:before{content:\"\"}.fa-percent:before{content:\"\"}.fa-gitlab:before{content:\"\"}.fa-wpbeginner:before{content:\"\"}.fa-wpforms:before{content:\"\"}.fa-envira:before{content:\"\"}.fa-universal-access:before{content:\"\"}.fa-wheelchair-alt:before{content:\"\"}.fa-question-circle-o:before{content:\"\"}.fa-blind:before{content:\"\"}.fa-audio-description:before{content:\"\"}.fa-volume-control-phone:before{content:\"\"}.fa-braille:before{content:\"\"}.fa-assistive-listening-systems:before{content:\"\"}.fa-american-sign-language-interpreting:before,.fa-asl-interpreting:before{content:\"\"}.fa-deaf:before,.fa-deafness:before,.fa-hard-of-hearing:before{content:\"\"}.fa-glide:before{content:\"\"}.fa-glide-g:before{content:\"\"}.fa-sign-language:before,.fa-signing:before{content:\"\"}.fa-low-vision:before{content:\"\"}.fa-viadeo:before{content:\"\"}.fa-viadeo-square:before{content:\"\"}.fa-snapchat:before{content:\"\"}.fa-snapchat-ghost:before{content:\"\"}.fa-snapchat-square:before{content:\"\"}.fa-pied-piper:before{content:\"\"}.fa-first-order:before{content:\"\"}.fa-yoast:before{content:\"\"}.fa-themeisle:before{content:\"\"}.fa-google-plus-circle:before,.fa-google-plus-official:before{content:\"\"}.fa-fa:before,.fa-font-awesome:before{content:\"\"}.fa-handshake-o:before{content:\"\"}.fa-envelope-open:before{content:\"\"}.fa-envelope-open-o:before{content:\"\"}.fa-linode:before{content:\"\"}.fa-address-book:before{content:\"\"}.fa-address-book-o:before{content:\"\"}.fa-address-card:before,.fa-vcard:before{content:\"\"}.fa-address-card-o:before,.fa-vcard-o:before{content:\"\"}.fa-user-circle:before{content:\"\"}.fa-user-circle-o:before{content:\"\"}.fa-user-o:before{content:\"\"}.fa-id-badge:before{content:\"\"}.fa-drivers-license:before,.fa-id-card:before{content:\"\"}.fa-drivers-license-o:before,.fa-id-card-o:before{content:\"\"}.fa-quora:before{content:\"\"}.fa-free-code-camp:before{content:\"\"}.fa-telegram:before{content:\"\"}.fa-thermometer-4:before,.fa-thermometer-full:before,.fa-thermometer:before{content:\"\"}.fa-thermometer-3:before,.fa-thermometer-three-quarters:before{content:\"\"}.fa-thermometer-2:before,.fa-thermometer-half:before{content:\"\"}.fa-thermometer-1:before,.fa-thermometer-quarter:before{content:\"\"}.fa-thermometer-0:before,.fa-thermometer-empty:before{content:\"\"}.fa-shower:before{content:\"\"}.fa-bath:before,.fa-bathtub:before,.fa-s15:before{content:\"\"}.fa-podcast:before{content:\"\"}.fa-window-maximize:before{content:\"\"}.fa-window-minimize:before{content:\"\"}.fa-window-restore:before{content:\"\"}.fa-times-rectangle:before,.fa-window-close:before{content:\"\"}.fa-times-rectangle-o:before,.fa-window-close-o:before{content:\"\"}.fa-bandcamp:before{content:\"\"}.fa-grav:before{content:\"\"}.fa-etsy:before{content:\"\"}.fa-imdb:before{content:\"\"}.fa-ravelry:before{content:\"\"}.fa-eercast:before{content:\"\"}.fa-microchip:before{content:\"\"}.fa-snowflake-o:before{content:\"\"}.fa-superpowers:before{content:\"\"}.fa-wpexplorer:before{content:\"\"}.fa-meetup:before{content:\"\"}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}');
+('/*!\n * Bootstrap v3.4.1 (https://getbootstrap.com/)\n * Copyright 2011-2019 Twitter, Inc.\n * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n */\n/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */\nhtml{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:none;text-decoration:underline dotted}b,strong{font-weight:700}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-.5em}sub{bottom:-.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=checkbox],input[type=radio]{box-sizing:border-box;padding:0}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{height:auto}input[type=search]{-webkit-appearance:textfield;box-sizing:content-box}input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{border:0}textarea{overflow:auto}optgroup{font-weight:700}table{border-collapse:collapse;border-spacing:0}legend,td,th{padding:0}\n/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */\n@-webkit-keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes progress-bar-stripes{0%{background-position:40px 0}to{background-position:0 0}}@keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-webkit-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-moz-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@-o-keyframes bubble{0%{-webkit-transform:translateY(60px) scale(1,1);-moz-transform:translateY(60px) scale(1,1);-ms-transform:translateY(60px) scale(1,1);transform:translateY(60px) scale(1,1)}80%{-webkit-transform:translateY(-60px) scale(1,1);-moz-transform:translateY(-60px) scale(1,1);-ms-transform:translateY(-60px) scale(1,1);transform:translateY(-60px) scale(1,1)}97%{-webkit-transform:translateY(-75px) scale(1.4,1.4);-moz-transform:translateY(-75px) scale(1.4,1.4);-ms-transform:translateY(-75px) scale(1.4,1.4);transform:translateY(-75px) scale(1.4,1.4)}to{-webkit-transform:translateY(-75px) scale(.1,.1);-moz-transform:translateY(-75px) scale(.1,.1);-ms-transform:translateY(-75px) scale(.1,.1);transform:translateY(-75px) scale(.1,.1)}}@keyframes bs-notify-fadeOut{0%{opacity:.9}to{opacity:0}}@-webkit-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-moz-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-o-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-webkit-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-moz-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-o-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-webkit-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-moz-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-o-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-webkit-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-moz-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-o-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@media print{*,:after,:before{color:#000!important;text-shadow:none!important;background:0 0!important;box-shadow:none!important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\"attr(href)\")\"}abbr[title]:after{content:\" (\"attr(title)\")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}blockquote,pre{border:1px solid #999}thead{display:table-header-group}blockquote,img,pre,tr{page-break-inside:avoid}img{max-width:100%!important}h2,h3,p{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000!important}.label{border:1px solid #000}.table{border-collapse:collapse!important}.table td,.table th{background-color:#fff!important}.table-bordered td,.table-bordered th{border:1px solid #ddd!important}}@font-face{font-family:\"Glyphicons Halflings\";src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot);src:url(../../common/v3/fonts/glyphicons-halflings-regular.eot?#iefix)format(\"embedded-opentype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff2)format(\"woff2\"),url(../../common/v3/fonts/glyphicons-halflings-regular.woff)format(\"woff\"),url(../../common/v3/fonts/glyphicons-halflings-regular.ttf)format(\"truetype\"),url(../../common/v3/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular)format(\"svg\")}.glyphicon{position:relative;top:1px;display:inline-block;font-family:\"Glyphicons Halflings\";font-style:normal;font-weight:400;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.glyphicon-asterisk:before{content:\"*\"}.glyphicon-plus:before{content:\"+\"}.glyphicon-eur:before,.glyphicon-euro:before{content:\"€\"}.glyphicon-minus:before,.sim-tabs>ul>li>a.active>.tab-title::after{content:\"−\"}.glyphicon-cloud:before{content:\"☁\"}.glyphicon-envelope:before{content:\"✉\"}.glyphicon-pencil:before{content:\"✏\"}.glyphicon-glass:before{content:\"\"}.glyphicon-music:before{content:\"\"}.glyphicon-search:before{content:\"\"}.glyphicon-heart:before{content:\"\"}.glyphicon-star:before{content:\"\"}.glyphicon-star-empty:before{content:\"\"}.glyphicon-user:before{content:\"\"}.glyphicon-film:before{content:\"\"}.glyphicon-th-large:before{content:\"\"}.glyphicon-th:before{content:\"\"}.glyphicon-th-list:before{content:\"\"}.glyphicon-ok:before{content:\"\"}.glyphicon-remove:before{content:\"\"}.glyphicon-zoom-in:before{content:\"\"}.glyphicon-zoom-out:before{content:\"\"}.glyphicon-off:before{content:\"\"}.glyphicon-signal:before{content:\"\"}.glyphicon-cog:before{content:\"\"}.glyphicon-trash:before{content:\"\"}.glyphicon-home:before{content:\"\"}.glyphicon-file:before{content:\"\"}.glyphicon-time:before{content:\"\"}.glyphicon-road:before{content:\"\"}.glyphicon-download-alt:before{content:\"\"}.glyphicon-download:before{content:\"\"}.glyphicon-upload:before{content:\"\"}.glyphicon-inbox:before{content:\"\"}.glyphicon-play-circle:before{content:\"\"}.glyphicon-repeat:before{content:\"\"}.glyphicon-refresh:before{content:\"\"}.glyphicon-list-alt:before{content:\"\"}.glyphicon-lock:before{content:\"\"}.glyphicon-flag:before{content:\"\"}.glyphicon-headphones:before{content:\"\"}.glyphicon-volume-off:before{content:\"\"}.glyphicon-volume-down:before{content:\"\"}.glyphicon-volume-up:before{content:\"\"}.glyphicon-qrcode:before{content:\"\"}.glyphicon-barcode:before{content:\"\"}.glyphicon-tag:before{content:\"\"}.glyphicon-tags:before{content:\"\"}.glyphicon-book:before{content:\"\"}.glyphicon-bookmark:before{content:\"\"}.glyphicon-print:before{content:\"\"}.glyphicon-camera:before{content:\"\"}.glyphicon-font:before{content:\"\"}.glyphicon-bold:before{content:\"\"}.glyphicon-italic:before{content:\"\"}.glyphicon-text-height:before{content:\"\"}.glyphicon-text-width:before{content:\"\"}.glyphicon-align-left:before{content:\"\"}.glyphicon-align-center:before{content:\"\"}.glyphicon-align-right:before{content:\"\"}.glyphicon-align-justify:before{content:\"\"}.glyphicon-list:before{content:\"\"}.glyphicon-indent-left:before{content:\"\"}.glyphicon-indent-right:before{content:\"\"}.glyphicon-facetime-video:before{content:\"\"}.glyphicon-picture:before{content:\"\"}.glyphicon-map-marker:before{content:\"\"}.glyphicon-adjust:before{content:\"\"}.glyphicon-tint:before{content:\"\"}.glyphicon-edit:before{content:\"\"}.glyphicon-share:before{content:\"\"}.glyphicon-check:before{content:\"\"}.glyphicon-move:before{content:\"\"}.glyphicon-step-backward:before{content:\"\"}.glyphicon-fast-backward:before{content:\"\"}.glyphicon-backward:before{content:\"\"}.glyphicon-play:before{content:\"\"}.glyphicon-pause:before{content:\"\"}.glyphicon-stop:before{content:\"\"}.glyphicon-forward:before{content:\"\"}.glyphicon-fast-forward:before{content:\"\"}.glyphicon-step-forward:before{content:\"\"}.glyphicon-eject:before{content:\"\"}.glyphicon-chevron-left:before{content:\"\"}.glyphicon-chevron-right:before{content:\"\"}.glyphicon-plus-sign:before{content:\"\"}.glyphicon-minus-sign:before{content:\"\"}.glyphicon-remove-sign:before{content:\"\"}.glyphicon-ok-sign:before{content:\"\"}.glyphicon-question-sign:before{content:\"\"}.glyphicon-info-sign:before{content:\"\"}.glyphicon-screenshot:before{content:\"\"}.glyphicon-remove-circle:before{content:\"\"}.glyphicon-ok-circle:before{content:\"\"}.glyphicon-ban-circle:before{content:\"\"}.glyphicon-arrow-left:before{content:\"\"}.glyphicon-arrow-right:before{content:\"\"}.glyphicon-arrow-up:before{content:\"\"}.glyphicon-arrow-down:before{content:\"\"}.glyphicon-share-alt:before{content:\"\"}.glyphicon-resize-full:before{content:\"\"}.glyphicon-resize-small:before{content:\"\"}.glyphicon-exclamation-sign:before{content:\"\"}.glyphicon-gift:before{content:\"\"}.glyphicon-leaf:before{content:\"\"}.glyphicon-fire:before{content:\"\"}.glyphicon-eye-open:before{content:\"\"}.glyphicon-eye-close:before{content:\"\"}.glyphicon-warning-sign:before{content:\"\"}.glyphicon-plane:before{content:\"\"}.glyphicon-calendar:before{content:\"\"}.glyphicon-random:before{content:\"\"}.glyphicon-comment:before{content:\"\"}.glyphicon-magnet:before{content:\"\"}.glyphicon-chevron-up:before{content:\"\"}.glyphicon-chevron-down:before{content:\"\"}.glyphicon-retweet:before{content:\"\"}.glyphicon-shopping-cart:before{content:\"\"}.glyphicon-folder-close:before{content:\"\"}.glyphicon-folder-open:before{content:\"\"}.glyphicon-resize-vertical:before{content:\"\"}.glyphicon-resize-horizontal:before{content:\"\"}.glyphicon-hdd:before{content:\"\"}.glyphicon-bullhorn:before{content:\"\"}.glyphicon-bell:before{content:\"\"}.glyphicon-certificate:before{content:\"\"}.glyphicon-thumbs-up:before{content:\"\"}.glyphicon-thumbs-down:before{content:\"\"}.glyphicon-hand-right:before{content:\"\"}.glyphicon-hand-left:before{content:\"\"}.glyphicon-hand-up:before{content:\"\"}.glyphicon-hand-down:before{content:\"\"}.glyphicon-circle-arrow-right:before{content:\"\"}.glyphicon-circle-arrow-left:before{content:\"\"}.glyphicon-circle-arrow-up:before{content:\"\"}.glyphicon-circle-arrow-down:before{content:\"\"}.glyphicon-globe:before{content:\"\"}.glyphicon-wrench:before{content:\"\"}.glyphicon-tasks:before{content:\"\"}.glyphicon-filter:before{content:\"\"}.glyphicon-briefcase:before{content:\"\"}.glyphicon-fullscreen:before{content:\"\"}.glyphicon-dashboard:before{content:\"\"}.glyphicon-paperclip:before{content:\"\"}.glyphicon-heart-empty:before{content:\"\"}.glyphicon-link:before{content:\"\"}.glyphicon-phone:before{content:\"\"}.glyphicon-pushpin:before{content:\"\"}.glyphicon-usd:before{content:\"\"}.glyphicon-gbp:before{content:\"\"}.glyphicon-sort:before{content:\"\"}.glyphicon-sort-by-alphabet:before{content:\"\"}.glyphicon-sort-by-alphabet-alt:before{content:\"\"}.glyphicon-sort-by-order:before{content:\"\"}.glyphicon-sort-by-order-alt:before{content:\"\"}.glyphicon-sort-by-attributes:before{content:\"\"}.glyphicon-sort-by-attributes-alt:before{content:\"\"}.glyphicon-unchecked:before{content:\"\"}.glyphicon-expand:before{content:\"\"}.glyphicon-collapse-down:before{content:\"\"}.glyphicon-collapse-up:before{content:\"\"}.glyphicon-log-in:before{content:\"\"}.glyphicon-flash:before{content:\"\"}.glyphicon-log-out:before{content:\"\"}.glyphicon-new-window:before{content:\"\"}.glyphicon-record:before{content:\"\"}.glyphicon-save:before{content:\"\"}.glyphicon-open:before{content:\"\"}.glyphicon-saved:before{content:\"\"}.glyphicon-import:before{content:\"\"}.glyphicon-export:before{content:\"\"}.glyphicon-send:before{content:\"\"}.glyphicon-floppy-disk:before{content:\"\"}.glyphicon-floppy-saved:before{content:\"\"}.glyphicon-floppy-remove:before{content:\"\"}.glyphicon-floppy-save:before{content:\"\"}.glyphicon-floppy-open:before{content:\"\"}.glyphicon-credit-card:before{content:\"\"}.glyphicon-transfer:before{content:\"\"}.glyphicon-cutlery:before{content:\"\"}.glyphicon-header:before{content:\"\"}.glyphicon-compressed:before{content:\"\"}.glyphicon-earphone:before{content:\"\"}.glyphicon-phone-alt:before{content:\"\"}.glyphicon-tower:before{content:\"\"}.glyphicon-stats:before{content:\"\"}.glyphicon-sd-video:before{content:\"\"}.glyphicon-hd-video:before{content:\"\"}.glyphicon-subtitles:before{content:\"\"}.glyphicon-sound-stereo:before{content:\"\"}.glyphicon-sound-dolby:before{content:\"\"}.glyphicon-sound-5-1:before{content:\"\"}.glyphicon-sound-6-1:before{content:\"\"}.glyphicon-sound-7-1:before{content:\"\"}.glyphicon-copyright-mark:before{content:\"\"}.glyphicon-registration-mark:before{content:\"\"}.glyphicon-cloud-download:before{content:\"\"}.glyphicon-cloud-upload:before{content:\"\"}.glyphicon-tree-conifer:before{content:\"\"}.glyphicon-tree-deciduous:before{content:\"\"}.glyphicon-cd:before{content:\"\"}.glyphicon-save-file:before{content:\"\"}.glyphicon-open-file:before{content:\"\"}.glyphicon-level-up:before{content:\"\"}.glyphicon-copy:before{content:\"\"}.glyphicon-paste:before{content:\"\"}.glyphicon-alert:before{content:\"\"}.glyphicon-equalizer:before{content:\"\"}.glyphicon-king:before{content:\"\"}.glyphicon-queen:before{content:\"\"}.glyphicon-pawn:before{content:\"\"}.glyphicon-bishop:before{content:\"\"}.glyphicon-knight:before{content:\"\"}.glyphicon-baby-formula:before{content:\"\"}.glyphicon-tent:before{content:\"⛺\"}.glyphicon-blackboard:before{content:\"\"}.glyphicon-bed:before{content:\"\"}.glyphicon-apple:before{content:\"\"}.glyphicon-erase:before{content:\"\"}.glyphicon-hourglass:before{content:\"⌛\"}.glyphicon-lamp:before{content:\"\"}.glyphicon-duplicate:before{content:\"\"}.glyphicon-piggy-bank:before{content:\"\"}.glyphicon-scissors:before{content:\"\"}.glyphicon-bitcoin:before,.glyphicon-btc:before,.glyphicon-xbt:before{content:\"\"}.glyphicon-jpy:before,.glyphicon-yen:before{content:\"¥\"}.glyphicon-rub:before,.glyphicon-ruble:before{content:\"₽\"}.glyphicon-scale:before{content:\"\"}.glyphicon-ice-lolly:before{content:\"\"}.glyphicon-ice-lolly-tasted:before{content:\"\"}.glyphicon-education:before{content:\"\"}.glyphicon-option-horizontal:before{content:\"\"}.glyphicon-option-vertical:before{content:\"\"}.glyphicon-menu-hamburger:before{content:\"\"}.glyphicon-modal-window:before{content:\"\"}.glyphicon-oil:before{content:\"\"}.glyphicon-grain:before{content:\"\"}.glyphicon-sunglasses:before{content:\"\"}.glyphicon-text-size:before{content:\"\"}.glyphicon-text-color:before{content:\"\"}.glyphicon-text-background:before{content:\"\"}.glyphicon-object-align-top:before{content:\"\"}.glyphicon-object-align-bottom:before{content:\"\"}.glyphicon-object-align-horizontal:before{content:\"\"}.glyphicon-object-align-left:before{content:\"\"}.glyphicon-object-align-vertical:before{content:\"\"}.glyphicon-object-align-right:before{content:\"\"}.glyphicon-triangle-right:before{content:\"\"}.glyphicon-triangle-left:before{content:\"\"}.glyphicon-triangle-bottom:before{content:\"\"}.glyphicon-triangle-top:before{content:\"\"}.glyphicon-console:before{content:\"\"}.glyphicon-superscript:before{content:\"\"}.glyphicon-subscript:before{content:\"\"}.glyphicon-menu-left:before{content:\"\"}.glyphicon-menu-right:before{content:\"\"}.glyphicon-menu-down:before{content:\"\"}.glyphicon-menu-up:before{content:\"\"}*,:after,:before{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:transparent}body{font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#21366b;text-decoration:none}a:focus,a:hover{color:#0f1831;text-decoration:underline}a:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.carousel-inner>.item>a>img,.carousel-inner>.item>img,.img-responsive,.thumbnail a>img,.thumbnail>img{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #dcdcdc}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=button]{cursor:pointer}.h1,.h2,.h3,.h4,.h5,.h6,h1,h2,h3,h4,h5,h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-weight:400;line-height:1;color:#cdcdcd}.h1,.h2,.h3,h1,h2,h3{margin-top:20px;margin-bottom:10px}.h1 .small,.h1 small,.h2 .small,.h2 small,.h3 .small,.h3 small,h1 .small,h1 small,h2 .small,h2 small,h3 .small,h3 small{font-size:65%}.h4,.h5,.h6,h4,h5,h6{margin-top:10px;margin-bottom:10px}.h4 .small,.h4 small,.h5 .small,.h5 small,.h6 .small,.h6 small,h4 .small,h4 small,h5 .small,h5 small,h6 .small,h6 small{font-size:75%}.h1,h1{font-size:36px}.h2,h2{font-size:30px}.h3,h3{font-size:24px}.h4,h4{font-size:18px}.h5,h5{font-size:14px}.h6,h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}.small,small{font-size:85%}.mark,mark{padding:.2em;background-color:#fcf8e3}.text-left,th{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#cdcdcd}.text-primary{color:#21366b}a.text-primary:focus,a.text-primary:hover{color:#152244}.text-success{color:#3c763d}a.text-success:focus,a.text-success:hover{color:#2b542c}.text-info{color:#31708f}a.text-info:focus,a.text-info:hover{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:focus,a.text-warning:hover{color:#66512c}.text-danger{color:#a94442}a.text-danger:focus,a.text-danger:hover{color:#843534}.bg-primary{color:#fff;background-color:#21366b}a.bg-primary:focus,a.bg-primary:hover{background-color:#152244}.bg-success{background-color:#dff0d8}a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #dcdcdc}dl,ol,ul{margin-top:0;margin-bottom:10px}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}.list-inline,.list-unstyled{padding-left:0;list-style:none}.list-inline{margin-left:-5px}.list-inline>li{display:inline-block;padding-right:5px;padding-left:5px}dl{margin-bottom:20px}dd,dt{line-height:1.42857143}dt{font-weight:700}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[data-original-title],abbr[title]{cursor:help}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #dcdcdc}.sim-controls ul.checkboxes li:last-child,.sim-controls ul.radios li:last-child,blockquote ol:last-child,blockquote p:last-child,blockquote ul:last-child{margin-bottom:0}blockquote .small,blockquote footer,blockquote small{display:block;font-size:80%;line-height:1.42857143;color:#cdcdcd}blockquote .small:before,blockquote footer:before,blockquote small:before{content:\"— \"}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;text-align:right;border-right:5px solid #dcdcdc;border-left:0}.blockquote-reverse .small:before,.blockquote-reverse footer:before,.blockquote-reverse small:before,.sim-tabs>ul>li>a.singleton.active>.tab-title::after,.sim-tabs>ul>li>a.singleton>.tab-title::after,blockquote.pull-right .small:before,blockquote.pull-right footer:before,blockquote.pull-right small:before{content:\"\"}.blockquote-reverse .small:after,.blockquote-reverse footer:after,.blockquote-reverse small:after,blockquote.pull-right .small:after,blockquote.pull-right footer:after,blockquote.pull-right small:after{content:\" —\"}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}code,kbd,pre,samp{font-family:Menlo,Monaco,Consolas,\"Courier New\",monospace}code,kbd,pre{padding:2px 4px;font-size:90%;color:#c7254e;background-color:#f9f2f4;border-radius:4px}kbd{color:#fff;background-color:#333;border-radius:3px;box-shadow:inset 0-1px 0 rgba(0,0,0,.25)}kbd kbd{padding:0;font-size:100%;font-weight:700;box-shadow:none}pre{display:block;padding:9.5px;margin:0 0 10px;font-size:13px;line-height:1.42857143;color:#333;word-break:break-all;word-wrap:break-word;background-color:#f5f5f5;border:1px solid #ccc}pre code{padding:0;font-size:inherit;color:inherit;white-space:pre-wrap;border-radius:0}.pre-scrollable{max-height:340px;overflow-y:scroll}.container{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}@media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}@media (min-width:1200px){.container{width:1170px}}.container-fluid{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}.row{margin-right:-15px;margin-left:-15px}.row-no-gutters{margin-right:0;margin-left:0}.row-no-gutters [class*=col-]{padding-right:0;padding-left:0}.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{position:relative;min-height:1px;padding-right:15px;padding-left:15px}.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{float:left}.col-xs-12{width:100%}.col-xs-11{width:91.66666667%}.col-xs-10{width:83.33333333%}.col-xs-9{width:75%}.col-xs-8{width:66.66666667%}.col-xs-7{width:58.33333333%}.col-xs-6{width:50%}.col-xs-5{width:41.66666667%}.col-xs-4{width:33.33333333%}.col-xs-3{width:25%}.col-xs-2{width:16.66666667%}.col-xs-1{width:8.33333333%}.col-xs-pull-12{right:100%}.col-xs-pull-11{right:91.66666667%}.col-xs-pull-10{right:83.33333333%}.col-xs-pull-9{right:75%}.col-xs-pull-8{right:66.66666667%}.col-xs-pull-7{right:58.33333333%}.col-xs-pull-6{right:50%}.col-xs-pull-5{right:41.66666667%}.col-xs-pull-4{right:33.33333333%}.col-xs-pull-3{right:25%}.col-xs-pull-2{right:16.66666667%}.col-xs-pull-1{right:8.33333333%}.col-xs-pull-0{right:auto}.col-xs-push-12{left:100%}.col-xs-push-11{left:91.66666667%}.col-xs-push-10{left:83.33333333%}.col-xs-push-9{left:75%}.col-xs-push-8{left:66.66666667%}.col-xs-push-7{left:58.33333333%}.col-xs-push-6{left:50%}.col-xs-push-5{left:41.66666667%}.col-xs-push-4{left:33.33333333%}.col-xs-push-3{left:25%}.col-xs-push-2{left:16.66666667%}.col-xs-push-1{left:8.33333333%}.col-xs-push-0{left:auto}.col-xs-offset-12{margin-left:100%}.col-xs-offset-11{margin-left:91.66666667%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-0{margin-left:0}@media (min-width:768px){.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9{float:left}.col-sm-12{width:100%}.col-sm-11{width:91.66666667%}.col-sm-10{width:83.33333333%}.col-sm-9{width:75%}.col-sm-8{width:66.66666667%}.col-sm-7{width:58.33333333%}.col-sm-6{width:50%}.col-sm-5{width:41.66666667%}.col-sm-4{width:33.33333333%}.col-sm-3{width:25%}.col-sm-2{width:16.66666667%}.col-sm-1{width:8.33333333%}.col-sm-pull-12{right:100%}.col-sm-pull-11{right:91.66666667%}.col-sm-pull-10{right:83.33333333%}.col-sm-pull-9{right:75%}.col-sm-pull-8{right:66.66666667%}.col-sm-pull-7{right:58.33333333%}.col-sm-pull-6{right:50%}.col-sm-pull-5{right:41.66666667%}.col-sm-pull-4{right:33.33333333%}.col-sm-pull-3{right:25%}.col-sm-pull-2{right:16.66666667%}.col-sm-pull-1{right:8.33333333%}.col-sm-pull-0{right:auto}.col-sm-push-12{left:100%}.col-sm-push-11{left:91.66666667%}.col-sm-push-10{left:83.33333333%}.col-sm-push-9{left:75%}.col-sm-push-8{left:66.66666667%}.col-sm-push-7{left:58.33333333%}.col-sm-push-6{left:50%}.col-sm-push-5{left:41.66666667%}.col-sm-push-4{left:33.33333333%}.col-sm-push-3{left:25%}.col-sm-push-2{left:16.66666667%}.col-sm-push-1{left:8.33333333%}.col-sm-push-0{left:auto}.col-sm-offset-12{margin-left:100%}.col-sm-offset-11{margin-left:91.66666667%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-0{margin-left:0}}@media (min-width:992px){.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9{float:left}.col-md-12{width:100%}.col-md-11{width:91.66666667%}.col-md-10{width:83.33333333%}.col-md-9{width:75%}.col-md-8{width:66.66666667%}.col-md-7{width:58.33333333%}.col-md-6{width:50%}.col-md-5{width:41.66666667%}.col-md-4{width:33.33333333%}.col-md-3{width:25%}.col-md-2{width:16.66666667%}.col-md-1{width:8.33333333%}.col-md-pull-12{right:100%}.col-md-pull-11{right:91.66666667%}.col-md-pull-10{right:83.33333333%}.col-md-pull-9{right:75%}.col-md-pull-8{right:66.66666667%}.col-md-pull-7{right:58.33333333%}.col-md-pull-6{right:50%}.col-md-pull-5{right:41.66666667%}.col-md-pull-4{right:33.33333333%}.col-md-pull-3{right:25%}.col-md-pull-2{right:16.66666667%}.col-md-pull-1{right:8.33333333%}.col-md-pull-0{right:auto}.col-md-push-12{left:100%}.col-md-push-11{left:91.66666667%}.col-md-push-10{left:83.33333333%}.col-md-push-9{left:75%}.col-md-push-8{left:66.66666667%}.col-md-push-7{left:58.33333333%}.col-md-push-6{left:50%}.col-md-push-5{left:41.66666667%}.col-md-push-4{left:33.33333333%}.col-md-push-3{left:25%}.col-md-push-2{left:16.66666667%}.col-md-push-1{left:8.33333333%}.col-md-push-0{left:auto}.col-md-offset-12{margin-left:100%}.col-md-offset-11{margin-left:91.66666667%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-9{margin-left:75%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-6{margin-left:50%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-3{margin-left:25%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-0{margin-left:0}}@media (min-width:1200px){.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9{float:left}.col-lg-12{width:100%}.col-lg-11{width:91.66666667%}.col-lg-10{width:83.33333333%}.col-lg-9{width:75%}.col-lg-8{width:66.66666667%}.col-lg-7{width:58.33333333%}.col-lg-6{width:50%}.col-lg-5{width:41.66666667%}.col-lg-4{width:33.33333333%}.col-lg-3{width:25%}.col-lg-2{width:16.66666667%}.col-lg-1{width:8.33333333%}.col-lg-pull-12{right:100%}.col-lg-pull-11{right:91.66666667%}.col-lg-pull-10{right:83.33333333%}.col-lg-pull-9{right:75%}.col-lg-pull-8{right:66.66666667%}.col-lg-pull-7{right:58.33333333%}.col-lg-pull-6{right:50%}.col-lg-pull-5{right:41.66666667%}.col-lg-pull-4{right:33.33333333%}.col-lg-pull-3{right:25%}.col-lg-pull-2{right:16.66666667%}.col-lg-pull-1{right:8.33333333%}.col-lg-pull-0{right:auto}.col-lg-push-12{left:100%}.col-lg-push-11{left:91.66666667%}.col-lg-push-10{left:83.33333333%}.col-lg-push-9{left:75%}.col-lg-push-8{left:66.66666667%}.col-lg-push-7{left:58.33333333%}.col-lg-push-6{left:50%}.col-lg-push-5{left:41.66666667%}.col-lg-push-4{left:33.33333333%}.col-lg-push-3{left:25%}.col-lg-push-2{left:16.66666667%}.col-lg-push-1{left:8.33333333%}.col-lg-push-0{left:auto}.col-lg-offset-12{margin-left:100%}.col-lg-offset-11{margin-left:91.66666667%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-0{margin-left:0}}pre code,table{background-color:transparent}table col[class*=col-]{position:static;display:table-column;float:none}table td[class*=col-],table th[class*=col-]{position:static;display:table-cell;float:none}caption{padding-top:8px;padding-bottom:8px;color:#cdcdcd;text-align:left}.table{width:100%;max-width:100%;margin-bottom:20px}.table>thead>tr>th{padding:8px;line-height:1.42857143;border-top:1px solid #ddd}.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}.panel>.table>tbody:first-child>tr:first-child td,.panel>.table>tbody:first-child>tr:first-child th,.table>caption+thead>tr:first-child>td,.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>td,.table>thead:first-child>tr:first-child>th{border-top:0}.table>tbody+tbody{border-top:2px solid #ddd}.table .table{background-color:#fff}.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:5px}.table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}.table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}.table-hover>tbody>tr:hover,.table>tbody>tr.active>td,.table>tbody>tr.active>th,.table>tbody>tr>td.active,.table>tbody>tr>th.active,.table>tfoot>tr.active>td,.table>tfoot>tr.active>th,.table>tfoot>tr>td.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>thead>tr.active>th,.table>thead>tr>td.active,.table>thead>tr>th.active{background-color:#f5f5f5}.table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr.active:hover>th,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover{background-color:#e8e8e8}.table>tbody>tr.success>td,.table>tbody>tr.success>th,.table>tbody>tr>td.success,.table>tbody>tr>th.success,.table>tfoot>tr.success>td,.table>tfoot>tr.success>th,.table>tfoot>tr>td.success,.table>tfoot>tr>th.success,.table>thead>tr.success>td,.table>thead>tr.success>th,.table>thead>tr>td.success,.table>thead>tr>th.success{background-color:#dff0d8}.table-hover>tbody>tr.success:hover>td,.table-hover>tbody>tr.success:hover>th,.table-hover>tbody>tr:hover>.success,.table-hover>tbody>tr>td.success:hover,.table-hover>tbody>tr>th.success:hover{background-color:#d0e9c6}.table>tbody>tr.info>td,.table>tbody>tr.info>th,.table>tbody>tr>td.info,.table>tbody>tr>th.info,.table>tfoot>tr.info>td,.table>tfoot>tr.info>th,.table>tfoot>tr>td.info,.table>tfoot>tr>th.info,.table>thead>tr.info>td,.table>thead>tr.info>th,.table>thead>tr>td.info,.table>thead>tr>th.info{background-color:#d9edf7}.table-hover>tbody>tr.info:hover>td,.table-hover>tbody>tr.info:hover>th,.table-hover>tbody>tr:hover>.info,.table-hover>tbody>tr>td.info:hover,.table-hover>tbody>tr>th.info:hover{background-color:#c4e3f3}.table>tbody>tr.warning>td,.table>tbody>tr.warning>th,.table>tbody>tr>td.warning,.table>tbody>tr>th.warning,.table>tfoot>tr.warning>td,.table>tfoot>tr.warning>th,.table>tfoot>tr>td.warning,.table>tfoot>tr>th.warning,.table>thead>tr.warning>td,.table>thead>tr.warning>th,.table>thead>tr>td.warning,.table>thead>tr>th.warning{background-color:#fcf8e3}.table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr.warning:hover>th,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover{background-color:#faf2cc}.table>tbody>tr.danger>td,.table>tbody>tr.danger>th,.table>tbody>tr>td.danger,.table>tbody>tr>th.danger,.table>tfoot>tr.danger>td,.table>tfoot>tr.danger>th,.table>tfoot>tr>td.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>thead>tr.danger>th,.table>thead>tr>td.danger,.table>thead>tr>th.danger{background-color:#f2dede}.table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr.danger:hover>th,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover{background-color:#ebcccc}.table-responsive{min-height:.01%;overflow-x:auto}@media screen and (max-width:767px){.table-responsive{width:100%;margin-bottom:15px;overflow-y:hidden;-ms-overflow-style:-ms-autohiding-scrollbar;border:1px solid #ddd}.table-responsive>.table{margin-bottom:0}.table-responsive>.table>tbody>tr>td,.table-responsive>.table>tbody>tr>th,.table-responsive>.table>tfoot>tr>td,.table-responsive>.table>tfoot>tr>th,.table-responsive>.table>thead>tr>td,.table-responsive>.table>thead>tr>th{white-space:nowrap}.table-responsive>.table-bordered{border:0}.table-responsive>.table-bordered>tbody>tr>td:first-child,.table-responsive>.table-bordered>tbody>tr>th:first-child,.table-responsive>.table-bordered>tfoot>tr>td:first-child,.table-responsive>.table-bordered>tfoot>tr>th:first-child,.table-responsive>.table-bordered>thead>tr>td:first-child,.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.table-responsive>.table-bordered>tbody>tr>td:last-child,.table-responsive>.table-bordered>tbody>tr>th:last-child,.table-responsive>.table-bordered>tfoot>tr>td:last-child,.table-responsive>.table-bordered>tfoot>tr>th:last-child,.table-responsive>.table-bordered>thead>tr>td:last-child,.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.table-responsive>.table-bordered>tbody>tr:last-child>td,.table-responsive>.table-bordered>tbody>tr:last-child>th,.table-responsive>.table-bordered>tfoot>tr:last-child>td,.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}}fieldset,legend{padding:0;border:0}fieldset{min-width:0;margin:0}legend{display:block;width:100%;margin-bottom:20px;font-size:21px;line-height:inherit;color:#333;border-bottom:1px solid #e5e5e5}label{display:inline-block;max-width:100%;margin-bottom:5px;font-weight:700}input[type=search]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-appearance:none;appearance:none}input[type=checkbox],input[type=radio]{margin:4px 0 0;margin-top:1px \\9;line-height:normal}fieldset[disabled] input[type=checkbox],fieldset[disabled] input[type=radio],input[type=checkbox].disabled,input[type=checkbox][disabled],input[type=radio].disabled,input[type=radio][disabled]{cursor:not-allowed}input[type=file]{display:block}input[type=range]{display:block;width:100%}.form-group-sm select[multiple].form-control,.form-group-sm textarea.form-control,select[multiple],select[multiple].input-sm,select[size],textarea.form-control,textarea.input-sm{height:auto}input[type=checkbox]:focus,input[type=file]:focus,input[type=radio]:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.form-control,output{display:block;font-size:14px;line-height:1.42857143;color:#555}output{padding-top:7px}.form-control{width:100%;height:34px;padding:6px 12px;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075);-webkit-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}.form-control:focus{border-color:#66afe9;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)}.form-control::-moz-placeholder{color:#999;opacity:1}.form-control:-ms-input-placeholder{color:#999}.form-control::-webkit-input-placeholder{color:#999}.form-control::-ms-expand{background-color:transparent;border:0}.form-control[disabled],.form-control[readonly],fieldset[disabled] .form-control{background-color:#dcdcdc;opacity:1}.checkbox.disabled label,.form-control[disabled],.radio.disabled label,fieldset[disabled] .checkbox label,fieldset[disabled] .form-control,fieldset[disabled] .radio label{cursor:not-allowed}@media screen and (-webkit-min-device-pixel-ratio:0){input[type=date].form-control,input[type=datetime-local].form-control,input[type=month].form-control,input[type=time].form-control{line-height:34px}.input-group-sm input[type=date],.input-group-sm input[type=datetime-local],.input-group-sm input[type=month],.input-group-sm input[type=time],input[type=date].input-sm,input[type=datetime-local].input-sm,input[type=month].input-sm,input[type=time].input-sm{line-height:30px}.input-group-lg input[type=date],.input-group-lg input[type=datetime-local],.input-group-lg input[type=month],.input-group-lg input[type=time],input[type=date].input-lg,input[type=datetime-local].input-lg,input[type=month].input-lg,input[type=time].input-lg{line-height:46px}}.form-group{margin-bottom:15px}.checkbox,.radio{position:relative;display:block;margin-top:10px;margin-bottom:10px}.checkbox label,.checkbox-inline,.radio label,.radio-inline{padding-left:20px;margin-bottom:0;font-weight:400;cursor:pointer}.checkbox label,.radio label{min-height:20px}.checkbox input[type=checkbox],.checkbox-inline input[type=checkbox],.radio input[type=radio],.radio-inline input[type=radio]{position:absolute;margin-top:4px \\9;margin-left:-20px}.checkbox+.checkbox,.radio+.radio{margin-top:-5px}.checkbox-inline,.radio-inline{position:relative;display:inline-block;vertical-align:middle}.checkbox-inline.disabled,.radio-inline.disabled,fieldset[disabled] .checkbox-inline,fieldset[disabled] .radio-inline{cursor:not-allowed}.checkbox-inline+.checkbox-inline,.radio-inline+.radio-inline{margin-top:0;margin-left:10px}.form-control-static{min-height:34px;padding-top:7px;padding-bottom:7px;margin-bottom:0}.form-control-static.input-lg,.form-control-static.input-sm{padding-right:0;padding-left:0}.form-group-sm .form-control,.input-sm{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.form-group-sm select.form-control,select.input-sm{height:30px;line-height:30px}.form-group-sm .form-control-static{height:30px;min-height:32px;padding:6px 10px;font-size:12px;line-height:1.5}.form-group-lg .form-control,.input-lg{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.form-group-lg select[multiple].form-control,.form-group-lg textarea.form-control,select[multiple].input-lg,textarea.input-lg{height:auto}.form-group-lg select.form-control,select.input-lg{height:46px;line-height:46px}.form-group-lg .form-control-static{height:46px;min-height:38px;padding:11px 16px;font-size:18px;line-height:1.3333333}.has-feedback{position:relative}.has-feedback .form-control{padding-right:42.5px}.form-control-feedback{position:absolute;top:0;right:0;z-index:2;display:block;width:34px;height:34px;line-height:34px;text-align:center;pointer-events:none}.form-group-lg .form-control+.form-control-feedback,.input-group-lg+.form-control-feedback,.input-lg+.form-control-feedback{width:46px;height:46px;line-height:46px}.form-group-sm .form-control+.form-control-feedback,.input-group-sm+.form-control-feedback,.input-sm+.form-control-feedback{width:30px;height:30px;line-height:30px}.has-success .checkbox,.has-success .checkbox-inline,.has-success .control-label,.has-success .help-block,.has-success .radio,.has-success .radio-inline,.has-success.checkbox label,.has-success.checkbox-inline label,.has-success.radio label,.has-success.radio-inline label{color:#3c763d}.has-success .form-control{border-color:#3c763d;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-success .form-control:focus{border-color:#2b542c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #67b168}.has-success .input-group-addon{color:#3c763d;background-color:#dff0d8;border-color:#3c763d}.has-success .form-control-feedback{color:#3c763d}.has-warning .checkbox,.has-warning .checkbox-inline,.has-warning .control-label,.has-warning .help-block,.has-warning .radio,.has-warning .radio-inline,.has-warning.checkbox label,.has-warning.checkbox-inline label,.has-warning.radio label,.has-warning.radio-inline label{color:#8a6d3b}.has-warning .form-control{border-color:#8a6d3b;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-warning .form-control:focus{border-color:#66512c;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #c0a16b}.has-warning .input-group-addon{color:#8a6d3b;background-color:#fcf8e3;border-color:#8a6d3b}.has-warning .form-control-feedback{color:#8a6d3b}.has-error .checkbox,.has-error .checkbox-inline,.has-error .control-label,.has-error .help-block,.has-error .radio,.has-error .radio-inline,.has-error.checkbox label,.has-error.checkbox-inline label,.has-error.radio label,.has-error.radio-inline label{color:#a94442}.has-error .form-control{border-color:#a94442;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075);box-shadow:inset 0 1px 1px rgba(0,0,0,.075)}.has-error .form-control:focus{border-color:#843534;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 6px #ce8483}.has-error .input-group-addon{color:#a94442;background-color:#f2dede;border-color:#a94442}.has-error .form-control-feedback{color:#a94442}.has-feedback label~.form-control-feedback{top:25px}.has-feedback label.sr-only~.form-control-feedback{top:0}.help-block{display:block;margin-top:5px;margin-bottom:10px;color:#737373}@media (min-width:768px){.form-inline .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.form-inline .form-control{display:inline-block;width:auto;vertical-align:middle}.form-inline .form-control-static{display:inline-block}.form-inline .input-group{display:inline-table;vertical-align:middle}.form-inline .input-group .form-control,.form-inline .input-group .input-group-addon,.form-inline .input-group .input-group-btn{width:auto}.form-inline .input-group>.form-control{width:100%}.form-inline .control-label{margin-bottom:0;vertical-align:middle}.form-inline .checkbox,.form-inline .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.form-inline .checkbox label,.form-inline .radio label{padding-left:0}.form-inline .checkbox input[type=checkbox],.form-inline .radio input[type=radio]{position:relative;margin-left:0}.form-inline .has-feedback .form-control-feedback{top:0}}.form-horizontal .checkbox,.form-horizontal .checkbox-inline,.form-horizontal .radio,.form-horizontal .radio-inline{padding-top:7px;margin-top:0;margin-bottom:0}.form-horizontal .checkbox,.form-horizontal .radio{min-height:27px}.form-horizontal .form-group{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.form-horizontal .control-label{padding-top:7px;margin-bottom:0;text-align:right}}.form-horizontal .has-feedback .form-control-feedback{right:15px}@media (min-width:768px){.form-horizontal .form-group-lg .control-label{padding-top:11px;font-size:18px}.form-horizontal .form-group-sm .control-label{padding-top:6px;font-size:12px}}.btn{display:inline-block;margin-bottom:0;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;touch-action:manipulation;cursor:pointer;background-image:none;border:1px solid transparent;padding:6px 12px;font-size:14px;line-height:1.42857143;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.btn.active.focus,.btn.active:focus,.btn.focus,.btn:active.focus,.btn:active:focus,.btn:focus{outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.btn.focus,.btn:focus,.btn:hover{color:#333;text-decoration:none}.btn.active,.btn:active{background-image:none;outline:0;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn.disabled,.btn[disabled],fieldset[disabled] .btn{cursor:not-allowed;filter:alpha(opacity=65);opacity:.65;-webkit-box-shadow:none;box-shadow:none}a.btn.disabled,fieldset[disabled] a.btn{pointer-events:none}.btn-default{color:#333;background-color:#fff;border-color:#ccc}.btn-default.focus,.btn-default:focus{color:#333;background-color:#e6e6e6;border-color:#8c8c8c}.btn-default:hover{color:#333;background-color:#e6e6e6;border-color:#adadad}.btn-default.active,.btn-default:active,.open>.dropdown-toggle.btn-default{color:#333;background-color:#e6e6e6;background-image:none;border-color:#adadad}.btn-default.active.focus,.btn-default.active:focus,.btn-default.active:hover,.btn-default:active.focus,.btn-default:active:focus,.btn-default:active:hover,.open>.dropdown-toggle.btn-default.focus,.open>.dropdown-toggle.btn-default:focus,.open>.dropdown-toggle.btn-default:hover{color:#333;background-color:#d4d4d4;border-color:#8c8c8c}.btn-default.disabled.focus,.btn-default.disabled:focus,.btn-default.disabled:hover,.btn-default[disabled].focus,.btn-default[disabled]:focus,.btn-default[disabled]:hover,fieldset[disabled] .btn-default.focus,fieldset[disabled] .btn-default:focus,fieldset[disabled] .btn-default:hover{background-color:#fff;border-color:#ccc}.btn-default .badge{color:#fff;background-color:#333}.btn-primary{color:#fff;background-color:#21366b;border-color:#1b2c58}.btn-primary.focus,.btn-primary:focus{color:#fff;background-color:#152244;border-color:#000}.btn-primary:hover{color:#fff;background-color:#152244;border-color:#0d1529}.btn-primary.active,.btn-primary:active,.open>.dropdown-toggle.btn-primary{color:#fff;background-color:#152244;background-image:none;border-color:#0d1529}.btn-primary.active.focus,.btn-primary.active:focus,.btn-primary.active:hover,.btn-primary:active.focus,.btn-primary:active:focus,.btn-primary:active:hover,.open>.dropdown-toggle.btn-primary.focus,.open>.dropdown-toggle.btn-primary:focus,.open>.dropdown-toggle.btn-primary:hover{color:#fff;background-color:#0d1529;border-color:#000}.btn-primary.disabled.focus,.btn-primary.disabled:focus,.btn-primary.disabled:hover,.btn-primary[disabled].focus,.btn-primary[disabled]:focus,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary.focus,fieldset[disabled] .btn-primary:focus,fieldset[disabled] .btn-primary:hover{background-color:#21366b;border-color:#1b2c58}.btn-primary .badge{color:#21366b;background-color:#fff}.btn-success{color:#fff;background-color:#5cb85c;border-color:#4cae4c}.btn-success.focus,.btn-success:focus{color:#fff;background-color:#449d44;border-color:#255625}.btn-success:hover{color:#fff;background-color:#449d44;border-color:#398439}.btn-success.active,.btn-success:active,.open>.dropdown-toggle.btn-success{color:#fff;background-color:#449d44;background-image:none;border-color:#398439}.btn-success.active.focus,.btn-success.active:focus,.btn-success.active:hover,.btn-success:active.focus,.btn-success:active:focus,.btn-success:active:hover,.open>.dropdown-toggle.btn-success.focus,.open>.dropdown-toggle.btn-success:focus,.open>.dropdown-toggle.btn-success:hover{color:#fff;background-color:#398439;border-color:#255625}.btn-success.disabled.focus,.btn-success.disabled:focus,.btn-success.disabled:hover,.btn-success[disabled].focus,.btn-success[disabled]:focus,.btn-success[disabled]:hover,fieldset[disabled] .btn-success.focus,fieldset[disabled] .btn-success:focus,fieldset[disabled] .btn-success:hover{background-color:#5cb85c;border-color:#4cae4c}.btn-success .badge{color:#5cb85c;background-color:#fff}.btn-info{color:#fff;background-color:#5bc0de;border-color:#46b8da}.btn-info.focus,.btn-info:focus{color:#fff;background-color:#31b0d5;border-color:#1b6d85}.btn-info:hover{color:#fff;background-color:#31b0d5;border-color:#269abc}.btn-info.active,.btn-info:active,.open>.dropdown-toggle.btn-info{color:#fff;background-color:#31b0d5;background-image:none;border-color:#269abc}.btn-info.active.focus,.btn-info.active:focus,.btn-info.active:hover,.btn-info:active.focus,.btn-info:active:focus,.btn-info:active:hover,.open>.dropdown-toggle.btn-info.focus,.open>.dropdown-toggle.btn-info:focus,.open>.dropdown-toggle.btn-info:hover{color:#fff;background-color:#269abc;border-color:#1b6d85}.btn-info.disabled.focus,.btn-info.disabled:focus,.btn-info.disabled:hover,.btn-info[disabled].focus,.btn-info[disabled]:focus,.btn-info[disabled]:hover,fieldset[disabled] .btn-info.focus,fieldset[disabled] .btn-info:focus,fieldset[disabled] .btn-info:hover{background-color:#5bc0de;border-color:#46b8da}.btn-info .badge{color:#5bc0de;background-color:#fff}.btn-warning{color:#fff;background-color:#f0ad4e;border-color:#eea236}.btn-warning.focus,.btn-warning:focus{color:#fff;background-color:#ec971f;border-color:#985f0d}.btn-warning:hover{color:#fff;background-color:#ec971f;border-color:#d58512}.btn-warning.active,.btn-warning:active,.open>.dropdown-toggle.btn-warning{color:#fff;background-color:#ec971f;background-image:none;border-color:#d58512}.btn-warning.active.focus,.btn-warning.active:focus,.btn-warning.active:hover,.btn-warning:active.focus,.btn-warning:active:focus,.btn-warning:active:hover,.open>.dropdown-toggle.btn-warning.focus,.open>.dropdown-toggle.btn-warning:focus,.open>.dropdown-toggle.btn-warning:hover{color:#fff;background-color:#d58512;border-color:#985f0d}.btn-warning.disabled.focus,.btn-warning.disabled:focus,.btn-warning.disabled:hover,.btn-warning[disabled].focus,.btn-warning[disabled]:focus,.btn-warning[disabled]:hover,fieldset[disabled] .btn-warning.focus,fieldset[disabled] .btn-warning:focus,fieldset[disabled] .btn-warning:hover{background-color:#f0ad4e;border-color:#eea236}.btn-warning .badge{color:#f0ad4e;background-color:#fff}.btn-danger{color:#fff;background-color:#d9534f;border-color:#d43f3a}.btn-danger.focus,.btn-danger:focus{color:#fff;background-color:#c9302c;border-color:#761c19}.btn-danger:hover{color:#fff;background-color:#c9302c;border-color:#ac2925}.btn-danger.active,.btn-danger:active,.open>.dropdown-toggle.btn-danger{color:#fff;background-color:#c9302c;background-image:none;border-color:#ac2925}.btn-danger.active.focus,.btn-danger.active:focus,.btn-danger.active:hover,.btn-danger:active.focus,.btn-danger:active:focus,.btn-danger:active:hover,.open>.dropdown-toggle.btn-danger.focus,.open>.dropdown-toggle.btn-danger:focus,.open>.dropdown-toggle.btn-danger:hover{color:#fff;background-color:#ac2925;border-color:#761c19}.btn-danger.disabled.focus,.btn-danger.disabled:focus,.btn-danger.disabled:hover,.btn-danger[disabled].focus,.btn-danger[disabled]:focus,.btn-danger[disabled]:hover,fieldset[disabled] .btn-danger.focus,fieldset[disabled] .btn-danger:focus,fieldset[disabled] .btn-danger:hover{background-color:#d9534f;border-color:#d43f3a}.btn-danger .badge{color:#d9534f;background-color:#fff}.btn-link{font-weight:400;color:#21366b;border-radius:0}.btn-link,.btn-link.active,.btn-link:active,.btn-link[disabled],fieldset[disabled] .btn-link{background-color:transparent;-webkit-box-shadow:none;box-shadow:none}.btn-link,.btn-link:active,.btn-link:focus,.btn-link:hover{border-color:transparent}.btn-link:focus,.btn-link:hover{color:#0f1831;text-decoration:underline;background-color:transparent}.btn-link[disabled]:focus,.btn-link[disabled]:hover,fieldset[disabled] .btn-link:focus,fieldset[disabled] .btn-link:hover{color:#cdcdcd;text-decoration:none}.btn-group-lg>.btn,.btn-lg{padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}.btn-group-sm>.btn,.btn-group-xs>.btn,.btn-sm,.btn-xs{padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}.btn-group-xs>.btn,.btn-xs{padding:1px 5px}.btn-block{display:block;width:100%}.alert>p+p,.btn-block+.btn-block{margin-top:5px}input[type=button].btn-block,input[type=reset].btn-block,input[type=submit].btn-block{width:100%}.fade{opacity:0;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear}.fade.in{opacity:1}.collapse{display:none}.collapse.in{display:block}tr.collapse.in{display:table-row}tbody.collapse.in{display:table-row-group}.collapsing{position:relative;height:0;overflow:hidden;-webkit-transition-property:height,visibility;transition-property:height,visibility;-webkit-transition-duration:.35s;transition-duration:.35s;-webkit-transition-timing-function:ease;transition-timing-function:ease}.caret{display:inline-block;width:0;height:0;margin-left:2px;vertical-align:middle;border-top:4px dashed;border-top:4px solid \\9;border-right:4px solid transparent;border-left:4px solid transparent}.dropdown,.dropup{position:relative}.dropdown-toggle:focus{outline:0}.dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;font-size:14px;text-align:left;list-style:none;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175)}.dropdown-menu-right,.dropdown-menu.pull-right{right:0;left:auto}.dropdown-menu .divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.dropdown-menu>li>a{display:block;padding:3px 20px;clear:both;font-weight:400;line-height:1.42857143;color:#333;white-space:nowrap}.dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{color:#262626;text-decoration:none;background-color:#f5f5f5}.dropdown-menu>.active>a,.dropdown-menu>.active>a:focus,.dropdown-menu>.active>a:hover{color:#fff;text-decoration:none;background-color:#21366b;outline:0}.dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{color:#cdcdcd}.dropdown-menu>.disabled>a:focus,.dropdown-menu>.disabled>a:hover{text-decoration:none;cursor:not-allowed;background-color:transparent;background-image:none;filter:progid:DXImageTransform.Microsoft.gradient(enabled = false)}.open>.dropdown-menu{display:block}.open>a{outline:0}.dropdown-menu-left{right:auto;left:0}.dropdown-header{display:block;padding:3px 20px;font-size:12px;line-height:1.42857143;color:#cdcdcd;white-space:nowrap}.dropdown-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:990}.pull-right>.dropdown-menu{right:0;left:auto}.dropup .caret,.navbar-fixed-bottom .dropdown .caret{content:\"\";border-top:0;border-bottom:4px dashed;border-bottom:4px solid \\9}.dropup .dropdown-menu,.navbar-fixed-bottom .dropdown .dropdown-menu{top:auto;bottom:100%;margin-bottom:2px}@media (min-width:768px){.navbar-right .dropdown-menu{right:0;left:auto}.navbar-right .dropdown-menu-left{right:auto;left:0}}.btn-group,.btn-group-vertical{position:relative;display:inline-block;vertical-align:middle}.btn-group>.btn{float:left}.btn-group-vertical>.btn,.btn-group>.btn{position:relative}.btn-group-vertical>.btn.active,.btn-group-vertical>.btn:active,.btn-group-vertical>.btn:focus,.btn-group-vertical>.btn:hover,.btn-group>.btn.active,.btn-group>.btn:active,.btn-group>.btn:focus,.btn-group>.btn:hover{z-index:2}.btn-group .btn+.btn,.btn-group .btn+.btn-group,.btn-group .btn-group+.btn,.btn-group .btn-group+.btn-group{margin-left:-1px}.btn-toolbar{margin-left:-5px}.btn-toolbar .btn,.btn-toolbar .btn-group,.btn-toolbar .input-group{float:left}.btn-toolbar>.btn,.btn-toolbar>.btn-group,.btn-toolbar>.input-group{margin-left:5px}.btn-group>.btn:not(:first-child):not(:last-child):not(.dropdown-toggle){border-radius:0}.btn-group>.btn:first-child{margin-left:0}.btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn:last-child:not(:first-child),.btn-group>.dropdown-toggle:not(:first-child){border-top-left-radius:0;border-bottom-left-radius:0}.btn-group>.btn-group{float:left}.btn-group>.btn-group:not(:first-child):not(:last-child)>.btn{border-radius:0}.btn-group>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-top-right-radius:0;border-bottom-right-radius:0}.btn-group>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-bottom-left-radius:0}.btn-group .dropdown-toggle:active,.btn-group.open .dropdown-toggle{outline:0}.btn-group>.btn+.dropdown-toggle{padding-right:8px;padding-left:8px}.btn-group>.btn-lg+.dropdown-toggle{padding-right:12px;padding-left:12px}.btn-group.open .dropdown-toggle{-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,.125);box-shadow:inset 0 3px 5px rgba(0,0,0,.125)}.btn-group.open .dropdown-toggle.btn-link{-webkit-box-shadow:none;box-shadow:none}.btn .caret{margin-left:0}.btn-lg .caret{border-width:5px 5px 0}.dropup .btn-lg .caret{border-width:0 5px 5px}.btn-group-vertical>.btn,.btn-group-vertical>.btn-group,.btn-group-vertical>.btn-group>.btn{display:block;width:100%;max-width:100%;float:none}.nav-tabs.nav-justified>li{float:none}.btn-group-vertical>.btn+.btn,.btn-group-vertical>.btn+.btn-group,.btn-group-vertical>.btn-group+.btn,.btn-group-vertical>.btn-group+.btn-group{margin-top:-1px;margin-left:0}.btn-group-vertical>.btn-group:not(:first-child):not(:last-child)>.btn,.btn-group-vertical>.btn:not(:first-child):not(:last-child){border-radius:0}.btn-group-vertical>.btn:first-child:not(:last-child){border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn:last-child:not(:first-child){border-top-left-radius:0;border-top-right-radius:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.btn-group-vertical>.btn-group:first-child:not(:last-child)>.btn:last-child,.btn-group-vertical>.btn-group:first-child:not(:last-child)>.dropdown-toggle{border-bottom-right-radius:0;border-bottom-left-radius:0}.btn-group-vertical>.btn-group:last-child:not(:first-child)>.btn:first-child{border-top-left-radius:0;border-top-right-radius:0}.btn-group-justified,.input-group{display:table;border-collapse:separate}.btn-group-justified{width:100%;table-layout:fixed}.btn-group-justified>.btn,.btn-group-justified>.btn-group{display:table-cell;float:none;width:1%}.btn-group-justified>.btn-group .btn{width:100%}.btn-group-justified>.btn-group .dropdown-menu{left:auto}[data-toggle=buttons]>.btn input[type=checkbox],[data-toggle=buttons]>.btn input[type=radio],[data-toggle=buttons]>.btn-group>.btn input[type=checkbox],[data-toggle=buttons]>.btn-group>.btn input[type=radio]{position:absolute;clip:rect(0,0,0,0);pointer-events:none}.input-group{position:relative}.input-group[class*=col-]{float:none;padding-right:0;padding-left:0}.input-group .form-control{position:relative;z-index:2;float:left;width:100%;margin-bottom:0}.input-group .form-control:focus{z-index:3}.input-group-lg>.form-control,.input-group-lg>.input-group-addon,.input-group-lg>.input-group-btn>.btn{height:46px;padding:10px 16px;font-size:18px;line-height:1.3333333;border-radius:6px}select.input-group-lg>.form-control,select.input-group-lg>.input-group-addon,select.input-group-lg>.input-group-btn>.btn{height:46px;line-height:46px}select[multiple].input-group-lg>.form-control,select[multiple].input-group-lg>.input-group-addon,select[multiple].input-group-lg>.input-group-btn>.btn,textarea.input-group-lg>.form-control,textarea.input-group-lg>.input-group-addon,textarea.input-group-lg>.input-group-btn>.btn{height:auto}.input-group-sm>.form-control,.input-group-sm>.input-group-addon,.input-group-sm>.input-group-btn>.btn{height:30px;padding:5px 10px;font-size:12px;line-height:1.5;border-radius:3px}select.input-group-sm>.form-control,select.input-group-sm>.input-group-addon,select.input-group-sm>.input-group-btn>.btn{height:30px;line-height:30px}select[multiple].input-group-sm>.form-control,select[multiple].input-group-sm>.input-group-addon,select[multiple].input-group-sm>.input-group-btn>.btn,textarea.input-group-sm>.form-control,textarea.input-group-sm>.input-group-addon,textarea.input-group-sm>.input-group-btn>.btn{height:auto}.input-group .form-control,.input-group-addon,.input-group-btn{display:table-cell}.input-group .form-control:not(:first-child):not(:last-child),.input-group-addon:not(:first-child):not(:last-child),.input-group-btn:not(:first-child):not(:last-child){border-radius:0}.input-group-addon{white-space:nowrap}.input-group-addon,.input-group-btn{width:1%;vertical-align:middle}.input-group-addon{padding:6px 12px;font-size:14px;font-weight:400;line-height:1;color:#555;text-align:center;background-color:#dcdcdc;border:1px solid #ccc;border-radius:4px}.input-group-addon.input-sm{padding:5px 10px;font-size:12px;border-radius:3px}.input-group-addon.input-lg{padding:10px 16px;font-size:18px;border-radius:6px}.input-group-addon input[type=checkbox],.input-group-addon input[type=radio]{margin-top:0}.input-group .form-control:first-child,.input-group-addon:first-child,.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group>.btn,.input-group-btn:first-child>.dropdown-toggle,.input-group-btn:last-child>.btn-group:not(:last-child)>.btn,.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle){border-top-right-radius:0;border-bottom-right-radius:0}.input-group-addon:first-child{border-right:0}.input-group .form-control:last-child,.input-group-addon:last-child,.input-group-btn:first-child>.btn-group:not(:first-child)>.btn,.input-group-btn:first-child>.btn:not(:first-child),.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group>.btn,.input-group-btn:last-child>.dropdown-toggle{border-top-left-radius:0;border-bottom-left-radius:0}.input-group-addon:last-child{border-left:0}.input-group-btn{font-size:0;white-space:nowrap}.input-group-btn,.input-group-btn>.btn{position:relative}.input-group-btn>.btn+.btn{margin-left:-1px}.input-group-btn>.btn:active,.input-group-btn>.btn:focus,.input-group-btn>.btn:hover{z-index:2}.input-group-btn:first-child>.btn,.input-group-btn:first-child>.btn-group{margin-right:-1px}.input-group-btn:last-child>.btn,.input-group-btn:last-child>.btn-group{z-index:2;margin-left:-1px}.nav{padding-left:0;margin-bottom:0;list-style:none}.nav>li,.nav>li>a{position:relative;display:block}.nav>li>a{padding:10px 15px}.nav>li>a:focus,.nav>li>a:hover{text-decoration:none;background-color:#dcdcdc}.nav>li.disabled>a{color:#cdcdcd}.nav>li.disabled>a:focus,.nav>li.disabled>a:hover{color:#cdcdcd;text-decoration:none;cursor:not-allowed;background-color:transparent}.nav .open>a,.nav .open>a:focus,.nav .open>a:hover{background-color:#dcdcdc;border-color:#21366b}.nav .nav-divider{height:1px;margin:9px 0;overflow:hidden;background-color:#e5e5e5}.nav>li>a>img{max-width:none}.nav-tabs{border-bottom:1px solid #ddd}.nav-tabs>li{float:left;margin-bottom:-1px}.nav-tabs>li>a{margin-right:2px;line-height:1.42857143;border:1px solid transparent;border-radius:4px 4px 0 0}.nav-tabs>li>a:hover{border-color:#dcdcdc #dcdcdc #ddd}.nav-tabs>li.active>a,.nav-tabs>li.active>a:focus,.nav-tabs>li.active>a:hover{color:#555;cursor:default;background-color:#fff;border:1px solid #ddd;border-bottom-color:transparent}.nav-tabs.nav-justified{width:100%;border-bottom:0}.nav-tabs.nav-justified>li>a{margin-bottom:5px;text-align:center}.nav-justified>.dropdown .dropdown-menu,.nav-tabs.nav-justified>.dropdown .dropdown-menu{top:auto;left:auto}@media (min-width:768px){.nav-tabs.nav-justified>li{display:table-cell;width:1%}.nav-tabs.nav-justified>li>a{margin-bottom:0}}.nav-tabs.nav-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs.nav-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs.nav-justified>.active>a,.nav-tabs.nav-justified>.active>a:focus,.nav-tabs.nav-justified>.active>a:hover{border-bottom-color:#fff}}.nav-pills>li{float:left}.nav-pills>li>a{border-radius:4px}.nav-pills>li+li{margin-left:2px}.nav-pills>li.active>a,.nav-pills>li.active>a:focus,.nav-pills>li.active>a:hover{color:#fff;background-color:#21366b}.nav-justified>li,.nav-stacked>li{float:none}.nav-stacked>li+li{margin-top:2px;margin-left:0}.nav-justified{width:100%}.nav-justified>li>a{margin-bottom:5px;text-align:center}@media (min-width:768px){.nav-justified>li{display:table-cell;width:1%}.nav-justified>li>a{margin-bottom:0}}.nav-tabs-justified{border-bottom:0}.nav-tabs-justified>li>a{margin-right:0;border-radius:4px}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border:1px solid #ddd}@media (min-width:768px){.nav-tabs-justified>li>a{border-bottom:1px solid #ddd;border-radius:4px 4px 0 0}.nav-tabs-justified>.active>a,.nav-tabs-justified>.active>a:focus,.nav-tabs-justified>.active>a:hover{border-bottom-color:#fff}}.tab-content>.tab-pane{display:none}.navbar-brand>img,.tab-content>.active{display:block}.nav-tabs .dropdown-menu{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}.navbar{position:relative;min-height:50px;margin-bottom:20px;border:1px solid transparent}@media (min-width:768px){.navbar{border-radius:4px}.navbar-header{float:left}}.navbar-collapse{padding-right:15px;padding-left:15px;overflow-x:visible;border-top:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);-webkit-overflow-scrolling:touch}.navbar-collapse.in{overflow-y:auto}@media (min-width:768px){.navbar-collapse{width:auto;border-top:0;box-shadow:none}.navbar-collapse.collapse{display:block!important;height:auto!important;padding-bottom:0;overflow:visible!important}.navbar-collapse.in{overflow-y:visible}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse,.navbar-static-top .navbar-collapse{padding-right:0;padding-left:0}}.navbar-fixed-bottom,.navbar-fixed-top{position:fixed;right:0;left:0;z-index:1030}.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:340px}@media (max-device-width:480px) and (orientation:landscape){.navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse{max-height:200px}}@media (min-width:768px){.navbar-fixed-bottom,.navbar-fixed-top{border-radius:0}}.navbar-fixed-top{top:0;border-width:0 0 1px}.navbar-fixed-bottom{bottom:0;margin-bottom:0;border-width:1px 0 0}.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:-15px;margin-left:-15px}@media (min-width:768px){.container-fluid>.navbar-collapse,.container-fluid>.navbar-header,.container>.navbar-collapse,.container>.navbar-header{margin-right:0;margin-left:0}}.navbar-static-top{z-index:1000;border-width:0 0 1px}@media (min-width:768px){.navbar-static-top{border-radius:0}}.navbar-brand{float:left;height:50px;padding:15px;font-size:18px;line-height:20px}.navbar-brand:focus,.navbar-brand:hover,.sim-tabs>ul>li>a:active,.sim-tabs>ul>li>a:focus,.sim-tabs>ul>li>a:hover,.sim-tabs>ul>li>a:visited{text-decoration:none}@media (min-width:768px){.navbar>.container .navbar-brand,.navbar>.container-fluid .navbar-brand{margin-left:-15px}}.navbar-toggle{position:relative;float:right;padding:9px 10px;margin-right:15px;margin-top:8px;margin-bottom:8px;background-color:transparent;background-image:none;border:1px solid transparent;border-radius:4px}.navbar-toggle:focus{outline:0}.navbar-toggle .icon-bar{display:block;width:22px;height:2px;border-radius:1px}.navbar-toggle .icon-bar+.icon-bar{margin-top:4px}@media (min-width:768px){.navbar-toggle{display:none}}.navbar-nav{margin:7.5px -15px}.navbar-nav>li>a{padding-top:10px;padding-bottom:10px;line-height:20px}@media (max-width:767px){.navbar-nav .open .dropdown-menu{position:static;float:none;width:auto;margin-top:0;background-color:transparent;border:0;box-shadow:none}.navbar-nav .open .dropdown-menu .dropdown-header,.navbar-nav .open .dropdown-menu>li>a{padding:5px 15px 5px 25px}.navbar-nav .open .dropdown-menu>li>a{line-height:20px}.navbar-nav .open .dropdown-menu>li>a:focus,.navbar-nav .open .dropdown-menu>li>a:hover{background-image:none}}@media (min-width:768px){.navbar-nav{float:left;margin:0}.navbar-nav>li{float:left}.navbar-nav>li>a{padding-top:15px;padding-bottom:15px}}.navbar-form{padding:10px 15px;border-top:1px solid transparent;border-bottom:1px solid transparent;-webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 rgba(255,255,255,.1);margin:8px -15px}@media (min-width:768px){.navbar-form .form-group{display:inline-block;margin-bottom:0;vertical-align:middle}.navbar-form .form-control{display:inline-block;width:auto;vertical-align:middle}.navbar-form .form-control-static{display:inline-block}.navbar-form .input-group{display:inline-table;vertical-align:middle}.navbar-form .input-group .form-control,.navbar-form .input-group .input-group-addon,.navbar-form .input-group .input-group-btn{width:auto}.navbar-form .input-group>.form-control{width:100%}.navbar-form .control-label{margin-bottom:0;vertical-align:middle}.navbar-form .checkbox,.navbar-form .radio{display:inline-block;margin-top:0;margin-bottom:0;vertical-align:middle}.navbar-form .checkbox label,.navbar-form .radio label{padding-left:0}.navbar-form .checkbox input[type=checkbox],.navbar-form .radio input[type=radio]{position:relative;margin-left:0}.navbar-form .has-feedback .form-control-feedback{top:0}}@media (max-width:767px){.navbar-form .form-group{margin-bottom:5px}.navbar-form .form-group:last-child{margin-bottom:0}}@media (min-width:768px){.navbar-form{width:auto;padding-top:0;padding-bottom:0;margin-right:0;margin-left:0;border:0;-webkit-box-shadow:none;box-shadow:none}}.navbar-nav>li>.dropdown-menu{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}.navbar-fixed-bottom .navbar-nav>li>.dropdown-menu{margin-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;border-bottom-right-radius:0;border-bottom-left-radius:0}.navbar-btn{margin-top:8px;margin-bottom:8px}.navbar-btn.btn-sm{margin-top:10px;margin-bottom:10px}.navbar-btn.btn-xs{margin-top:14px;margin-bottom:14px}.navbar-text{margin-top:15px;margin-bottom:15px}@media (min-width:768px){.navbar-text{float:left;margin-right:15px;margin-left:15px}.navbar-left{float:left!important}.navbar-right{float:right!important;margin-right:-15px}.navbar-right~.navbar-right{margin-right:0}}.navbar-default{background-color:#f8f8f8;border-color:#e7e7e7}.navbar-default .navbar-brand,.navbar-default .navbar-nav>li>a,.navbar-default .navbar-text{color:#777}.navbar-default .navbar-brand:focus,.navbar-default .navbar-brand:hover{color:#5e5e5e;background-color:transparent}.navbar-default .navbar-nav>li>a:focus,.navbar-default .navbar-nav>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:focus,.navbar-default .navbar-nav>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav>.disabled>a,.navbar-default .navbar-nav>.disabled>a:focus,.navbar-default .navbar-nav>.disabled>a:hover{color:#ccc;background-color:transparent}.navbar-default .navbar-nav>.open>a,.navbar-default .navbar-nav>.open>a:focus,.navbar-default .navbar-nav>.open>a:hover{color:#555;background-color:#e7e7e7}@media (max-width:767px){.navbar-default .navbar-nav .open .dropdown-menu>li>a{color:#777}.navbar-default .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>li>a:hover{color:#333;background-color:transparent}.navbar-default .navbar-nav .open .dropdown-menu>.active>a,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.active>a:hover{color:#555;background-color:#e7e7e7}.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-default .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#ccc;background-color:transparent}}.navbar-default .navbar-toggle{border-color:#ddd}.navbar-default .navbar-toggle:focus,.navbar-default .navbar-toggle:hover{background-color:#ddd}.navbar-default .navbar-toggle .icon-bar{background-color:#888}.navbar-default .navbar-collapse,.navbar-default .navbar-form{border-color:#e7e7e7}.navbar-default .btn-link,.navbar-default .navbar-link{color:#777}.navbar-default .navbar-link:hover,a.list-group-item .list-group-item-heading,button.list-group-item .list-group-item-heading{color:#333}.navbar-default .btn-link:focus,.navbar-default .btn-link:hover{color:#333}.navbar-default .btn-link[disabled]:focus,.navbar-default .btn-link[disabled]:hover,fieldset[disabled] .navbar-default .btn-link:focus,fieldset[disabled] .navbar-default .btn-link:hover{color:#ccc}.navbar-inverse{background-color:#222;border-color:#080808}.navbar-inverse .navbar-brand,.navbar-inverse .navbar-nav>li>a,.navbar-inverse .navbar-text{color:#f3f3f3}.navbar-inverse .navbar-brand:focus,.navbar-inverse .navbar-brand:hover,.navbar-inverse .navbar-nav>li>a:focus,.navbar-inverse .navbar-nav>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav>.active>a,.navbar-inverse .navbar-nav>.active>a:focus,.navbar-inverse .navbar-nav>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav>.disabled>a,.navbar-inverse .navbar-nav>.disabled>a:focus,.navbar-inverse .navbar-nav>.disabled>a:hover{color:#444;background-color:transparent}.navbar-inverse .navbar-nav>.open>a,.navbar-inverse .navbar-nav>.open>a:focus,.navbar-inverse .navbar-nav>.open>a:hover{color:#fff;background-color:#080808}@media (max-width:767px){.navbar-inverse .navbar-nav .open .dropdown-menu>.dropdown-header{border-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu .divider{background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a{color:#f3f3f3}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:hover{color:#fff;background-color:transparent}.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:hover{color:#fff;background-color:#080808}.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:focus,.navbar-inverse .navbar-nav .open .dropdown-menu>.disabled>a:hover{color:#444;background-color:transparent}}.navbar-inverse .navbar-toggle{border-color:#333}.navbar-inverse .navbar-toggle:focus,.navbar-inverse .navbar-toggle:hover{background-color:#333}.navbar-inverse .navbar-toggle .icon-bar{background-color:#fff}.navbar-inverse .navbar-collapse,.navbar-inverse .navbar-form{border-color:#101010}.navbar-inverse .btn-link,.navbar-inverse .navbar-link{color:#f3f3f3}.navbar-inverse .navbar-link:hover{color:#fff}.navbar-inverse .btn-link:focus,.navbar-inverse .btn-link:hover{color:#fff}.navbar-inverse .btn-link[disabled]:focus,.navbar-inverse .btn-link[disabled]:hover,fieldset[disabled] .navbar-inverse .btn-link:focus,fieldset[disabled] .navbar-inverse .btn-link:hover{color:#444}.breadcrumb{padding:8px 15px;margin-bottom:20px;list-style:none;background-color:#f5f5f5;border-radius:4px}.breadcrumb>li,.pagination{display:inline-block}.breadcrumb>li+li:before{padding:0 5px;color:#ccc;content:\"/ \"}.breadcrumb>.active{color:#cdcdcd}.pagination{padding-left:0;margin:20px 0;border-radius:4px}.pager li,.pagination>li{display:inline}.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:6px 12px;margin-left:-1px;line-height:1.42857143;color:#21366b;text-decoration:none;background-color:#fff;border:1px solid #ddd}.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:2;color:#0f1831;background-color:#dcdcdc;border-color:#ddd}.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:3;color:#fff;cursor:default;background-color:#21366b;border-color:#21366b}.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#cdcdcd;cursor:not-allowed;background-color:#fff;border-color:#ddd}.pagination-lg>li>a,.pagination-lg>li>span{padding:10px 16px;font-size:18px;line-height:1.3333333}.pagination-lg>li:first-child>a,.pagination-lg>li:first-child>span{border-top-left-radius:6px;border-bottom-left-radius:6px}.pagination-lg>li:last-child>a,.pagination-lg>li:last-child>span{border-top-right-radius:6px;border-bottom-right-radius:6px}.pagination-sm>li>a,.pagination-sm>li>span{padding:5px 10px;font-size:12px;line-height:1.5}.pagination-sm>li:first-child>a,.pagination-sm>li:first-child>span{border-top-left-radius:3px;border-bottom-left-radius:3px}.pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-top-right-radius:3px;border-bottom-right-radius:3px}.pager{padding-left:0;margin:20px 0;text-align:center;list-style:none}.pager li>a,.pager li>span{display:inline-block;padding:5px 14px;background-color:#fff;border:1px solid #ddd;border-radius:15px}.pager li>a:focus,.pager li>a:hover{text-decoration:none;background-color:#dcdcdc}.pager .next>a,.pager .next>span{float:right}.pager .previous>a,.pager .previous>span{float:left}.pager .disabled>a,.pager .disabled>a:focus,.pager .disabled>a:hover,.pager .disabled>span{color:#cdcdcd;cursor:not-allowed;background-color:#fff}.label{display:inline;padding:.2em .6em .3em;font-size:75%;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:baseline;border-radius:.25em}a.badge:focus,a.badge:hover,a.label:focus,a.label:hover{color:#fff;text-decoration:none;cursor:pointer}.label:empty{display:none}.btn .label{position:relative;top:-1px}.label-default{background-color:#cdcdcd}.label-default[href]:focus,.label-default[href]:hover{background-color:#b4b4b4}.label-primary{background-color:#21366b}.label-primary[href]:focus,.label-primary[href]:hover{background-color:#152244}.label-success{background-color:#5cb85c}.label-success[href]:focus,.label-success[href]:hover{background-color:#449d44}.label-info{background-color:#5bc0de}.label-info[href]:focus,.label-info[href]:hover{background-color:#31b0d5}.label-warning{background-color:#f0ad4e}.label-warning[href]:focus,.label-warning[href]:hover{background-color:#ec971f}.label-danger{background-color:#d9534f}.label-danger[href]:focus,.label-danger[href]:hover{background-color:#c9302c}.badge{display:inline-block;min-width:10px;padding:3px 7px;font-size:12px;font-weight:700;line-height:1;color:#fff;text-align:center;white-space:nowrap;vertical-align:middle;background-color:#cdcdcd;border-radius:10px}.badge:empty{display:none}.btn .badge{position:relative;top:-1px}.btn-group-xs>.btn .badge,.btn-xs .badge{top:0;padding:1px 5px}.list-group-item.active>.badge,.nav-pills>.active>a>.badge{color:#21366b;background-color:#fff}.list-group-item>.badge{float:right}.list-group-item>.badge+.badge{margin-right:5px}.nav-pills>li>a>.badge{margin-left:3px}.jumbotron{padding-top:30px;padding-bottom:30px;margin-bottom:30px;background-color:#dcdcdc}.jumbotron,.jumbotron .h1,.jumbotron h1,a.list-group-item-danger .list-group-item-heading,a.list-group-item-info .list-group-item-heading,a.list-group-item-success .list-group-item-heading,a.list-group-item-warning .list-group-item-heading,button.list-group-item-danger .list-group-item-heading,button.list-group-item-info .list-group-item-heading,button.list-group-item-success .list-group-item-heading,button.list-group-item-warning .list-group-item-heading{color:inherit}.jumbotron p{margin-bottom:15px;font-size:21px;font-weight:200}.jumbotron>hr{border-top-color:#c3c3c3}.container .jumbotron,.container-fluid .jumbotron{padding-right:15px;padding-left:15px;border-radius:6px}.jumbotron .container{max-width:100%}@media screen and (min-width:768px){.jumbotron{padding-top:48px;padding-bottom:48px}.container .jumbotron,.container-fluid .jumbotron{padding-right:60px;padding-left:60px}.jumbotron .h1,.jumbotron h1{font-size:63px}}.thumbnail{display:block;padding:4px;margin-bottom:20px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:border .2s ease-in-out;-o-transition:border .2s ease-in-out;transition:border .2s ease-in-out}.thumbnail a>img,.thumbnail>img{margin-right:auto;margin-left:auto}a.thumbnail.active,a.thumbnail:focus,a.thumbnail:hover{border-color:#21366b}.thumbnail .caption{padding:9px;color:#333}.alert{padding:15px;margin-bottom:20px;border:1px solid transparent;border-radius:4px}.alert h4{margin-top:0;color:inherit}.alert .alert-link,.sim-controls ul.checkboxes li label,.sim-controls ul.radios li label{font-weight:700}.alert>p,.alert>ul{margin-bottom:0}.alert-dismissable,.alert-dismissible{padding-right:35px}.alert-dismissable .close,.alert-dismissible .close{position:relative;top:-2px;right:-21px;color:inherit}.alert-success{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.alert-success hr{border-top-color:#c9e2b3}.alert-success .alert-link{color:#2b542c}.alert-info{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.alert-info hr{border-top-color:#a6e1ec}.alert-info .alert-link{color:#245269}.alert-warning{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.alert-warning hr{border-top-color:#f7e1b5}.alert-warning .alert-link{color:#66512c}.alert-danger{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.alert-danger hr{border-top-color:#e4b9c0}.alert-danger .alert-link{color:#843534}.progress{height:20px;margin-bottom:20px;overflow:hidden;background-color:#f5f5f5;border-radius:4px;-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.progress-bar{float:left;width:0%;height:100%;font-size:12px;line-height:20px;color:#fff;text-align:center;background-color:#21366b;-webkit-box-shadow:inset 0-1px 0 rgba(0,0,0,.15);box-shadow:inset 0-1px 0 rgba(0,0,0,.15);-webkit-transition:width .6s ease;-o-transition:width .6s ease;transition:width .6s ease}.progress-bar-striped,.progress-striped .progress-bar{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-size:40px 40px}.progress-bar.active,.progress.active .progress-bar{-webkit-animation:progress-bar-stripes 2s linear infinite;-o-animation:progress-bar-stripes 2s linear infinite;animation:progress-bar-stripes 2s linear infinite}.progress-bar-success{background-color:#5cb85c}.progress-striped .progress-bar-danger,.progress-striped .progress-bar-info,.progress-striped .progress-bar-success,.progress-striped .progress-bar-warning{background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:-o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);background-image:linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)}.progress-bar-info{background-color:#5bc0de}.progress-bar-warning{background-color:#f0ad4e}.progress-bar-danger{background-color:#d9534f}.media{margin-top:15px}.media:first-child{margin-top:0}.media,.media-body{overflow:hidden;zoom:1}.media-body{width:10000px}.media-object{display:block}.media-object.img-thumbnail{max-width:none}.media-right,.media>.pull-right{padding-left:10px}.media-left,.media>.pull-left{padding-right:10px}.media-body,.media-left,.media-right{display:table-cell;vertical-align:top}.media-middle{vertical-align:middle}.media-bottom{vertical-align:bottom}.media-heading{margin-top:0;margin-bottom:5px}.media-list{padding-left:0;list-style:none}.list-group{padding-left:0;margin-bottom:20px}.list-group-item{position:relative;display:block;padding:10px 15px;margin-bottom:-1px;background-color:#fff;border:1px solid #ddd}.list-group-item:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.list-group-item:last-child{margin-bottom:0;border-bottom-right-radius:4px;border-bottom-left-radius:4px}.list-group-item.disabled,.list-group-item.disabled:focus,.list-group-item.disabled:hover{color:#cdcdcd;cursor:not-allowed;background-color:#dcdcdc}.list-group-item.disabled .list-group-item-heading,.list-group-item.disabled:focus .list-group-item-heading,.list-group-item.disabled:hover .list-group-item-heading{color:inherit}.list-group-item.disabled .list-group-item-text,.list-group-item.disabled:focus .list-group-item-text,.list-group-item.disabled:hover .list-group-item-text{color:#cdcdcd}.list-group-item.active,.list-group-item.active:focus,.list-group-item.active:hover{z-index:2;color:#fff;background-color:#21366b;border-color:#21366b}.list-group-item.active .list-group-item-heading,.list-group-item.active .list-group-item-heading>.small,.list-group-item.active .list-group-item-heading>small,.list-group-item.active:focus .list-group-item-heading,.list-group-item.active:focus .list-group-item-heading>.small,.list-group-item.active:focus .list-group-item-heading>small,.list-group-item.active:hover .list-group-item-heading,.list-group-item.active:hover .list-group-item-heading>.small,.list-group-item.active:hover .list-group-item-heading>small{color:inherit}.list-group-item.active .list-group-item-text,.list-group-item.active:focus .list-group-item-text,.list-group-item.active:hover .list-group-item-text{color:#8099d8}a.list-group-item,button.list-group-item{color:#555}a.list-group-item:focus,a.list-group-item:hover,button.list-group-item:focus,button.list-group-item:hover{color:#555;text-decoration:none;background-color:#f5f5f5}button.list-group-item{width:100%;text-align:left}.list-group-item-success{color:#3c763d;background-color:#dff0d8}a.list-group-item-success,button.list-group-item-success{color:#3c763d}a.list-group-item-success:focus,a.list-group-item-success:hover,button.list-group-item-success:focus,button.list-group-item-success:hover{color:#3c763d;background-color:#d0e9c6}a.list-group-item-success.active,a.list-group-item-success.active:focus,a.list-group-item-success.active:hover,button.list-group-item-success.active,button.list-group-item-success.active:focus,button.list-group-item-success.active:hover{color:#fff;background-color:#3c763d;border-color:#3c763d}.list-group-item-info{color:#31708f;background-color:#d9edf7}a.list-group-item-info,button.list-group-item-info{color:#31708f}a.list-group-item-info:focus,a.list-group-item-info:hover,button.list-group-item-info:focus,button.list-group-item-info:hover{color:#31708f;background-color:#c4e3f3}a.list-group-item-info.active,a.list-group-item-info.active:focus,a.list-group-item-info.active:hover,button.list-group-item-info.active,button.list-group-item-info.active:focus,button.list-group-item-info.active:hover{color:#fff;background-color:#31708f;border-color:#31708f}.list-group-item-warning{color:#8a6d3b;background-color:#fcf8e3}a.list-group-item-warning,button.list-group-item-warning{color:#8a6d3b}a.list-group-item-warning:focus,a.list-group-item-warning:hover,button.list-group-item-warning:focus,button.list-group-item-warning:hover{color:#8a6d3b;background-color:#faf2cc}a.list-group-item-warning.active,a.list-group-item-warning.active:focus,a.list-group-item-warning.active:hover,button.list-group-item-warning.active,button.list-group-item-warning.active:focus,button.list-group-item-warning.active:hover{color:#fff;background-color:#8a6d3b;border-color:#8a6d3b}.list-group-item-danger{color:#a94442;background-color:#f2dede}a.list-group-item-danger,button.list-group-item-danger{color:#a94442}a.list-group-item-danger:focus,a.list-group-item-danger:hover,button.list-group-item-danger:focus,button.list-group-item-danger:hover{color:#a94442;background-color:#ebcccc}a.list-group-item-danger.active,a.list-group-item-danger.active:focus,a.list-group-item-danger.active:hover,button.list-group-item-danger.active,button.list-group-item-danger.active:focus,button.list-group-item-danger.active:hover{color:#fff;background-color:#a94442;border-color:#a94442}.list-group-item-heading{margin-top:0;margin-bottom:5px}.list-group-item-text{margin-bottom:0;line-height:1.3}.panel{margin-bottom:20px;background-color:#fff;border:1px solid transparent;border-radius:4px;-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.05)}.panel-body{padding:15px}.panel-heading{padding:10px 15px;border-bottom:1px solid transparent;border-top-left-radius:3px;border-top-right-radius:3px}.panel-heading>.dropdown .dropdown-toggle,.panel-title,.panel-title>.small,.panel-title>.small>a,.panel-title>a,.panel-title>small,.panel-title>small>a{color:inherit}.panel-title{margin-top:0;margin-bottom:0;font-size:16px}.panel-footer{padding:10px 15px;background-color:#f5f5f5;border-top:1px solid #ddd;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.list-group,.panel>.panel-collapse>.list-group{margin-bottom:0}.panel>.list-group .list-group-item,.panel>.panel-collapse>.list-group .list-group-item{border-width:1px 0;border-radius:0}.panel>.list-group:first-child .list-group-item:first-child,.panel>.panel-collapse>.list-group:first-child .list-group-item:first-child{border-top:0;border-top-left-radius:3px;border-top-right-radius:3px}.panel>.list-group:last-child .list-group-item:last-child,.panel>.panel-collapse>.list-group:last-child .list-group-item:last-child{border-bottom:0;border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.panel-heading+.panel-collapse>.list-group .list-group-item:first-child{border-top-left-radius:0;border-top-right-radius:0}.panel-heading+.list-group .list-group-item:first-child{border-top-width:0}.list-group+.panel-footer{border-top-width:0}.panel>.panel-collapse>.table,.panel>.table,.panel>.table-responsive>.table{margin-bottom:0}.panel>.panel-collapse>.table caption,.panel>.table caption,.panel>.table-responsive>.table caption{padding-right:15px;padding-left:15px}.panel>.table-responsive:first-child>.table:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child,.panel>.table:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child,.panel>.table:first-child>thead:first-child>tr:first-child{border-top-left-radius:3px;border-top-right-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:first-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:first-child,.panel>.table:first-child>thead:first-child>tr:first-child td:first-child,.panel>.table:first-child>thead:first-child>tr:first-child th:first-child{border-top-left-radius:3px}.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child td:last-child,.panel>.table:first-child>tbody:first-child>tr:first-child th:last-child,.panel>.table:first-child>thead:first-child>tr:first-child td:last-child,.panel>.table:first-child>thead:first-child>tr:first-child th:last-child{border-top-right-radius:3px}.panel>.table-responsive:last-child>.table:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child,.panel>.table:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child{border-bottom-right-radius:3px;border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:first-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:first-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:first-child{border-bottom-left-radius:3px}.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child td:last-child,.panel>.table:last-child>tbody:last-child>tr:last-child th:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child td:last-child,.panel>.table:last-child>tfoot:last-child>tr:last-child th:last-child{border-bottom-right-radius:3px}.panel-group .panel-heading+.panel-collapse>.list-group,.panel-group .panel-heading+.panel-collapse>.panel-body,.panel>.panel-body+.table,.panel>.panel-body+.table-responsive,.panel>.table+.panel-body,.panel>.table-responsive+.panel-body{border-top:1px solid #ddd}.panel>.table-bordered,.panel>.table-responsive>.table-bordered{border:0}.panel>.table-bordered>tbody>tr>td:first-child,.panel>.table-bordered>tbody>tr>th:first-child,.panel>.table-bordered>tfoot>tr>td:first-child,.panel>.table-bordered>tfoot>tr>th:first-child,.panel>.table-bordered>thead>tr>td:first-child,.panel>.table-bordered>thead>tr>th:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:first-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:first-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:first-child,.panel>.table-responsive>.table-bordered>thead>tr>td:first-child,.panel>.table-responsive>.table-bordered>thead>tr>th:first-child{border-left:0}.panel>.table-bordered>tbody>tr>td:last-child,.panel>.table-bordered>tbody>tr>th:last-child,.panel>.table-bordered>tfoot>tr>td:last-child,.panel>.table-bordered>tfoot>tr>th:last-child,.panel>.table-bordered>thead>tr>td:last-child,.panel>.table-bordered>thead>tr>th:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>td:last-child,.panel>.table-responsive>.table-bordered>tbody>tr>th:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>td:last-child,.panel>.table-responsive>.table-bordered>tfoot>tr>th:last-child,.panel>.table-responsive>.table-bordered>thead>tr>td:last-child,.panel>.table-responsive>.table-bordered>thead>tr>th:last-child{border-right:0}.panel>.table-bordered>tbody>tr:first-child>td,.panel>.table-bordered>tbody>tr:first-child>th,.panel>.table-bordered>thead>tr:first-child>td,.panel>.table-bordered>thead>tr:first-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:first-child>th,.panel>.table-responsive>.table-bordered>thead>tr:first-child>td,.panel>.table-responsive>.table-bordered>thead>tr:first-child>th{border-bottom:0}.panel>.table-bordered>tbody>tr:last-child>td,.panel>.table-bordered>tbody>tr:last-child>th,.panel>.table-bordered>tfoot>tr:last-child>td,.panel>.table-bordered>tfoot>tr:last-child>th,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>td,.panel>.table-responsive>.table-bordered>tbody>tr:last-child>th,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>td,.panel>.table-responsive>.table-bordered>tfoot>tr:last-child>th{border-bottom:0}.panel>.table-responsive{margin-bottom:0;border:0}.panel-group{margin-bottom:20px}.panel-group .panel{margin-bottom:0;border-radius:4px}.panel-group .panel+.panel{margin-top:5px}.panel-group .panel-heading{border-bottom:0}.panel-group .panel-footer{border-top:0}.panel-group .panel-footer+.panel-collapse .panel-body{border-bottom:1px solid #ddd}.panel-default,.well blockquote{border-color:#ddd}.panel-default>.panel-heading{color:#333;background-color:#f5f5f5;border-color:#ddd}.panel-default>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ddd}.panel-default>.panel-heading .badge{color:#f5f5f5;background-color:#333}.panel-default>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ddd}.panel-primary{border-color:#21366b}.panel-primary>.panel-heading{color:#fff;background-color:#21366b;border-color:#21366b}.panel-primary>.panel-heading+.panel-collapse>.panel-body{border-top-color:#21366b}.panel-primary>.panel-heading .badge{color:#21366b;background-color:#fff}.panel-primary>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#21366b}.panel-success{border-color:#d6e9c6}.panel-success>.panel-heading{color:#3c763d;background-color:#dff0d8;border-color:#d6e9c6}.panel-success>.panel-heading+.panel-collapse>.panel-body{border-top-color:#d6e9c6}.panel-success>.panel-heading .badge{color:#dff0d8;background-color:#3c763d}.panel-success>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#d6e9c6}.panel-info{border-color:#bce8f1}.panel-info>.panel-heading{color:#31708f;background-color:#d9edf7;border-color:#bce8f1}.panel-info>.panel-heading+.panel-collapse>.panel-body{border-top-color:#bce8f1}.panel-info>.panel-heading .badge{color:#d9edf7;background-color:#31708f}.panel-info>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#bce8f1}.panel-warning{border-color:#faebcc}.panel-warning>.panel-heading{color:#8a6d3b;background-color:#fcf8e3;border-color:#faebcc}.panel-warning>.panel-heading+.panel-collapse>.panel-body{border-top-color:#faebcc}.panel-warning>.panel-heading .badge{color:#fcf8e3;background-color:#8a6d3b}.panel-warning>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#faebcc}.panel-danger{border-color:#ebccd1}.panel-danger>.panel-heading{color:#a94442;background-color:#f2dede;border-color:#ebccd1}.panel-danger>.panel-heading+.panel-collapse>.panel-body{border-top-color:#ebccd1}.panel-danger>.panel-heading .badge{color:#f2dede;background-color:#a94442}.panel-danger>.panel-footer+.panel-collapse>.panel-body{border-bottom-color:#ebccd1}.embed-responsive{position:relative;display:block;height:0;padding:0;overflow:hidden}.embed-responsive .embed-responsive-item,.embed-responsive embed,.embed-responsive iframe,.embed-responsive object,.embed-responsive video{position:absolute;top:0;bottom:0;left:0;width:100%;height:100%;border:0}.embed-responsive-16by9{padding-bottom:56.25%}.embed-responsive-4by3{padding-bottom:75%}.well{min-height:20px;padding:19px;margin-bottom:20px;background-color:#f5f5f5;border:1px solid #e3e3e3;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,.05)}.well blockquote{border-color:rgba(0,0,0,.15)}.well-lg{padding:24px;border-radius:6px}.well-sm{padding:9px;border-radius:3px}.close{float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0#fff;filter:alpha(opacity=20);opacity:.2}.close:focus,.close:hover{color:#000;text-decoration:none;cursor:pointer;filter:alpha(opacity=50);opacity:.5}button.close{padding:0;cursor:pointer;background:0 0;border:0;-webkit-appearance:none;appearance:none}.modal,.modal-open{overflow:hidden}.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1050;display:none;-webkit-overflow-scrolling:touch;outline:0}.modal.fade .modal-dialog{-webkit-transform:translate(0,-25%);-ms-transform:translate(0,-25%);-o-transform:translate(0,-25%);transform:translate(0,-25%);-webkit-transition:-webkit-transform .3s ease-out;-moz-transition:-moz-transform .3s ease-out;-o-transition:-o-transform .3s ease-out;transition:transform .3s ease-out}.modal.in .modal-dialog{-webkit-transform:translate(0,0);-ms-transform:translate(0,0);-o-transform:translate(0,0);transform:translate(0,0)}.modal-open .modal{overflow-x:hidden;overflow-y:auto}.modal-dialog{position:relative;width:auto;margin:10px}.modal-content{position:relative;background-color:#fff;background-clip:padding-box;border:1px solid #999;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 3px 9px rgba(0,0,0,.5);box-shadow:0 3px 9px rgba(0,0,0,.5);outline:0}.modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1040;background-color:#000}.modal-backdrop.fade{filter:alpha(opacity=0);opacity:0}.modal-backdrop.in{filter:alpha(opacity=50);opacity:.5}.modal-header{padding:15px;border-bottom:1px solid #e5e5e5}.modal-header .close{margin-top:-2px}.modal-title{margin:0;line-height:1.42857143}.modal-body{position:relative;padding:15px}.modal-footer{padding:15px;text-align:right;border-top:1px solid #e5e5e5}.modal-footer .btn+.btn{margin-bottom:0;margin-left:5px}.modal-footer .btn-group .btn+.btn{margin-left:-1px}.modal-footer .btn-block+.btn-block{margin-left:0}.modal-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}@media (min-width:768px){.modal-dialog{width:600px;margin:30px auto}.modal-content{-webkit-box-shadow:0 5px 15px rgba(0,0,0,.5);box-shadow:0 5px 15px rgba(0,0,0,.5)}.modal-sm{width:300px}}@media (min-width:992px){.modal-lg{width:900px}}.tooltip{position:absolute;z-index:1070;display:block;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:12px;filter:alpha(opacity=0);opacity:0}.tooltip.in{filter:alpha(opacity=90);opacity:.9}.tooltip.top{padding:5px 0;margin-top:-3px}.tooltip.right{padding:0 5px;margin-left:3px}.tooltip.bottom{padding:5px 0;margin-top:3px}.tooltip.left{padding:0 5px;margin-left:-3px}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow,.tooltip.top-right .tooltip-arrow{bottom:0;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{right:5px}.tooltip.top-right .tooltip-arrow{left:5px}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:14px;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,.2);box-shadow:0 5px 10px rgba(0,0,0,.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover>.arrow,.popover>.arrow:after{border-width:11px;position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}.popover>.arrow:after{content:\"\";border-width:10px}.popover.top>.arrow{bottom:-11px;left:50%;margin-left:-11px;border-top-color:#999;border-top-color:rgba(0,0,0,.25);border-bottom-width:0}.popover.top>.arrow:after{bottom:1px;margin-left:-10px;content:\" \";border-top-color:#fff;border-bottom-width:0}.popover.right>.arrow{top:50%;left:-11px;margin-top:-11px;border-right-color:#999;border-right-color:rgba(0,0,0,.25);border-left-width:0}.popover.right>.arrow:after{bottom:-10px;left:1px;content:\" \";border-right-color:#fff;border-left-width:0}.popover.bottom>.arrow{top:-11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#999;border-bottom-color:rgba(0,0,0,.25)}.popover.bottom>.arrow:after{top:1px;margin-left:-10px;content:\" \";border-top-width:0;border-bottom-color:#fff}.popover.left>.arrow{top:50%;right:-11px;margin-top:-11px;border-right-width:0;border-left-color:#999;border-left-color:rgba(0,0,0,.25)}.popover.left>.arrow:after{right:1px;bottom:-10px;content:\" \";border-right-width:0;border-left-color:#fff}.popover-title{padding:8px 14px;margin:0;font-size:14px;background-color:#f7f7f7;border-bottom:1px solid #ebebeb;border-radius:5px 5px 0 0}.popover-content{padding:9px 14px}.carousel,.carousel-inner{position:relative}.carousel-inner{width:100%;overflow:hidden}.carousel-inner>.item{position:relative;display:none;-webkit-transition:.6s ease-in-out left;-o-transition:.6s ease-in-out left;transition:.6s ease-in-out left}.carousel-inner>.item>a>img,.carousel-inner>.item>img{line-height:1}@media all and (transform-3d),(-webkit-transform-3d){.carousel-inner>.item{-webkit-transition:-webkit-transform .6s ease-in-out;-moz-transition:-moz-transform .6s ease-in-out;-o-transition:-o-transform .6s ease-in-out;transition:transform .6s ease-in-out;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;-webkit-perspective:1000px;-moz-perspective:1000px;perspective:1000px}.carousel-inner>.item.active.right,.carousel-inner>.item.next{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);left:0}.carousel-inner>.item.active.left,.carousel-inner>.item.prev{-webkit-transform:translate3d(-100%,0,0);transform:translate3d(-100%,0,0);left:0}.carousel-inner>.item.active,.carousel-inner>.item.next.left,.carousel-inner>.item.prev.right{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);left:0}}.carousel-inner>.active,.carousel-inner>.next,.carousel-inner>.prev{display:block}.carousel-inner>.active,.carousel-inner>.next.left,.carousel-inner>.prev.right{left:0}.carousel-control,.carousel-inner>.next,.carousel-inner>.prev{position:absolute;top:0;width:100%}.carousel-inner>.next{left:100%}.carousel-inner>.active.left,.carousel-inner>.prev{left:-100%}.carousel-inner>.active.right{left:100%}.carousel-control{bottom:0;left:0;width:15%;font-size:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6);background-color:transparent;filter:alpha(opacity=50);opacity:.5}.carousel-control.left{background-image:-webkit-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.5)0,rgba(0,0,0,.0001) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#80000000\', endColorstr=\'#00000000\', GradientType=1);background-repeat:repeat-x}.carousel-control.right{right:0;left:auto;background-image:-webkit-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:-o-linear-gradient(left,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);background-image:linear-gradient(to right,rgba(0,0,0,.0001)0,rgba(0,0,0,.5) 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#00000000\', endColorstr=\'#80000000\', GradientType=1);background-repeat:repeat-x}.carousel-control:focus,.carousel-control:hover{color:#fff;text-decoration:none;outline:0;filter:alpha(opacity=90);opacity:.9}.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{position:absolute;top:50%;z-index:5;display:inline-block;margin-top:-10px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{left:50%;margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{right:50%;margin-right:-10px}.carousel-control .icon-next,.carousel-control .icon-prev{width:20px;height:20px;font-family:serif;line-height:1}.carousel-control .icon-prev:before{content:\"‹\"}.carousel-control .icon-next:before{content:\"›\"}.carousel-indicators{position:absolute;bottom:10px;left:50%;z-index:15;width:60%;padding-left:0;margin-left:-30%;text-align:center;list-style:none}.carousel-indicators li{display:inline-block;width:10px;height:10px;margin:1px;text-indent:-999px;cursor:pointer;background-color:#000 \\9;background-color:transparent;border:1px solid #fff;border-radius:10px}.carousel-indicators .active{width:12px;height:12px;margin:0;background-color:#fff}.carousel-caption{position:absolute;right:15%;bottom:20px;left:15%;z-index:10;padding-top:20px;padding-bottom:20px;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}.carousel-caption .btn{text-shadow:none}@media screen and (min-width:768px){.carousel-control .glyphicon-chevron-left,.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next,.carousel-control .icon-prev{width:30px;height:30px;margin-top:-10px;font-size:30px}.carousel-control .glyphicon-chevron-left,.carousel-control .icon-prev{margin-left:-10px}.carousel-control .glyphicon-chevron-right,.carousel-control .icon-next{margin-right:-10px}.carousel-caption{right:20%;left:20%;padding-bottom:30px}.carousel-indicators{bottom:20px}}.btn-group-vertical>.btn-group:after,.btn-group-vertical>.btn-group:before,.btn-toolbar:after,.btn-toolbar:before,.clearfix:after,.clearfix:before,.container-fluid:after,.container-fluid:before,.container:after,.container:before,.dl-horizontal dd:after,.dl-horizontal dd:before,.form-horizontal .form-group:after,.form-horizontal .form-group:before,.modal-footer:after,.modal-footer:before,.modal-header:after,.modal-header:before,.nav:after,.nav:before,.navbar-collapse:after,.navbar-collapse:before,.navbar-header:after,.navbar-header:before,.navbar:after,.navbar:before,.pager:after,.pager:before,.panel-body:after,.panel-body:before,.row:after,.row:before{display:table;content:\" \"}.btn-group-vertical>.btn-group:after,.btn-toolbar:after,.clearfix:after,.container-fluid:after,.container:after,.dl-horizontal dd:after,.form-horizontal .form-group:after,.modal-footer:after,.modal-header:after,.nav:after,.navbar-collapse:after,.navbar-header:after,.navbar:after,.pager:after,.panel-body:after,.row:after{clear:both}.center-block{display:block;margin-right:auto;margin-left:auto}.pull-right{float:right!important}.pull-left{float:left!important}.hide{display:none!important}.show{display:block!important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none!important}.affix{position:fixed}@-ms-viewport{width:device-width}.visible-lg,.visible-lg-block,.visible-lg-inline,.visible-lg-inline-block,.visible-md,.visible-md-block,.visible-md-inline,.visible-md-inline-block,.visible-sm,.visible-sm-block,.visible-sm-inline,.visible-sm-inline-block,.visible-xs,.visible-xs-block,.visible-xs-inline,.visible-xs-inline-block{display:none!important}@media (max-width:767px){.visible-xs,.visible-xs-block{display:block!important}table.visible-xs{display:table!important}tr.visible-xs{display:table-row!important}td.visible-xs,th.visible-xs{display:table-cell!important}.visible-xs-inline{display:inline!important}.visible-xs-inline-block{display:inline-block!important}}@media (min-width:768px) and (max-width:991px){.visible-sm,.visible-sm-block{display:block!important}table.visible-sm{display:table!important}tr.visible-sm{display:table-row!important}td.visible-sm,th.visible-sm{display:table-cell!important}.visible-sm-inline{display:inline!important}.visible-sm-inline-block{display:inline-block!important}}@media (min-width:992px) and (max-width:1199px){.visible-md,.visible-md-block{display:block!important}table.visible-md{display:table!important}tr.visible-md{display:table-row!important}td.visible-md,th.visible-md{display:table-cell!important}.visible-md-inline{display:inline!important}.visible-md-inline-block{display:inline-block!important}}@media (min-width:1200px){.visible-lg,.visible-lg-block{display:block!important}table.visible-lg{display:table!important}tr.visible-lg{display:table-row!important}td.visible-lg,th.visible-lg{display:table-cell!important}.visible-lg-inline{display:inline!important}.visible-lg-inline-block{display:inline-block!important}}@media (max-width:767px){.hidden-xs{display:none!important}}@media (min-width:768px) and (max-width:991px){.hidden-sm{display:none!important}}@media (min-width:992px) and (max-width:1199px){.hidden-md{display:none!important}}@media (min-width:1200px){.hidden-lg{display:none!important}}.visible-print{display:none!important}@media print{.visible-print{display:block!important}table.visible-print{display:table!important}tr.visible-print{display:table-row!important}td.visible-print,th.visible-print{display:table-cell!important}}.visible-print-block{display:none!important}@media print{.visible-print-block{display:block!important}}.visible-print-inline{display:none!important}@media print{.visible-print-inline{display:inline!important}}.bootstrap-select>select.bs-select-hidden,.visible-print-inline-block,select.bs-select-hidden,select.selectpicker{display:none!important}@media print{.visible-print-inline-block{display:inline-block!important}.hidden-print{display:none!important}}body,html{width:100%;height:100%;margin:0}.app-view{position:relative;margin:10px auto 0;max-width:960px;width:100%}@media screen and (max-height:560px){.app-view{margin-top:0}}.app-view .loading-screen{position:fixed;z-index:1200;left:0;top:0;width:100%;height:100%;min-height:600px;background-color:#fff}.app-view .loading-screen .beaker{border-radius:10px;border-top-right-radius:0;border-top-left-radius:0;display:inline-block;height:75px;left:50%;margin-left:-50px;position:absolute;top:50%;margin-top:-60px;width:100px;background-color:#ededed;box-sizing:content-box}.app-view .loading-screen .beaker:after,.app-view .loading-screen .beaker:before{content:\"\";box-sizing:content-box;position:absolute;top:-45px}.app-view .loading-screen .beaker:before{border-left:10px solid #ededed;border-radius:10px;border-right:10px solid #ededed;height:10px;left:-5px;width:90px}.app-view .loading-screen .beaker:after{border-left:10px solid #ededed;border-right:10px solid #ededed;height:45px;width:80px}.app-view .loading-screen .beaker .bubbles{position:absolute;left:10px;right:10px;bottom:75px;height:1000px;overflow:hidden}.app-view .loading-screen .beaker .bubbles .bubble{position:absolute;bottom:0;border-radius:50%;background-color:#575c5f;width:10px;height:10px;-webkit-animation-name:bubble;animation-name:bubble;-webkit-animation-duration:1600ms;animation-duration:1600ms;-webkit-animation-iteration-count:infinite;animation-iteration-count:infinite;-webkit-animation-timing-function:linear;animation-timing-function:linear;-webkit-transform:translateY(1em);-moz-transform:translateY(1em);-ms-transform:translateY(1em);transform:translateY(1em)}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(1){left:5%}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(2){background-color:#20356b;width:7px;height:7px;left:12%;bottom:-45px;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(3){background-color:#f0cf31;width:16px;height:16px;left:26%;-webkit-animation-duration:2000ms;animation-duration:2000ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(4){background-color:#71b653;width:9px;height:9px;left:46%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:400ms;animation-delay:400ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(5){background-color:#f47b4d;width:12px;height:12px;left:59%;bottom:-22.5px;-webkit-animation-delay:-100ms;animation-delay:-100ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(6){background-color:#20356b;width:14px;height:14px;left:77%;-webkit-animation-duration:1400ms;animation-duration:1400ms;-webkit-animation-delay:200ms;animation-delay:200ms}.app-view .loading-screen .beaker .bubbles .bubble:nth-child(7){background-color:#f47b4d;width:6px;height:6px;left:13%;bottom:-37.5px;-webkit-animation-delay:800ms;animation-delay:800ms}.sims{position:relative}.sim-content.rendering{position:absolute;top:0;left:0}.sim-view{height:100%;width:100%}.footer{position:absolute;margin:16px 0 10px;float:left;clear:both;width:100%;font-size:16px;color:#222}.footer .footer-left{float:left;margin-left:16px}.footer .footer-left img{opacity:.7}.footer .footer-right{float:right;margin-right:16px}.footer .footer-right span{width:88px;display:inline-block;padding-right:8px;line-height:14px;vertical-align:bottom;color:#b5b5b5;text-transform:lowercase;text-align:right;font-size:12px}.footer .footer-right a{display:inline-block;padding-bottom:2px}.footer img{max-height:32px;display:inline-block}.sim-tabs>ul{margin:0;padding:0 0 0 30px;font-size:0;list-style-type:none;color:#21366b;border-bottom:2px solid #21366b}.sim-tabs>ul>li{display:inline-block;margin-right:3px}.sim-tabs>ul>li>a{display:block;padding:7px 10px;font-size:1.4rem;background-color:#ededed;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.sim-tabs>ul>li>a.singleton{cursor:default}.sim-tabs>ul>li>a>.tab-title{margin-left:2px;vertical-align:middle}.sim-tabs>ul>li>a>.tab-title::after{font-weight:700;margin-left:5px;vertical-align:top;content:\"+\"}.sim-tabs>ul>li>a.active{color:#ededed;background-color:#21366b}.sim-tabs>ul>li>a.disabled{cursor:not-allowed;pointer-events:none;opacity:.65}.sim-content{display:none;width:100%;min-height:600px;position:relative;top:0;left:0}.sim-content.active{display:block}.scene-view{width:100%;height:580px;background-image:-webkit-linear-gradient(top,#ccc 0,#fafafa 85%);background-image:-o-linear-gradient(top,#ccc 0,#fafafa 85%);background-image:linear-gradient(to bottom,#ccc 0,#fafafa 85%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=\'#ffcccccc\', endColorstr=\'#fffafafa\', GradientType=0);background-repeat:repeat-x}@media screen and (max-height:560px){.scene-view{height:412px}}.sim-controls.laser-power-panel{position:absolute;left:324px;top:416px;width:280px}@media screen and (max-height:560px){.sim-controls.laser-power-panel{left:12px;top:224px;width:300px}}.sim-controls.laser-power-panel .power-meter-wrapper label{display:inline-block;width:58px;height:42px;margin:0;text-align:left}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter{display:inline-block;position:relative;width:184px;height:32px;padding:4px;margin-top:5px;float:right}@media screen and (max-height:560px){.sim-controls.laser-power-panel .power-meter-wrapper .power-meter{width:200px}}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .power-meter-segment{float:left;width:3px;height:100%;border-radius:1.5px;margin-right:1px;background:rgba(0,0,0,.08)}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .power-meter-segment:last-child{margin-right:0}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .power-meter-segment.filled{background:#a7f3ff;box-shadow:0 0 3px #c4f7ff}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .power-meter-segment.filled-lasing{background:#00b8ff;box-shadow:0 0 3px #61d3ff}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .power-meter-segment.filled-danger{background:#ff3838;box-shadow:0 0 3px #ff6a6a}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .danger-label,.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .lasing-label{position:absolute;top:29px;display:block;height:12px;font-size:9px;font-weight:500;text-align:center;border-left:2px solid;border-right:2px solid}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .lasing-label{color:#00b8ff}.sim-controls.laser-power-panel .power-meter-wrapper .power-meter .danger-label{color:#ff3838}.sim-controls .bootstrap-select>.btn:focus{outline:0!important}.sims .sim-content{min-height:inherit}.sim-controls-wrapper{position:absolute;right:20px;top:20px}@media screen and (max-height:560px){.sim-controls-wrapper{position:inherit;top:auto;right:auto}.sim-controls-left{position:absolute;top:12px;left:13px}.sim-controls-right{position:absolute;top:12px;right:13px}}.sim-controls{background:rgba(245,245,245,.75);box-shadow:0 0 11px rgba(0,0,0,.25);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;padding:15px;position:relative;margin-bottom:12px;width:190px}.sim-controls h2{font-size:18px;font-weight:400;color:rgba(51,51,51,.8);margin-top:0;margin-bottom:7px;padding-bottom:3px;border-bottom:1px solid rgba(0,0,0,.09)}@media screen and (max-height:560px){.sim-controls h2{margin-top:-2px;margin-bottom:6px}}.sim-controls h2 .collapse-icon,.sim-controls h2 .expand-icon{display:none}.sim-controls h2:not(:first-child){margin-top:20px}@media screen and (max-height:560px){.sim-controls h2:not(:first-child){margin-top:14px}}.sim-controls label{color:rgba(34,34,34,.8)}.sim-controls ul.checkboxes,.sim-controls ul.radios{list-style:none;padding:0;margin:4px 0 0}.sim-controls ul.checkboxes.three-level-options,.sim-controls ul.radios.three-level-options{margin-top:18px}.sim-controls ul.checkboxes li,.sim-controls ul.radios li{text-align:left;list-style-image:none;margin-bottom:6px}.sim-controls .slider-header{display:block}.sim-controls .slider-header .slider-value{float:right;font-weight:400}.sim-controls .bootstrap-select{width:100%!important;background-color:transparent;border-color:transparent;margin-bottom:8px}.sim-controls .bootstrap-select>.btn{background:rgba(255,255,255,.5);border-color:rgba(0,0,0,.14);text-transform:capitalize}.sim-controls .bootstrap-select.open>.btn,.sim-controls .bootstrap-select>.btn:active{-webkit-box-shadow:none;box-shadow:none}.sim-controls .bootstrap-select a{text-transform:capitalize}.sim-controls .bootstrap-select a:focus{outline:0}@media screen and (max-height:560px){.sim-controls .bootstrap-select{margin-top:-2px}.sim-controls .bootstrap-select>.btn{padding:5px 12px}}.sim-controls .target-select-wrapper{margin-bottom:16px}.sim-controls .mirror-options{margin-top:12px}@media screen and (max-height:560px){.sim-controls.legend-panel{position:absolute;right:196px;top:335px;width:250px;background:0 0;box-shadow:none}.sim-controls.legend-panel h2{display:none}}.playback-controls-wrapper{position:relative;margin-top:-5px;width:100%;height:62px;padding:10px;background:#ededed;text-align:center;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}@media screen and (max-height:560px){.playback-controls-wrapper{padding:4px 10px;height:50px}}.playback-controls-wrapper>.playback-center-buttons-wrapper{width:200px;position:absolute;left:50%;margin-left:-100px;top:0;height:100%;padding:10px;text-align:center}@media screen and (max-height:560px){.playback-controls-wrapper>.playback-center-buttons-wrapper{padding:4px 10px}}.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn{display:inline-block;background:#ccc;color:#21366b;outline:0;border:0;border-radius:50%;width:28px;height:28px;text-align:center}.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn:hover{opacity:.9}.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn:active{background:#21366b;color:#fff}.sim-view.playing .playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.pause-btn{display:inline-block}.bootstrap-select .dropdown-menu li a span.check-mark,.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.pause-btn,.sim-view.playing .playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.play-btn,input[type=checkbox],input[type=radio]{display:none}.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.pause-btn,.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.play-btn{width:42px;height:42px;font-size:16px}.playback-controls-wrapper>.playback-center-buttons-wrapper .playback-btn.play-btn{padding-left:10px}.playback-controls-wrapper .reset-btn{font-weight:500;color:#21366b;background-color:#ccc;border:0;margin:5px 5px 0;float:right}.playback-controls-wrapper .reset-btn:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .reset-btn:active,.playback-controls-wrapper .reset-btn:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .reset-btn:focus{outline:0;color:#21366b}.playback-controls-wrapper .reset-btn.disabled,.playback-controls-wrapper .reset-btn.disabled.active,.playback-controls-wrapper .reset-btn.disabled:active,.playback-controls-wrapper .reset-btn.disabled:focus,.playback-controls-wrapper .reset-btn.disabled:hover,.playback-controls-wrapper .reset-btn[disabled],.playback-controls-wrapper .reset-btn[disabled].active,.playback-controls-wrapper .reset-btn[disabled]:active,.playback-controls-wrapper .reset-btn[disabled]:focus,.playback-controls-wrapper .reset-btn[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .reset-btn,fieldset[disabled] .playback-controls-wrapper .reset-btn.active,fieldset[disabled] .playback-controls-wrapper .reset-btn:active,fieldset[disabled] .playback-controls-wrapper .reset-btn:focus,fieldset[disabled] .playback-controls-wrapper .reset-btn:hover{background-color:#ccc}.playback-controls-wrapper .view-laser-picture-btn{font-weight:500;color:#21366b;background-color:#ccc;border:0;margin:5px 5px 0;float:left}.playback-controls-wrapper .view-laser-picture-btn:hover{color:#21366b;opacity:.9}.playback-controls-wrapper .view-laser-picture-btn:active,.playback-controls-wrapper .view-laser-picture-btn:focus:active{color:#fff;background:#21366b;outline:0;-webkit-box-shadow:none;box-shadow:none}.playback-controls-wrapper .view-laser-picture-btn:focus{outline:0;color:#21366b}.playback-controls-wrapper .view-laser-picture-btn.disabled,.playback-controls-wrapper .view-laser-picture-btn.disabled.active,.playback-controls-wrapper .view-laser-picture-btn.disabled:active,.playback-controls-wrapper .view-laser-picture-btn.disabled:focus,.playback-controls-wrapper .view-laser-picture-btn.disabled:hover,.playback-controls-wrapper .view-laser-picture-btn[disabled],.playback-controls-wrapper .view-laser-picture-btn[disabled].active,.playback-controls-wrapper .view-laser-picture-btn[disabled]:active,.playback-controls-wrapper .view-laser-picture-btn[disabled]:focus,.playback-controls-wrapper .view-laser-picture-btn[disabled]:hover,fieldset[disabled] .playback-controls-wrapper .view-laser-picture-btn,fieldset[disabled] .playback-controls-wrapper .view-laser-picture-btn.active,fieldset[disabled] .playback-controls-wrapper .view-laser-picture-btn:active,fieldset[disabled] .playback-controls-wrapper .view-laser-picture-btn:focus,fieldset[disabled] .playback-controls-wrapper .view-laser-picture-btn:hover{background-color:#ccc}@media (min-width:649px){.picture-dialog .modal-dialog{width:649px}}.picture-dialog .modal-body{padding:4px 2px 4px 4px;overflow:scroll}.picture-dialog #laser-picture{background:url(img/annotated-laser-2.jpg);width:641px;height:480px}.bootstrap-select .dropdown-menu li,.slider{position:relative}.slider.noUi-target,.slider.noUi-target *,input[type=checkbox]+label,input[type=radio]+label{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.slider.noUi-target,.slider.noUi-target *{-ms-touch-action:none;-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-base{width:100%;height:100%;position:relative}.slider .noUi-origin{position:absolute;right:0;top:0;left:0;bottom:0}.slider .noUi-handle{position:relative;z-index:1}.slider .noUi-stacking .noUi-handle{z-index:10}.slider .noUi-stacking+.noUi-origin{*z-index:-1}.slider.noUi-state-tap .noUi-origin{-webkit-transition:left .3s,top .3s;transition:left .3s,top .3s}.slider.noUi-state-drag *{cursor:inherit!important}.slider.noUi-horizontal{height:2px;margin-top:12px;margin-bottom:12px}.slider.noUi-horizontal .noUi-base:after,.slider.noUi-horizontal .noUi-base:before{content:\"\";position:absolute;height:14px;left:0;width:100%}.slider.noUi-horizontal .noUi-base:before{bottom:2px}.slider.noUi-horizontal .noUi-base:after{top:2px}.slider .noUi-handle:after,.slider.noUi-vertical .noUi-base:after,.slider.noUi-vertical .noUi-base:before{content:\"\";position:absolute;width:14px;top:0;height:100%}.slider.noUi-vertical .noUi-base:before{right:2px}.slider.noUi-vertical .noUi-base:after{left:2px}.slider.noUi-horizontal .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-horizontal.noUi-extended{padding:0 15px}.slider.noUi-horizontal.noUi-extended .noUi-origin{right:-15px}.slider.noUi-vertical{width:2px}.slider.noUi-vertical .noUi-handle{width:26px;height:26px;left:-12px;top:-12px}.slider.noUi-vertical.noUi-extended{padding:15px 0}.slider.noUi-vertical.noUi-extended .noUi-origin{bottom:-15px}.slider .noUi-background{background:#fafafa}.slider.noUi-connect{background:#21366b;-webkit-transition:background 450ms ease;-o-transition:background 450ms ease;transition:background 450ms ease}.slider .noUi-dragable{cursor:w-resize}.slider.noUi-vertical .noUi-dragable{cursor:n-resize}.slider .noUi-handle{text-align:center}.slider .noUi-handle:after{display:block;width:12px;height:12px;top:50%;left:50%;margin-top:-6px;margin-left:-6px;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,background 450ms ease}.slider .noUi-active:after{width:100%;height:100%;margin-top:-50%;margin-left:-50%}.slider[disabled] .noUi-connect,.slider[disabled] .noUi-handle:after,.slider[disabled] .noUi-handle:before,.slider[disabled].noUi-connect{background:#b8b8b8}.slider[disabled] .noUi-handle{cursor:not-allowed}.slider.pipped{margin-bottom:30px}.slider .noUi-pips,.slider .noUi-pips *{-moz-box-sizing:border-box;box-sizing:border-box}.slider .noUi-pips{position:absolute;font:400 12px Arial;color:#999}.slider .noUi-value{width:40px;position:absolute;text-align:center}.slider .noUi-value-sub{color:#ccc;font-size:10px}.slider .noUi-marker{position:absolute;background:#afafaf}.slider .noUi-marker-sub{background:#ddd}.slider .noUi-marker-large{background:#ccc}.slider .noUi-pips-horizontal{padding:8px 0;height:50px;top:100%;left:0;width:100%}.slider .noUi-value-horizontal{margin-left:-20px;padding-top:16px}.slider .noUi-value-horizontal.noUi-value-sub{padding-top:12px}.slider .noUi-marker-horizontal.noUi-marker{margin-left:-1px;width:2px;height:4px}.slider .noUi-marker-horizontal.noUi-marker-sub{height:8px}.slider .noUi-marker-horizontal.noUi-marker-large{height:12px}.slider .noUi-pips-vertical{padding:0 8px;height:100%;top:0;left:100%}.slider .noUi-value-vertical{width:15px;margin-left:20px;margin-top:-5px}.slider .noUi-marker-vertical.noUi-marker{width:5px;height:2px;margin-top:-1px}.slider .noUi-marker-vertical.noUi-marker-sub{width:10px}.slider .noUi-marker-vertical.noUi-marker-large{width:15px}input[type=checkbox]+label,input[type=radio]+label{display:inline-block;position:relative;padding-left:26px;margin-bottom:12px;line-height:16px;user-select:none}input[type=checkbox]+label:last-child,input[type=radio]+label:last-child{margin-bottom:0}input[type=checkbox]+label:before,input[type=radio]+label:before{content:\"\";position:absolute;top:0;left:0;width:16px;height:16px;background:#fff;border:2px solid #333;cursor:pointer}input[type=radio]+label:before{border-radius:50%}input[type=radio]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease}input[type=radio]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px}input[type=checkbox]+label:after{content:\"\";display:block;width:0;height:0;position:absolute;top:8px;left:8px;margin-top:0;margin-left:0;background:#21366b;-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);-o-transform:rotate(90deg);transform:rotate(90deg);-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease,transform .2s ease;cursor:pointer}input[type=checkbox]:checked+label:after{width:14px;height:14px;margin-top:-7px;margin-left:-7px;-webkit-transform:rotate(0);-ms-transform:rotate(0);-o-transform:rotate(0);transform:rotate(0)}.bootstrap-select{width:220px \\0;vertical-align:middle}.bootstrap-select>.dropdown-toggle{position:relative;width:100%;text-align:right;white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between}.bootstrap-select>.dropdown-toggle:after{margin-top:-1px}.bootstrap-select>.dropdown-toggle.bs-placeholder,.bootstrap-select>.dropdown-toggle.bs-placeholder:active,.bootstrap-select>.dropdown-toggle.bs-placeholder:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder:hover{color:#999}.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-danger:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-dark:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-info:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-primary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-secondary:hover,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:active,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:focus,.bootstrap-select>.dropdown-toggle.bs-placeholder.btn-success:hover{color:rgba(255,255,255,.5)}.bootstrap-select>select{position:absolute!important;bottom:0;left:50%;display:block!important;width:.5px!important;height:100%!important;padding:0!important;opacity:0!important;border:0;z-index:0!important}.bootstrap-select>select.mobile-device{top:0;left:0;display:block!important;width:100%!important;z-index:2!important}.bootstrap-select.is-invalid .dropdown-toggle,.error .bootstrap-select .dropdown-toggle,.has-error .bootstrap-select .dropdown-toggle,.was-validated .bootstrap-select select:invalid+.dropdown-toggle{border-color:#b94a48}.bootstrap-select.is-valid .dropdown-toggle,.was-validated .bootstrap-select select:valid+.dropdown-toggle{border-color:#28a745}.bootstrap-select.fit-width{width:auto!important}.bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn){width:220px}.bootstrap-select .dropdown-toggle:focus,.bootstrap-select>select.mobile-device:focus+.dropdown-toggle{outline:thin dotted #333!important;outline:5px auto -webkit-focus-ring-color!important;outline-offset:-2px}.bootstrap-select.form-control{margin-bottom:0;padding:0;border:0;height:auto}:not(.input-group)>.bootstrap-select.form-control:not([class*=col-]){width:100%}.bootstrap-select.form-control.input-group-btn{float:none;z-index:auto}.form-inline .bootstrap-select,.form-inline .bootstrap-select.form-control:not([class*=col-]){width:auto}.bootstrap-select:not(.input-group-btn),.bootstrap-select[class*=col-]{float:none;display:inline-block;margin-left:0}.bootstrap-select.dropdown-menu-right,.bootstrap-select[class*=col-].dropdown-menu-right,.row .bootstrap-select[class*=col-].dropdown-menu-right{float:right}.form-group .bootstrap-select,.form-horizontal .bootstrap-select,.form-inline .bootstrap-select{margin-bottom:0}.form-group-lg .bootstrap-select.form-control,.form-group-sm .bootstrap-select.form-control{padding:0}.form-group-lg .bootstrap-select.form-control .dropdown-toggle,.form-group-sm .bootstrap-select.form-control .dropdown-toggle{height:100%;font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-lg .dropdown-toggle,.bootstrap-select.form-control-sm .dropdown-toggle{font-size:inherit;line-height:inherit;border-radius:inherit}.bootstrap-select.form-control-sm .dropdown-toggle{padding:.25rem .5rem}.bootstrap-select.form-control-lg .dropdown-toggle{padding:.5rem 1rem}.form-inline .bootstrap-select .form-control{width:100%}.bootstrap-select .dropdown-menu li.disabled a,.bootstrap-select.disabled,.bootstrap-select>.disabled{cursor:not-allowed}.bootstrap-select.disabled:focus,.bootstrap-select>.disabled:focus{outline:0!important}.bootstrap-select.bs-container{position:absolute;top:0;left:0;height:0!important;padding:0!important}.bootstrap-select.bs-container .dropdown-menu{z-index:1060}.bootstrap-select .dropdown-toggle .filter-option{position:static;top:0;left:0;float:left;height:100%;width:100%;text-align:left;overflow:hidden;flex:0 1 auto}.bs3.bootstrap-select .dropdown-toggle .filter-option,.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option .filter-option-inner{padding-right:inherit}.input-group .bs3-has-addon.bootstrap-select .dropdown-toggle .filter-option{position:absolute;padding-top:inherit;padding-bottom:inherit;padding-left:inherit;float:none}.bootstrap-select .dropdown-toggle .filter-option-inner-inner{overflow:hidden}.bootstrap-select .dropdown-toggle .filter-expand{width:0!important;float:left;opacity:0!important;overflow:hidden}.bootstrap-select .dropdown-toggle .caret{position:absolute;top:50%;right:12px;margin-top:-2px;vertical-align:middle}.input-group .bootstrap-select.form-control .dropdown-toggle{border-radius:inherit}.bootstrap-select[class*=col-] .dropdown-toggle{width:100%}.bootstrap-select .dropdown-menu{min-width:100%;box-sizing:border-box}.bootstrap-select .dropdown-menu>.inner:focus{outline:0!important}.bootstrap-select .dropdown-menu.inner{position:static;float:none;border:0;padding:0;margin:0;border-radius:0;box-shadow:none}.bootstrap-select .dropdown-menu li.active small{color:rgba(255,255,255,.5)!important}.bootstrap-select .dropdown-menu li a{cursor:pointer;user-select:none}.bootstrap-select .dropdown-menu li a.opt{position:relative;padding-left:2.25em}.bootstrap-select .dropdown-menu li a span.text{display:inline-block}.bootstrap-select .dropdown-menu li small{padding-left:.5em}.bootstrap-select .dropdown-menu .notify{position:absolute;bottom:5px;width:96%;margin:0 2%;min-height:26px;padding:3px 5px;background:#f5f5f5;border:1px solid #e3e3e3;box-shadow:inset 0 1px 1px rgba(0,0,0,.05);pointer-events:none;opacity:.9;box-sizing:border-box}.bootstrap-select .dropdown-menu .notify.fadeOut{animation:300ms linear 750ms forwards bs-notify-fadeOut}.bootstrap-select .no-results{padding:3px;background:#f5f5f5;margin:0 5px;white-space:nowrap}.bootstrap-select.fit-width .dropdown-toggle .filter-option{position:static;display:inline;padding:0}.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner,.bootstrap-select.fit-width .dropdown-toggle .filter-option-inner-inner{display:inline}.bootstrap-select.fit-width .dropdown-toggle .bs-caret:before{content:\" \"}.bootstrap-select.fit-width .dropdown-toggle .caret{position:static;top:auto;margin-top:-1px}.bootstrap-select.show-tick .dropdown-menu .selected span.check-mark{position:absolute;display:inline-block;right:15px;top:5px}.bootstrap-select.show-tick .dropdown-menu li a span.text{margin-right:34px}.bootstrap-select .bs-ok-default:after{content:\"\";display:block;width:.5em;height:1em;border-style:solid;border-width:0 .26em .26em 0;transform-style:preserve-3d;transform:rotate(45deg)}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle{z-index:1061}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:before{content:\"\";border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:7px solid rgba(204,204,204,.2);position:absolute;bottom:-4px;left:9px;display:none}.bootstrap-select.show-menu-arrow .dropdown-toggle .filter-option:after{content:\"\";border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #fff;position:absolute;bottom:-4px;left:10px;display:none}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:before{bottom:auto;top:-4px;border-top:7px solid rgba(204,204,204,.2);border-bottom:0}.bootstrap-select.show-menu-arrow.dropup .dropdown-toggle .filter-option:after{bottom:auto;top:-4px;border-top:6px solid #fff;border-bottom:0}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:before{right:12px;left:auto}.bootstrap-select.show-menu-arrow.pull-right .dropdown-toggle .filter-option:after{right:13px;left:auto}.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.open>.dropdown-toggle .filter-option:before,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:after,.bootstrap-select.show-menu-arrow.show>.dropdown-toggle .filter-option:before{display:block}.bs-actionsbox,.bs-donebutton,.bs-searchbox{padding:4px 8px}.bs-actionsbox,.bs-donebutton{width:100%;box-sizing:border-box}.bs-actionsbox .btn-group button{width:50%}.bs-donebutton{float:left}.bs-donebutton .btn-group button{width:100%}.bs-searchbox+.bs-actionsbox{padding:0 8px 4px}.bs-searchbox .form-control{margin-bottom:0;width:100%;float:none}.slider.wavelength-slider{margin-left:8px;margin-right:8px}.slider.wavelength-slider>.wavelength-slider-canvas{position:absolute;top:-7px;left:-7px;height:16px;border-radius:8px}.slider.wavelength-slider .noUi-handle:after{display:none}.slider.wavelength-slider .noUi-handle>.handle-content{content:\"\";display:block;width:12px;height:12px;position:absolute;top:50%;left:50%;margin-top:-6px;margin-left:-6px;border:1px solid #fff;border-radius:50%;-webkit-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;-o-transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease;transition:width .2s ease,height .2s ease,margin-top .2s ease,margin-left .2s ease}.slider.wavelength-slider .noUi-active>.handle-content{width:100%;height:100%;margin-top:-50%;margin-left:-50%}.beam-controls{width:auto;position:absolute}.beam-controls.laser-1{top:408px;left:20px}#sim-multiple-atoms .beam-controls,.beam-controls.laser-2{right:222px;top:20px}@media screen and (max-height:560px){.beam-controls.laser-1{left:324px;top:12px}#sim-multiple-atoms .beam-controls,.beam-controls.laser-2{right:214px;top:12px}}.beam-controls .intensity-slider-wrapper{padding-left:8px;padding-right:8px}.beam-controls .wavelength-slider-wrapper{position:relative}.beam-controls .wavelength-slider-wrapper .wavelength-slider{width:120px}.btn.active:focus,.btn:active:focus,.btn:focus{outline:0!important}.legend-view .legend-symbol{margin-bottom:4px}@media screen and (max-height:560px){.legend-view .legend-symbol{display:inline-block;margin-right:14px}}.legend-view .legend-symbol .legend-img-wrapper{display:inline-block;margin-right:12px;text-align:center}@media screen and (max-height:560px){.legend-view .legend-symbol .legend-img-wrapper{margin-right:0}}\n/*!\n *  Font Awesome 4.7.0 by @davegandy - http://fontawesome.io - @fontawesome\n *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)\n */\n@-webkit-keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@keyframes fa-spin{0%{-webkit-transform:rotate(0deg);transform:rotate(0deg)}to{-webkit-transform:rotate(359deg);transform:rotate(359deg)}}@-webkit-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-moz-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-o-keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@keyframes btn-clicked{0%{background-color:#b8b8b8}to{background-color:#21366b}}@-webkit-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-moz-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-o-keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@keyframes panel-btn-clicked{0%{color:#fff;background-color:#21366b}to{color:#21366b;background-color:#ededed}}@-webkit-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-moz-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-o-keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@keyframes graph-show-btn-clicked{0%{color:#fff;background-color:#21366b}to{opacity:0}}@-webkit-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-moz-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@-o-keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@keyframes graph-show-btn{0%{opacity:0}to{opacity:1}}@font-face{font-family:\"FontAwesome\";src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?v=4.7.0);src:url(node_modules/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0)format(\"embedded-opentype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0)format(\"woff2\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0)format(\"woff\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0)format(\"truetype\"),url(node_modules/font-awesome/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular)format(\"svg\");font-weight:400;font-style:normal}.fa{display:inline-block;font:14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.fa-lg{font-size:1.33333333em;line-height:.75em;vertical-align:-15%}.fa-2x{font-size:2em}.fa-3x{font-size:3em}.fa-4x{font-size:4em}.fa-5x{font-size:5em}.fa-fw{width:1.28571429em;text-align:center}.fa-ul{padding-left:0;margin-left:2.14285714em;list-style-type:none}.fa-ul>li{position:relative}.fa-li{position:absolute;left:-2.14285714em;width:2.14285714em;top:.14285714em;text-align:center}.fa-li.fa-lg{left:-1.85714286em}.fa-border{padding:.2em .25em .15em;border:solid .08em #eee;border-radius:.1em}.fa-pull-left{float:left}.fa-pull-right,.pull-right{float:right}.fa.fa-pull-left{margin-right:.3em}.fa.fa-pull-right{margin-left:.3em}.pull-left{float:left}.fa.pull-left{margin-right:.3em}.fa.pull-right{margin-left:.3em}.fa-spin{-webkit-animation:fa-spin 2s infinite linear;animation:fa-spin 2s infinite linear}.fa-pulse{-webkit-animation:fa-spin 1s infinite steps(8);animation:fa-spin 1s infinite steps(8)}.fa-rotate-90{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=1)\";-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.fa-rotate-180{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2)\";-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.fa-rotate-270{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=3)\";-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.fa-flip-horizontal{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1)\";-webkit-transform:scale(-1,1);-ms-transform:scale(-1,1);transform:scale(-1,1)}.fa-flip-vertical{-ms-filter:\"progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1)\";-webkit-transform:scale(1,-1);-ms-transform:scale(1,-1);transform:scale(1,-1)}:root .fa-flip-horizontal,:root .fa-flip-vertical,:root .fa-rotate-180,:root .fa-rotate-270,:root .fa-rotate-90{filter:none}.fa-stack{position:relative;display:inline-block;width:2em;height:2em;line-height:2em;vertical-align:middle}.fa-stack-1x,.fa-stack-2x{position:absolute;left:0;width:100%;text-align:center}.fa-stack-1x{line-height:inherit}.fa-stack-2x{font-size:2em}.fa-inverse{color:#fff}.fa-glass:before{content:\"\"}.fa-music:before{content:\"\"}.fa-search:before{content:\"\"}.fa-envelope-o:before{content:\"\"}.fa-heart:before{content:\"\"}.fa-star:before{content:\"\"}.fa-star-o:before{content:\"\"}.fa-user:before{content:\"\"}.fa-film:before{content:\"\"}.fa-th-large:before{content:\"\"}.fa-th:before{content:\"\"}.fa-th-list:before{content:\"\"}.fa-check:before{content:\"\"}.fa-close:before,.fa-remove:before,.fa-times:before{content:\"\"}.fa-search-plus:before{content:\"\"}.fa-search-minus:before{content:\"\"}.fa-power-off:before{content:\"\"}.fa-signal:before{content:\"\"}.fa-cog:before,.fa-gear:before{content:\"\"}.fa-trash-o:before{content:\"\"}.fa-home:before{content:\"\"}.fa-file-o:before{content:\"\"}.fa-clock-o:before{content:\"\"}.fa-road:before{content:\"\"}.fa-download:before{content:\"\"}.fa-arrow-circle-o-down:before{content:\"\"}.fa-arrow-circle-o-up:before{content:\"\"}.fa-inbox:before{content:\"\"}.fa-play-circle-o:before{content:\"\"}.fa-repeat:before,.fa-rotate-right:before{content:\"\"}.fa-refresh:before{content:\"\"}.fa-list-alt:before{content:\"\"}.fa-lock:before{content:\"\"}.fa-flag:before{content:\"\"}.fa-headphones:before{content:\"\"}.fa-volume-off:before{content:\"\"}.fa-volume-down:before{content:\"\"}.fa-volume-up:before{content:\"\"}.fa-qrcode:before{content:\"\"}.fa-barcode:before{content:\"\"}.fa-tag:before{content:\"\"}.fa-tags:before{content:\"\"}.fa-book:before{content:\"\"}.fa-bookmark:before{content:\"\"}.fa-print:before{content:\"\"}.fa-camera:before{content:\"\"}.fa-font:before{content:\"\"}.fa-bold:before{content:\"\"}.fa-italic:before{content:\"\"}.fa-text-height:before{content:\"\"}.fa-text-width:before{content:\"\"}.fa-align-left:before{content:\"\"}.fa-align-center:before{content:\"\"}.fa-align-right:before{content:\"\"}.fa-align-justify:before{content:\"\"}.fa-list:before{content:\"\"}.fa-dedent:before,.fa-outdent:before{content:\"\"}.fa-indent:before{content:\"\"}.fa-video-camera:before{content:\"\"}.fa-image:before,.fa-photo:before,.fa-picture-o:before{content:\"\"}.fa-pencil:before{content:\"\"}.fa-map-marker:before{content:\"\"}.fa-adjust:before{content:\"\"}.fa-tint:before{content:\"\"}.fa-edit:before,.fa-pencil-square-o:before{content:\"\"}.fa-share-square-o:before{content:\"\"}.fa-check-square-o:before{content:\"\"}.fa-arrows:before{content:\"\"}.fa-step-backward:before{content:\"\"}.fa-fast-backward:before{content:\"\"}.fa-backward:before{content:\"\"}.fa-play:before{content:\"\"}.fa-pause:before{content:\"\"}.fa-stop:before{content:\"\"}.fa-forward:before{content:\"\"}.fa-fast-forward:before{content:\"\"}.fa-step-forward:before{content:\"\"}.fa-eject:before{content:\"\"}.fa-chevron-left:before{content:\"\"}.fa-chevron-right:before{content:\"\"}.fa-plus-circle:before{content:\"\"}.fa-minus-circle:before{content:\"\"}.fa-times-circle:before{content:\"\"}.fa-check-circle:before{content:\"\"}.fa-question-circle:before{content:\"\"}.fa-info-circle:before{content:\"\"}.fa-crosshairs:before{content:\"\"}.fa-times-circle-o:before{content:\"\"}.fa-check-circle-o:before{content:\"\"}.fa-ban:before{content:\"\"}.fa-arrow-left:before{content:\"\"}.fa-arrow-right:before{content:\"\"}.fa-arrow-up:before{content:\"\"}.fa-arrow-down:before{content:\"\"}.fa-mail-forward:before,.fa-share:before{content:\"\"}.fa-expand:before{content:\"\"}.fa-compress:before{content:\"\"}.fa-plus:before{content:\"\"}.fa-minus:before{content:\"\"}.fa-asterisk:before{content:\"\"}.fa-exclamation-circle:before{content:\"\"}.fa-gift:before{content:\"\"}.fa-leaf:before{content:\"\"}.fa-fire:before{content:\"\"}.fa-eye:before{content:\"\"}.fa-eye-slash:before{content:\"\"}.fa-exclamation-triangle:before,.fa-warning:before{content:\"\"}.fa-plane:before{content:\"\"}.fa-calendar:before{content:\"\"}.fa-random:before{content:\"\"}.fa-comment:before{content:\"\"}.fa-magnet:before{content:\"\"}.fa-chevron-up:before{content:\"\"}.fa-chevron-down:before{content:\"\"}.fa-retweet:before{content:\"\"}.fa-shopping-cart:before{content:\"\"}.fa-folder:before{content:\"\"}.fa-folder-open:before{content:\"\"}.fa-arrows-v:before{content:\"\"}.fa-arrows-h:before{content:\"\"}.fa-bar-chart-o:before,.fa-bar-chart:before{content:\"\"}.fa-twitter-square:before{content:\"\"}.fa-facebook-square:before{content:\"\"}.fa-camera-retro:before{content:\"\"}.fa-key:before{content:\"\"}.fa-cogs:before,.fa-gears:before{content:\"\"}.fa-comments:before{content:\"\"}.fa-thumbs-o-up:before{content:\"\"}.fa-thumbs-o-down:before{content:\"\"}.fa-star-half:before{content:\"\"}.fa-heart-o:before{content:\"\"}.fa-sign-out:before{content:\"\"}.fa-linkedin-square:before{content:\"\"}.fa-thumb-tack:before{content:\"\"}.fa-external-link:before{content:\"\"}.fa-sign-in:before{content:\"\"}.fa-trophy:before{content:\"\"}.fa-github-square:before{content:\"\"}.fa-upload:before{content:\"\"}.fa-lemon-o:before{content:\"\"}.fa-phone:before{content:\"\"}.fa-square-o:before{content:\"\"}.fa-bookmark-o:before{content:\"\"}.fa-phone-square:before{content:\"\"}.fa-twitter:before{content:\"\"}.fa-facebook-f:before,.fa-facebook:before{content:\"\"}.fa-github:before{content:\"\"}.fa-unlock:before{content:\"\"}.fa-credit-card:before{content:\"\"}.fa-feed:before,.fa-rss:before{content:\"\"}.fa-hdd-o:before{content:\"\"}.fa-bullhorn:before{content:\"\"}.fa-bell:before{content:\"\"}.fa-certificate:before{content:\"\"}.fa-hand-o-right:before{content:\"\"}.fa-hand-o-left:before{content:\"\"}.fa-hand-o-up:before{content:\"\"}.fa-hand-o-down:before{content:\"\"}.fa-arrow-circle-left:before{content:\"\"}.fa-arrow-circle-right:before{content:\"\"}.fa-arrow-circle-up:before{content:\"\"}.fa-arrow-circle-down:before{content:\"\"}.fa-globe:before{content:\"\"}.fa-wrench:before{content:\"\"}.fa-tasks:before{content:\"\"}.fa-filter:before{content:\"\"}.fa-briefcase:before{content:\"\"}.fa-arrows-alt:before{content:\"\"}.fa-group:before,.fa-users:before{content:\"\"}.fa-chain:before,.fa-link:before{content:\"\"}.fa-cloud:before{content:\"\"}.fa-flask:before{content:\"\"}.fa-cut:before,.fa-scissors:before{content:\"\"}.fa-copy:before,.fa-files-o:before{content:\"\"}.fa-paperclip:before{content:\"\"}.fa-floppy-o:before,.fa-save:before{content:\"\"}.fa-square:before{content:\"\"}.fa-bars:before,.fa-navicon:before,.fa-reorder:before{content:\"\"}.fa-list-ul:before{content:\"\"}.fa-list-ol:before{content:\"\"}.fa-strikethrough:before{content:\"\"}.fa-underline:before{content:\"\"}.fa-table:before{content:\"\"}.fa-magic:before{content:\"\"}.fa-truck:before{content:\"\"}.fa-pinterest:before{content:\"\"}.fa-pinterest-square:before{content:\"\"}.fa-google-plus-square:before{content:\"\"}.fa-google-plus:before{content:\"\"}.fa-money:before{content:\"\"}.fa-caret-down:before{content:\"\"}.fa-caret-up:before{content:\"\"}.fa-caret-left:before{content:\"\"}.fa-caret-right:before{content:\"\"}.fa-columns:before{content:\"\"}.fa-sort:before,.fa-unsorted:before{content:\"\"}.fa-sort-desc:before,.fa-sort-down:before{content:\"\"}.fa-sort-asc:before,.fa-sort-up:before{content:\"\"}.fa-envelope:before{content:\"\"}.fa-linkedin:before{content:\"\"}.fa-rotate-left:before,.fa-undo:before{content:\"\"}.fa-gavel:before,.fa-legal:before{content:\"\"}.fa-dashboard:before,.fa-tachometer:before{content:\"\"}.fa-comment-o:before{content:\"\"}.fa-comments-o:before{content:\"\"}.fa-bolt:before,.fa-flash:before{content:\"\"}.fa-sitemap:before{content:\"\"}.fa-umbrella:before{content:\"\"}.fa-clipboard:before,.fa-paste:before{content:\"\"}.fa-lightbulb-o:before{content:\"\"}.fa-exchange:before{content:\"\"}.fa-cloud-download:before{content:\"\"}.fa-cloud-upload:before{content:\"\"}.fa-user-md:before{content:\"\"}.fa-stethoscope:before{content:\"\"}.fa-suitcase:before{content:\"\"}.fa-bell-o:before{content:\"\"}.fa-coffee:before{content:\"\"}.fa-cutlery:before{content:\"\"}.fa-file-text-o:before{content:\"\"}.fa-building-o:before{content:\"\"}.fa-hospital-o:before{content:\"\"}.fa-ambulance:before{content:\"\"}.fa-medkit:before{content:\"\"}.fa-fighter-jet:before{content:\"\"}.fa-beer:before{content:\"\"}.fa-h-square:before{content:\"\"}.fa-plus-square:before{content:\"\"}.fa-angle-double-left:before{content:\"\"}.fa-angle-double-right:before{content:\"\"}.fa-angle-double-up:before{content:\"\"}.fa-angle-double-down:before{content:\"\"}.fa-angle-left:before{content:\"\"}.fa-angle-right:before{content:\"\"}.fa-angle-up:before{content:\"\"}.fa-angle-down:before{content:\"\"}.fa-desktop:before{content:\"\"}.fa-laptop:before{content:\"\"}.fa-tablet:before{content:\"\"}.fa-mobile-phone:before,.fa-mobile:before{content:\"\"}.fa-circle-o:before{content:\"\"}.fa-quote-left:before{content:\"\"}.fa-quote-right:before{content:\"\"}.fa-spinner:before{content:\"\"}.fa-circle:before{content:\"\"}.fa-mail-reply:before,.fa-reply:before{content:\"\"}.fa-github-alt:before{content:\"\"}.fa-folder-o:before{content:\"\"}.fa-folder-open-o:before{content:\"\"}.fa-smile-o:before{content:\"\"}.fa-frown-o:before{content:\"\"}.fa-meh-o:before{content:\"\"}.fa-gamepad:before{content:\"\"}.fa-keyboard-o:before{content:\"\"}.fa-flag-o:before{content:\"\"}.fa-flag-checkered:before{content:\"\"}.fa-terminal:before{content:\"\"}.fa-code:before{content:\"\"}.fa-mail-reply-all:before,.fa-reply-all:before{content:\"\"}.fa-star-half-empty:before,.fa-star-half-full:before,.fa-star-half-o:before{content:\"\"}.fa-location-arrow:before{content:\"\"}.fa-crop:before{content:\"\"}.fa-code-fork:before{content:\"\"}.fa-chain-broken:before,.fa-unlink:before{content:\"\"}.fa-question:before{content:\"\"}.fa-info:before{content:\"\"}.fa-exclamation:before{content:\"\"}.fa-superscript:before{content:\"\"}.fa-subscript:before{content:\"\"}.fa-eraser:before{content:\"\"}.fa-puzzle-piece:before{content:\"\"}.fa-microphone:before{content:\"\"}.fa-microphone-slash:before{content:\"\"}.fa-shield:before{content:\"\"}.fa-calendar-o:before{content:\"\"}.fa-fire-extinguisher:before{content:\"\"}.fa-rocket:before{content:\"\"}.fa-maxcdn:before{content:\"\"}.fa-chevron-circle-left:before{content:\"\"}.fa-chevron-circle-right:before{content:\"\"}.fa-chevron-circle-up:before{content:\"\"}.fa-chevron-circle-down:before{content:\"\"}.fa-html5:before{content:\"\"}.fa-css3:before{content:\"\"}.fa-anchor:before{content:\"\"}.fa-unlock-alt:before{content:\"\"}.fa-bullseye:before{content:\"\"}.fa-ellipsis-h:before{content:\"\"}.fa-ellipsis-v:before{content:\"\"}.fa-rss-square:before{content:\"\"}.fa-play-circle:before{content:\"\"}.fa-ticket:before{content:\"\"}.fa-minus-square:before{content:\"\"}.fa-minus-square-o:before{content:\"\"}.fa-level-up:before{content:\"\"}.fa-level-down:before{content:\"\"}.fa-check-square:before{content:\"\"}.fa-pencil-square:before{content:\"\"}.fa-external-link-square:before{content:\"\"}.fa-share-square:before{content:\"\"}.fa-compass:before{content:\"\"}.fa-caret-square-o-down:before,.fa-toggle-down:before{content:\"\"}.fa-caret-square-o-up:before,.fa-toggle-up:before{content:\"\"}.fa-caret-square-o-right:before,.fa-toggle-right:before{content:\"\"}.fa-eur:before,.fa-euro:before{content:\"\"}.fa-gbp:before{content:\"\"}.fa-dollar:before,.fa-usd:before{content:\"\"}.fa-inr:before,.fa-rupee:before{content:\"\"}.fa-cny:before,.fa-jpy:before,.fa-rmb:before,.fa-yen:before{content:\"\"}.fa-rouble:before,.fa-rub:before,.fa-ruble:before{content:\"\"}.fa-krw:before,.fa-won:before{content:\"\"}.fa-bitcoin:before,.fa-btc:before{content:\"\"}.fa-file:before{content:\"\"}.fa-file-text:before{content:\"\"}.fa-sort-alpha-asc:before{content:\"\"}.fa-sort-alpha-desc:before{content:\"\"}.fa-sort-amount-asc:before{content:\"\"}.fa-sort-amount-desc:before{content:\"\"}.fa-sort-numeric-asc:before{content:\"\"}.fa-sort-numeric-desc:before{content:\"\"}.fa-thumbs-up:before{content:\"\"}.fa-thumbs-down:before{content:\"\"}.fa-youtube-square:before{content:\"\"}.fa-youtube:before{content:\"\"}.fa-xing:before{content:\"\"}.fa-xing-square:before{content:\"\"}.fa-youtube-play:before{content:\"\"}.fa-dropbox:before{content:\"\"}.fa-stack-overflow:before{content:\"\"}.fa-instagram:before{content:\"\"}.fa-flickr:before{content:\"\"}.fa-adn:before{content:\"\"}.fa-bitbucket:before{content:\"\"}.fa-bitbucket-square:before{content:\"\"}.fa-tumblr:before{content:\"\"}.fa-tumblr-square:before{content:\"\"}.fa-long-arrow-down:before{content:\"\"}.fa-long-arrow-up:before{content:\"\"}.fa-long-arrow-left:before{content:\"\"}.fa-long-arrow-right:before{content:\"\"}.fa-apple:before{content:\"\"}.fa-windows:before{content:\"\"}.fa-android:before{content:\"\"}.fa-linux:before{content:\"\"}.fa-dribbble:before{content:\"\"}.fa-skype:before{content:\"\"}.fa-foursquare:before{content:\"\"}.fa-trello:before{content:\"\"}.fa-female:before{content:\"\"}.fa-male:before{content:\"\"}.fa-gittip:before,.fa-gratipay:before{content:\"\"}.fa-sun-o:before{content:\"\"}.fa-moon-o:before{content:\"\"}.fa-archive:before{content:\"\"}.fa-bug:before{content:\"\"}.fa-vk:before{content:\"\"}.fa-weibo:before{content:\"\"}.fa-renren:before{content:\"\"}.fa-pagelines:before{content:\"\"}.fa-stack-exchange:before{content:\"\"}.fa-arrow-circle-o-right:before{content:\"\"}.fa-arrow-circle-o-left:before{content:\"\"}.fa-caret-square-o-left:before,.fa-toggle-left:before{content:\"\"}.fa-dot-circle-o:before{content:\"\"}.fa-wheelchair:before{content:\"\"}.fa-vimeo-square:before{content:\"\"}.fa-try:before,.fa-turkish-lira:before{content:\"\"}.fa-plus-square-o:before{content:\"\"}.fa-space-shuttle:before{content:\"\"}.fa-slack:before{content:\"\"}.fa-envelope-square:before{content:\"\"}.fa-wordpress:before{content:\"\"}.fa-openid:before{content:\"\"}.fa-bank:before,.fa-institution:before,.fa-university:before{content:\"\"}.fa-graduation-cap:before,.fa-mortar-board:before{content:\"\"}.fa-yahoo:before{content:\"\"}.fa-google:before{content:\"\"}.fa-reddit:before{content:\"\"}.fa-reddit-square:before{content:\"\"}.fa-stumbleupon-circle:before{content:\"\"}.fa-stumbleupon:before{content:\"\"}.fa-delicious:before{content:\"\"}.fa-digg:before{content:\"\"}.fa-pied-piper-pp:before{content:\"\"}.fa-pied-piper-alt:before{content:\"\"}.fa-drupal:before{content:\"\"}.fa-joomla:before{content:\"\"}.fa-language:before{content:\"\"}.fa-fax:before{content:\"\"}.fa-building:before{content:\"\"}.fa-child:before{content:\"\"}.fa-paw:before{content:\"\"}.fa-spoon:before{content:\"\"}.fa-cube:before{content:\"\"}.fa-cubes:before{content:\"\"}.fa-behance:before{content:\"\"}.fa-behance-square:before{content:\"\"}.fa-steam:before{content:\"\"}.fa-steam-square:before{content:\"\"}.fa-recycle:before{content:\"\"}.fa-automobile:before,.fa-car:before{content:\"\"}.fa-cab:before,.fa-taxi:before{content:\"\"}.fa-tree:before{content:\"\"}.fa-spotify:before{content:\"\"}.fa-deviantart:before{content:\"\"}.fa-soundcloud:before{content:\"\"}.fa-database:before{content:\"\"}.fa-file-pdf-o:before{content:\"\"}.fa-file-word-o:before{content:\"\"}.fa-file-excel-o:before{content:\"\"}.fa-file-powerpoint-o:before{content:\"\"}.fa-file-image-o:before,.fa-file-photo-o:before,.fa-file-picture-o:before{content:\"\"}.fa-file-archive-o:before,.fa-file-zip-o:before{content:\"\"}.fa-file-audio-o:before,.fa-file-sound-o:before{content:\"\"}.fa-file-movie-o:before,.fa-file-video-o:before{content:\"\"}.fa-file-code-o:before{content:\"\"}.fa-vine:before{content:\"\"}.fa-codepen:before{content:\"\"}.fa-jsfiddle:before{content:\"\"}.fa-life-bouy:before,.fa-life-buoy:before,.fa-life-ring:before,.fa-life-saver:before,.fa-support:before{content:\"\"}.fa-circle-o-notch:before{content:\"\"}.fa-ra:before,.fa-rebel:before,.fa-resistance:before{content:\"\"}.fa-empire:before,.fa-ge:before{content:\"\"}.fa-git-square:before{content:\"\"}.fa-git:before{content:\"\"}.fa-hacker-news:before,.fa-y-combinator-square:before,.fa-yc-square:before{content:\"\"}.fa-tencent-weibo:before{content:\"\"}.fa-qq:before{content:\"\"}.fa-wechat:before,.fa-weixin:before{content:\"\"}.fa-paper-plane:before,.fa-send:before{content:\"\"}.fa-paper-plane-o:before,.fa-send-o:before{content:\"\"}.fa-history:before{content:\"\"}.fa-circle-thin:before{content:\"\"}.fa-header:before{content:\"\"}.fa-paragraph:before{content:\"\"}.fa-sliders:before{content:\"\"}.fa-share-alt:before{content:\"\"}.fa-share-alt-square:before{content:\"\"}.fa-bomb:before{content:\"\"}.fa-futbol-o:before,.fa-soccer-ball-o:before{content:\"\"}.fa-tty:before{content:\"\"}.fa-binoculars:before{content:\"\"}.fa-plug:before{content:\"\"}.fa-slideshare:before{content:\"\"}.fa-twitch:before{content:\"\"}.fa-yelp:before{content:\"\"}.fa-newspaper-o:before{content:\"\"}.fa-wifi:before{content:\"\"}.fa-calculator:before{content:\"\"}.fa-paypal:before{content:\"\"}.fa-google-wallet:before{content:\"\"}.fa-cc-visa:before{content:\"\"}.fa-cc-mastercard:before{content:\"\"}.fa-cc-discover:before{content:\"\"}.fa-cc-amex:before{content:\"\"}.fa-cc-paypal:before{content:\"\"}.fa-cc-stripe:before{content:\"\"}.fa-bell-slash:before{content:\"\"}.fa-bell-slash-o:before{content:\"\"}.fa-trash:before{content:\"\"}.fa-copyright:before{content:\"\"}.fa-at:before{content:\"\"}.fa-eyedropper:before{content:\"\"}.fa-paint-brush:before{content:\"\"}.fa-birthday-cake:before{content:\"\"}.fa-area-chart:before{content:\"\"}.fa-pie-chart:before{content:\"\"}.fa-line-chart:before{content:\"\"}.fa-lastfm:before{content:\"\"}.fa-lastfm-square:before{content:\"\"}.fa-toggle-off:before{content:\"\"}.fa-toggle-on:before{content:\"\"}.fa-bicycle:before{content:\"\"}.fa-bus:before{content:\"\"}.fa-ioxhost:before{content:\"\"}.fa-angellist:before{content:\"\"}.fa-cc:before{content:\"\"}.fa-ils:before,.fa-shekel:before,.fa-sheqel:before{content:\"\"}.fa-meanpath:before{content:\"\"}.fa-buysellads:before{content:\"\"}.fa-connectdevelop:before{content:\"\"}.fa-dashcube:before{content:\"\"}.fa-forumbee:before{content:\"\"}.fa-leanpub:before{content:\"\"}.fa-sellsy:before{content:\"\"}.fa-shirtsinbulk:before{content:\"\"}.fa-simplybuilt:before{content:\"\"}.fa-skyatlas:before{content:\"\"}.fa-cart-plus:before{content:\"\"}.fa-cart-arrow-down:before{content:\"\"}.fa-diamond:before{content:\"\"}.fa-ship:before{content:\"\"}.fa-user-secret:before{content:\"\"}.fa-motorcycle:before{content:\"\"}.fa-street-view:before{content:\"\"}.fa-heartbeat:before{content:\"\"}.fa-venus:before{content:\"\"}.fa-mars:before{content:\"\"}.fa-mercury:before{content:\"\"}.fa-intersex:before,.fa-transgender:before{content:\"\"}.fa-transgender-alt:before{content:\"\"}.fa-venus-double:before{content:\"\"}.fa-mars-double:before{content:\"\"}.fa-venus-mars:before{content:\"\"}.fa-mars-stroke:before{content:\"\"}.fa-mars-stroke-v:before{content:\"\"}.fa-mars-stroke-h:before{content:\"\"}.fa-neuter:before{content:\"\"}.fa-genderless:before{content:\"\"}.fa-facebook-official:before{content:\"\"}.fa-pinterest-p:before{content:\"\"}.fa-whatsapp:before{content:\"\"}.fa-server:before{content:\"\"}.fa-user-plus:before{content:\"\"}.fa-user-times:before{content:\"\"}.fa-bed:before,.fa-hotel:before{content:\"\"}.fa-viacoin:before{content:\"\"}.fa-train:before{content:\"\"}.fa-subway:before{content:\"\"}.fa-medium:before{content:\"\"}.fa-y-combinator:before,.fa-yc:before{content:\"\"}.fa-optin-monster:before{content:\"\"}.fa-opencart:before{content:\"\"}.fa-expeditedssl:before{content:\"\"}.fa-battery-4:before,.fa-battery-full:before,.fa-battery:before{content:\"\"}.fa-battery-3:before,.fa-battery-three-quarters:before{content:\"\"}.fa-battery-2:before,.fa-battery-half:before{content:\"\"}.fa-battery-1:before,.fa-battery-quarter:before{content:\"\"}.fa-battery-0:before,.fa-battery-empty:before{content:\"\"}.fa-mouse-pointer:before{content:\"\"}.fa-i-cursor:before{content:\"\"}.fa-object-group:before{content:\"\"}.fa-object-ungroup:before{content:\"\"}.fa-sticky-note:before{content:\"\"}.fa-sticky-note-o:before{content:\"\"}.fa-cc-jcb:before{content:\"\"}.fa-cc-diners-club:before{content:\"\"}.fa-clone:before{content:\"\"}.fa-balance-scale:before{content:\"\"}.fa-hourglass-o:before{content:\"\"}.fa-hourglass-1:before,.fa-hourglass-start:before{content:\"\"}.fa-hourglass-2:before,.fa-hourglass-half:before{content:\"\"}.fa-hourglass-3:before,.fa-hourglass-end:before{content:\"\"}.fa-hourglass:before{content:\"\"}.fa-hand-grab-o:before,.fa-hand-rock-o:before{content:\"\"}.fa-hand-paper-o:before,.fa-hand-stop-o:before{content:\"\"}.fa-hand-scissors-o:before{content:\"\"}.fa-hand-lizard-o:before{content:\"\"}.fa-hand-spock-o:before{content:\"\"}.fa-hand-pointer-o:before{content:\"\"}.fa-hand-peace-o:before{content:\"\"}.fa-trademark:before{content:\"\"}.fa-registered:before{content:\"\"}.fa-creative-commons:before{content:\"\"}.fa-gg:before{content:\"\"}.fa-gg-circle:before{content:\"\"}.fa-tripadvisor:before{content:\"\"}.fa-odnoklassniki:before{content:\"\"}.fa-odnoklassniki-square:before{content:\"\"}.fa-get-pocket:before{content:\"\"}.fa-wikipedia-w:before{content:\"\"}.fa-safari:before{content:\"\"}.fa-chrome:before{content:\"\"}.fa-firefox:before{content:\"\"}.fa-opera:before{content:\"\"}.fa-internet-explorer:before{content:\"\"}.fa-television:before,.fa-tv:before{content:\"\"}.fa-contao:before{content:\"\"}.fa-500px:before{content:\"\"}.fa-amazon:before{content:\"\"}.fa-calendar-plus-o:before{content:\"\"}.fa-calendar-minus-o:before{content:\"\"}.fa-calendar-times-o:before{content:\"\"}.fa-calendar-check-o:before{content:\"\"}.fa-industry:before{content:\"\"}.fa-map-pin:before{content:\"\"}.fa-map-signs:before{content:\"\"}.fa-map-o:before{content:\"\"}.fa-map:before{content:\"\"}.fa-commenting:before{content:\"\"}.fa-commenting-o:before{content:\"\"}.fa-houzz:before{content:\"\"}.fa-vimeo:before{content:\"\"}.fa-black-tie:before{content:\"\"}.fa-fonticons:before{content:\"\"}.fa-reddit-alien:before{content:\"\"}.fa-edge:before{content:\"\"}.fa-credit-card-alt:before{content:\"\"}.fa-codiepie:before{content:\"\"}.fa-modx:before{content:\"\"}.fa-fort-awesome:before{content:\"\"}.fa-usb:before{content:\"\"}.fa-product-hunt:before{content:\"\"}.fa-mixcloud:before{content:\"\"}.fa-scribd:before{content:\"\"}.fa-pause-circle:before{content:\"\"}.fa-pause-circle-o:before{content:\"\"}.fa-stop-circle:before{content:\"\"}.fa-stop-circle-o:before{content:\"\"}.fa-shopping-bag:before{content:\"\"}.fa-shopping-basket:before{content:\"\"}.fa-hashtag:before{content:\"\"}.fa-bluetooth:before{content:\"\"}.fa-bluetooth-b:before{content:\"\"}.fa-percent:before{content:\"\"}.fa-gitlab:before{content:\"\"}.fa-wpbeginner:before{content:\"\"}.fa-wpforms:before{content:\"\"}.fa-envira:before{content:\"\"}.fa-universal-access:before{content:\"\"}.fa-wheelchair-alt:before{content:\"\"}.fa-question-circle-o:before{content:\"\"}.fa-blind:before{content:\"\"}.fa-audio-description:before{content:\"\"}.fa-volume-control-phone:before{content:\"\"}.fa-braille:before{content:\"\"}.fa-assistive-listening-systems:before{content:\"\"}.fa-american-sign-language-interpreting:before,.fa-asl-interpreting:before{content:\"\"}.fa-deaf:before,.fa-deafness:before,.fa-hard-of-hearing:before{content:\"\"}.fa-glide:before{content:\"\"}.fa-glide-g:before{content:\"\"}.fa-sign-language:before,.fa-signing:before{content:\"\"}.fa-low-vision:before{content:\"\"}.fa-viadeo:before{content:\"\"}.fa-viadeo-square:before{content:\"\"}.fa-snapchat:before{content:\"\"}.fa-snapchat-ghost:before{content:\"\"}.fa-snapchat-square:before{content:\"\"}.fa-pied-piper:before{content:\"\"}.fa-first-order:before{content:\"\"}.fa-yoast:before{content:\"\"}.fa-themeisle:before{content:\"\"}.fa-google-plus-circle:before,.fa-google-plus-official:before{content:\"\"}.fa-fa:before,.fa-font-awesome:before{content:\"\"}.fa-handshake-o:before{content:\"\"}.fa-envelope-open:before{content:\"\"}.fa-envelope-open-o:before{content:\"\"}.fa-linode:before{content:\"\"}.fa-address-book:before{content:\"\"}.fa-address-book-o:before{content:\"\"}.fa-address-card:before,.fa-vcard:before{content:\"\"}.fa-address-card-o:before,.fa-vcard-o:before{content:\"\"}.fa-user-circle:before{content:\"\"}.fa-user-circle-o:before{content:\"\"}.fa-user-o:before{content:\"\"}.fa-id-badge:before{content:\"\"}.fa-drivers-license:before,.fa-id-card:before{content:\"\"}.fa-drivers-license-o:before,.fa-id-card-o:before{content:\"\"}.fa-quora:before{content:\"\"}.fa-free-code-camp:before{content:\"\"}.fa-telegram:before{content:\"\"}.fa-thermometer-4:before,.fa-thermometer-full:before,.fa-thermometer:before{content:\"\"}.fa-thermometer-3:before,.fa-thermometer-three-quarters:before{content:\"\"}.fa-thermometer-2:before,.fa-thermometer-half:before{content:\"\"}.fa-thermometer-1:before,.fa-thermometer-quarter:before{content:\"\"}.fa-thermometer-0:before,.fa-thermometer-empty:before{content:\"\"}.fa-shower:before{content:\"\"}.fa-bath:before,.fa-bathtub:before,.fa-s15:before{content:\"\"}.fa-podcast:before{content:\"\"}.fa-window-maximize:before{content:\"\"}.fa-window-minimize:before{content:\"\"}.fa-window-restore:before{content:\"\"}.fa-times-rectangle:before,.fa-window-close:before{content:\"\"}.fa-times-rectangle-o:before,.fa-window-close-o:before{content:\"\"}.fa-bandcamp:before{content:\"\"}.fa-grav:before{content:\"\"}.fa-etsy:before{content:\"\"}.fa-imdb:before{content:\"\"}.fa-ravelry:before{content:\"\"}.fa-eercast:before{content:\"\"}.fa-microchip:before{content:\"\"}.fa-snowflake-o:before{content:\"\"}.fa-superpowers:before{content:\"\"}.fa-wpexplorer:before{content:\"\"}.fa-meetup:before{content:\"\"}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}.btn.active:focus,.btn:active:focus,.btn:focus{outline:0!important}.settings-btn-wrapper{position:absolute;top:0;right:30px}.settings-btn-wrapper>.help-btn,.settings-btn-wrapper>.settings-btn{background:#ededed;color:#21366b;outline:0;border:0;border-radius:50%;width:28px;height:28px;text-align:center}.settings-btn-wrapper>.help-btn.active,.settings-btn-wrapper>.help-btn:active,.settings-btn-wrapper>.help-btn:active:hover,.settings-btn-wrapper>.settings-btn.active,.settings-btn-wrapper>.settings-btn:active,.settings-btn-wrapper>.settings-btn:active:hover{background:#21366b;color:#fff}.settings-btn-wrapper>.help-btn.active:hover,.settings-btn-wrapper>.settings-btn.active:hover{background:rgba(33,54,107,.75)}.settings-btn-wrapper>.help-btn:hover,.settings-btn-wrapper>.settings-btn:hover{opacity:.9}.settings-btn-wrapper>.help-btn{padding-left:4px}#settings-dialog .modal-header{border-color:#dfdfdf}#settings-dialog .modal-body{background:#ededed;padding:40px 40px 15px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}#settings-dialog .modal-body .control-wrapper{padding-bottom:15px}#settings-dialog .modal-body .slider-header{display:block}#settings-dialog .modal-body .slider-header .slider-value{float:right;font-weight:400}#settings-dialog .modal-footer{border-color:#dfdfdf}.modal{background:rgba(0,0,0,.5)}');

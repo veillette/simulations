@@ -106,7 +106,8 @@ define(function (require) {
         var textures = [];
         for (var i = 0; i < imagePaths.length; i++)
             textures.push(Assets.Texture(imagePaths[i]));
-        return new PIXI.extras.MovieClip(textures);
+        var MovieClip = (PIXI.extras && (PIXI.extras.MovieClip || PIXI.extras.AnimatedSprite)) || PIXI.AnimatedSprite;
+        return new MovieClip(textures);
     };
 
     return Assets;
