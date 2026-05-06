@@ -29,8 +29,8 @@ define(function () {
             this.x = x.x;
             this.y = x.y;
         } else {
-            this.x = x;
-            this.y = y;
+            this.x = x || 0;
+            this.y = y || 0;
         }
         return this;
     };
@@ -41,8 +41,8 @@ define(function () {
             this.x += x.x;
             this.y += x.y;
         } else {
-            this.x += x;
-            this.y += y;
+            this.x += x || 0;
+            this.y += y || 0;
         }
         return this;
     };
@@ -53,8 +53,8 @@ define(function () {
             this.x -= x.x;
             this.y -= x.y;
         } else {
-            this.x -= x;
-            this.y -= y;
+            this.x -= x || 0;
+            this.y -= y || 0;
         }
         return this;
     };
