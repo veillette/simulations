@@ -37,7 +37,7 @@ define(function(require) {
             this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
             this.flashlight.anchor.x = 1;
             this.flashlight.anchor.y = 0.5;
-            
+
             this.flashlightLayer = new PIXI.Container();
             this.flashlightLayer.addChild(this.lampLightGraphics);
             this.flashlightLayer.addChild(this.flashlight);
@@ -122,6 +122,6 @@ define(function(require) {
         }
 
     }, Constants.BeamView);
-    
+
     return BeamView;
 });

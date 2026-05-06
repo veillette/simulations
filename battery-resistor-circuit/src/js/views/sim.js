@@ -116,7 +116,7 @@ define(function (require) {
                 simulation: this.simulation
             };
             this.$el.html(this.template(data));
-            
+
             this.$('.resistance-slider').noUiSlider({
                 start: Constants.RESISTANCE_RANGE.defaultValue,
                 connect: 'lower',

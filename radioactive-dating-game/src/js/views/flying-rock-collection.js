@@ -28,7 +28,7 @@ define(function(require) {
     var getFirstTexture = function() {
         if (!textures)
             initTextures();
-        
+
         return textures[0];
     };
 
@@ -61,7 +61,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             sprite.rotation = model.get('rotation');
         }
 

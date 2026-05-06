@@ -21,7 +21,7 @@ define(function(require) {
     var SOMSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         heaterCoolerPosition: new Vector2(),
@@ -35,7 +35,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -70,7 +70,7 @@ define(function(require) {
                     fireAssetReference: Assets.Images.FLAME
                 });
             }
-            
+
             this.heaterCoolerView.displayObject.x = Math.floor(this.width  * this.heaterCoolerPosition.x);
             this.heaterCoolerView.displayObject.y = Math.floor(this.height * this.heaterCoolerPosition.y);
             this.stage.addChild(this.heaterCoolerView.displayObject);

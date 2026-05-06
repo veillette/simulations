@@ -7,7 +7,7 @@ define(function (require) {
     var FaradayObject = require('models/faraday-object');
 
     /**
-     * 
+     *
      */
     var AbstractCurrentSource = FaradayObject.extend({
 

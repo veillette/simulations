@@ -29,7 +29,7 @@ define(function(require) {
 
         reset: function() {
             FaradaySceneView.prototype.reset.apply(this, arguments);
-            
+
             this.electromagnetView.reset();
         },
 

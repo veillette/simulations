@@ -50,7 +50,7 @@ define(function(require) {
         updatePosition: function() {
             var viewPosition = this.mvt.modelToView(this.model.get('position'));
             this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y; 
+            this.displayObject.y = viewPosition.y;
         },
 
         update: function() {

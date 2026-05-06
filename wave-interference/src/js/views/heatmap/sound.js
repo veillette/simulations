@@ -31,7 +31,7 @@ define(function(require) {
 	    scale;
 
 	/**
-	 * SoundHeatmapView is the sound simulation version of the HeatmapView 
+	 * SoundHeatmapView is the sound simulation version of the HeatmapView
 	 *   that uses different sub-views where necessary.
 	 */
 	var SoundHeatmapView = HeatmapView.extend({
@@ -100,7 +100,7 @@ define(function(require) {
 			this.eachPressureParticle(function(i, j) {
 				if (!this.pressureParticles[i]) {
 					this.pressureParticles[i]       = [];
-					this.pressureParticleSprites[i] = [];	
+					this.pressureParticleSprites[i] = [];
 				}
 
 				if (Math.random() < 0.05)
@@ -119,14 +119,14 @@ define(function(require) {
 				this.pressureParticles[i][j] = particle;
 				this.pressureParticleSprites[i][j] = sprite;
 
-				this.pressureParticleSpriteBatch.addChild(sprite);	
+				this.pressureParticleSpriteBatch.addChild(sprite);
 			});
 
 			this.resizePressureParticles();
 		},
 
 		/**
-		 * 
+		 *
 		 */
 		resizePressureParticles: function() {
 			height = this.waveSimulation.lattice.height;
@@ -145,11 +145,11 @@ define(function(require) {
 				sprite.scale.x = scale;
 				sprite.scale.y = scale;
 				// TODO: change the scale?
-			});	
+			});
 		},
 
 		/**
-		 * 
+		 *
 		 */
 		enablePressureParticles: function() {
 			this.pressureParticleSpriteBatchContainer.visible = true;
@@ -159,7 +159,7 @@ define(function(require) {
 		},
 
 		/**
-		 * 
+		 *
 		 */
 		disablePressureParticles: function() {
 			this.spriteBatchContainer.visible = true;
@@ -204,7 +204,7 @@ define(function(require) {
 
 				while (this.accumulator >= this.waveSimulation.timestep) {
 					this.updatePressureParticles();
-					
+
 					this.accumulator -= this.waveSimulation.timestep;
 				}
 			}

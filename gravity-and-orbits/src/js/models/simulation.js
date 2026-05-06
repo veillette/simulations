@@ -16,14 +16,14 @@ define(function (require, exports, module) {
     var Scenarios = require('scenarios');
 
      /* PhET explanation: "
-      *    Subdivide DT intervals by this factor to improve smoothing, 
-      *    otherwise some orbits look too non-smooth (you can see 
+      *    Subdivide DT intervals by this factor to improve smoothing,
+      *    otherwise some orbits look too non-smooth (you can see
       *    their corners). "
       */
     var SMOOTHING_STEPS = 5;
 
     /**
-     * 
+     *
      */
     var GOSimulation = FixedIntervalSimulation.extend({
 
@@ -31,10 +31,10 @@ define(function (require, exports, module) {
             scenario: Scenarios.Friendly[0],
             gravityEnabled: true,
             secondCounter: 0,
-            speedScale: Constants.DEFAULT_SPEED_SCALE, 
+            speedScale: Constants.DEFAULT_SPEED_SCALE,
             deltaTimePerStep: Constants.DT_PER_TICK
         }),
-        
+
         /**
          *
          */
@@ -63,14 +63,14 @@ define(function (require, exports, module) {
 
             this.scenarioChanged(this, this.get('scenario'));
         },
-        
+
         /**
          * Loads a scenario. Sets up the bodies, applies simulation
          *   attributes, and resets the simulation.
          */
         scenarioChanged: function(simulation, scenario) {
             this.pause();
-            
+
             this.bodies.reset(_.map(scenario.bodies, function(body) {
                 return body.clone();
             }));
@@ -217,12 +217,12 @@ define(function (require, exports, module) {
             for (s = 0; s < subSubSteps; s++)
                 state = this.performSubSubStep(dtPerSubSubstep, state);
 
-            // We've kept cheap copies of the real models for 
+            // We've kept cheap copies of the real models for
             //   making quick calculations, so now we must
             //   update those real models.
             for (i = 0; i < state.length; i++)
                 state[i].applyState(this.bodies.at(i));
-            
+
             // Check for collisions between bodies
             for (i = 0; i < this.bodies.length; i++) {
                 for (j = i + 1; j < this.bodies.length; j++) {
@@ -315,8 +315,8 @@ define(function (require, exports, module) {
          */
         getForceFromSource: function(target, newTargetPosition, source) {
             if (source.position.equals(newTargetPosition)) {
-                // If they are on top of each other, force should be 
-                //   infinite, but ignore it since we want to have 
+                // If they are on top of each other, force should be
+                //   infinite, but ignore it since we want to have
                 //   semi-realistic behavior.
                 return this._sourceForce.set(0, 0);
             }

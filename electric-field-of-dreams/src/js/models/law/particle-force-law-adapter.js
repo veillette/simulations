@@ -10,7 +10,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var ParticleForceLawAdapter = function(forceLaw) {
         this.particles = new Backbone.Collection();

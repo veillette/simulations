@@ -7,7 +7,7 @@ define(function (require) {
         this.height = height;
     };
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -93,7 +93,7 @@ define(function (require) {
 
     Inductor.MIN_INDUCTANCE = 10;
     Inductor.MAX_INDUCTANCE = 100;
-    // 50 henries makes tau=L/R = 5 sec for default resistor; 
+    // 50 henries makes tau=L/R = 5 sec for default resistor;
     //   this saturates in about 5 * tau = 25 sec
     Inductor.DEFAULT_INDUCTANCE = 50;
 
@@ -155,7 +155,7 @@ define(function (require) {
     Switch.HANDLE_ANGLE_CLOSED = 0;
 
     Constants.Switch = Switch;
-    
+
 
 
     /*************************************************************************

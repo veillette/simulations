@@ -87,7 +87,7 @@ define(function (require) {
 		barrierDown: function(event) {
 			if ($(event.target).hasClass('barrier-box')) {
 				event.preventDefault();
-				
+
 				this.draggingBarrier = true;
 
 				this.fixTouchEvents(event);

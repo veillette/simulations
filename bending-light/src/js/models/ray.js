@@ -7,7 +7,7 @@ define(function (require) {
     var Pool = require('object-pool');
 
     var Vector2 = require('common/math/vector2');
-    
+
     var pool = Pool({
         init: function() {
             return new Ray();

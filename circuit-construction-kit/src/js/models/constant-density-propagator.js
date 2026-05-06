@@ -14,9 +14,9 @@ define(function (require) {
 
     var locationPool = Pool({
         init: function() {
-            return { 
-                branch: undefined, 
-                x: undefined 
+            return {
+                branch: undefined,
+                x: undefined
             };
         }
     });
@@ -45,14 +45,14 @@ define(function (require) {
                 this.scale = MAX_STEP / maxStep;
             else
                 this.scale = 1;
-            
+
             this.smoothData.addData(this.scale * 100);
             this.timeScalingPercentValue = this.smoothData.getAverage();
 
             this.percent = Math.round(this.timeScalingPercentValue);
             if (this.percent === 0)
                 this.percent = 1;
-            
+
             // Todo add test for change before notify
             for (var i = 0; i < this.particleSet.numParticles(); i++)
                 this.propagate(this.particleSet.particleAt(i), deltaTime);
@@ -83,7 +83,7 @@ define(function (require) {
             var indices = [];
             for (i = 0; i < this.particleSet.numParticles(); i++)
                 indices.push(i);
-            
+
             _.shuffle(indices);
 
             for (i = 0; i < this.particleSet.numParticles(); i++)
@@ -96,7 +96,7 @@ define(function (require) {
             var lower = this.particleSet.getLowerNeighborInBranch(e);
             if (!upper || !lower)
                 return;
-            
+
             var sep = upper.get('distAlongWire') - lower.get('distAlongWire');
             var myloc = e.get('distAlongWire');
             var midpoint = lower.get('distAlongWire') + sep / 2;
@@ -109,7 +109,7 @@ define(function (require) {
             var correctionSpeed = 0.055 / this.numEqualize * myscale;
             if (!sameDirAsCurrent)
                 correctionSpeed = 0.01 / this.numEqualize * myscale;
-            
+
             var maxDX = Math.abs(correctionSpeed * deltaTime);
 
             if (distMoving > maxDX) {
@@ -169,14 +169,14 @@ define(function (require) {
 
                 if (isNaN(overshoot)) // Never happens
                     throw 'Overshoot is NaN';
-                
+
                 if (overshoot < 0) // Never happens
                     throw 'Overshoot is <0';
-                
+
                 var locations = this.getLocations(e, overshoot, under);
                 if (locations.length === 0)
                     return;
-                
+
                 // Choose the branch with the furthest away electron
                 var chosen = this.chooseDestinationBranch(locations);
                 e.setLocation(chosen.branch, Math.abs(chosen.x));
@@ -190,7 +190,7 @@ define(function (require) {
         chooseDestinationBranch: function(locations) {
             for (var i = 0; i < locations.length; i++)
                 locations[i].density = this.getDensity(locations[i]);
-            
+
             if (!this._densitySortFunction) {
                 this._densitySortFunction = function(loc1, loc2) {
                     return loc1.density - loc2.density;
@@ -208,10 +208,10 @@ define(function (require) {
 
         getLocations: function(e, overshoot, under) {
             var branch = e.get('branch');
-            var jroot = (under) ? 
+            var jroot = (under) ?
                 branch.get('startJunction') :
                 branch.get('endJunction');
-            
+
             var adj = this.circuit.getAdjacentBranches(jroot);
             var all = [];
 
@@ -225,7 +225,7 @@ define(function (require) {
                     current = FIRE_CURRENT;
                 else if (current < -FIRE_CURRENT)
                     current = -FIRE_CURRENT;
-                
+
                 var distAlongNew;
                 if (current > 0 && neighbor.get('startJunction') == jroot) { // Start near the beginning.
                     distAlongNew = overshoot;
@@ -245,7 +245,7 @@ define(function (require) {
                         distAlongNew = neighbor.getLength();
                     else if (distAlongNew < 0)
                         distAlongNew = 0;
-                    
+
                     location = locationPool.create();
                     location.branch = neighbor;
                     location.x = distAlongNew;

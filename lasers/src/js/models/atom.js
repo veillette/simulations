@@ -49,7 +49,7 @@ define(function (require) {
 
         update: function(time, deltaTime) {
             PropertiesBasedAtom.prototype.update.apply(this, arguments);
-            
+
             this.lifetimeTimer -= deltaTime;
             if (this.lifetimeTimer <= 0 && !this.get('canCollideInGroundState'))
                 this.set('canCollideInGroundState', true);

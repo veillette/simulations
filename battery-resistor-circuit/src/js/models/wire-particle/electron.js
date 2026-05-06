@@ -7,7 +7,7 @@ define(function (require) {
     var WireParticle = require('models/wire-particle');
 
     /**
-     * 
+     *
      */
     var Electron = function(attributes) {
         WireParticle.apply(this, arguments);
@@ -29,10 +29,10 @@ define(function (require) {
         getLastCollision: function() {
             if (!this.collisionEvent)
                 return null;
-            
+
             if (this.collisionEvent.currentTime() - this.lastCollisionTime > 20)
                 this.collided = true;
-            
+
             return this.lastCollisionObject;
         },
 

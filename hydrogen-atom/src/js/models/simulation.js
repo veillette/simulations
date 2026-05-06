@@ -21,7 +21,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var HydrogenAtomSimulation = FixedIntervalSimulation.extend({
 
@@ -29,13 +29,13 @@ define(function (require, exports, module) {
             atomicModel: AtomicModels.BILLIARD_BALL,
             experimentSelected: true
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 framesPerSecond: Constants.FRAME_RATE,
                 deltaTimePerFrame: Constants.DEFAULT_DELTA_TIME_PER_FRAME
             }, options);
-            
+
             FixedIntervalSimulation.prototype.initialize.apply(this, [attributes, options]);
 
             this.on('change:atomicModel',        this.atomicModelChanged);
@@ -52,10 +52,10 @@ define(function (require, exports, module) {
             var nozzleWidth = Constants.ANIMATION_BOX_SIZE.width;
 
             this.gun = new Gun({
-                position: position, 
-                orientation: orientation, 
-                nozzleWidth: nozzleWidth, 
-                minWavelength: Constants.MIN_WAVELENGTH, 
+                position: position,
+                orientation: orientation,
+                nozzleWidth: nozzleWidth,
+                minWavelength: Constants.MIN_WAVELENGTH,
                 maxWavelength: Constants.MAX_WAVELENGTH
             });
 
@@ -141,7 +141,7 @@ define(function (require, exports, module) {
             else {
                 var constructor = this.get('atomicModel').constructor;
 
-                this.atom = new constructor({ 
+                this.atom = new constructor({
                     position: position
                 }, {
                     gun: this.gun
@@ -166,7 +166,7 @@ define(function (require, exports, module) {
         photonFired: function(photon) {
             this.photons.add(photon);
         },
-        
+
         // When the gun fires an alpha particle, add the alpha particle to the model.
         alphaParticleFired: function(alphaParticle) {
             this.alphaParticles.add(alphaParticle);

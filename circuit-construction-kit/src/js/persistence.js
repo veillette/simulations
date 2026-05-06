@@ -62,14 +62,14 @@ define(function (require) {
 
     var toBranch = function(startJunction, endJunction, $xml) {
         var type = trimComponentType($xml.attr('type'));
-        
+
         if (type === 'Wire') {
             return new Wire({
                 startJunction: startJunction,
                 endJunction: endJunction
             });
         }
-        
+
         var length = parseFloat($xml.attr('length'));
         var height = parseFloat($xml.attr('height'));
 
@@ -88,7 +88,7 @@ define(function (require) {
                 endJunction: endJunction,
                 length: length,
                 height: height,
-                internalResistance: parseFloat($xml.attr('internalResistance')), 
+                internalResistance: parseFloat($xml.attr('internalResistance')),
                 internalResistanceOn: true,
                 amplitude: parseFloat($xml.attr('amplitude')),
                 frequency: parseFloat($xml.attr('frequency'))
@@ -111,7 +111,7 @@ define(function (require) {
                 endJunction: endJunction,
                 length: length,
                 height: height,
-                internalResistance: parseFloat($xml.attr('internalResistance')), 
+                internalResistance: parseFloat($xml.attr('internalResistance')),
                 internalResistanceOn: true,
                 voltageDrop: parseFloat($xml.attr('voltage'))
             });
@@ -164,14 +164,14 @@ define(function (require) {
                 inductance:  parseFloat($xml.attr('inductance'))
             });
         }
-        
+
         return null;
     };
 
     var trimComponentType = function(type) {
         if (type == 'edu.colorado.phet.cck3.circuit.Branch')
             return 'Wire';
-        
+
         return type.substr(type.lastIndexOf('.') + 1);
     };
 

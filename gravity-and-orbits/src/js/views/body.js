@@ -76,7 +76,7 @@ define(function(require) {
             this.initGraphics();
 
             this.updateMass(this.model, this.model.get('mass'));
-            
+
             this.listenTo(this.model, 'change:position', this.updatePosition);
             this.listenTo(this.model, 'change:velocity', this.updateVelocity);
             this.listenTo(this.model, 'change:force',    this.updateGravity);
@@ -95,7 +95,7 @@ define(function(require) {
             this.initGravityArrowView();
             this.initVelocityArrowView();
             this.initVelocityMarker();
-            
+
             this.displayObject.addChild(this.bodyContainer);
             this.displayObject.addChild(this.bodyLabel);
             this.displayObject.addChild(this.massLabel);
@@ -159,7 +159,7 @@ define(function(require) {
         },
 
         initGravityArrowView: function() {
-            this.gravityArrowView = new ArrowView({ 
+            this.gravityArrowView = new ArrowView({
                 model: this.gravityViewModel,
 
                 tailWidth:  BodyView.ARROW_TAIL_WIDTH,
@@ -172,7 +172,7 @@ define(function(require) {
         },
 
         initVelocityArrowView: function() {
-            this.velocityArrowView = new ArrowView({ 
+            this.velocityArrowView = new ArrowView({
                 model: this.velocityViewModel,
 
                 tailWidth:  BodyView.ARROW_TAIL_WIDTH,
@@ -241,7 +241,7 @@ define(function(require) {
         },
 
         update: function(time, delta) {
-            
+
         },
 
         updateMVT: function(mvt) {
@@ -271,7 +271,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 this.displayObject.x += dx;
                 this.displayObject.y += dy;
 
@@ -300,7 +300,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
                 var x = local.x - this.dragOffset.x;
                 var y = local.y - this.dragOffset.y;
-                
+
                 this.velocityMarker.x = x;
                 this.velocityMarker.y = y;
 

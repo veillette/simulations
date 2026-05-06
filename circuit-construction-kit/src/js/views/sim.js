@@ -32,7 +32,7 @@ define(function (require) {
     var playbackControlsHtml = require('text!templates/playback-controls.html');
 
     /**
-     * 
+     *
      */
     var CCKSimView = SimView.extend({
 
@@ -140,7 +140,7 @@ define(function (require) {
          * Renders the playback controls at the bottom of the screen
          */
         renderPlaybackControls: function() {
-            this.$playbackControls = $(this.playbackControlsPanelTemplate({ 
+            this.$playbackControls = $(this.playbackControlsPanelTemplate({
                 unique: this.cid,
                 dcOnly: this.dcOnly
             }));
@@ -168,7 +168,7 @@ define(function (require) {
                 decimals: 4,
                 position: {
                     x : AppView.windowIsShort() ? 630 : 622,
-                    y : AppView.windowIsShort() ? 326 : 398 
+                    y : AppView.windowIsShort() ? 326 : 398
                 }
             });
 
@@ -208,7 +208,7 @@ define(function (require) {
          */
         resetComponents: function() {
             SimView.prototype.resetComponents.apply(this);
-            
+
             this.sceneView.reset();
             this.stopwatchView.hide();
         },

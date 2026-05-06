@@ -13,11 +13,11 @@ define(function(require) {
     var Constants = require('constants');
 
     var html = require('text!hydrogen-atom/templates/spectrometer.html');
-    
+
     require('less!hydrogen-atom/styles/spectrometer');
 
     /**
-     * 
+     *
      */
     var SpectrometerView = Backbone.View.extend({
 
@@ -89,7 +89,7 @@ define(function(require) {
             this.minWavelength = options.minWavelength;
             this.maxWavelength = options.maxWavelength;
             this.invisibleSpectrumColor = options.invisibleSpectrumColor;
-            
+
             this.classificationFont = options.classificationFontSize * resolution + 'px Helvetica Neue';
             this.wavelengthFont = options.wavelengthFontSize * resolution + 'px Helvetica Neue';
 
@@ -188,7 +188,7 @@ define(function(require) {
             else {
                 var $spectrometerPanel = $('.spectrometer-panel');
                 x = $spectrometerPanel.position().left;
-                y = $spectrometerPanel.position().top - 176;    
+                y = $spectrometerPanel.position().top - 176;
             }
 
             var snapshotView = new SnapshotView({
@@ -368,12 +368,12 @@ define(function(require) {
         photonEmitted: function(photon) {
             if (!this._stopped) {
                 var wavelength = Math.floor(photon.getWavelength());
-                
+
                 if (this.wavelengthCounts[wavelength] === undefined)
                     this.wavelengthCounts[wavelength] = 1;
                 else
                     this.wavelengthCounts[wavelength] = this.wavelengthCounts[wavelength] + 1;
-                
+
                 this.drawPoint(wavelength, this.wavelengthCounts[wavelength]);
             }
         }

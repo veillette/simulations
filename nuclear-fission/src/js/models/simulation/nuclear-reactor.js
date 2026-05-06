@@ -41,7 +41,7 @@ define(function (require, exports, module) {
             totalEnergyReleased: 0,
             reactionStarted: false
         }),
-        
+
         initialize: function(attributes, options) {
             NuclearPhysicsSimulation.prototype.initialize.apply(this, [attributes, options]);
         },
@@ -67,23 +67,23 @@ define(function (require, exports, module) {
             // Set the initial values of the bins to 0
             this.initFissionEventBins();
 
-            // Create the reaction chambers (which are modeled as simple 
+            // Create the reaction chambers (which are modeled as simple
             //   rectangles) and the control rods.
             this.initRodsAndReactionChambers();
-            
+
             // Create a rectangle that represents the inner boundary of the
             //   reactor.  This is used to test when particles have effectively
             //   gone outside the bounds of the reactor.
             this.innerReactorRect = new Rectangle(
                 REACTOR_POSITION.x + REACTOR_WALL_WIDTH,
-                REACTOR_POSITION.y + REACTOR_WALL_WIDTH, 
+                REACTOR_POSITION.y + REACTOR_WALL_WIDTH,
                 OVERALL_REACTOR_WIDTH - (2 * REACTOR_WALL_WIDTH),
                 OVERALL_REACTOR_HEIGHT - (2 * REACTOR_WALL_WIDTH)
             );
 
             this.outerReactorRect = new Rectangle(
                 REACTOR_POSITION.x,
-                REACTOR_POSITION.y, 
+                REACTOR_POSITION.y,
                 OVERALL_REACTOR_WIDTH,
                 OVERALL_REACTOR_HEIGHT
             );
@@ -104,12 +104,12 @@ define(function (require, exports, module) {
                 var yPos = REACTOR_POSITION.y + REACTOR_WALL_WIDTH;
                 var chamberRect = new Rectangle(xPos, yPos, reactionChamberWidth, reactionChamberHeight);
                 this.reactionChamberRects.push(chamberRect);
-                
+
                 if (i < NUMBER_OF_REACTION_CHAMBERS - 1) {
                     // Create a control rod.
                     var controlRod = new ControlRod({
                         position: new Vector2(xPos + reactionChamberWidth, yPos),
-                        width: controlRodWidth, 
+                        width: controlRodWidth,
                         height: OVERALL_REACTOR_HEIGHT
                     });
                     this.controlRods.push(controlRod);
@@ -130,7 +130,7 @@ define(function (require, exports, module) {
             var reactionChamberHeight = this.reactionChamberRects[0].h;
             var numNucleiAcross = Math.floor(((reactionChamberWidth - (2 * MIN_DISTANCE_FROM_NUCLEI_TO_WALLS)) / MIN_INTER_NUCLEI_DISTANCE) + 1);
             var numNucleiDown = Math.floor(((reactionChamberHeight - (2 * MIN_DISTANCE_FROM_NUCLEI_TO_WALLS)) / MIN_INTER_NUCLEI_DISTANCE) + 1);
-            
+
             // Add the U235 and U238 nuclei to each chamber.  Note that the U238
             //   nuclei are present to moderate the reaction, but the educators
             //   have requested that they don't appear visually to the user since
@@ -141,12 +141,12 @@ define(function (require, exports, module) {
                 var reactionChamberRect = this.reactionChamberRects[i];
                 var xStartPos = reactionChamberRect.x + MIN_DISTANCE_FROM_NUCLEI_TO_WALLS;
                 var yStartPos = reactionChamberRect.y + MIN_DISTANCE_FROM_NUCLEI_TO_WALLS;
-                
+
                 for (var j = 0; j < numNucleiDown; j++) {
                     for (var k = 0; k < numNucleiAcross; k++) {
                         // Add the U235 nucleus.
                         nucleusPosition.set(
-                            xStartPos + (k * MIN_INTER_NUCLEI_DISTANCE), 
+                            xStartPos + (k * MIN_INTER_NUCLEI_DISTANCE),
                             yStartPos + (j * MIN_INTER_NUCLEI_DISTANCE)
                         );
 
@@ -158,13 +158,13 @@ define(function (require, exports, module) {
 
                         this.u235Nuclei.add(u235Nucleus);
                         this.triggerNucleusAdded(u235Nucleus);
-                        
+
                         // Add the U238 nucleus.  We don't need to listen for
                         // changes to atomic weight.  These exist primarily to
                         // moderate the overall reaction.
                         if (k < numNucleiAcross - 1) {
                             nucleusPosition.set(
-                                xStartPos + ((k + 0.5) * MIN_INTER_NUCLEI_DISTANCE), 
+                                xStartPos + ((k + 0.5) * MIN_INTER_NUCLEI_DISTANCE),
                                 yStartPos + ((j + 0.5) * MIN_INTER_NUCLEI_DISTANCE)
                             );
 
@@ -193,12 +193,12 @@ define(function (require, exports, module) {
         resetComponents: function() {
             // Clear all the old particles out
             this.removeAllParticles();
-            
+
             // Clear out the energy accumulators.
             for (var i = 0; i < this.stepsPerSecond; i++)
                 this.fissionEventBins[i] = 0;
             this.currentBin = 0;
-            
+
             // Re-add the starting nuclei
             this.addNuclei();
 
@@ -261,7 +261,7 @@ define(function (require, exports, module) {
         /**
          * Fires neutrons into the reaction chambers, which is how the reaction
          *   can be initiated.
-         * 
+         *
          */
         fireNeutrons: function() {
             var chamberIndicesUsed = [];
@@ -273,7 +273,7 @@ define(function (require, exports, module) {
                 } while (chamberIndicesUsed.indexOf(chamberIndex) !== -1);
                 chamberIndicesUsed.push(chamberIndex);
                 var chamberRect = this.reactionChamberRects[chamberIndex];
-                
+
                 // Select the initial position along the edge of the chamber.
                 var startPosX;
                 var startPosY;
@@ -287,7 +287,7 @@ define(function (require, exports, module) {
                         // Right side.
                         startPosX = chamberRect.right();
                     }
-                    startPosY = chamberRect.y + (Math.random() * chamberRect.h);   
+                    startPosY = chamberRect.y + (Math.random() * chamberRect.h);
                 }
                 else {
                     // Launch neutron from top or bottom of chamber.
@@ -299,24 +299,24 @@ define(function (require, exports, module) {
                         // Bottom.
                         startPosY = chamberRect.bottom();
                     }
-                    startPosX = chamberRect.x + (Math.random() * chamberRect.w); 
+                    startPosX = chamberRect.x + (Math.random() * chamberRect.w);
                 }
-                
+
                 // Calculate a path toward the center of the chamber.
                 var center = chamberRect.center();
                 var angle = Math.atan2(center.y - startPosY, center.x - startPosX);
                 var startVelX = NuclearReactorSimulation.NEUTRON_VELOCITY * Math.cos(angle);
                 var startVelY = NuclearReactorSimulation.NEUTRON_VELOCITY * Math.sin(angle);
-                
+
                 // Create the neutron and let any listeners know about it.
                 var firedNeutron = Nucleon.create({
-                    type: Nucleon.NEUTRON, 
+                    type: Nucleon.NEUTRON,
                     position: new Vector2(startPosX, startPosY),
                     velocity: new Vector2(startVelX, startVelY),
                     tunnelingEnabled: false
                 });
                 this.freeNeutrons.add(firedNeutron);
-                
+
                 // Make sure we don't get stuck in this loop if we need to fire
                 // more neutrons than we have reaction chambers.
                 if ((NuclearReactorSimulation.NUMBER_OF_NEUTRONS_TO_FIRE > NuclearReactorSimulation.NUMBER_OF_REACTION_CHAMBERS) &&
@@ -334,7 +334,7 @@ define(function (require, exports, module) {
          */
         moveControlRods: function(yDelta) {
             var numControlRods = this.controlRods.length;
-            
+
             // Make sure that we don't move the control rods where they can't go.
             var minY = this.getControlRodsMinY();
             var maxY = this.getControlRodsMaxY();
@@ -345,7 +345,7 @@ define(function (require, exports, module) {
                 else if (controlRod.getY() + yDelta > maxY)
                     yDelta = maxY - controlRod.getY();
             }
-            
+
             // Set the actual position.
             for (var i = 0; i < numControlRods; i++)
                 this.controlRods[i].translate(0, yDelta);
@@ -374,10 +374,10 @@ define(function (require, exports, module) {
             for (i = numFreeNeutrons - 1; i >= 0; i--) {
                 var freeNucleon = this.freeNeutrons.at(i);
                 var particleAbsorbed = false;
-                
+
                 // Move the neutron.
                 freeNucleon.update();
-                
+
                 // Check if the particle has gone outside the bounds of the
                 // reactor and, if so, remove it from the model.
                 if (!(this.innerReactorRect.contains(freeNucleon.getPosition()))){
@@ -385,7 +385,7 @@ define(function (require, exports, module) {
                     // it to be absorbed by the wall.
                     particleAbsorbed = true;
                 }
-                
+
                 // Check if the particle has been absorbed by a control rod and, if
                 // so, remove it.
                 var numControlRods = this.controlRods.length;
@@ -396,7 +396,7 @@ define(function (require, exports, module) {
                         particleAbsorbed = true;
                     }
                 }
-                
+
                 // Check if any of the free particles have collided with a U238
                 // nucleus.
                 var numU238Nuclei = this.u238Nuclei.length;
@@ -419,7 +419,7 @@ define(function (require, exports, module) {
                         particleAbsorbed = nucleus.captureParticle(freeNucleon, time);
                     }
                 }
-                
+
                 if (particleAbsorbed){
                     // The particle has become part of a larger nucleus, so we
                     // need to take it off the list of free particles and let the
@@ -434,7 +434,7 @@ define(function (require, exports, module) {
 
             for (i = 0; i < this.u235Nuclei.length; i++)
                 this.u235Nuclei.at(i).update(time, deltaTime);
-            
+
             for (i = 0; i < this.u238Nuclei.length; i++)
                 this.u238Nuclei.at(i).update(time, deltaTime);
         },
@@ -442,19 +442,19 @@ define(function (require, exports, module) {
         updateEnergy: function(time, deltaTime) {
             // Accumulate the total amount of energy release so far.
             var totalEnergyReleased = this.get('totalEnergyReleased') + (this.u235FissionEventCount * NuclearReactorSimulation.JOULES_PER_FISSION_EVENT);
-            
+
             // Update the bins used for calculating the energy produced per second.
             var energyPerSecond = this.get('energyReleasedPerSecond') + ((this.u235FissionEventCount - this.fissionEventBins[this.currentBin]) * NuclearReactorSimulation.JOULES_PER_FISSION_EVENT);
             this.fissionEventBins[this.currentBin] = this.u235FissionEventCount;
             this.currentBin = (this.currentBin + 1) % this.stepsPerSecond;
-            
+
             // Clear out any accumulated errors.
             if (energyPerSecond < NuclearReactorSimulation.JOULES_PER_FISSION_EVENT)
                 energyPerSecond = 0;
-            
+
             // Reset the fission event counter.
             this.u235FissionEventCount = 0;
-            
+
             // See if the internal temperature has changed and, if so, notify any
             // listeners.
             var temperature = energyPerSecond * (1 / NuclearReactorSimulation.JOULES_PER_FISSION_EVENT);
@@ -467,8 +467,8 @@ define(function (require, exports, module) {
                 else
                     this.set('temperature', this.get('temperature') - NuclearReactorSimulation.MAX_TEMP_CHANGE_PER_TICK);
             }
-            
-            if ((energyPerSecond !== this.get('energyReleasedPerSecond')) || 
+
+            if ((energyPerSecond !== this.get('energyReleasedPerSecond')) ||
                 (totalEnergyReleased !== this.get('totalEnergyReleased'))
             ) {
                 // Update our energy-related variables.
@@ -498,10 +498,10 @@ define(function (require, exports, module) {
             if (byProducts) {
                 // There are some byproducts of this event that need to be
                 //   managed by this object.
-                
-                if (!this.get('reactionStarted')) 
+
+                if (!this.get('reactionStarted'))
                     this.set('reactionStarted', true);
-                
+
                 // Handle the by products.
                 for (var i = 0; i < byProducts.length; i++) {
                     var byProduct = byProducts[i];
@@ -511,7 +511,7 @@ define(function (require, exports, module) {
                         var xVel = Math.sin(nucleonAngle) * NuclearReactorSimulation.FREED_NEUTRON_VELOCITY;
                         var yVel = Math.cos(nucleonAngle) * NuclearReactorSimulation.FREED_NEUTRON_VELOCITY;
                         byProduct.setVelocity(xVel, yVel);
-                        
+
                         // Add this new particle to our list.
                         this.freeNeutrons.add(byProduct);
                     }
@@ -536,16 +536,16 @@ define(function (require, exports, module) {
                             daughterNucleus.getX() - xDistance,
                             daughterNucleus.getY() - yDistance
                         );
-                        
+
                         // Add the daughter nucleus to our collection.
                         this.daughterNuclei.add(daughterNucleus);
-                        
-                        // Move the 'parent' nucleus to the list of daughter nuclei 
+
+                        // Move the 'parent' nucleus to the list of daughter nuclei
                         //  so that it doesn't continue to be involved in the
                         //  fission detection calculations.
                         this.u235Nuclei.remove(nucleus);
                         this.daughterNuclei.add(nucleus);
-                        
+
                         // Increment the count of fission events.  This will be
                         //   cleared when a total tally is made.
                         this.u235FissionEventCount++;

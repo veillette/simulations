@@ -13,7 +13,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var ElectronView = PixiView.extend({
 
@@ -76,31 +76,31 @@ define(function(require) {
         /**
          * Updates the view to match the model.
          * Handles moving the electron from one segment of the coil to the next.
-         * Changes the "look" of the electron as it moves between the foreground 
+         * Changes the "look" of the electron as it moves between the foreground
          * and background of the coil.
          */
         update: function() {
             this.displayObject.visible = this.model.get('enabled');
             if (this.displayObject.visible) {
-                
+
                 var descriptor = this.model.getPathDescriptor();
-                    
+
                 // Jump between foreground and background.
                 var parent = descriptor.getParent();
                 if (parent !== this.parent) {
                     // Change the parent.
                     if (this.parent)
                         this.parent.removeChild(this.displayObject);
-                    
+
                     parent.addChild(this.displayObject);
                     this.parent = parent;
-                    
+
                     // Change the image.
                     if (descriptor.getLayer() == ElectronPathDescriptor.BACKGROUND) {
                         this.bgSprite.visible = true;
                         this.fgSprite.visible = false;
                     }
-                    else { 
+                    else {
                         this.fgSprite.visible = true;
                         this.bgSprite.visible = false;
                     }

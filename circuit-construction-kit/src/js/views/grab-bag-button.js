@@ -16,7 +16,7 @@ define(function(require) {
     var Assets    = require('assets');
 
     /**
-     * 
+     *
      */
     var GrabBagButton = PixiView.extend({
 

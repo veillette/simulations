@@ -16,7 +16,7 @@ define(function (require) {
     var modeControlsHtml = require('text!templates/mode-controls.html');
 
     /**
-     * 
+     *
      */
     var ReflectionInterferenceSimView = SoundSimView.extend({
 

@@ -41,15 +41,15 @@ define(function (require) {
          * Returns true if the particle can be captured by this nucleus, false if
          * not.  Note that the particle itself is unaffected, and it is up to the
          * caller to remove the captured particle from the model if desired.
-         * 
+         *
          * @param freeParticle - The free particle that could potentially be
          * captured.
          * @return true if the particle is captured, false if not.
          */
         captureParticle: function(freeParticle, simulationTime) {
             var particleCaptured = false;
-            
-            if (freeParticle instanceof Nucleon && 
+
+            if (freeParticle instanceof Nucleon &&
                 freeParticle.get('type') === Nucleon.NEUTRON &&
                 this.get('numNeutrons') == this.originalNumNeutrons
             ){
@@ -63,17 +63,17 @@ define(function (require) {
                 this.constituents.push(freeParticle);
 
                 this.updateAgitationFactor();
-                
+
                 // Let the listeners know that the atomic weight has changed.
                 this.triggerNucleusChange(null);
 
                 // Start a timer to kick off fission.
                 this.fissionTime = simulationTime + this.get('fissionInterval');
-                
+
                 // Indicate that the particle was captured.
                 particleCaptured = true;
             }
-            
+
             return particleCaptured;
         },
 
@@ -81,7 +81,7 @@ define(function (require) {
          * Resets the nucleus to its original state, before any fission has occurred.
          */
         reset: function(freeNeutrons, daughterNucleus) {
-            
+
             // Reset the fission time to 0, indicating that it shouldn't occur
             // until something changes.
             this.fissionTime = 0;
@@ -92,7 +92,7 @@ define(function (require) {
             this.setAcceleration(0, 0);
 
             var i;
-            
+
             if (this.get('numNeutrons') < this.originalNumNeutrons) {
                 // Fission has occurred, so we need to reabsorb the daughter
                 //   nucleus and two of the free neutrons.
@@ -114,10 +114,10 @@ define(function (require) {
                         }
                     }
                 }
-                
+
                 if (daughterNucleus) {
                     var daughterConstituents = daughterNucleus.getConstituents();
-                    
+
                     for (i = 0; i < daughterConstituents.length; i++) {
                         var constituent = daughterConstituents[i];
 
@@ -137,7 +137,7 @@ define(function (require) {
                             // it does.
                             throw 'What is this?';
                         }
-                        
+
                         this.constituents.push(constituent);
                     }
                 }
@@ -155,16 +155,16 @@ define(function (require) {
                     }
                 }
             }
-            
+
             // Position all the nucleons near the new center of the nucleus.
             for (var i = 0; i < this.constituents.length; i++) {
                 var constituent = this.constituents[i];
                 constituent.tunnel(this.get('position'), 0, this.get('diameter') / 2, this.get('tunnelingRegionRadius'));
             }
-            
+
             // Update our agitation level.
             this.updateAgitationFactor();
-            
+
             // Notify all listeners of the change to our atomic weight.
             this.triggerNucleusChange(null);
         },
@@ -174,7 +174,7 @@ define(function (require) {
 
             // See if fission should occur.
             if ((this.fissionTime !== 0) && (time >= this.fissionTime)) {
-                // Fission the nucleus.  
+                // Fission the nucleus.
                 this.fission();
 
                 // Set the fission time to 0 to indicate that no more fissioning
@@ -186,7 +186,7 @@ define(function (require) {
         fission: function() {
             var i;
 
-            // Fission the nucleus.  First pull out three neutrons as 
+            // Fission the nucleus.  First pull out three neutrons as
             // byproducts of this decay event.
             var byProducts = [];
             var neutronByProductCount = 0;
@@ -198,7 +198,7 @@ define(function (require) {
                     this.set('numNeutrons', this.get('numNeutrons') - 1);
                 }
             }
-            
+
             // Now pull out the needed number of protons, neutrons, and alphas
             //   to create the appropriate daughter nucleus.  The daughter
             //   nucleus created is Krypton-92, so the number of particles
@@ -206,12 +206,12 @@ define(function (require) {
             var numAlphasNeeded = 12;
             var numProtonsNeeded = 12;
             var numNeutronsNeeded = 32;
-                
+
             var daughterNucleusConstituents = [];
-            
+
             for (var i = this.constituents.length - 1; i >= 0; i--) {
                 var constituent = this.constituents[i];
-                
+
                 if ((numNeutronsNeeded > 0) && (constituent instanceof Nucleon) && constituent.get('type') === Nucleon.NEUTRON) {
                     daughterNucleusConstituents.push(constituent);
                     this.constituents.splice(i, 1);
@@ -232,22 +232,22 @@ define(function (require) {
                     this.set('numNeutrons', this.get('numNeutrons') - 2);
                     this.set('numProtons', this.get('numProtons') - 2);
                 }
-                
+
                 if ((numNeutronsNeeded === 0) && (numProtonsNeeded === 0) && (numAlphasNeeded === 0)) {
                     // We've got all that we need.
                     break;
                 }
             }
-            
+
             var daughterNucleus = DaughterCompositeNucleus.create({
                 position: this.get('position')
             }, {
                 constituents: daughterNucleusConstituents
             });
-            
+
             // Consolidate all of the byproducts.
             byProducts.push(daughterNucleus);
-            
+
             // Send out the decay event to all listeners.
             this.triggerNucleusChange(byProducts);
         },
@@ -270,7 +270,7 @@ define(function (require) {
                         this.agitationFactor = Uranium235CompositeNucleus.URANIUM_236_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 default:
                     this.agitationFactor = Uranium235CompositeNucleus.DEFAULT_AGITATION_FACTOR;
                     break;

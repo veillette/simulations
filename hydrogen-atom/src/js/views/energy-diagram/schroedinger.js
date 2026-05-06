@@ -12,11 +12,11 @@ define(function(require) {
     var X_MARGIN = 10;
     var Y_TOP_MARGIN = 22;
     var Y_BOTTOM_MARGIN = 2;
-    
+
     // Margins for "m="
     var M_X_MARGIN = 2;
     var M_Y_MARGIN = 2;
-    
+
     // horizontal spacing between state lines
     var LINE_LINE_SPACING = 10;
     // horizontal spacing between state line and label
@@ -90,10 +90,10 @@ define(function(require) {
         },
 
         /*
-         * Draws the representation for the possible electron states for 
-         *   some value of the electron's primary state (n).  State n has n 
-         *   possible secondary states.  Each of these possible states is 
-         *   represented as a horizontal line, and the lines are arranged 
+         * Draws the representation for the possible electron states for
+         *   some value of the electron's primary state (n).  State n has n
+         *   possible secondary states.  Each of these possible states is
+         *   represented as a horizontal line, and the lines are arranged
          *   horizontally.
          */
         drawState: function(ctx, state) {
@@ -137,7 +137,7 @@ define(function(require) {
                 var y1 = this.getYOffset(this._previousState);
                 var x2 = this.getXOffset(l) + (this.stateLineLength / 2);
                 var y2 = this.getYOffset(n);
-                this.drawSquiggle(ctx, x1, y1, x2, y2, wavelength);    
+                this.drawSquiggle(ctx, x1, y1, x2, y2, wavelength);
             }
 
             // Place the electron
@@ -154,7 +154,7 @@ define(function(require) {
         getXOffset: function(l) {
             return this.paddingLeft + this.xMargin + (l * this.stateLineLength) + (l * this.lineLineSpacing);
         },
-        
+
         /**
          * Gets the y-offset that corresponds to a specific state.
          * This is used for positioning both the state lines and the electron.

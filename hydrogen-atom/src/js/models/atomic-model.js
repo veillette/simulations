@@ -82,7 +82,7 @@ define(function (require) {
         getNumberOfStates: function() {
             return 0;
         },
-        
+
         /**
          * Determines if two points collide.
          * Any distance between the points that is <= threshold

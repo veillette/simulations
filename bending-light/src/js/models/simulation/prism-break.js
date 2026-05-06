@@ -28,7 +28,7 @@ define(function (require, exports, module) {
     var WAVELENGTH_RED = Constants.WAVELENGTH_RED;
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var PrismBreakSimulation = BendingLightSimulation.extend({
 
@@ -36,11 +36,11 @@ define(function (require, exports, module) {
             manyRays: false,       // Show multiple beams to help show how lenses work
             showReflections: false // If false, will hide non TIR reflections
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
-                laserDistanceFromPivot: Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT * 0.9, 
-                laserAngle: Math.PI, 
+                laserDistanceFromPivot: Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT * 0.9,
+                laserAngle: Math.PI,
                 topLeftQuadrant: false
             }, options);
 
@@ -107,7 +107,7 @@ define(function (require, exports, module) {
             // Continuous Semicircle
             var semicircle = new Prism({}, {
                 shape: new ShapeIntersection(
-                    new Circle(radius), 
+                    new Circle(radius),
                     new Polygon([
                         new Vector2(0,        radius),
                         new Vector2(0,       -radius),
@@ -253,20 +253,20 @@ define(function (require, exports, module) {
                 var min = Constants.MIN_WAVELENGTH / Constants.METERS_TO_NANOMETERS;
                 var max = Constants.MAX_WAVELENGTH / Constants.METERS_TO_NANOMETERS;
                 // This number sets the number of (equally spaced wavelength) rays to
-                //   show in a white beam.  More rays looks better but is more 
+                //   show in a white beam.  More rays looks better but is more
                 //   computationally intensive.
                 var dw = (max - min) / 16;
                 for (var wavelength = min; wavelength <= max; wavelength += dw) {
-                    var mediumIndexOfRefraction = laserInPrism ? 
-                        this.prismMedium.getIndexOfRefraction(wavelength) : 
+                    var mediumIndexOfRefraction = laserInPrism ?
+                        this.prismMedium.getIndexOfRefraction(wavelength) :
                         this.environment.getIndexOfRefraction(wavelength);
 
                     var ray = Ray.create(
-                        tail, 
-                        directionUnitVector, 
-                        power, 
-                        wavelength, 
-                        mediumIndexOfRefraction, 
+                        tail,
+                        directionUnitVector,
+                        power,
+                        wavelength,
+                        mediumIndexOfRefraction,
                         Constants.SPEED_OF_LIGHT / wavelength
                     );
 
@@ -276,16 +276,16 @@ define(function (require, exports, module) {
                 }
             }
             else {
-                var mediumIndexOfRefraction = laserInPrism ? 
-                    this.prismMedium.getIndexOfRefraction(this.laser.getWavelength()) : 
+                var mediumIndexOfRefraction = laserInPrism ?
+                    this.prismMedium.getIndexOfRefraction(this.laser.getWavelength()) :
                     this.environment.getIndexOfRefraction(this.laser.getWavelength());
 
                 var ray = Ray.create(
-                    tail, 
-                    directionUnitVector, 
-                    power, 
-                    this.laser.getWavelength(), 
-                    mediumIndexOfRefraction, 
+                    tail,
+                    directionUnitVector,
+                    power,
+                    this.laser.getWavelength(),
+                    mediumIndexOfRefraction,
                     this.laser.getFrequency()
                 );
 
@@ -318,16 +318,16 @@ define(function (require, exports, module) {
 
                 // Add the incident ray itself
                 this.addRay(LightRay.create(
-                    incidentRay.tail, 
-                    intersection.getPoint(), 
-                    n1, 
-                    wavelengthInN1, 
-                    incidentRay.power, 
-                    incidentRay.wavelength, 
-                    waveWidth, 
-                    0, 
-                    null, 
-                    true, 
+                    incidentRay.tail,
+                    intersection.getPoint(),
+                    n1,
+                    wavelengthInN1,
+                    incidentRay.power,
+                    incidentRay.wavelength,
+                    waveWidth,
+                    0,
+                    null,
+                    true,
                     false
                 ));
 
@@ -350,8 +350,8 @@ define(function (require, exports, module) {
                 }
 
                 // Index of refraction of the other medium
-                var n2 = outputInsidePrism ? 
-                    this.prismMedium.getIndexOfRefraction(incidentRay.getBaseWavelength()) : 
+                var n2 = outputInsidePrism ?
+                    this.prismMedium.getIndexOfRefraction(incidentRay.getBaseWavelength()) :
                     this.environment.getIndexOfRefraction(incidentRay.getBaseWavelength());
 
                 // Precompute for readability
@@ -379,7 +379,7 @@ define(function (require, exports, module) {
                 // Create the new rays and propagate them recursively
                 var reflected = Ray.create(scratchP.set(point).add(scratchU.set(incidentRay.directionUnitVector).scale(-1E-12)), vReflect, incidentRay.power * reflectedPower,   incidentRay.wavelength, incidentRay.mediumIndexOfRefraction, incidentRay.frequency);
                 var refracted = Ray.create(scratchP.set(point).add(scratchU.set(incidentRay.directionUnitVector).scale(+1E-12)), vRefract, incidentRay.power * transmittedPower, incidentRay.wavelength, n2,                                  incidentRay.frequency);
-                
+
                 if (this.get('showReflections') || totalInternalReflectionOccurs)
                     this.propagateRay(reflected, count + 1);
 
@@ -393,16 +393,16 @@ define(function (require, exports, module) {
             else {
                 // No intersection, so the light ray should just keep going
                 this.addRay(LightRay.create(
-                    incidentRay.tail, 
+                    incidentRay.tail,
                     this._scratchVec.set(incidentRay.tail).add(incidentRay.directionUnitVector), // 1 meter long ray (long enough to seem like infinity for the sim which is at nm scale)
-                    n1, 
-                    wavelengthInN1, 
-                    incidentRay.power, 
-                    incidentRay.wavelength, 
-                    waveWidth, 
-                    0, 
-                    null, 
-                    true, 
+                    n1,
+                    wavelengthInN1,
+                    incidentRay.power,
+                    incidentRay.wavelength,
+                    waveWidth,
+                    0,
+                    null,
+                    true,
                     false
                 ));
             }

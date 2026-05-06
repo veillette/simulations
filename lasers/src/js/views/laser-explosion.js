@@ -120,7 +120,7 @@ define(function(require) {
         },
 
         updateText: function(time, deltaTime) {
-            if (!this._emittingParticles) 
+            if (!this._emittingParticles)
                 return;
 
             this._textFadeTimer += deltaTime;
@@ -181,7 +181,7 @@ define(function(require) {
                 }
             }
         },
-        
+
         emitParticle: function() {
             if (!this.dormantParticles.length)
                 return null;

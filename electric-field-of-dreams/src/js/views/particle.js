@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -75,7 +75,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
                 var x = local.x - this.dragOffset.x;
                 var y = local.y - this.dragOffset.y;
-                
+
                 var mx = this.mvt.viewToModelX(x);
                 var my = this.mvt.viewToModelY(y);
 

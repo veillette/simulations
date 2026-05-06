@@ -45,7 +45,7 @@ define(function (require) {
 
 			this.outerDragBounds = {
 				width:  this.$outerDragFrame.width()  * this.zoom,
-				height: this.$outerDragFrame.height() * this.zoom 
+				height: this.$outerDragFrame.height() * this.zoom
 			};
 
 			this.dragOffset = this.$dragFrame.offset();

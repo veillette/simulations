@@ -43,7 +43,7 @@ define(function(require) {
 		getPotential: function(x, y, time) {
 			if (!this.enabled)
 				return 0;
-			
+
 			if (x >= this.x && y >= this.y && x <= this.x + this.width && y <= this.y + this.height)
 				return this.potentialValue;
 			else

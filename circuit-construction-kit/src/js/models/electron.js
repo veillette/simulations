@@ -33,9 +33,9 @@ define(function (require) {
         setLocation: function(branch, x) {
             if (isNaN(x))
                 throw 'x was NaN, for electron distance along branch.';
-            else if (!branch.containsScalarLocation(x)) 
+            else if (!branch.containsScalarLocation(x))
                 throw 'No location in branch.';
-            
+
             this._attrs.branch = branch;
             this._attrs.distAlongWire = x;
             this.set(this._attrs);
@@ -48,7 +48,7 @@ define(function (require) {
                 console.warn('Point was NaN, pt=' + pt + ', dist=' + this.get('distAlongWire') + ', wire length=' + this.get('branch').getLength());
                 return;
             }
-            
+
             this.setPosition(pt);
         },
 

@@ -47,7 +47,7 @@ define(function (require) {
                 this.initConstituentsFromArray(options.constituents);
             else
                 this.initConstituentsFromCounts(this.get('numProtons'), this.get('numNeutrons'));
-            
+
             // Set initial positions of all nucleons.
             this.setInitialNucleonPositions();
 
@@ -64,7 +64,7 @@ define(function (require) {
             //   particles.
             if (numProtons + numNeutrons > 50)
                 this.numAlphas = ((numProtons + numNeutrons) / 2) / 4;  // Assume half of all particles are tied up in alphas.
-            
+
             // Add the constituent particles that make up this nucleus.  We do this
             //   in such a way that the particles are interspersed in the list,
             //   particularly towards the end of the list, since this works out
@@ -76,10 +76,10 @@ define(function (require) {
             for (var i = (maxParticles - 1); i >= 0; i--) {
                 if (i < this.numAlphas)
                     this.constituents.push(AlphaParticle.create());
-                
+
                 if (i < numFreeProtons)
                     this.constituents.push(Nucleon.create({ type: Nucleon.PROTON, tunnelingEnabled: true }));
-                
+
                 if (i < numFreeNeutrons)
                     this.constituents.push(Nucleon.create({ type: Nucleon.NEUTRON, tunnelingEnabled: true }));
             }
@@ -138,7 +138,7 @@ define(function (require) {
                 var constituent;
                 for (var i = 0; i < numConstituents; i++) {
                     constituent = this.constituents[i];
-                    var newPosX = constituent.get('position').x + this.get('velocity').x; 
+                    var newPosX = constituent.get('position').x + this.get('velocity').x;
                     var newPosY = constituent.get('position').y + this.get('velocity').y;
                     constituent.setPosition(newPosX, newPosY);
                 }
@@ -146,7 +146,7 @@ define(function (require) {
 
             var i;
             var agitationIncrement;
-            
+
             // Move the constituent particles to create the visual effect of a
             //   very dynamic nucleus.  In order to allow different levels of
             //   agitation, we don't necessarily move all particles every time.
@@ -156,14 +156,14 @@ define(function (require) {
                     agitationIncrement = 20 - (2 * this.agitationFactor);
                     if (agitationIncrement <= 0)
                         agitationIncrement = 5;
-                        
+
                     // Limit the tunneling distance, because otherwise it can look like
                     //   alpha particles are leaving the nucleus when they aren't.
                     var tunnelingRegion = Math.min(this.get('tunnelingRegionRadius'), this.get('diameter') * 1.5);
 
                     for (i = this.agitationCount; i < this.constituents.length; i += agitationIncrement)
                         this.constituents[i].tunnel(this.get('position'), 0, this.get('diameter') / 2, tunnelingRegion);
-                    
+
                     this.agitationCount = (this.agitationCount + 1) % agitationIncrement;
                 }
                 else {
@@ -171,10 +171,10 @@ define(function (require) {
                     //   so these nucleons just vibrate a little instead.
                     if (this.agitationFactor > 0) {
                         agitationIncrement = CompositeAtomicNucleus.MAX_AGITATION_FACTOR - this.agitationFactor + 1;
-                        
+
                         for (i = this.agitationCount; i < this.constituents.length; i += agitationIncrement)
                             this.constituents[i].jitter();
-                        
+
                         this.agitationCount = (this.agitationCount + 1) % agitationIncrement;
                     }
                 }
@@ -192,7 +192,7 @@ define(function (require) {
                     var xOffset = Math.sin(angle) * distanceFromCenter;
                     var yOffset = Math.cos(angle) * distanceFromCenter;
                     this.constituents[i].setPosition(
-                        this.getX() + xOffset, 
+                        this.getX() + xOffset,
                         this.getY() + yOffset
                     );
                 }

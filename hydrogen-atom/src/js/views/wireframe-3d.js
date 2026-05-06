@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     var Vector2   = require('common/math/vector2');
@@ -48,7 +48,7 @@ define(function(require) {
             var graphics = this.displayObject;
             graphics.clear();
             graphics.lineStyle(this.width, this.color, this.alpha);
-            
+
             for (var i = 0; i < this.numLines; i++) {
                 var T = this.lines[i];
                 var p1 = ((T >> 16) & 0xFFFF) * 3;

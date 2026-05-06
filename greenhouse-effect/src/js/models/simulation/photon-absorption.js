@@ -47,12 +47,12 @@ define(function (require, exports, module) {
      *   Primary model for the Photon Absorption tab.  This models photons being
      *   absorbed (or often NOT absorbed) by various molecules.  The scale for this
      *   model is picometers (10E-12 meters).
-     *   
+     *
      *   The basic idea for this model is that there is some sort of photon emitter
      *   that emits photons, and some sort of photon target that could potentially
      *   some of the emitted photons and react in some way.  In many cases, the
      *   photon target can re-emit one or more photons after absorption.
-     *  
+     *
      *                                               - John Blanco
      */
     var PhotonAbsorptionSimulation = Simulation.extend({
@@ -62,9 +62,9 @@ define(function (require, exports, module) {
             photonEmissionPeriod: Constants.PhotonAbsorptionSimulation.DEFAULT_PHOTON_EMISSION_PERIOD,
             photonTarget: Constants.PhotonAbsorptionSimulation.DEFAULT_PHOTON_TARGET
         }),
-        
+
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
@@ -233,7 +233,7 @@ define(function (require, exports, module) {
                 //   such that a photon will be emitted right away so that the user
                 //   doesn't have to wait too long in order to see something come
                 //   out.
-                if (this.photonEmissionPeriodTarget === Number.POSITIVE_INFINITY && 
+                if (this.photonEmissionPeriodTarget === Number.POSITIVE_INFINITY &&
                     photonEmissionPeriod            !== Number.POSITIVE_INFINITY) {
                     this.photonEmissionCountdownTimer = PhotonAbsorptionSimulation.INITIAL_COUNTDOWN_WHEN_EMISSION_ENABLED;
                 }
@@ -263,7 +263,7 @@ define(function (require, exports, module) {
             // If switching to the configurable atmosphere, photon emission
             //   is turned off (if it is happening).  This is done because it
             //   just looks better.
-            if (photonTarget      === PhotonTargets.CONFIGURABLE_ATMOSPHERE || 
+            if (photonTarget      === PhotonTargets.CONFIGURABLE_ATMOSPHERE ||
                 this.photonTarget === PhotonTargets.CONFIGURABLE_ATMOSPHERE) {
                 this.set('photonEmissionPeriod', Number.POSITIVE_INFINITY);
                 this.removeAllPhotons();
@@ -470,11 +470,11 @@ define(function (require, exports, module) {
 
         /**
          * Set the active molecules to match the list of molecules in the
-         *   configurable atmosphere list.  This is generally done when 
+         *   configurable atmosphere list.  This is generally done when
          *   switching the photon target to be the atmosphere or when the
          *   concentration of the gases in the atmosphere changes while
          *   the configurable atmosphere is the selected photon target.
-         * 
+         *
          * The direction of data flow is from the config atmosphere to the
          *   active molecules, not the reverse.
          */
@@ -483,7 +483,7 @@ define(function (require, exports, module) {
 
             // Add any to the active molecules that aren't there already
             for (i = 0; i < this.configurableAtmosphereMolecules.length; i++) {
-                if (!this.molecules.contains(this.configurableAtmosphereMolecules[i])) 
+                if (!this.molecules.contains(this.configurableAtmosphereMolecules[i]))
                     this.molecules.add(this.configurableAtmosphereMolecules[i]);
             }
 

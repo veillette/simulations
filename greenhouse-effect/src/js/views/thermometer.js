@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var ThermometerView = require('common/v3/pixi/view/thermometer');
     var range           = require('common/math/range');
 

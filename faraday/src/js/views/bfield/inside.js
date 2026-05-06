@@ -11,7 +11,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var BFieldInsideView = AbstractBFieldView.extend({
 

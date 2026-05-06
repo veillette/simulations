@@ -106,10 +106,10 @@ define(function (require, exports, module) {
             var atomicNuclei = this.atomicNuclei;
             var bounds = this._nucleusBounds;
             var canisterAreaRect = this.canisterAreaRect;
-            
+
             // Determine the minimum placement distance between nuclei.
             var minInterNucleusDistance = DEFAULT_MIN_INTER_NUCLEUS_DISTANCE;
-            
+
             if (atomicNuclei.length > 0 ) {
                 // Calculate a minimum distance between nuclei based on the
                 //   diameter of the current nucleus.
@@ -120,7 +120,7 @@ define(function (require, exports, module) {
             }
 
             var minInterNucleusDistanceSq = minInterNucleusDistance * minInterNucleusDistance;
-            
+
             // Pick random locations until one is found that works or until we've
             // tried the maximum number of times.
             for (var i = 0; i < 4; i++){
@@ -128,7 +128,7 @@ define(function (require, exports, module) {
                     // Randomly select an x & y position
                     x = bounds.x + bounds.w * Math.random();
                     y = bounds.y + bounds.h * Math.random();
-                    
+
                     // Check if this point is available.
                     pointAvailable = true;
                     for (var k = 0; (k < atomicNuclei.length) && (pointAvailable === true); k++){
@@ -140,7 +140,7 @@ define(function (require, exports, module) {
                             pointAvailable = false;
                         }
                     }
-                    
+
                     if (pointAvailable) {
                         // We have found a usable location.
                         break;
@@ -155,7 +155,7 @@ define(function (require, exports, module) {
                     minInterNucleusDistanceSq = minInterNucleusDistance * minInterNucleusDistance;
                 }
             }
-            
+
             if (!pointAvailable) {
                 // The random algorithm failed to find an open location, so pick a
                 //   random location that is outside of the holding area.
@@ -166,7 +166,7 @@ define(function (require, exports, module) {
                     y = bounds.y + bounds.h * Math.random();
                 } while (canisterAreaRect.contains(x, y));
             }
-            
+
             this.addNucleusAt(x, y);
         },
 
@@ -177,7 +177,7 @@ define(function (require, exports, module) {
 
             var newNucleus = this.createNucleus();
             newNucleus.setPosition(x, y);
-            
+
             this.atomicNuclei.add(newNucleus);
         },
 
@@ -190,7 +190,7 @@ define(function (require, exports, module) {
          * Convert a value representing simulation time to the corresponding
          * adjusted value according to the nucleus (which may be as much as
          * billions of years).
-         * 
+         *
          * @param simTime
          */
         convertSimTimeToAdjustedTime: function(simTime) {

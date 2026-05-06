@@ -7,7 +7,7 @@ define(function(require) {
     var THUMB_HIGHLIGHT_THRESHOLD = 3; // nm
 
     /**
-     * 
+     *
      */
     var HydrogenAtomWavelengthSliderView = WavelengthSliderView.extend({
 
@@ -76,7 +76,7 @@ define(function(require) {
         updateColor: function() {
             var match = this.getTransitionWavelengthMatch(this.val());
             if (match && this._absorptionWavelengthsVisible)
-                this.$wavelengthSliderHandle.css('background-color', '#fff');    
+                this.$wavelengthSliderHandle.css('background-color', '#fff');
             else
                 WavelengthSliderView.prototype.updateColor.apply(this, arguments);
         },
@@ -104,7 +104,7 @@ define(function(require) {
         },
 
         /*
-         * Determines whether some wavelength is sufficiently 
+         * Determines whether some wavelength is sufficiently
          *   close to some transition wavelength.
          */
         isClose: function(wavelength, transitionWavelength) {
@@ -126,7 +126,7 @@ define(function(require) {
         }
 
     });
-    
+
 
     return HydrogenAtomWavelengthSliderView;
 });

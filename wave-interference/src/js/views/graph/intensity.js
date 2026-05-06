@@ -21,8 +21,8 @@ define(function(require) {
 	    j;
 
 	/**
-	 * IntensityGraphView shows on a line graph intensity of colors 
-	 *   reaching the right edge of the heatmap. 
+	 * IntensityGraphView shows on a line graph intensity of colors
+	 *   reaching the right edge of the heatmap.
 	 */
 	var IntensityGraphView = StaticGraphView.extend({
 
@@ -104,9 +104,9 @@ define(function(require) {
 			length = this.screenGraphView.colors.length;
 			points = this.points;
 			for (j = 0; j < length; j++) {
-				points[j] = { 
-					x: 0, 
-					y: 0 
+				points[j] = {
+					x: 0,
+					y: 0
 				};
 			}
 		},
@@ -155,7 +155,7 @@ define(function(require) {
 		hide: function(event) {
 			if (this.toggling)
 				return;
-			
+
 			StaticGraphView.prototype.hide.apply(this, [event]);
 
 			this.heatmapView.unshift();

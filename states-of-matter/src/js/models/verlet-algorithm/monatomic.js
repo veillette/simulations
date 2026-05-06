@@ -52,20 +52,20 @@ define(function(require) {
             // Update the positions of all particles based on their current
             //   velocities and the forces acting on them.
             this._updateCenterOfMassPositions(
-                moleculeCenterOfMassPositions, 
-                numberOfAtoms, 
-                moleculeVelocities, 
+                moleculeCenterOfMassPositions,
+                numberOfAtoms,
+                moleculeVelocities,
                 moleculeForces
             );
 
             // Calculate the forces exerted on the particles by the container
             //   walls and by gravity.
             var pressureZoneWallForce = this._calculateWallAndGravityForces(
-                nextMoleculeForces, 
-                numberOfAtoms, 
+                nextMoleculeForces,
+                numberOfAtoms,
                 moleculeCenterOfMassPositions,
-                simulation.getNormalizedContainerWidth(), 
-                simulation.getNormalizedContainerHeight(), 
+                simulation.getNormalizedContainerWidth(),
+                simulation.getNormalizedContainerHeight(),
                 simulation.getGravitationalAcceleration()
             );
 
@@ -82,17 +82,17 @@ define(function(require) {
             // Calculate the forces created through interactions with other
             //   particles.
             this._calculateInteractionForces(
-                nextMoleculeForces, 
-                numberOfSafeMolecules, 
+                nextMoleculeForces,
+                numberOfSafeMolecules,
                 moleculeCenterOfMassPositions
             );
 
             // Calculate the new velocities based on the old ones and the forces
             //   that are acting on the particle.
             var kineticEnergy = this._calculateVelocities(
-                moleculeVelocities, 
-                numberOfAtoms, 
-                moleculeForces, 
+                moleculeVelocities,
+                numberOfAtoms,
+                moleculeForces,
                 nextMoleculeForces
             );
 
@@ -113,11 +113,11 @@ define(function(require) {
          */
         _updateCenterOfMassPositions: function(moleculeCenterOfMassPositions, numberOfAtoms, moleculeVelocities, moleculeForces) {
             for (var i = 0; i < numberOfAtoms; i++) {
-                var xPos = moleculeCenterOfMassPositions[i].x + 
+                var xPos = moleculeCenterOfMassPositions[i].x +
                     (VerletAlgorithm.TIME_STEP * moleculeVelocities[i].x) +
                     (VerletAlgorithm.TIME_STEP_SQR_HALF * moleculeForces[i].x);
 
-                var yPos = moleculeCenterOfMassPositions[i].y + 
+                var yPos = moleculeCenterOfMassPositions[i].y +
                     (VerletAlgorithm.TIME_STEP * moleculeVelocities[i].y) +
                     (VerletAlgorithm.TIME_STEP_SQR_HALF * moleculeForces[i].y);
 
@@ -139,7 +139,7 @@ define(function(require) {
 
                 // Get the force values caused by the container walls.
                 this.calculateWallForce(
-                    moleculeCenterOfMassPositions[i], 
+                    moleculeCenterOfMassPositions[i],
                     containerWidth,
                     containerHeight,
                     nextMoleculeForces[i]
@@ -192,7 +192,7 @@ define(function(require) {
                         // that we need to calculate their interaction forces.
                         if (distanceSqrd < VerletAlgorithm.MIN_DISTANCE_SQUARED)
                             distanceSqrd = VerletAlgorithm.MIN_DISTANCE_SQUARED;
-                        
+
                         var r2inv = 1 / distanceSqrd;
                         var r6inv = r2inv * r2inv * r2inv;
                         var forceScalar = 48 * r2inv * r6inv * (r6inv - 0.5) * this.epsilon;

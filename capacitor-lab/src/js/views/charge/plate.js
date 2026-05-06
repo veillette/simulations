@@ -26,7 +26,7 @@ define(function(require) {
             ChargeView.prototype.initialize.apply(this, [options]);
 
             // Listen for model events
-            
+
             this.listenTo(this.model, 'change:plateSeparation', this.updatePosition);
             this.listenTo(this.model, 'change', this.draw);
         },
@@ -111,7 +111,7 @@ define(function(require) {
 
         isPositivelyCharged: function() {
             return (
-                (this.getPlateCharge() >= 0 && this.polarity === Polarity.POSITIVE) || 
+                (this.getPlateCharge() >= 0 && this.polarity === Polarity.POSITIVE) ||
                 (this.getPlateCharge() <  0 && this.polarity === Polarity.NEGATIVE)
             );
         },
@@ -128,7 +128,7 @@ define(function(require) {
             this.displayObject.x = viewPos.x;
             this.displayObject.y = viewPos.y;
         },
- 
+
         updateMVT: function(mvt) {
             this.mvt = mvt;
 

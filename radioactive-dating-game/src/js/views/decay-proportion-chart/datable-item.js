@@ -46,12 +46,12 @@ define(function(require) {
             this.defaultTickLabelsWidth = 46;
             this.defaultYAxisLabelText = 'Percent of\nElement Remaining';
 
-            DecayProportionChartView.prototype.initialize.apply(this, [options]);            
+            DecayProportionChartView.prototype.initialize.apply(this, [options]);
 
             this.listenTo(this.simulation, 'reset', this.simulationReset);
             this.listenTo(this.simulation, 'change:mode', this.clearData);
             this.listenTo(this.simulation.meter, 'change:nucleusType',             this.nucleusTypeChanged);
-            this.listenTo(this.simulation.meter, 'change:halfLifeOfCustomNucleus', this.halfLifeChanged);  
+            this.listenTo(this.simulation.meter, 'change:halfLifeOfCustomNucleus', this.halfLifeChanged);
 
             this.nucleusTypeChanged(this.simulation.meter, this.simulation.meter.get('nucleusType'));
         },

@@ -8,7 +8,7 @@ define(function (require) {
     var EnergyChunkWanderController = require('models/energy-chunk-wander-controller');
 
     /**
-     * 
+     *
      */
     var BeakerContainer = Beaker.extend({
 
@@ -68,7 +68,7 @@ define(function (require) {
                     );
                 }
             }
-            
+
         },
 
         isEnergyChunkObscured: function(chunk) {

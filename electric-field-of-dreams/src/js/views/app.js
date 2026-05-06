@@ -1,5 +1,5 @@
 define(function(require) {
-    
+
     'use strict';
 
     var _ = require('underscore');
@@ -56,7 +56,7 @@ define(function(require) {
 
             // .noUiSlider_pips({
             //     mode: 'values',
-            //     // values: (function(){ 
+            //     // values: (function(){
             //     //     var positions = [];
             //     //     for (var i = Constants.DISCRETENESS_RANGE.min; i <= Constants.DISCRETENESS_RANGE.max; i++)
             //     //         positions.push(i);

@@ -5,7 +5,7 @@ define(function (require) {
     var _ = require('underscore');
 
     var NuclearPhysicsSimView = require('views/sim');
-    
+
     var BetaDecayLegendView         = require('beta-decay/views/legend');
     var BetaDecayNucleusChooserView = require('beta-decay/views/nucleus-chooser');
 
@@ -144,7 +144,7 @@ define(function (require) {
          */
         resetComponents: function() {
             NuclearPhysicsSimView.prototype.resetComponents.apply(this);
-            
+
             this.sceneView.reset();
             this.nucleusChooserView.reset();
         },

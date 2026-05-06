@@ -33,7 +33,7 @@ define(function (require) {
         init: function(populate) {
             // Create an array of arrays like [numVerticalCells][numHorizontalCells];
             this._fillWithArrays(this._sums, this.numVerticalCells);
-            
+
             var n;
             var l;
             var m;
@@ -72,7 +72,7 @@ define(function (require) {
         },
 
         /**
-         * Gets a cache entry. 
+         * Gets a cache entry.
          * If there is no entry, the entry is created.
          */
         getBrightness: function(n, l, m) {
@@ -95,14 +95,14 @@ define(function (require) {
         computeBrightness: function(n, l, m, sums) {
             var brightness = [];
             this._fillWithArrays(brightness, this.numVerticalCells);
-            
+
             var maxSum = 0;
             var cellHeight = this.cellHeight;
             var cellWidth = this.cellWidth;
             var cellDepth = this.cellDepth;
             var row;
             var col;
-            
+
             for (row = 0; row < this.numVerticalCells; row++ ) {
                 var z = (row * cellHeight) + (cellHeight / 2);
                 for (col = 0; col < this.numHorizontalCells; col++) {
@@ -129,7 +129,7 @@ define(function (require) {
                     brightness[row][col] = b;
                 }
             }
-            
+
             return brightness;
         }
 

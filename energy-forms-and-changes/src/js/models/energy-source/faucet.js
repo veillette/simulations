@@ -24,7 +24,7 @@ define(function (require) {
             flowProportion: 0,
             waterPowerableElementInPlace: false
         }),
-        
+
         initialize: function(attributes, options) {
             EnergySource.prototype.initialize.apply(this, [attributes, options]);
 
@@ -93,7 +93,7 @@ define(function (require) {
                 if (this.get('flowProportion') > 0) {
                     var initialWidth = this.get('flowProportion') * Faucet.MAX_WATER_WIDTH * (1 + (Math.random() - 0.5) * 0.2);
                     var initialPosition = this._initialWaterDropPosition.set(Faucet.OFFSET_FROM_CENTER_TO_WATER_ORIGIN).add(0, 0.01);
-                    
+
                     this.waterDrops.add(WaterDrop.create({
                         position: initialPosition,
                         width:    initialWidth,
@@ -108,7 +108,7 @@ define(function (require) {
                     if (drop.update(time, deltaTime))
                         drop.destroy();
                 }
-                    
+
 
                 // Check if it's time to emit an energy chunk and, if so, do it.
                 this.energySinceLastChunk += Constants.MAX_ENERGY_PRODUCTION_RATE * this.get('flowProportion') * deltaTime;
@@ -177,7 +177,7 @@ define(function (require) {
             var initialVelocity = this._initialChunkVelocity.set(0, -Faucet.FALLING_ENERGY_CHUNK_VELOCITY);
 
             return EnergyChunk.create({
-                energyType: EnergyChunk.MECHANICAL, 
+                energyType: EnergyChunk.MECHANICAL,
                 position:   initialPosition,
                 velocity:   initialVelocity
             });

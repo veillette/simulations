@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2 = require('common/math/vector2');
 
     var EnergyUser            = require('models/energy-user');
@@ -28,10 +28,10 @@ define(function (require) {
 
             // Most other classes don't need this info this info, and really it should be designed
             //   to not need it, but for the sake of sticking with the original algorithms and not
-            //   introducing new bugs, we're going to keep it. 
+            //   introducing new bugs, we're going to keep it.
             energyChunksVisible: false
         }),
-        
+
         initialize: function(attributes, options) {
             EnergyUser.prototype.initialize.apply(this, [attributes, options]);
 
@@ -55,7 +55,7 @@ define(function (require) {
                 height:   BeakerHeater.BEAKER_HEIGHT
             });
             var beaker = this.beaker;
-            
+
             // Thermometer
             this.thermometer = new Thermometer({
                 position: new Vector2(BeakerHeater.THERMOMETER_OFFSET).add(this.get('position')),
@@ -72,7 +72,7 @@ define(function (require) {
                 this.beaker.setPosition(this._position.set(this.get('position')).add(BeakerHeater.BEAKER_OFFSET));
                 this.thermometer.setPosition(this._position.set(this.get('position')).add(BeakerHeater.THERMOMETER_OFFSET));
             });
-        },  
+        },
 
         update: function(time, deltaTime, incomingEnergy) {
             if (this.active()) {
@@ -154,7 +154,7 @@ define(function (require) {
                 var chunk = this.beaker.extractClosestEnergyChunk(extractionPoint);
                 if (chunk) {
                     chunk.set('zPosition', 0); // Move to front of z order.
-                    
+
                     this.radiatedEnergyChunks.add(chunk);
                     this.radiatedEnergyChunkMovers.push(new EnergyChunkPathMover(
                         chunk,
@@ -170,7 +170,7 @@ define(function (require) {
         updateHeatingProportion: function(deltaTime, incomingEnergy) {
             var heatProportion;
             if ((this.get('energyChunksVisible') && this.heatingElementEnergyChunkMovers.length > 0) ||
-                (!this.get('energyChunksVisible') && incomingEnergy.type == EnergyTypes.ELECTRICAL) 
+                (!this.get('energyChunksVisible') && incomingEnergy.type == EnergyTypes.ELECTRICAL)
             ) {
                 heatProportion = Math.min(
                     incomingEnergy.amount / (Constants.MAX_ENERGY_PRODUCTION_RATE * deltaTime),

@@ -13,7 +13,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var ComponentToolbox = PixiView.extend({
 

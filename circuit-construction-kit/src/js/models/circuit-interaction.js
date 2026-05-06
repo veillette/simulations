@@ -13,7 +13,7 @@ define(function (require, exports, module) {
     //var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var CircuitInteraction = {
 
@@ -82,7 +82,7 @@ define(function (require, exports, module) {
                 var scEnd = this.circuit.getStrongConnections(wire.get('endJunction'));
                 var startSources = this.getSources(scStart, wire.get('startJunction'));
                 var endSources = this.getSources(scEnd, wire.get('endJunction'));
-                
+
                 // How about removing any junctions in start and end that share a branch?
                 // Is this sufficient to keep from dropping wires directly on other wires?
 
@@ -152,8 +152,8 @@ define(function (require, exports, module) {
                 this.branchSet
                     .clear()
                     .addBranches(strongComponent)
-                    .translate(this.branchDragMatch === null ? 
-                        startDx : 
+                    .translate(this.branchDragMatch === null ?
+                        startDx :
                         this.branchDragMatch.getVector()
                     );
             },
@@ -164,7 +164,7 @@ define(function (require, exports, module) {
                         this.circuit.collapseJunctions( this.branchDragMatch.source, this.branchDragMatch.target);
                         this.branchDragMatch.destroy();
                     }
-                    
+
                     this.branchDragMatch = null;
                     this.draggingBranch = false;
                 }
@@ -175,7 +175,7 @@ define(function (require, exports, module) {
                         this.circuit.collapseJunctions(this.startMatch.source, this.startMatch.target);
                         this.startMatch.destroy();
                     }
-                
+
                     if (this.endMatch) {
                         this.circuit.collapseJunctions(this.endMatch.source, this.endMatch.target);
                         this.endMatch.destroy();
@@ -221,7 +221,7 @@ define(function (require, exports, module) {
             _vec: new Vector2(),
 
             getSoleComponent: function(j) {
-                if (this.circuit.getAdjacentBranches(j).length == 1 && 
+                if (this.circuit.getAdjacentBranches(j).length == 1 &&
                     this.circuit.getAdjacentBranches(j)[0] instanceof CircuitComponent
                 ) {
                     return this.circuit.getAdjacentBranches(j)[0];

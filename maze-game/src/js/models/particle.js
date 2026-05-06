@@ -20,7 +20,7 @@ define(function (require) {
 
             vx: 0,
             vy: 0,
-            
+
             ax: 0,
             ay: 0,
 
@@ -32,7 +32,7 @@ define(function (require) {
         },
 
         initialize: function(attributes, options) {
-    
+
         },
 
         update: function(time, deltaTime) {
@@ -46,7 +46,7 @@ define(function (require) {
                 this.set('x', this.get('x') + vx * deltaTime + 0.5 * this.get('ax') * deltaTime * deltaTime);
                 this.set('y', this.get('y') + vy * deltaTime + 0.5 * this.get('ay') * deltaTime * deltaTime);
                 this.set('vx', vx);
-                this.set('vy', vy); 
+                this.set('vy', vy);
             }
         }
 

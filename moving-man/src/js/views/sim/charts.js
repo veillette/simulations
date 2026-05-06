@@ -11,7 +11,7 @@ define(function(require) {
     var MovingManSimView    = require('views/sim');
     var SceneView           = require('views/scene');
     var MovingManGraphView  = require('views/graph/moving-man');
-    
+
     require('nouislider');
 
     // HTML
@@ -52,7 +52,7 @@ define(function(require) {
                 title: 'Charts',
                 name:  'charts'
             }, options);
-            
+
             MovingManSimView.prototype.initialize.apply(this, [ options ]);
 
             this.listenTo(this.simulation, 'change:paused',    this.pausedChanged);
@@ -211,7 +211,7 @@ define(function(require) {
         },
 
         /**
-         * In the Charts tab, the velocity and acceleration sliders are 
+         * In the Charts tab, the velocity and acceleration sliders are
          *   actually supposed to have different ranges.
          */
         initVariableSliders: function() {
@@ -229,7 +229,7 @@ define(function(require) {
                     max:  16
                 }
             }));
-            
+
             initSlider(this.$acceleration, _.extend(this.getSliderOptions(), {
                 range: {
                     min: -60,
@@ -338,7 +338,7 @@ define(function(require) {
          */
         hideRow: function(event) {
             $(event.target).parents('.variable-row').addClass('collapsed');
-            
+
             this._layoutRows();
         },
 
@@ -349,7 +349,7 @@ define(function(require) {
             var $row = $(event.target).parents('.variable-row');
             $row.removeClass('collapsed');
             this.rowBeingOpened = $row[0];
-            
+
             this._layoutRows();
 
             this.lastRowOpened = $row[0];
@@ -383,7 +383,7 @@ define(function(require) {
                     if (this !== rowBeingOpened && this !== lastRowOpened)
                         $rowToClose = $(this);
                 });
-                
+
                 $rowToClose.addClass('collapsed');
 
                 $visibleRows   = this.$('.variable-row').not('.collapsed');

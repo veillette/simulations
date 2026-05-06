@@ -12,7 +12,7 @@ define(function (require) {
 
     /**
      * Voltmeter is the model of a compass.
-     * 
+     *
      * Several types of compass behavior can be specified using setBehavior.
      *   In the case of KINEMATIC_BEHAVIOR, the compass needle attempts to be
      *   physically accurate with respect to force, friction, inertia, etc.
@@ -48,11 +48,11 @@ define(function (require) {
         getDesiredNeedleAngle: function() {
             // Use amplitude of the voltage source as our signal.
             var amplitude = this.pickupCoilModel.get('currentAmplitude');
-            
+
             // Absolute amplitude below the threshold is effectively zero.
             if (Math.abs(amplitude) < Constants.CURRENT_AMPLITUDE_THRESHOLD)
                 amplitude = 0;
-            
+
             // Determine the needle deflection angle.
             return amplitude * Voltmeter.MAX_NEEDLE_ANGLE;
         },
@@ -65,7 +65,7 @@ define(function (require) {
             if (this.get('enabled')) {
                 // Determine the desired needle deflection angle.
                 var needleAngle = this.getDesiredNeedleAngle();
-                
+
                 if (!this.get('jiggleEnabled')) {
                     // If jiggle is disabled, simply set the needle angle.
                     this.set('needleAngle', needleAngle);

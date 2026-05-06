@@ -9,7 +9,7 @@ define(function(require) {
     var Colors     = require('common/colors/colors');
 
     var AtomicModels = require('hydrogen-atom/models/atomic-models');
-    
+
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
     var PhotonCollectionView  = require('hydrogen-atom/views/photon-collection');
     var ExperimentModelView   = require('hydrogen-atom/views/atomic-model/experiment');
@@ -22,7 +22,7 @@ define(function(require) {
 
     var Assets = require('assets');
     var Constants = require('constants');
-    
+
     /**
      * Represents the zoomed in view of the scene and what's happening at the atomic level
      */
@@ -57,13 +57,13 @@ define(function(require) {
             this.initParticles();
             this.initBox();
             this.initAtomicModelViews();
-            
+
             this.updateMVT(this.mvt);
         },
 
         initMask: function() {
             this.boxMask = new PIXI.Graphics();
-            
+
             this.displayObject.addChild(this.boxMask);
         },
 
@@ -82,7 +82,7 @@ define(function(require) {
 
         initBox: function() {
             this.box = new PIXI.Graphics();
-            
+
             this.displayObject.addChild(this.box);
         },
 
@@ -175,13 +175,13 @@ define(function(require) {
         },
 
         reset: function() {
-            
+
         },
 
         atomicModelChanged: function() {
             // Deactivate old view
             this.atomicModelViews[this.currentAtomicModelViewIndex].deactivate();
-            
+
             // Find current view
             if (this.simulation.get('experimentSelected')) {
                 this.currentAtomicModelViewIndex = 0;

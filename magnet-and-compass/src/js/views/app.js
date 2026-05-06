@@ -1,9 +1,9 @@
 define(function(require) {
-    
+
     'use strict';
 
     var FaradayAppView = require('views/app');
-    
+
     var MagnetAndCompassSimView = require('./sim/magnet-and-compass');
 
     var Assets = require('assets');

@@ -26,7 +26,7 @@ define(function (require) {
 
         init: function() {
             SubatomicParticle.prototype.init.apply(this, arguments);
-            
+
             this.jitterOffset = new Vector2();
         },
 
@@ -41,7 +41,7 @@ define(function (require) {
          * This method simulates the quantum tunneling behavior, which means that
          *   it causes the particle to move to some new random location within the
          *   confines of the supplied parameters.
-         * 
+         *
          * @param minDistance - Minimum distance from origin (0,0).  This is generally 0.
          * @param nucleusRadius - Radius of the nucleus where this particle resides.
          * @param tunnelRadius - Radius at which this particle could tunnel out of nucleus.
@@ -49,12 +49,12 @@ define(function (require) {
         tunnel: function(center, minDistance, nucleusRadius, tunnelRadius) {
             if (this.get('tunnelingEnabled')) {
                 var newPosition = Nucleon.tunnel(center, minDistance, nucleusRadius, tunnelRadius);
-                
+
                 // Save the new position.
                 this.setPosition(newPosition);
             }
         },
-        
+
         jitter: function() {
             if (this.jitterOffset.x == 0 && this.jitterOffset.y == 0) {
                 // Move away from the base position by a small amount.
@@ -75,7 +75,7 @@ define(function (require) {
          * This method simulates the quantum tunneling behavior, which means that
          *   it causes the particle to move to some new random location within the
          *   confines of the supplied parameters.
-         * 
+         *
          * @param minDistance - Minimum distance from origin (0,0).  This is generally 0.
          * @param nucleusRadius - Radius of the nucleus where this particle resides.
          * @param tunnelRadius - Radius at which this particle could tunnel out of nucleus.
@@ -93,16 +93,16 @@ define(function (require) {
                 // nucleus.
                 multiplier = Math.random() * Math.random();
             }
-            
+
             var newRadius = minDistance + (multiplier * (nucleusRadius - minDistance));
-            
+
             // Calculate the new angle, in radians, from the origin.
             var newAngle = Math.random() * 2 * Math.PI;
-            
+
             // Convert from polar to Cartesian coordinates.
             var xPos = Math.cos(newAngle) * newRadius;
             var yPos = Math.sin(newAngle) * newRadius;
-            
+
             // Save the new position.
             this._tunnelPosition.set(xPos + center.x, yPos + center.y);
 

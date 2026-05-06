@@ -14,7 +14,7 @@
                 // Render main app view
                 appView.load();
 			});
-	
+
 		});
 	});
 

@@ -26,11 +26,11 @@ define(function (require, exports, module) {
         numGlassPanes: Constants.MAX_GLASS_PANES,
 
         defaults: _.extend(BaseGreenhouseSimulation.prototype.defaults, {
-            
+
         }),
-        
+
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             BaseGreenhouseSimulation.prototype.initialize.apply(this, [attributes, options]);
@@ -93,7 +93,7 @@ define(function (require, exports, module) {
             for (var i = 0; i < this.glassPanes.length; i++)
                 PhotonGlassPaneCollisionModel.handle(photon, this.glassPanes.at(i), deltaTime);
         },
-        
+
         /**
          * If there are any available glassPanes to add, adds a
          *   glassPane to the model.

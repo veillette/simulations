@@ -14,11 +14,11 @@ define(function (require) {
 
     var PhaseChangesSceneView = SOMSceneView.extend({
 
-        heaterCoolerPosition: AppView.windowIsShort() ? 
-            Constants.PhaseChangesSceneView.SHORT_SCREEN_HEATER_COOLER_POSITION : 
+        heaterCoolerPosition: AppView.windowIsShort() ?
+            Constants.PhaseChangesSceneView.SHORT_SCREEN_HEATER_COOLER_POSITION :
             Constants.PhaseChangesSceneView.HEATER_COOLER_POSITION,
-            
-        particleTankPosition: AppView.windowIsShort() ? 
+
+        particleTankPosition: AppView.windowIsShort() ?
             Constants.PhaseChangesSceneView.SHORT_SCREEN_TANK_POSITION :
             Constants.PhaseChangesSceneView.TANK_POSITION,
 
@@ -50,8 +50,8 @@ define(function (require) {
                 simulation: this.simulation
             });
 
-            var pumpPosition = AppView.windowIsShort() ? 
-                PhaseChangesSceneView.SHORT_SCREEN_PUMP_POSITION : 
+            var pumpPosition = AppView.windowIsShort() ?
+                PhaseChangesSceneView.SHORT_SCREEN_PUMP_POSITION :
                 PhaseChangesSceneView.PUMP_POSITION;
 
             this.pumpView.displayObject.x = Math.floor(this.width  * pumpPosition.x);

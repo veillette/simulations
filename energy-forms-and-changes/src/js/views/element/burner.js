@@ -10,7 +10,7 @@ define(function(require) {
 
     var IntroElementView          = require('views/intro-element');
     var EnergyChunkCollectionView = require('views/energy-chunk-collection');
-    
+
 
     var Assets    = require('assets');
     var Constants = require('constants');
@@ -127,7 +127,7 @@ define(function(require) {
                     var gradient = ctx.createLinearGradient(0, 0, width, 0);
                     gradient.addColorStop(0, '#ced9e5');
                     gradient.addColorStop(1, '#7a8b9b');
-                    
+
                     ctx.fillStyle = gradient;
                 }
             };
@@ -158,7 +158,7 @@ define(function(require) {
             var gradient = ctx.createLinearGradient(0, 0, 0, bgHeight);
             gradient.addColorStop(0, BurnerView.HOT_COLOR);
             gradient.addColorStop(1, BurnerView.COLD_COLOR);
-            
+
             ctx.fillStyle = gradient;
             ctx.lineWidth   = 1;
             ctx.strokeStyle = '#000';
@@ -208,7 +208,7 @@ define(function(require) {
                     this.fire.anchor.y = 0;
                     this.ice.anchor.y = 0;
                     this.model.set('heatCoolLevel', 0);
-                });    
+                });
             }
 
             // Labels
@@ -226,9 +226,9 @@ define(function(require) {
                 heat.anchor.y = 0;
                 heat.x = textOffset;
                 heat.y = this.sliderView.displayObject.y;
-                this.frontLayer.addChild(heat);    
+                this.frontLayer.addChild(heat);
             }
-            
+
             if (this.coolingEnabled) {
                 var cool = new PIXI.Text('Cool', textStyle);
                 cool.anchor.y = 0.82;

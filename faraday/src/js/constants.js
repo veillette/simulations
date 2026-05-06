@@ -13,7 +13,7 @@ define(function (require) {
     var DEG_TO_RAD = Math.PI / 180;
 
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -23,11 +23,11 @@ define(function (require) {
 
     Constants.SCENE_WIDTH  = 800;
     Constants.SCENE_HEIGHT = 640; // Changed from 600 to account for playback controls panel
-    
+
     //----------------------------------------------------------------------------
     // Clock parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.CLOCK_STEP = 1; // clock ticks
     Constants.CLOCK_FRAME_RATE = 25;  // frames per second
     Constants.CLOCK_DELAY = (1000 / Constants.CLOCK_FRAME_RATE); // milliseconds
@@ -37,116 +37,116 @@ define(function (require) {
     //----------------------------------------------------------------------------
     // Bar Magnet parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.BAR_MAGNET_SIZE = new Dimension(250, 50);
     Constants.BAR_MAGNET_STRENGTH_MAX = 300; // Gauss
     Constants.BAR_MAGNET_STRENGTH_MIN = 0; // Gauss
-    Constants.BAR_MAGNET_STRENGTH_RANGE = range({ 
-        min: Constants.BAR_MAGNET_STRENGTH_MIN, 
+    Constants.BAR_MAGNET_STRENGTH_RANGE = range({
+        min: Constants.BAR_MAGNET_STRENGTH_MIN,
         max: Constants.BAR_MAGNET_STRENGTH_MAX
     });
 
     //----------------------------------------------------------------------------
     // Electromagnet parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.ELECTROMAGNET_STRENGTH_MAX = 300; // Gauss
     Constants.ELECTROMAGNET_LOOPS_MAX = 4;
     Constants.ELECTROMAGNET_LOOPS_MIN = 1;
     Constants.ELECTROMAGNET_WIRE_WIDTH = 20;
-    
+
     //----------------------------------------------------------------------------
     // Turbine parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.TURBINE_STRENGTH_MAX = 300; // Gauss
     Constants.TURBINE_STRENGTH_MIN = 0; // Gauss;
-    
+
     //----------------------------------------------------------------------------
     // B-field (grid of compass needles) parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.GRID_INTENSITY_SCALE_MIN = 1;
     Constants.GRID_INTENSITY_SCALE_MAX = 6;
     Constants.GRID_INTENSITY_SCALE = 2.7;
-    
+
     Constants.GRID_SPACING_MAX = 100;
     Constants.GRID_SPACING_MIN = 35;
     Constants.GRID_SPACING = 40;
-    
+
     Constants.GRID_NEEDLE_ASPECT_RATIO = 25 / 7; // tips:waist
-    
+
     Constants.GRID_NEEDLE_WIDTH_MAX = 60;
     Constants.GRID_NEEDLE_WIDTH_MIN = 20;
     Constants.GRID_NEEDLE_WIDTH = 25;
     Constants.GRID_NEEDLE_HEIGHT = parseInt(Constants.GRID_NEEDLE_WIDTH / Constants.GRID_NEEDLE_ASPECT_RATIO);
-    
+
     Constants.NORTH_COLOR = '#f00';
     Constants.SOUTH_COLOR = '#fff';
-    
+
     //----------------------------------------------------------------------------
     // Pickup Coil parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.MAX_PICKUP_LOOPS = 3;
     Constants.MIN_PICKUP_LOOPS = 1;
-    
+
     var MAX_PICKUP_LOOP_RADIUS = 150.0;
     var MIN_PICKUP_LOOP_RADIUS = 68.0;
     Constants.MIN_PICKUP_LOOP_RADIUS = MIN_PICKUP_LOOP_RADIUS;
-    
+
     Constants.MAX_PICKUP_LOOP_AREA = Math.PI * MAX_PICKUP_LOOP_RADIUS * MAX_PICKUP_LOOP_RADIUS;
     Constants.MIN_PICKUP_LOOP_AREA = Math.PI * MIN_PICKUP_LOOP_RADIUS * MIN_PICKUP_LOOP_RADIUS;
-    Constants.DEFAULT_PICKUP_LOOP_AREA = Constants.MAX_PICKUP_LOOP_AREA / 2; 
+    Constants.DEFAULT_PICKUP_LOOP_AREA = Constants.MAX_PICKUP_LOOP_AREA / 2;
     Constants.LOOP_AREA_RANGE = range({
         min: Constants.MIN_PICKUP_LOOP_AREA,
         max: Constants.MAX_PICKUP_LOOP_AREA
     });
-    
+
     //----------------------------------------------------------------------------
-    // Battery parameters 
+    // Battery parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.BATTERY_VOLTAGE_MAX = 10;  // volts
-    
+
     Constants.BATTERY_AMPLITUDE_MAX = 1.0; // -1...1
     Constants.BATTERY_AMPLITUDE_MIN = -1.0; // -1...1
 
     //----------------------------------------------------------------------------
     // AC Power Supply parameters
     //----------------------------------------------------------------------------
-    
+
     Constants.AC_VOLTAGE_MAX = 110.0;  // volts
-    
+
     Constants.AC_MAXAMPLITUDE_MAX = 1.0;  // 0...1
     Constants.AC_MAXAMPLITUDE_MIN = 0.0;  // 0...1
-    
+
     Constants.AC_FREQUENCY_MAX = 1.0;  // 0...1
     Constants.AC_FREQUENCY_MIN = 0.05;  // 0...1
 
     //----------------------------------------------------------------------------
     // Thresholds
     //----------------------------------------------------------------------------
-    
+
     /* B-field needles with magnitude below this value are not drawn. */
     Constants.GRID_BFIELD_THRESHOLD = 0.02; // Gauss
-    
+
     /* Absolute current amplitude below this value is treated as zero. */
     Constants.CURRENT_AMPLITUDE_THRESHOLD = 0.001;
-    
+
     //----------------------------------------------------------------------------
     // Developer controls
     //----------------------------------------------------------------------------
-    
+
     Constants.PICKUP_CALIBRATION_EMF_MIN = 1E4;
     Constants.PICKUP_CALIBRATION_EMF_MAX = 5E6;
-    
+
     Constants.PICKUP_ELECTRONS_SPEED_SCALE_MIN = 1;
     Constants.PICKUP_ELECTRONS_SPEED_SCALE_MAX = 100;
-    
+
     Constants.PICKUP_TRANSITION_SMOOTHING_SCALE_MIN = 0.1; // must be > 0
     Constants.PICKUP_TRANSITION_SMOOTHING_SCALE_MAX = 1; // must be <= 1
-    
+
     Constants.LIGHTBULB_GLASS_GLOW_SCALE_MIN = 1;
     Constants.LIGHTBULB_GLASS_GLOW_SCALE_MAX = 100;
 
@@ -308,7 +308,7 @@ define(function (require) {
     GeneratorSimulation.ELECTRON_SPEED_SCALE = 1.0;
 
     Constants.GeneratorSimulation = GeneratorSimulation;
-    
+
 
     /*************************************************************************
      **                                                                     **
@@ -507,7 +507,7 @@ define(function (require) {
 
     LightbulbView.BULB_RADIUS = 30.0; // Radius of the glass, must be aligned with image by trial & error.
     LightbulbView.DISTANCE_BULB_IS_SCREWED_INTO_BASE = 10; // must be aligned with rays via trial & error
-    
+
     LightbulbView.GLASS_MIN_ALPHA = 0.35; // alpha when the bulb is off
     LightbulbView.DEFAULT_GLASS_GLOW_SCALE = 15;
 
@@ -553,7 +553,7 @@ define(function (require) {
 
     // Pivot point, the point about which the needle pivots.
     VoltmeterView.PIVOT_POINT = new Vector2(0, -72);
-    
+
     // Needle
     VoltmeterView.NEEDLE_COLOR = '#00f';
     VoltmeterView.NEEDLE_LENGTH = 66;
@@ -569,11 +569,11 @@ define(function (require) {
     VoltmeterView.GUAGE_RADIUS = VoltmeterView.NEEDLE_LENGTH;
     VoltmeterView.GUAGE_COLOR = '#000';
     VoltmeterView.GUAGE_STROKE_WIDTH = 1;
-    
+
     // Title
     VoltmeterView.TITLE_FONT = '14px Helvetica Neue';
     VoltmeterView.TITLE_COLOR = '#fff';
-    
+
     // Tick marks
     VoltmeterView.MINOR_TICK_SPACING = Math.PI / 40; // Radians
     VoltmeterView.MINOR_TICKS_PER_MAJOR_TICK = 4;
@@ -624,7 +624,7 @@ define(function (require) {
     ACPowerSupplyView.CURSOR_WRAP_AROUND_TOLERANCE = 5 * DEG_TO_RAD;
 
     Constants.ACPowerSupplyView = ACPowerSupplyView;
-    
+
 
     /*************************************************************************
      **                                                                     **

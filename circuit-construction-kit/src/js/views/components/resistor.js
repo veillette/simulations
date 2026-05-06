@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Colors      = require('common/colors/colors');
 
@@ -29,7 +29,7 @@ define(function(require) {
         schematicImagePath:     Assets.Images.SCHEMATIC_RESISTOR,
         schematicMaskImagePath: Assets.Images.SCHEMATIC_RESISTOR_MASK,
 
-        contextMenuContent: 
+        contextMenuContent:
             '<li><a class="change-resistance-btn"><span class="fa fa-bolt"></span>&nbsp; Change Resistance</a></li>' +
             '<li><a class="show-value-btn"><span class="fa fa-square-o"></span>&nbsp; Show Value</a></li>' +
             '<hr>' +
@@ -96,9 +96,9 @@ define(function(require) {
             // First 2 digits for value, third digit for scale.
             if (resistance < 10) {
                 return [
-                    BAND_COLORS[0], 
-                    this.digitToColor(resistance), 
-                    BAND_COLORS[0], 
+                    BAND_COLORS[0],
+                    this.digitToColor(resistance),
+                    BAND_COLORS[0],
                     BAND_COLORS[4]
                 ];
             }
@@ -106,9 +106,9 @@ define(function(require) {
                 firstDigit  = Math.floor(resistance / 10);
                 secondDigit = Math.floor(resistance % 10);
                 return [
-                    this.digitToColor(firstDigit), 
-                    this.digitToColor(secondDigit), 
-                    BAND_COLORS[0], 
+                    this.digitToColor(firstDigit),
+                    this.digitToColor(secondDigit),
+                    BAND_COLORS[0],
                     BAND_COLORS[4]
                 ];
             }
@@ -122,8 +122,8 @@ define(function(require) {
                 var offBy = (resistance - predicted) / predicted * 100;
 
                 var colors = [
-                    this.digitToColor(firstDigit), 
-                    this.digitToColor(secondDigit), 
+                    this.digitToColor(firstDigit),
+                    this.digitToColor(secondDigit),
                     this.digitToColor(factor)
                 ];
 

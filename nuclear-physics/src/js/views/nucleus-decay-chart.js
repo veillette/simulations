@@ -212,7 +212,7 @@ define(function(require) {
 
             this.drawHalfLifeMarker(this.halfLifeMarker, height, HALF_LIFE_LINE_COLOR);
             this.drawHalfLifeMarker(this.halfLifeMarkerHover,  height, HALF_LIFE_HOVER_COLOR);
-            
+
             this.halfLifeMarkerText = this.createHalfLifeText(height, NucleusDecayChart.HALF_LIFE_TEXT_COLOR);
             this.halfLifeMarkerHover.addChild(this.createHalfLifeText(height, NucleusDecayChart.HALF_LIFE_HOVER_COLOR));
 
@@ -226,7 +226,7 @@ define(function(require) {
 
             this.drawHalfLifeHandles(this.halfLifeHandle, HALF_LIFE_LINE_COLOR);
             this.drawHalfLifeHandles(halfLifeHandleHover, HALF_LIFE_HOVER_COLOR);
-            
+
             this.halfLifeMarker.addChild(this.halfLifeHandle);
             this.halfLifeMarker.addChild(this.halfLifeMarkerText);
             this.halfLifeMarker.addChild(this.halfLifeMarkerHover);
@@ -329,7 +329,7 @@ define(function(require) {
             var y = this.graphOriginY;
             var x = timeZeroPosX + (time * this.msToPixelsFactor);
             var length = NucleusDecayChart.TICK_MARK_LENGTH;
-            
+
             this.xAxisTicks.moveTo(x, y);
             this.xAxisTicks.lineTo(x, y - length);
 
@@ -431,11 +431,11 @@ define(function(require) {
             var hlX = this.halfLifeMarker.x;
             var hlY = this.halfLifeMarker.y;
             this._axisLabelRect.set(
-                al.x - al.width * al.anchor.x, al.y - al.height * al.anchor.y, 
+                al.x - al.width * al.anchor.x, al.y - al.height * al.anchor.y,
                 al.width, al.height
             );
             this._halfLifeTextRect.set(
-                hl.x - hl.width * hl.anchor.x + hlX, hl.y - hl.height * hl.anchor.y + hlY, 
+                hl.x - hl.width * hl.anchor.x + hlX, hl.y - hl.height * hl.anchor.y + hlY,
                 hl.width, hl.height
             );
             this.xAxisLabel.visible = !(this._axisLabelRect.overlaps(this._halfLifeTextRect));
@@ -499,7 +499,7 @@ define(function(require) {
                 isotope1Text = IsotopeSymbolGenerator.generate(nucleusType,        NucleusDecayChart.ISOTOPE_FONT_SIZE, 1);
                 isotope2Text = IsotopeSymbolGenerator.generate(decayedNucleusType, NucleusDecayChart.ISOTOPE_FONT_SIZE, 1);
             }
-            
+
             this.yAxisIsotope1.removeChildren();
             this.yAxisIsotope2.removeChildren();
 

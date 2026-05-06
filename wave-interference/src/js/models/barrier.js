@@ -54,7 +54,7 @@ define(function(require) {
 				case 0:
 					this.changeBarrierType0();
 					break;
-				case 1: 
+				case 1:
 					this.changeBarrierType1();
 					break;
 				case 2:
@@ -80,7 +80,7 @@ define(function(require) {
 			this.topBox.height    = boxHeight;
 			this.middleBox.height = 0;
 			this.bottomBox.height = boxHeight;
-			
+
 			this.bottomBox.y = 0;
 			this.topBox.y = latHeight - boxHeight;
 

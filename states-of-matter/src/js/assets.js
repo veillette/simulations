@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         TANK:                  'tank.png',
         TANK_LID:              'tank-lid.png',
         HOSE_CONNECTOR:        'hose-connector.png',

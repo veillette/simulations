@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView = require('common/v3/pixi/view');
 
     var AtomView       = require('views/atom');

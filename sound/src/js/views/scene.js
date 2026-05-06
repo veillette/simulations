@@ -28,7 +28,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -43,7 +43,7 @@ define(function(require) {
             var minimumHeight = this.minSceneHeightInMeters;
             var usableHeight = this.height;
             var scale = usableHeight / minimumHeight;
-            
+
             this.viewOriginX = Math.round(this.width / 2 - (scale * (Constants.DEFAULT_LISTENER_X + 0.95)));
             this.viewOriginY = Math.round(usableHeight / 2);
 

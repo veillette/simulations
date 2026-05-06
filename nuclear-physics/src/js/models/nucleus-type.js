@@ -18,7 +18,7 @@ define(function (require) {
         URANIUM_238:             12,
         URANIUM_239:             13,
         HEAVY_CUSTOM:            14,
-        HEAVY_CUSTOM_POST_DECAY: 15, 
+        HEAVY_CUSTOM_POST_DECAY: 15,
 
         /**
          * Convenience method for identifying a nucleus based on its configuration.

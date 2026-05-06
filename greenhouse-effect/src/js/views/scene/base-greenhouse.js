@@ -72,9 +72,9 @@ define(function(require) {
 
             var boundsRatio = bounds.w / bounds.h;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
-            
+
             this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
             this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h);
 
@@ -115,7 +115,7 @@ define(function(require) {
             // Sunlight goes on top because it goes over the glass
             this.backgroundLayer.addChild(this.infraredPhotons);
             this.backgroundLayer.addChild(this.sunlightPhotons);
-            
+
 
             this.irFilter = new InfraredFilter();
 
@@ -181,7 +181,7 @@ define(function(require) {
         },
 
         createAndAddPhotonView: function(photon) {
-            var photonView = new PhotonView({ 
+            var photonView = new PhotonView({
                 model: photon,
                 mvt: this.mvt,
                 visibleProportion: this.visiblePhotonProportion

@@ -29,7 +29,7 @@ define(function (require, exports, module) {
             width:  100,
             height: 100
         }),
-        
+
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -47,7 +47,7 @@ define(function (require, exports, module) {
          * Initializes the models used in the simulation
          */
         initComponents: function() {
-            
+
         },
 
         /**
@@ -158,7 +158,7 @@ define(function (require, exports, module) {
 
             var eMidVec = this.getE(xMid, yMid);
             var vMid = this.getV(xMid, yMid);
-            
+
             var dx = (vMid - voltage) * eMidVec.x / eMidVec.lengthSq();
             var xFinal = xMid + dx;
             var yFinal = yMid + dx * eMidVec.y / eMidVec.x;

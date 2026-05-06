@@ -15,7 +15,7 @@ define(function (require) {
     var simHtml = require('text!templates/one-atom-sim.html');
 
     /**
-     * 
+     *
      */
     var OneAtomSimView = LasersSimView.extend({
 
@@ -25,7 +25,7 @@ define(function (require) {
          * Dom event listeners
          */
         events: _.extend({}, LasersSimView.prototype.events, {
-            
+
         }),
 
         /**
@@ -74,7 +74,7 @@ define(function (require) {
         },
 
         initLegendView: function() {
-            this.legendView = new LegendView({ 
+            this.legendView = new LegendView({
                 renderer: this.sceneView.renderer,
                 simulation: this.simulation
             });
@@ -90,7 +90,7 @@ define(function (require) {
 
             return this;
         },
-        
+
         /**
          * Renders the laser controls view
          */
@@ -112,7 +112,7 @@ define(function (require) {
          */
         postRender: function() {
             LasersSimView.prototype.postRender.apply(this);
-            
+
             this.laser1ControlsView.postRender();
             this.laser2ControlsView.postRender();
             this.renderLegend();
@@ -123,7 +123,7 @@ define(function (require) {
          */
         resetComponents: function() {
             LasersSimView.prototype.resetComponents.apply(this);
-            
+
             this.laser1ControlsView.reset();
             this.laser2ControlsView.reset();
         },

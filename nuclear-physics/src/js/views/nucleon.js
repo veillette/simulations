@@ -8,7 +8,7 @@ define(function(require) {
     var Nucleon = require('models/nucleon');
 
     /**
-     * 
+     *
      */
     var NucleonView = SubatomicParticleView.extend({
 

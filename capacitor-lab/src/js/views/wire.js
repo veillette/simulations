@@ -4,7 +4,7 @@ define(function(require) {
 
     var PIXI = require('pixi');
     var SAT  = require('sat');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -56,7 +56,7 @@ define(function(require) {
 
             var viewStart;
             var viewEnd;
-            
+
             var segment;
             for (var i = 0; i < this.model.segments.length; i++) {
                 segment = this.model.segments.at(i);
@@ -154,7 +154,7 @@ define(function(require) {
          */
         getYSortValue: function() {
             var y;
-            
+
             if (this.model instanceof BatteryToCapacitorsTopWire)
                 y = this.model.getMinY();
             else if (this.model instanceof BatteryToCapacitorsBottomWire)

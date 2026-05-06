@@ -20,15 +20,15 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * The base simulation model for the "Greenhouse Effect" and 
+     * The base simulation model for the "Greenhouse Effect" and
      *   "Glass Layers" tabs.
      */
     var BaseGreenhouseSimulation = FixedIntervalSimulation.extend({
 
         exposedEarth: 1,
-        
+
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             options = _.extend({
@@ -84,7 +84,7 @@ define(function (require, exports, module) {
                 position: new Vector2(0, -Earth.RADIUS + this.exposedEarth)
             }, {
                 alpha: Math.PI / 2 - gamma,
-                beta:  Math.PI / 2 + gamma 
+                beta:  Math.PI / 2 + gamma
             });
 
             this.earth.setProductionRate(1E-2);
@@ -200,7 +200,7 @@ define(function (require, exports, module) {
         },
 
         /**
-         * 
+         *
          */
         setEarthReflectivityAssessor: function(reflectivityAssessor) {
             this.earth.setReflectivityAssessor(reflectivityAssessor);
@@ -223,7 +223,7 @@ define(function (require, exports, module) {
         /**
          * Listens for any emission events in the system
          *   and adds the photon that was emitted to the
-         *   master photon collection.  Photons in this 
+         *   master photon collection.  Photons in this
          *   list will be rendered on the screen.  Any
          *   photon that is not in this list will not be
          *   rendered to the screen, so every photon

@@ -21,7 +21,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EnergyLevelPanelView = PixiView.extend({
 
@@ -145,7 +145,7 @@ define(function(require) {
         initAtoms: function() {
             this.atomSprites = [];
             var scale = this.atomDiameter / AtomView.getTextureWidth();
-            
+
             for (var i = 0; i < this.simulation.atoms.length; i++) {
                 var sprite = AtomView.createSprite();
                 sprite.anchor.x = 0;
@@ -321,7 +321,7 @@ define(function(require) {
                 this.atomCounts[2] = 0;
                 this.numUpdatesToAverage = 0;
                 this.timeSinceLastUpdate = 0;
-                
+
                 // Move atoms
                 var currentLevelCount;
                 var currentLevel = 0;

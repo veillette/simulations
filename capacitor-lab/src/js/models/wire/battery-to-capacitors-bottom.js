@@ -9,7 +9,7 @@ define(function (require) {
      */
     var Constants = require('constants');
     var ConnectionPoint = Constants.ConnectionPoint;
-    
+
     /*
      * Connects the bottom of the battery (B) to the bottoms of N capacitors (C1...Cn).
      *   Constructor args are described in superclass constructor.
@@ -27,7 +27,7 @@ define(function (require) {
              *   model, I'm omitting it.  They wanted to make the wire shape smaller
              *   because of occlusion of the bottom plate, but I don't care about that
              *   because I will just layer the bottom plate over it in the view.
-             */ 
+             */
         }
 
     });

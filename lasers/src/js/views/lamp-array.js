@@ -50,7 +50,7 @@ define(function(require) {
          */
         updateMVT: function(mvt) {
             this.mvt = mvt;
-            
+
             for (var i = 0; i < this.lampViews.length; i++)
                 this.lampViews[i].updateMVT(mvt);
 
@@ -69,6 +69,6 @@ define(function(require) {
         },
 
     });
-    
+
     return LampArrayView;
 });

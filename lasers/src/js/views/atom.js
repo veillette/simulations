@@ -13,7 +13,7 @@ define(function(require) {
     var Assets = require('assets');
 
     /**
-     * 
+     *
      */
     var AtomView = PixiView.extend({
 
@@ -27,7 +27,7 @@ define(function(require) {
 
             this.mvt = options.mvt;
             this.showEnergyLevel = options.showEnergyLevel;
-            
+
             this.initGraphics();
 
             this.listenTo(this.model, 'change:position',    this.updatePosition);
@@ -146,7 +146,7 @@ define(function(require) {
             var de1 = highestState.getEnergyLevel() - groundState.getEnergyLevel();
             var de2 = currentState.getEnergyLevel() - groundState.getEnergyLevel();
             var maxRingThickness = 6;
-            var radius = (de2 === 0) ? 
+            var radius = (de2 === 0) ?
                 groundStateRingThickness + baseAtomRadius :
                 maxRingThickness * de2 / de1 + groundStateRingThickness + baseAtomRadius;
 

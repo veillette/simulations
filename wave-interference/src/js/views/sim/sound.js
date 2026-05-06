@@ -17,7 +17,7 @@ define(function (require) {
 
 	// CSS
 	require('less!styles/sound');
-	
+
 
 	var SoundSimView = SimView.extend({
 
@@ -36,16 +36,16 @@ define(function (require) {
 				link: 'wave-interference',
 				detectorYLabel: 'Pressure'
 			}, options);
-			
+
 			SimView.prototype.initialize.apply(this, [ options ]);
 
 			this.volume = 50;
 			this.frequencyScale = 440 / 0.5; // from PhET's SoundModuleAudio class
 
 			this.sound = T('sin');
-			this.sound.set({ 
-				freq: parseFloat(this.waveSimulation.get('frequency')) * this.frequencyScale, 
-				mul: this.volume / 100 
+			this.sound.set({
+				freq: parseFloat(this.waveSimulation.get('frequency')) * this.frequencyScale,
+				mul: this.volume / 100
 			});
 
 			this.listenTo(this.waveSimulation, 'change:frequency', this.frequencyChanged);

@@ -35,7 +35,7 @@ define(function(require) {
     var GeometricOpticsSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -45,7 +45,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -86,9 +86,9 @@ define(function(require) {
 
             var simRatio = simWidth / simHeight;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > simRatio) ? usableScreenSpace.h / simHeight : usableScreenSpace.w / simWidth;
-            
+
             this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
             this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
 
@@ -251,7 +251,7 @@ define(function(require) {
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
-            
+
         },
 
         showSecondPoint: function() {

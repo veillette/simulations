@@ -26,9 +26,9 @@ define(function (require) {
 			return x * x;
 		},
 
-		/* 
+		/*
 		 * Just classic Pythagoras, Babe!
-		 */	
+		 */
 		lineLength: function(x0, y0, x1, y1) {
 			return Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
 		},
@@ -37,7 +37,7 @@ define(function (require) {
 		 * Finds the right angle distance between a point and a line
 		 *   defined by two endpoints.  It's the length of the vector
 		 *   that is perpendicular with the line and goes to the point.
-		 *   
+		 *
 		 * Source:
 		 *   http://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
 		 *
@@ -46,16 +46,16 @@ define(function (require) {
 		 */
 		distanceFromLine: function(x, y, x0, y0, x1, y1) {
 			if (x1 - x0 === 0 && y1 - y0 === 0) {
-				/* 
-				 * If the line is collapsed into a single point, 
+				/*
+				 * If the line is collapsed into a single point,
 				 *   it's just the distance to that point.
-				 */	
+				 */
 				return this.lineLength(x, y, x0, y0);
 			}
 			else {
-				/* 
+				/*
 				 * Calculate the length of right-angle vector and return it.
-				 */	
+				 */
 				return Math.abs( (x1 - x0) * (y1 - y) - (x0 - x) * (y1 - y0) ) / this.lineLength(x0, y0, x1, y1);
 			}
 		},
@@ -70,16 +70,16 @@ define(function (require) {
 		distanceFromSegmentSquared: function(x, y, x0, y0, x1, y1) {
 			lengthSquared = this.distanceSquared(x0, y0, x1, y1);
 
-			if (lengthSquared === 0) 
+			if (lengthSquared === 0)
 				return this.distanceSquared(x, y, x0, y0);
 
 			// Get the magnitude of the projection of vector from the point to (x0, y0) on the segment
 			dist = ((x - x0) * (x1 - x0) + (y - y0) * (y1 - y0)) / lengthSquared;
 
-			if (dist < 0) 
+			if (dist < 0)
 				return this.distanceSquared(x, y, x0, y0);
 
-			if (dist > 1) 
+			if (dist > 1)
 				return this.distanceSquared(x, y, x1, y1);
 
 			return this.distanceSquared(x, y, x0 + dist * (x1 - x0), y0 + dist * (y1 - y0));
@@ -193,9 +193,9 @@ define(function (require) {
 					return rgb;
 				else
 					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
-			} 
+			}
 			else
-				return null;	
+				return null;
 		},
 
 		/**
@@ -210,9 +210,9 @@ define(function (require) {
 				range = doc.body.createTextRange();
 				range.moveToElementText(element);
 				range.select();
-			} 
+			}
 			else if (window.getSelection) { //all others
-				selection = window.getSelection();        
+				selection = window.getSelection();
 				range = doc.createRange();
 				range.selectNodeContents(element);
 				selection.removeAllRanges();

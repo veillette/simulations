@@ -28,9 +28,9 @@ define(function (require) {
                 var p = particles[i];
                 if (p !== wireParticle && p.wirePatch === this.a && wireParticle.wirePatch === this.b) {
                     sum += this.params.getForce(
-                        p.position, 
-                        p.charge, 
-                        wireParticle.position + this.a.getLength(), 
+                        p.position,
+                        p.charge,
+                        wireParticle.position + this.a.getLength(),
                         wireParticle.charge
                     );
                 }

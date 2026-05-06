@@ -206,8 +206,8 @@ define(function (require) {
          * Returns a new ball settings view
          */
         createBallSettingsView: function(ball) {
-            return new BallSettingsView({ 
-                model: ball, 
+            return new BallSettingsView({
+                model: ball,
                 simulation: this.simulation,
                 showMoreData: this.moreDataMode
             });
@@ -399,7 +399,7 @@ define(function (require) {
             this.$('.remove-ball-btn').hide();
 
             // Show last remove ball button if appropriate
-            if (this.simulation.balls.length > Constants.Simulation.MIN_NUM_BALLS && this.userCanAddRemoveBalls) 
+            if (this.simulation.balls.length > Constants.Simulation.MIN_NUM_BALLS && this.userCanAddRemoveBalls)
                 this.$('.remove-ball-btn').last().show();
 
             // Hide or show the add ball button

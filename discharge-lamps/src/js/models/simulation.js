@@ -27,9 +27,9 @@ define(function (require, exports, module) {
      */
     var Constants = require('../constants');
 
-    
+
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var DischargeLampsSimulation = LasersSimulation.extend({
 
@@ -37,13 +37,13 @@ define(function (require, exports, module) {
             current: 0,
             maxCurrent: 0
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 framesPerSecond: Constants.FPS,
                 deltaTimePerFrame: Constants.DT
             }, options);
-            
+
             LasersSimulation.prototype.initialize.apply(this, [attributes, options]);
 
             this.on('change:elementProperties', this.elementPropertiesChanged);
@@ -68,7 +68,7 @@ define(function (require, exports, module) {
 
             // Make the battery
             this.battery = new Battery({
-                maxVoltage: -DischargeLampsSimulation.MAX_VOLTAGE, 
+                maxVoltage: -DischargeLampsSimulation.MAX_VOLTAGE,
                 minVoltage:  DischargeLampsSimulation.MAX_VOLTAGE
             });
             this.listenTo(this.battery, 'change:voltage', this.batteryVoltageChanged);
@@ -103,8 +103,8 @@ define(function (require, exports, module) {
             var length = Constants.ANODE_LOCATION.x - Constants.CATHODE_LOCATION.x + Constants.ELECTRODE_LEFT + Constants.ELECTRODE_RIGHT;
             var height = Constants.CATHODE_LENGTH + Constants.ELECTRODE_TOP + Constants.ELECTRODE_BOTTOM;
             this.tube = new Tube({
-                origin: new Vector2(x, y), 
-                width: length, 
+                origin: new Vector2(x, y),
+                width: length,
                 height: height
             });
             this.addModel(this.tube);
@@ -181,7 +181,7 @@ define(function (require, exports, module) {
                 this.leftHandPlate.set('potential', 0);
                 this.rightHandPlate.set('potential', -voltage);
             }
-            
+
             this.trigger('voltage-changed', this, voltage);
         },
 
@@ -247,7 +247,7 @@ define(function (require, exports, module) {
         setElectronProductionMode: function(electronProductionMode ) {
             for (var i = 0; i < this.electronSources.length; i++)
                 this.electronSources.at(i).set('electronProductionMode', electronProductionMode);
-            
+
             this.setHeatingElementsEnabled(electronProductionMode === ElectronSource.CONTINUOUS_MODE);
         },
 
@@ -285,7 +285,7 @@ define(function (require, exports, module) {
         elementPropertiesChanged: function(simulation, elementProperties) {
             for (var i = 0; i < this.atoms.length; i++)
                 this.atoms.at(i).setElementProperties(elementProperties);
-            
+
             this.trigger('energy-levels-changed', this);
         },
 
@@ -298,7 +298,7 @@ define(function (require, exports, module) {
 
             // Determine the acceleration that electrons will experience
             this.setElectronAcceleration(
-                potentialDiff * Constants.ELECTRON_ACCELERATION_CALIBRATION_FACTOR, 
+                potentialDiff * Constants.ELECTRON_ACCELERATION_CALIBRATION_FACTOR,
                 this.leftHandPlate.getPosition().distance(this.rightHandPlate.getPosition())
             );
 
@@ -314,7 +314,7 @@ define(function (require, exports, module) {
             //   the maxCurrent, is 255. This is because it's used in a filter for the graphic image.
             this.leftHandHeatingElement.setTemperature(0);
             this.rightHandHeatingElement.setTemperature(0);
-            var temperature = 255 * current * 1000 / this.get('maxCurrent'); 
+            var temperature = 255 * current * 1000 / this.get('maxCurrent');
             // Original PhET Note: The 1000 here works, but I haven't dug into
             //   exactly why it's needed.
 

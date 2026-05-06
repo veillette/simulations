@@ -9,7 +9,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var AverageCurrent = function(numSamples) {
         this.series = new NumberSeries(numSamples);
@@ -22,7 +22,7 @@ define(function (require) {
      * Instance functions/properties
      */
     _.extend(AverageCurrent.prototype, Law.prototype, {
-        
+
         update: function(deltaTime, system) {
             var hollyscale = 3.5 * 3.3;
             var hollywood = this.resistance / this.voltage * hollyscale;

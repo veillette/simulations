@@ -8,7 +8,7 @@ define(function (require) {
     var NucleusType  = require('models/nucleus-type');
     var HalfLifeInfo = require('models/half-life-info');
 
-    var Constants = require('nuclear-physics/constants'); 
+    var Constants = require('nuclear-physics/constants');
 
     Constants.FRAME_RATE = 25;
     Constants.DELTA_TIME_PER_FRAME = 40;
@@ -29,7 +29,7 @@ define(function (require) {
 
     HalfLifeSimulation.MAX_NUCLEI = 99;
     HalfLifeSimulation.DEFAULT_NUCLEUS_TYPE = NucleusType.CARBON_14;
-    
+
     // Size and position of the bucket of nuclei which the user uses to add
     //   nuclei to the simulation.
     HalfLifeSimulation.BUCKET_ORIGIN_X = 40;
@@ -50,7 +50,7 @@ define(function (require) {
 
     DecayRatesSimulation.MAX_NUCLEI = 1000;
     DecayRatesSimulation.DEFAULT_NUCLEUS_TYPE = NucleusType.CARBON_14;
-    
+
     DecayRatesSimulation.PLACEMENT_LOCATION_SEARCH_COUNT = 100;
     DecayRatesSimulation.DEFAULT_MIN_INTER_NUCLEUS_DISTANCE = 10;
 
@@ -72,7 +72,7 @@ define(function (require) {
     // essentially real time) and model time, which is often thousands or
     // billions of years in this model.
     MeasurementSimulation.INITIAL_TREE_AGING_RATE = HalfLifeInfo.convertYearsToMs(300) / 1000; // 300 years per second.
-    MeasurementSimulation.INITIAL_ROCK_AGING_RATE = HalfLifeInfo.convertDaysToMs(90) / 10000;  // 90 days over 10 seconds - this will be the total eruption time (~3 months). 
+    MeasurementSimulation.INITIAL_ROCK_AGING_RATE = HalfLifeInfo.convertDaysToMs(90) / 10000;  // 90 days over 10 seconds - this will be the total eruption time (~3 months).
     MeasurementSimulation.FINAL_ROCK_AGING_RATE   = HalfLifeInfo.convertYearsToMs(1E9) / 5000; // 1 billion years every 5 seconds.
 
     MeasurementSimulation.AGING_ROCK_EMISSION_TIME        = 4000; // Simulation milliseconds
@@ -85,7 +85,7 @@ define(function (require) {
     // Constants that control how time accelerates after the volcano has
     // erupted.
     MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL = 50;
-    MeasurementSimulation.TIME_ACC_INCREMENT = (MeasurementSimulation.FINAL_ROCK_AGING_RATE - MeasurementSimulation.INITIAL_ROCK_AGING_RATE) / (Math.pow(2, MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL) - 1); 
+    MeasurementSimulation.TIME_ACC_INCREMENT = (MeasurementSimulation.FINAL_ROCK_AGING_RATE - MeasurementSimulation.INITIAL_ROCK_AGING_RATE) / (Math.pow(2, MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL) - 1);
 
     MeasurementSimulation.VOLCANO_TOP_POSITION = new Vector2(140, 250);
     MeasurementSimulation.VOLCANO_POSITION = new Vector2(140, 210);
@@ -154,7 +154,7 @@ define(function (require) {
 
     Constants.AnimatedDatableItem = AnimatedDatableItem;
 
-    
+
     /*************************************************************************
      **                                                                     **
      **                             FLYING ROCK                             **

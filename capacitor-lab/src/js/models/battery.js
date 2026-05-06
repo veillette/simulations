@@ -13,7 +13,7 @@ define(function (require) {
     var Polarity = Constants.Polarity;
 
     /**
-     * 
+     *
      */
     var Battery = PositionableObject3D.extend({
 
@@ -41,7 +41,7 @@ define(function (require) {
          * Updates every simulation step
          */
         update: function(time, deltaTime) {
-            
+
         },
 
         /**
@@ -125,7 +125,7 @@ define(function (require) {
             return Battery.BODY_HEIGHT / 2;
         }
 
-    }, 
+    },
 
     /*************************************************************************
      **                                                                     **

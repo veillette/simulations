@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
@@ -44,7 +44,7 @@ define(function(require) {
             this.graphics = new PIXI.Graphics();
 
             this.times.push(0);
-            this.xPoints.push(this.model.x); 
+            this.xPoints.push(this.model.x);
             this.yPoints.push(this.model.y);
             this.airResistanceHistory.push(this.model.get('airResistanceEnabled'));
 
@@ -85,7 +85,7 @@ define(function(require) {
             var graphics = this.graphics;
             graphics.clear();
             graphics.moveTo(
-                this.mvt.modelToViewX(this.xPoints[0]), 
+                this.mvt.modelToViewX(this.xPoints[0]),
                 this.mvt.modelToViewY(this.yPoints[0])
             );
 

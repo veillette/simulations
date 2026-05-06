@@ -7,7 +7,7 @@ define(function(require) {
 
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
-    
+
     var Assets = require('assets');
     var Constants = require('constants');
 
@@ -89,7 +89,7 @@ define(function(require) {
             this.gunSprite.anchor.y = (30 / 104);
             this.gunSprite.addChild(this.button);
             this.gunSprite.addChild(this.dragHandle);
-            
+
             this.displayObject.addChild(this.gunSprite);
 
             this.updateMVT(this.mvt);

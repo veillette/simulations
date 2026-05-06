@@ -7,7 +7,7 @@ define(function(require) {
     var SAT  = require('sat');
 
     var defineInputUpdateLocks = require('common/locks/define-locks');
-    
+
     var AppView    = require('common/v3/app/app');
     var PixiView   = require('common/v3/pixi/view');
     var SliderView = require('common/v3/pixi/view/slider');
@@ -20,13 +20,13 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var BatteryView = PixiView.extend({
 
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
             this.mvt = options.mvt;
@@ -53,7 +53,7 @@ define(function(require) {
             this.displayObject.addChild(this.batteryDown);
 
             this.initSlider();
-            
+
             this.updateMVT(this.mvt);
         },
 
@@ -86,7 +86,7 @@ define(function(require) {
             });
 
             // Position it
-            
+
             sliderView.displayObject.y = -sliderView.displayObject.height / 2 + topHeight / 2;
 
             // Bind events for it
@@ -112,7 +112,7 @@ define(function(require) {
 
                     this.pointUp();
                 }
-            }); 
+            });
 
             // Draw guide marks
             var lineWidth = AppView.windowIsShort() ? 12 : 14;

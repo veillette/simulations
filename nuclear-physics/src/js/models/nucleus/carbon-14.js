@@ -10,7 +10,7 @@ define(function (require) {
 
     /**
      * This class represents a non-composite Carbon 14 nucleus.  Because it is
-     *   non-composite, this nucleus does not create or keep track of any 
+     *   non-composite, this nucleus does not create or keep track of any
      *   constituent nucleons.
      */
     var Carbon14Nucleus = AbstractBetaDecayNucleus.extend({

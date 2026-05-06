@@ -68,7 +68,7 @@ define(function(require) {
 
             if (offset) {
                 sprite.x = centerXOffset + this.mvt.modelToViewDeltaX(offset.x);
-                sprite.y = centerYOffset + this.mvt.modelToViewDeltaY(offset.y);    
+                sprite.y = centerYOffset + this.mvt.modelToViewDeltaY(offset.y);
             }
             else {
                 sprite.x = centerXOffset;

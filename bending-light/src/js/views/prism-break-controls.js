@@ -17,7 +17,7 @@ define(function(require) {
     require('less!styles/prism-break-controls');
 
     /**
-     * 
+     *
      */
     var PrismBreakControls = Backbone.View.extend({
 
@@ -64,7 +64,7 @@ define(function(require) {
          */
         render: function() {
             var data = {
-                
+
             };
 
             this.setElement($(this.template(data)));
@@ -139,7 +139,7 @@ define(function(require) {
 
     // Add input/update locking functionality to the prototype
     defineInputUpdateLocks(PrismBreakControls);
-    
+
 
     return PrismBreakControls;
 });

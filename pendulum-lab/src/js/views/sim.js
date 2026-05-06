@@ -235,7 +235,7 @@ define(function (require) {
                 units : this.simulation.get('units').time,
                 position: {
                     x : 525,
-                    y : 625 
+                    y : 625
                 }
             });
 
@@ -321,7 +321,7 @@ define(function (require) {
         },
 
         updatePlaybackSpeed: function(){
-             
+
             var speed = this.$('input[name=playback-speed]:checked').val();
             this.timeScale = speed;
         },
@@ -463,7 +463,7 @@ define(function (require) {
                 range: range
             });
 
-            if(options.pips){            
+            if(options.pips){
                 $element.noUiSlider_pips(options.pips);
             }
 

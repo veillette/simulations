@@ -11,7 +11,7 @@ define(function(require) {
 	var WaterSimView = SimView.extend({
 
 		events: _.extend(SimView.prototype.events, {
-			
+
 		}),
 
 		initialize: function(options) {
@@ -22,7 +22,7 @@ define(function(require) {
 				link: 'wave-interference',
 				detectorYLabel: 'Water Level'
 			}, options);
-			
+
 			SimView.prototype.initialize.apply(this, [ options ]);
 		},
 

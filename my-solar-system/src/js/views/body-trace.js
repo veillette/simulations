@@ -5,13 +5,13 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     //var Vector2  = require('common/math/vector2');
 
     var Constants = require('constants');
-    
+
 
     var BodyTraceView = PixiView.extend({
 
@@ -33,7 +33,7 @@ define(function(require) {
         initGraphics: function() {
             this.trace = new PIXI.Graphics();
             this.trace.lineStyle(BodyTraceView.LINE_WIDTH, this.color, 1);
-                        
+
             this.displayObject.addChild(this.trace);
 
             this.updateMVT(this.mvt);
@@ -45,7 +45,7 @@ define(function(require) {
 
             this.trace.moveTo(this.previousPoint.x, this.previousPoint.y);
             this.trace.lineTo(x, y);
-            
+
             this.previousPoint.x = x;
             this.previousPoint.y = y;
         },

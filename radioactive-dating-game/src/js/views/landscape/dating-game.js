@@ -41,8 +41,8 @@ define(function(require) {
         },
 
         updateBackgroundScale: function() {
-            var targetSceneWidth = AppView.windowIsShort() ? 
-                SHORT_SCREEN_BACKGROUND_WIDTH : 
+            var targetSceneWidth = AppView.windowIsShort() ?
+                SHORT_SCREEN_BACKGROUND_WIDTH :
                 DEFAULT_BACKGROUND_WIDTH; // In pixels
             var scale = targetSceneWidth / this.background.width;
             this.background.scale.x = scale;
@@ -52,8 +52,8 @@ define(function(require) {
     }, {
 
         createMVT: function(width, height) {
-            var scale = AppView.windowIsShort() ? 
-                SHORT_SCREEN_BACKGROUND_WIDTH / LandscapeView.BACKGROUND_IMAGE_WIDTH: 
+            var scale = AppView.windowIsShort() ?
+                SHORT_SCREEN_BACKGROUND_WIDTH / LandscapeView.BACKGROUND_IMAGE_WIDTH:
                 DEFAULT_BACKGROUND_WIDTH      / LandscapeView.BACKGROUND_IMAGE_WIDTH;
 
             var x = AppView.windowIsShort() ? 130 : 0;

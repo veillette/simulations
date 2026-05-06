@@ -12,11 +12,11 @@ define(function(require) {
     var plusRgb  = Colors.hexToRgb(Constants.DeBroglieModelBrightnessSubView.PLUS_COLOR);
     var minusRgb = Colors.hexToRgb(Constants.DeBroglieModelBrightnessSubView.MINUS_COLOR);
     var zeroRgb  = Colors.hexToRgb(Constants.DeBroglieModelBrightnessSubView.ZERO_COLOR);
-    
+
     /**
      * DeBroglieBrightnessNode represents the deBroglie model
      *   as a standing wave. The amplitude (-1...+1) of the standing
-     *   wave is represented by the brightness of color in a ring that 
+     *   wave is represented by the brightness of color in a ring that
      *   is positioned at the electron's orbit. The ring is approximated
      *   using a set of polygons.
      */
@@ -56,7 +56,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             DeBroglieModelSubView.prototype.update.apply(this, arguments);
-        
+
             if (this.simulation.updated())
                 this.drawRing();
         },
@@ -80,7 +80,7 @@ define(function(require) {
                 var sin1 = Math.sin(a1);
                 var cos2 = Math.cos(a2);
                 var sin2 = Math.sin(a2);
-                
+
                 // Points that define the polygon
                 var x1 = r1 * cos1;
                 var y1 = r1 * sin1;
@@ -93,7 +93,7 @@ define(function(require) {
 
                 var amplitude = atom.getAmplitude(a1);
                 var color = this.amplitudeToColor(amplitude);
-                
+
                 // Shape for the polygon
                 graphics.beginFill(color, 1);
                 graphics.moveTo(x1, y1);

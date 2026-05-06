@@ -14,7 +14,7 @@ define(function(require) {
     var BUNCHING_OFFSETS = Constants.NucleusDecayChart.BUNCHING_OFFSETS;
 
     /**
-     * 
+     *
      */
     var NucleusDecayChartNucleiView = PixiView.extend({
 
@@ -98,7 +98,7 @@ define(function(require) {
                     this.decayedNuclei.splice(i, 1);
                     this.decayedSprites.splice(i, 1);
                 }
-            } 
+            }
         },
 
         clear: function() {

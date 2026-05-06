@@ -7,7 +7,7 @@ define(function (require) {
     var Thermometer = require('models/element/thermometer');
 
     /**
-     * 
+     *
      */
     var ElementFollowingThermometer = Thermometer.extend({
 
@@ -41,7 +41,7 @@ define(function (require) {
                             this.follow(block);
                         }
                     }
-                    
+
                     if (!this.followedElement && this.simulation.getBeaker().getThermalContactArea().getBounds().contains(this.get('position'))) {
                         // Stick to the beaker.
                         this.follow(this.simulation.getBeaker());

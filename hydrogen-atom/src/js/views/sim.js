@@ -7,7 +7,7 @@ define(function (require) {
 
     var AppView = require('common/v3/app/app');
     var SimView = require('common/v3/app/sim');
-    
+
     var HydrogenAtomSimulation           = require('hydrogen-atom/models/simulation');
     var AtomicModels                     = require('hydrogen-atom/models/atomic-models');
     var HydrogenAtomSceneView            = require('hydrogen-atom/views/scene');
@@ -94,7 +94,7 @@ define(function (require) {
             this.initLegend();
             this.initSpectrometer();
             this.initEnergyDiagrams();
-            
+
             this.listenTo(this.simulation, 'atom-added',                this.atomAdded);
             this.listenTo(this.simulation, 'change:atomicModel',        this.atomicModelChanged);
             this.listenTo(this.simulation, 'change:experimentSelected', this.atomicModelChanged);

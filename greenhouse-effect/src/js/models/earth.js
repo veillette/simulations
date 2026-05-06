@@ -12,7 +12,7 @@ define(function (require) {
     var Earth = Disk.extend({
 
         defaults: _.extend({}, Disk.prototype.defaults, {
-            mass:   Number.MAX_VALUE, 
+            mass:   Number.MAX_VALUE,
             radius: Constants.Earth.RADIUS,
 
             temperature:     Constants.Earth.BASE_TEMPERATURE,
@@ -49,7 +49,7 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         reset: function() {
             this.resetTemperatureHistory();
@@ -67,7 +67,7 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         update: function(deltaTime) {
             Disk.prototype.update.apply(this, arguments);
@@ -151,7 +151,7 @@ define(function (require) {
              *   and the view, I eventually settled on the fact that it's much
              *   simpler and more sustainable (more flexible if we want to change
              *   the graphics in the future) if we just do it that way.  Because it
-             *   doesn't need to be used by the simulation right away--because 
+             *   doesn't need to be used by the simulation right away--because
              *   photons starting at the top are in no danger of getting to a
              *   potentially reflective surface at the moment of their birth--we can
              *   create an object that waits patiently until the assets have been
@@ -174,14 +174,14 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         setProductionRate: function(productionRate) {
             this.photonSource.set('productionRate', productionRate);
         },
 
         /**
-         * 
+         *
          */
         getProductionRate: function() {
             return this.photonSource.get('productionRate');

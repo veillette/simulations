@@ -11,10 +11,10 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var PlumPuddingSimulation = RutherfordScatteringSimulation.extend({
-        
+
         initialize: function(attributes, options) {
             this.boundWidth = Constants.PUDDING_ACTUAL;
             RutherfordScatteringSimulation.prototype.initialize.apply(this, arguments);

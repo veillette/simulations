@@ -127,13 +127,13 @@ define(function(require) {
         getColor: function(ratio) {
             // Make sure the ratio stays between 0 and 1
             ratio = clamp(0, ratio, 1);
-            
+
             // Use a normalized ratio instead of the raw ratio
             this.ratioSamples.add(ratio);
             ratio = this.ratioSamples.average();
 
             var x = clamp(0, parseInt(this.spectrumWidth * ratio), this.spectrumWidth - 1);
-            
+
             var color = this.spectrumContext.getImageData(x, 0, 1, 1).data;
             this._rgba.r = color[0];
             this._rgba.g = color[1];

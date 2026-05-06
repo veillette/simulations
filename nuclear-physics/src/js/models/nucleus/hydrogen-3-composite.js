@@ -38,7 +38,7 @@ define(function (require) {
                         this.agitationFactor = Hydrogen3CompositeNucleus.HYDROGEN_3_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 case 2:
                     // Helium
                     if (this.get('numNeutrons') === 1) {
@@ -46,7 +46,7 @@ define(function (require) {
                         this.agitationFactor = Hydrogen3CompositeNucleus.HELIUM_3_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 default:
                     // If we reach this point in the code, there is a problem
                     //   somewhere that should be debugged.

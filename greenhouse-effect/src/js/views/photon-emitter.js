@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView   = require('common/v3/pixi/view');
     var SliderView = require('common/v3/pixi/view/slider');
     var Colors     = require('common/colors/colors');
@@ -121,9 +121,9 @@ define(function(require) {
                     emissionPeriod = Number.POSITIVE_INFINITY;
                 else if (this.model.get('photonTarget') === PhotonTargets.CONFIGURABLE_ATMOSPHERE)
                     emissionPeriod = PhotonAbsorptionSimulation.MIN_PHOTON_EMISSION_PERIOD_MULTIPLE_TARGET / percent;
-                else 
+                else
                     emissionPeriod = PhotonAbsorptionSimulation.MIN_PHOTON_EMISSION_PERIOD_SINGLE_TARGET / percent;
-                
+
                 this.model.set('photonEmissionPeriod', emissionPeriod);
             });
 
@@ -222,7 +222,7 @@ define(function(require) {
                     sliderView.val(1);
                 else
                     sliderView.val(0);
-            });   
+            });
 
             clickTop.click = function() {
                 sliderView.val(1);
@@ -257,10 +257,10 @@ define(function(require) {
 
         photonTargetChanged: function(simulation, photonTarget) {
             if ((
-                photonTarget === PhotonTargets.CONFIGURABLE_ATMOSPHERE && 
+                photonTarget === PhotonTargets.CONFIGURABLE_ATMOSPHERE &&
                 simulation.previous('photonTarget') !== PhotonTargets.CONFIGURABLE_ATMOSPHERE
             ) || (
-                photonTarget !== PhotonTargets.CONFIGURABLE_ATMOSPHERE && 
+                photonTarget !== PhotonTargets.CONFIGURABLE_ATMOSPHERE &&
                 simulation.previous('photonTarget') === PhotonTargets.CONFIGURABLE_ATMOSPHERE
             )) {
                 this.sliderView.val(1);

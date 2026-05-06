@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
 
     var Rectangle = require('common/math/rectangle');
     var Vector2   = require('common/math/vector2');
@@ -95,7 +95,7 @@ define(function(require) {
                 this.dragOffset = event.data.getLocalPosition(this[this.dragLayer], this._dragOffset);
                 this.dragging = true;
                 this.model.set('userControlled', true);
-                this.trigger('drag-start');  
+                this.trigger('drag-start');
             }
         },
 
@@ -104,7 +104,7 @@ define(function(require) {
                 var global = this[this.dragLayer].getGlobalPosition();
                 var dx = event.data.global.x - global.x - this.dragOffset.x;
                 var dy = event.data.global.y - global.y - this.dragOffset.y;
-                
+
                 var newBounds = this.calculateDragBounds(dx, dy);
                 var constraintBounds = this.movementConstraintBounds;
 

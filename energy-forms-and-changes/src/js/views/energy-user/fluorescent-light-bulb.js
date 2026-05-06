@@ -38,7 +38,7 @@ define(function(require) {
             var bulbFrontOn  = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_ON_FRONT_2, bulbOffset);
 
             this.litBulbBack = bulbBackOn; // We need to remember this one
-            this.litBulb     = bulbFrontOn; 
+            this.litBulb     = bulbFrontOn;
 
             // Fudging
             straightWire.x += 4;

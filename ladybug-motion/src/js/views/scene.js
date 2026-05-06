@@ -28,7 +28,7 @@ define(function(require) {
     var LadybugMotionSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -36,7 +36,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -80,9 +80,9 @@ define(function(require) {
             );
 
             this.simulation.setBounds(
-                this.mvt.viewToModelX(this.viewOriginX - usableWidth  / 2), 
-                this.mvt.viewToModelY(this.viewOriginY - usableHeight / 2), 
-                this.mvt.viewToModelX(this.viewOriginX + usableWidth  / 2), 
+                this.mvt.viewToModelX(this.viewOriginX - usableWidth  / 2),
+                this.mvt.viewToModelY(this.viewOriginY - usableHeight / 2),
+                this.mvt.viewToModelX(this.viewOriginX + usableWidth  / 2),
                 this.mvt.viewToModelY(this.viewOriginY + usableHeight / 2)
             );
         },
@@ -125,7 +125,7 @@ define(function(require) {
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
-            
+
         },
 
     });

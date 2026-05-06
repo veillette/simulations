@@ -5,7 +5,7 @@ define(function (require) {
     var _ = require('underscore');
 
     /**
-     * 
+     *
      */
     var WaveMedium = function() {
         this.wavefronts = [];

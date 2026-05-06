@@ -25,7 +25,7 @@ define(function(require) {
     var CapacitorLabSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -33,7 +33,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -85,9 +85,9 @@ define(function(require) {
 
             var boundsRatio = bounds.w / bounds.h;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
-            
+
             this.viewOriginX = Math.round(usableScreenSpace.x);
             this.viewOriginY = Math.round(usableScreenSpace.y);
 
@@ -119,7 +119,7 @@ define(function(require) {
         getIntersectingComponentView: function(polygon) {},
 
         /**
-         * 
+         *
          */
         getIntersectingCapacitorView: function(point) {},
 

@@ -24,7 +24,7 @@ define(function (require) {
 		var animationFrame;
 		var playing = false;
 		var dormant = false;
-		
+
 		var last  = 0;
 		var now   = 0;
 		var delta = 0;
@@ -42,11 +42,11 @@ define(function (require) {
 
 			if (!dormant) {
 				for (i = 0; i < listeners.update.length; i++)
-					listeners.update[i](this.total, delta);	
+					listeners.update[i](this.total, delta);
 			}
 			else if (delta < DORMANCY_THRESHOLD)
 				awaken();
-			
+
 			animationFrame = window.requestAnimFrame(frame);
 		}.bind(this);
 
@@ -92,7 +92,7 @@ define(function (require) {
 			if (!playing) {
 				playing = true;
 				/*
-				 * Subtract the last delta so we don't do two frames 
+				 * Subtract the last delta so we don't do two frames
 				 * at the same this.total time after unpausing.
 				 */
 				last = Date.now() - delta;

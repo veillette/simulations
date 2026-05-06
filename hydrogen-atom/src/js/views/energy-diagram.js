@@ -15,7 +15,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EnergyDiagramView = Backbone.View.extend({
 
@@ -53,7 +53,7 @@ define(function(require) {
             this.paddingRight  = options.paddingRight * resolution;
             this.paddingTop    = options.paddingTop * resolution;
             this.paddingBottom = options.paddingBottom * resolution;
-            
+
             var suffix = 'px Helvetica Neue';
             this.levelFont = options.levelFontSize * resolution + suffix;
             this.levelColor = options.levelColor;
@@ -207,8 +207,8 @@ define(function(require) {
             var distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             var phi = Math.atan2(y2 - y1, x2 - x1);
             var period = this.wavelengthToPeriod(wavelength);
-            
-            
+
+
             // Save the context's state before transforming
             ctx.save();
             // And transform so we can paint as though the squiggle is starting
@@ -226,7 +226,7 @@ define(function(require) {
                 color = WavelengthColors.nmToHex(wavelength);
 
             /*
-             * The arrow head is drawn only if the distance between the points is 
+             * The arrow head is drawn only if the distance between the points is
              * large enough to fit both the arrow head and a minimum amount of squiggle.
              * If the distance isn't sufficient, then our squiggle will have no arrow head.
              */
@@ -244,7 +244,7 @@ define(function(require) {
 
             /*
              * The squiggle is a sinusoidal line, with period and amplitude.
-             * If the 2 points are too close together, the sinusoidal nature of 
+             * If the 2 points are too close together, the sinusoidal nature of
              * the line won't be intelligible, so we simply draw a straight line.
              */
             ctx.beginPath();
@@ -323,7 +323,7 @@ define(function(require) {
         getEnergy: function(state) {
             return this._energies[state - 1];
         },
-        
+
         /**
          * Calculates the energy values for a specified number of states.
          *   Optional distortion is applied to increase the space between

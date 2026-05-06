@@ -43,7 +43,7 @@ define(function (require) {
         setReflectivity: function(reflectivity) {
             if (reflectivity < 0 || reflectivity > 1)
                 throw 'Reflectivity not between 0 and 1.0';
-            
+
             this.reflectivity = reflectivity;
         }
 

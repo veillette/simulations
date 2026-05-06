@@ -9,7 +9,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      *
      * Modeled after edu.colorado.phet.ladybugmotion2d.model.LadybugMotionModel
      */
@@ -224,7 +224,7 @@ define(function (require) {
         'Elliptical': LadybugMover.MOTION_TYPE_ELLIPTICAL
     };
 
-    
+
 
 
     return LadybugMover;

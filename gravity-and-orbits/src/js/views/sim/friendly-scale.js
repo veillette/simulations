@@ -19,7 +19,7 @@ define(function(require) {
                 title: 'Friendly Scale',
                 name:  'friendly'
             }, options);
-            
+
             GOSimView.prototype.initialize.apply(this, [ options ]);
         },
 

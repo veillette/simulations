@@ -7,7 +7,7 @@ define(function (require) {
     var Filter = require('models/filter');
 
     /**
-     * 
+     *
      */
     var BandPassFilter = function(low, high) {
         Filter.apply(this, arguments);

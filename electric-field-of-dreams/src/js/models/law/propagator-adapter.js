@@ -7,7 +7,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var PropagatorLawAdapter = function(propagator) {
         this.propagator = propagator;

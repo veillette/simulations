@@ -13,7 +13,7 @@ define(function(require) {
     var html = require('text!templates/seek-bar.html');
 
     /**
-     * 
+     *
      */
     var SeekBarView = Backbone.View.extend({
 

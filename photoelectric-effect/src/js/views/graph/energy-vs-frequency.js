@@ -13,7 +13,7 @@ define(function(require) {
     var FREQUENCY_MULTIPLIER = 1E-15;
 
     /**
-     * 
+     *
      */
     var EnergyVsFrequencyGraphView = GraphView.extend({
 
@@ -68,13 +68,13 @@ define(function(require) {
                     (this.lastFrequencyRecorded > this.kneeFrequency && frequency < this.kneeFrequency)
                 ) {
                     this.points.push(this.createPoint(
-                        this.kneeFrequency, 
+                        this.kneeFrequency,
                         0
                     ));
                 }
 
                 this.points.push(this.createPoint(
-                    frequency, 
+                    frequency,
                     energy
                 ));
 

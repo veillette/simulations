@@ -13,7 +13,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var GeneratorSimView = FaradaySimView.extend({
 
@@ -21,7 +21,7 @@ define(function (require) {
          * Dom event listeners
          */
         events: _.extend(FaradaySimView.prototype.events, {
-            
+
         }),
 
         /**
@@ -75,7 +75,7 @@ define(function (require) {
          */
         resetComponents: function() {
             FaradaySimView.prototype.resetComponents.apply(this);
-            
+
             this.resetBarMagnetControls();
             this.resetPickupCoilControls();
         },

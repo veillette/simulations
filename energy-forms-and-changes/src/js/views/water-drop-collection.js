@@ -26,7 +26,7 @@ define(function(require) {
 
         initGraphics: function() {
             this.graphics = new PIXI.Graphics();
-            
+
             this.displayObject.addChild(this.graphics);
         },
 
@@ -50,7 +50,7 @@ define(function(require) {
 
             graphics.clear();
             graphics.beginFill(Colors.parseHex(Constants.WATER_FILL_COLOR), 1);
-            
+
             for (var i = 0; i < models.length; i++) {
                 var model = models[i];
                 var x = this.mvt.modelToViewDeltaX(model.get('position').x);

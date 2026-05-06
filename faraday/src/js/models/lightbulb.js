@@ -19,7 +19,7 @@ define(function (require) {
 
             /* Determines whether the lightbulb turns off when the current in the coil
              * changes direction.  In some cases (eg, the Generator or AC Electromagnet)
-             * this is the desired behavoir.  In other cases (eg, polarity file of the 
+             * this is the desired behavoir.  In other cases (eg, polarity file of the
              * Bar Magnet) this is not the desired behavior.
              */
             this.offWhenCurrentChangesDirection = false;
@@ -31,11 +31,11 @@ define(function (require) {
          */
         getIntensity: function() {
             var intensity = 0.0;
-            
+
             var currentAmplitude = this.pickupCoilModel.get('currentAmplitude');
-            
+
             if (this.offWhenCurrentChangesDirection && (
-                    (currentAmplitude >  0 && this.previousCurrentAmplitude <= 0) || 
+                    (currentAmplitude >  0 && this.previousCurrentAmplitude <= 0) ||
                     (currentAmplitude <= 0 && this.previousCurrentAmplitude >  0)
                 )) {
                  // Current changed direction, so turn the light off.
@@ -44,14 +44,14 @@ define(function (require) {
             else {
                 // Light intensity is proportional to amplitude of current in the coil.
                 intensity = Math.abs(currentAmplitude);
-                
+
                 // Intensity below the threshold is effectively zero.
                 if (intensity < Constants.CURRENT_AMPLITUDE_THRESHOLD)
                     intensity = 0;
             }
-            
+
             this.previousCurrentAmplitude = currentAmplitude;
-            
+
             return intensity;
         },
 

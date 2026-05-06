@@ -96,7 +96,7 @@ define(function(require) {
         },
 
         /**
-         * Clear all data points that have time values after the 
+         * Clear all data points that have time values after the
          *   specified time.
          */
         clearPointsAfter: function(time) {
@@ -169,7 +169,7 @@ define(function(require) {
          */
         initialize: function(options) {
             DataSeries.prototype.initialize.apply(this, [options]);
-            
+
             if (options && options.maxSize)
                 this.maxSize = options.maxSize;
         },

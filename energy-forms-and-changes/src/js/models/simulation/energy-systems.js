@@ -8,7 +8,7 @@ define(function (require, exports, module) {
     // Common dependencies
     var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
     var Vector2 = require('common/math/vector2');
-    
+
     // Project dependiencies
     var Air = require('models/air');
 
@@ -26,12 +26,12 @@ define(function (require, exports, module) {
 
     var CarouselAnimator = require('models/carousel-animator');
     var Belt             = require('models/belt');
-    
+
     // Constants
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EnergySystemsSimulation = FixedIntervalSimulation.extend({
 
@@ -40,7 +40,7 @@ define(function (require, exports, module) {
             converter: null,
             user: null
         }),
-        
+
         initialize: function(attributes, options) {
             options = options || {};
             options.framesPerSecond = Constants.FRAMES_PER_SECOND;
@@ -53,7 +53,7 @@ define(function (require, exports, module) {
         },
 
         /**
-         * Initializes all the model components necessary for the 
+         * Initializes all the model components necessary for the
          *   simulation to function.
          */
         initComponents: function() {
@@ -169,7 +169,7 @@ define(function (require, exports, module) {
                 activeElementPosition: EnergySystemsSimulation.ENERGY_USER_POSITION
             });
 
-            var activateElement = function(activeElement) { 
+            var activateElement = function(activeElement) {
                 activeElement.activate();
             };
 
@@ -186,10 +186,10 @@ define(function (require, exports, module) {
 
         /**
          * This is called on a reset to set the simulation
-         *   components back to defaults.  The inherited 
+         *   components back to defaults.  The inherited
          *   behavior is to just call initComponents, but
-         *   since we want to manually reset each component 
-         *   in this simulation instead of clearing them 
+         *   since we want to manually reset each component
+         *   in this simulation instead of clearing them
          *   out and starting over, we override this
          *   function.
          */
@@ -250,7 +250,7 @@ define(function (require, exports, module) {
 
             // Transfer energy chunks between elements
             var sourceOutput = this.get('source').extractOutgoingEnergyChunks();
-            this.get('converter').injectEnergyChunks(sourceOutput); 
+            this.get('converter').injectEnergyChunks(sourceOutput);
             var converterOutput = this.get('converter').extractOutgoingEnergyChunks();
             this.get('user').injectEnergyChunks(converterOutput);
 

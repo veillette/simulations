@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
 
@@ -49,7 +49,7 @@ define(function(require) {
          */
         drawSegments: function(width, color) {
             var graphics = this.displayObject;
-            
+
             var segments = this.model.segments;
             var viewPoint;
 
@@ -71,7 +71,7 @@ define(function(require) {
                     viewPoint = this.mvt.modelToView(segments[i].getStart());
                     graphics.drawCircle(viewPoint.x, viewPoint.y, radius);
                 }
-                
+
                 viewPoint = this.mvt.modelToView(segments[i].getFinish());
                 graphics.drawCircle(viewPoint.x, viewPoint.y, radius);
             }

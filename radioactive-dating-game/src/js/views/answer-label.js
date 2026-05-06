@@ -13,7 +13,7 @@ define(function(require) {
     var templateHtml = require('text!radioactive-dating-game/templates/answer-label.html');
 
     /**
-     * 
+     *
      */
     var AnswerLabelView = Backbone.View.extend({
 
@@ -26,7 +26,7 @@ define(function(require) {
             this.simulation = options.simulation;
             this.answer = options.answer;
             this.passed = options.passed;
-            
+
             this.render();
             this.setPosition(options.x, options.y);
         },

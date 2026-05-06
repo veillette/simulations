@@ -26,21 +26,21 @@ define(function (require) {
             // to go to tunnel out.
             tunnelingRegionRadius: Constants.AtomicNucleus.DEFAULT_TUNNELING_REGION_RADIUS,
 
-            // Diameter of the atom, calculated at init and when changes occur. 
+            // Diameter of the atom, calculated at init and when changes occur.
             diameter: undefined,
 
             // Variables that describe and control the decay of the nucleus.
-            
+
             halfLife: 0,
             decayTimeScalingFactor: 1
         }),
 
         init: function() {
             VanillaMotionObject.prototype.init.apply(this, arguments);
-            
+
             this.originalPosition = new Vector2();
         },
-        
+
         onCreate: function(attributes, options) {
             VanillaMotionObject.prototype.onCreate.apply(this, [attributes, options]);
 
@@ -278,7 +278,7 @@ define(function (require) {
 
         /**
          * Convenience method for obtaining the nucleus or nuclei that the specified
-         *   nucleus type will decay into.  Note that the return values are NOT 
+         *   nucleus type will decay into.  Note that the return values are NOT
          *   NECESSARILY what always happens in the real world - they represent the
          *   way this simulation behaves, which is a simplification of real-world
          *   behavior.  Also note that this method may sometimes consider something

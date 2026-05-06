@@ -46,7 +46,7 @@ define(function (require) {
         setLoopArea: function(area) {
             this.set('radius', Math.sqrt(area / Math.PI));
         },
-        
+
         /**
          * Gets the surface area of one loop.
          */

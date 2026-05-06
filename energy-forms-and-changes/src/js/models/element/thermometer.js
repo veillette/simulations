@@ -12,7 +12,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Thermometer = MovableElement.extend({
 
@@ -28,7 +28,7 @@ define(function (require) {
             //   temperature at a specific location.
             attached: false
         }),
-        
+
         initialize: function(attributes, options) {
             options = options || {};
 

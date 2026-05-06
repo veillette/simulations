@@ -47,7 +47,7 @@ define(function (require) {
                 var cnt = 0;
                 if (_.isNumber(photonCount))
                     cnt = photonCount;
-                
+
                 cnt++;
                 this.wavelengthToPhotonNumberMap['' + wavelength] = cnt;
             }

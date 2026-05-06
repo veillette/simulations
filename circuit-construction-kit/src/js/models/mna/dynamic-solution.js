@@ -4,7 +4,7 @@ define(function (require) {
 
     var _    = require('underscore');
     var Pool = require('object-pool');
-    
+
     var pool = Pool({
         init: function() {
             return new DynamicSolution();

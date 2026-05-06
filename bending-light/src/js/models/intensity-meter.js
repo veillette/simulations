@@ -28,7 +28,7 @@ define(function (require) {
     });
 
     /**
-     * 
+     *
      */
     var IntensityMeter = Backbone.Model.extend({
 
@@ -39,7 +39,7 @@ define(function (require) {
             sensorRadius: 1.5e-6,
             reading: null
         },
-        
+
         initialize: function(attributes, options) {
             // Create vectors
             this.set('bodyPosition',   vectorPool.create().set(this.get('bodyPosition')));
@@ -91,14 +91,14 @@ define(function (require) {
                 this.set('bodyPosition', newBodyPosition.add(x));
             else
                 this.set('bodyPosition', newBodyPosition.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldBodyPosition);
         },
 
         setBodyPosition: function(x, y) {
             var oldBodyPosition = this.get('bodyPosition');
-            
+
             if (x instanceof Vector2)
                 this.set('bodyPosition', vectorPool.create().set(x));
             else
@@ -124,14 +124,14 @@ define(function (require) {
                 this.set('sensorPosition', newSensorPosition.add(x));
             else
                 this.set('sensorPosition', newSensorPosition.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldSensorPosition);
         },
 
         setSensorPosition: function(x, y) {
             var oldSensorPosition = this.get('sensorPosition');
-            
+
             if (x instanceof Vector2)
                 this.set('sensorPosition', vectorPool.create().set(x));
             else

@@ -7,7 +7,7 @@ define(function (require) {
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var SimplePatchWireRegion = function(wirePatch) {
         this.wirePatch = wirePatch;

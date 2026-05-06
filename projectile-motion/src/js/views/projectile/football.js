@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var Football = require('models/projectile/football');
 
     var ProjectileView = require('views/projectile');
@@ -16,7 +16,7 @@ define(function(require) {
             sprite.anchor.y = 0.5;
             return sprite;
         },
-        
+
         createRestingProjectileSprite: function() {
             return this.createProjectileSprite();
         },

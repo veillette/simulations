@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -16,9 +16,9 @@ define(function(require) {
      * An equipotential plot (or a contour plot) draws a curve connecting
      *   every point where the value is the same--where in this case the
      *   voltage is the same.  For example, if the voltage tool were over
-     *   a spot near a single positive charge where the voltage was 12 V, 
+     *   a spot near a single positive charge where the voltage was 12 V,
      *   and the user pressed the plot button to create an equipotential
-     *   plot, a ring would be drawn around the positive charge showing 
+     *   plot, a ring would be drawn around the positive charge showing
      *   every point where the voltage is 12 V around it.
      *
      * The draw function here is based off of the GUI.traceV function in
@@ -48,7 +48,7 @@ define(function(require) {
         },
 
         /**
-         * This function assumes the simulation has charges.  If the 
+         * This function assumes the simulation has charges.  If the
          *   simulation does not have charges, we shouldn't be creating
          *   an equipotential plot.
          */
@@ -106,20 +106,20 @@ define(function(require) {
                 graphics.moveTo(mvt.modelToViewX(currXB), mvt.modelToViewY(currYB));
                 graphics.lineTo(mvt.modelToViewX(nextXB), mvt.modelToViewY(nextYB));
 
-                if (readyToBreak) 
+                if (readyToBreak)
                     break;
 
                 distSq = (nextXA - nextXB) * (nextXA - nextXB) + (nextYA - nextYB) * (nextYA - nextYB);
 
                 // If A and B lines meet up, make one more pass through drawing loop to close up curve
                 if (distSq < stoppingDistance)
-                    readyToBreak = true; 
+                    readyToBreak = true;
 
                 currXA = nextXA;
                 currYA = nextYA;
                 currXB = nextXB;
                 currYB = nextYB;
-                
+
                 tic++;
             }
 

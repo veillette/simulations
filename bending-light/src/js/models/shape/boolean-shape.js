@@ -37,9 +37,9 @@ define(function (require) {
             clipper.AddPath(bPath, ClipperLib.PolyType.ptClip,    true);
 
             var succeeded = clipper.Execute(
-                clipperClipType, 
-                solutionPaths, 
-                ClipperLib.PolyFillType.pftNonZero, 
+                clipperClipType,
+                solutionPaths,
+                ClipperLib.PolyFillType.pftNonZero,
                 ClipperLib.PolyFillType.pftNonZero
             );
 
@@ -86,7 +86,7 @@ define(function (require) {
 
             for (var i = 0; i < clipperPath.length; i++) {
                 points.push(new Vector2(
-                    clipperPath[i].X, 
+                    clipperPath[i].X,
                     clipperPath[i].Y
                 ));
             }

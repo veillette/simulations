@@ -19,7 +19,7 @@ define(function(require) {
     var html = require('text!radioactive-dating-game/templates/answer-input.html');
 
     /**
-     * 
+     *
      */
     var AnswerInputView = Backbone.View.extend({
 
@@ -92,9 +92,9 @@ define(function(require) {
             if (itemBeingTouched && itemBeingTouched !== DatableItem.DATABLE_AIR && measurementMode === RadiometricDatingMeter.OBJECTS) {
                 // Move it into position
                 var position = this.findSpotForWindow(itemBeingTouched);
-                this.$el.css({ 
-                    left: position.x + 'px', 
-                    top: position.y + 'px' 
+                this.$el.css({
+                    left: position.x + 'px',
+                    top: position.y + 'px'
                 });
 
                 // Change name
@@ -112,7 +112,7 @@ define(function(require) {
         },
 
         /**
-         * Finds a location in the scene near the specified object.  This is necessary 
+         * Finds a location in the scene near the specified object.  This is necessary
          *   prevent the view from going off the sides or the top/bottom of the scene.
          */
         findSpotForWindow: function(item) {

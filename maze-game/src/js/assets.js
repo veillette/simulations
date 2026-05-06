@@ -7,7 +7,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         FLOOR:            'floor',
         WALL:             'wall',
         WALL_SHADOW:      'wall-shadow',

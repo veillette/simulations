@@ -7,7 +7,7 @@ define(function(require) {
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     var AtomicModelView = require('hydrogen-atom/views/atomic-model');
-    
+
     /**
      * Represents the scene for the BohrModel
      */
@@ -41,7 +41,7 @@ define(function(require) {
             var atomPosition = this.getViewPosition();
             this.protonSprite.x = atomPosition.x;
             this.protonSprite.y = atomPosition.y;
-            
+
             this.displayObject.addChild(this.electronSprite);
             this.displayObject.addChild(this.protonSprite);
         },

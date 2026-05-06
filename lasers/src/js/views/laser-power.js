@@ -9,11 +9,11 @@ define(function(require) {
     var Constants = require('constants');
 
     var html = require('text!templates/laser-power.html');
-    
+
     require('less!styles/laser-power');
 
     /**
-     * 
+     *
      */
     var LaserPowerView = Backbone.View.extend({
 
@@ -86,7 +86,7 @@ define(function(require) {
         updateBar: function($container, percent, simple) {
             if (percent === 0)
                 return;
-            
+
             var segments = $container.segments;
             var lasingPercent = this.getLasingPercent();
             var dangerPercent = this.getDangerPercent();
@@ -128,7 +128,7 @@ define(function(require) {
             var count = lasingPhotons.length;
             var internalPowerPercent = count / Constants.KABOOM_THRESHOLD;
             var outputPowerPercent = (count / Constants.KABOOM_THRESHOLD) * (1 - this.simulation.rightMirror.getReflectivity());
-            
+
             this.updateBar(this.$internalPowerMeter, internalPowerPercent, false);
             this.updateBar(this.$outputPowerMeter, outputPowerPercent, true);
         }

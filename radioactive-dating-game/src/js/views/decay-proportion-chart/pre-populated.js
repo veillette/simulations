@@ -40,10 +40,10 @@ define(function(require) {
          */
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
-            DatableItemDecayProportionChartView.prototype.initialize.apply(this, [options]);       
+            DatableItemDecayProportionChartView.prototype.initialize.apply(this, [options]);
         },
 
         /**
@@ -149,7 +149,7 @@ define(function(require) {
             graphics.beginFill(INFO_BOX_BG_COLOR, PrePopulatedDatableItemDecayProportionChartView.INFO_BOX_BG_ALPHA);
             graphics.drawRoundedRect(-boxWidth / 2, boxBottomY - boxHeight, boxWidth, boxHeight, PrePopulatedDatableItemDecayProportionChartView.INFO_BOX_RADIUS);
             graphics.endFill();
-            
+
             graphics.lineStyle(0, 0, 0);
             graphics.beginFill(color, 1);
             graphics.drawCircle(0, circleY, ballRadius);
@@ -197,7 +197,7 @@ define(function(require) {
         },
 
         update: function(time, deltaTime, paused) {
-            
+
         },
 
         updateLayout: function() {
@@ -302,7 +302,7 @@ define(function(require) {
                 element = '?';
                 number = '';
             }
-            
+
             this.infoIsotopeNumberLabel.text = number;
             this.infoIsotopeLabel.text = element + ':';
 

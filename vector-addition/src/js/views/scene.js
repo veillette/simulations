@@ -9,7 +9,7 @@ define(function(require) {
   var AppView       = require('common/v3/app/app');
   var Vector2       = require('common/math/vector2');
   var Rectangle     = require('common/math/rectangle');
-  
+
   var VectorBinView = require('views/vector-bin');
   var TrashCanView  = require('views/trash-can');
   var SumVectorView = require('views/sum-vector');

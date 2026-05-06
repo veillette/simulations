@@ -16,7 +16,7 @@ define(function (require) {
         },
 
         initialize: function(attributes, options) {
-            
+
         }
     }, Constants.Circuit);
 

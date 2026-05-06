@@ -4,7 +4,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2      = require('common/math/vector2');
     var Pool         = require('object-pool');
     var MotionObject = require('common/models/motion-object');
@@ -31,7 +31,7 @@ define(function (require) {
      * Represents a body with mass moving in space.
      */
     var Body = MotionObject.extend({
-        
+
         defaults: _.extend({}, MotionObject.prototype.defaults, {
             momentum: null,
             mass: 1,
@@ -85,12 +85,12 @@ define(function (require) {
         },
 
         /**
-         * Function that facilitates setting the momentum vector 
+         * Function that facilitates setting the momentum vector
          *   while still triggering a change event.
          */
         setMomentum: function(x, y, options) {
             var oldMomentum = this.get('momentum');
-            
+
             if (x instanceof Vector2)
                 this.set('momentum', vectorPool.create().set(x), y);
             else
@@ -126,12 +126,12 @@ define(function (require) {
                 this.set('momentum', newMomentum.add(x), y);
             else
                 this.set('momentum', newMomentum.add(x, y), options);
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldMomentum);
         },
 
-        /** 
+        /**
          * Avoid memory leaks from the pool.
          */
         destroy: function(options) {

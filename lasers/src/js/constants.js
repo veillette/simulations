@@ -6,7 +6,7 @@ define(function (require) {
 
     var DEG_TO_RAD = Math.PI / 180;
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -46,7 +46,7 @@ define(function (require) {
     var simSecondsPerRealSecond = (Constants.FPS * Constants.DT) / 1000;
 	Constants.MINIMUM_GROUND_STATE_LIFETIME = 200 * simSecondsPerRealSecond;
 
-    // Angle within which a photon is considered to be moving horizontally. This 
+    // Angle within which a photon is considered to be moving horizontally. This
     //   is used by the mirrors to "cheat" photons into lasing, and by the wave
     //   graphic to determine its amplitude
     Constants.PHOTON_CHEAT_ANGLE = 3 * DEG_TO_RAD;

@@ -8,7 +8,7 @@ define(function (require) {
     var Colors           = require('common/colors/colors');
     var range            = require('common/math/range');
 
-    var Constants = require('nuclear-physics/constants'); 
+    var Constants = require('nuclear-physics/constants');
 
     var DEG_TO_RAD = Math.PI / 180;
 
@@ -96,11 +96,11 @@ define(function (require) {
      **                         UNIVERSAL CONSTANTS                         **
      **                                                                     **
      *************************************************************************/
-    
+
     //----------------------------------------------------------------------------
     // Dimensions
     //----------------------------------------------------------------------------
-    
+
     Constants.CANVAS_RENDERING_SIZE = new Dimension(750, 750);
     // Animation box size, must be square!
     Constants.ANIMATION_BOX_SIZE = new Dimension(475, 475);
@@ -108,44 +108,44 @@ define(function (require) {
     Constants.BOX_OF_HYDROGEN_SIZE = new Dimension(70, 70);
     Constants.BOX_OF_HYDROGEN_DEPTH = 10;
     Constants.BEAM_SIZE = new Dimension((0.75 * Constants.BOX_OF_HYDROGEN_SIZE.width), 75);
-    
+
     // Spectrometer
     Constants.SPECTROMETER_SIZE = new Dimension(500, 210);
-    
+
     //----------------------------------------------------------------------------
     // Clock
     //----------------------------------------------------------------------------
-    
+
     Constants.FRAME_RATE = 25; // fps, frames per second (wall time)
-    
+
     // The clock control area has a slider for choosing a clock "speed".
     // These are the clock steps that correspond to each speed setting.
     Constants.DELTA_TIMES_PER_FRAME = [
         0.5, 2, 6
     ];
     Constants.DEFAULT_DELTA_TIME_PER_FRAME = Constants.DELTA_TIMES_PER_FRAME[1];
-    
+
     // Color for photon used on controls & in legends
     Constants.PHOTON_ICON_WAVELENGTH = 600; // nm
-    
+
     //----------------------------------------------------------------------------
     // Model
     //----------------------------------------------------------------------------
-    
+
     Constants.MIN_WAVELENGTH = 92;
     Constants.MAX_WAVELENGTH = WavelengthColors.MAX_WAVELENGTH;
     Constants.WHITE_WAVELENGTH = 0;
-    
+
     Constants.PHOTON_INITIAL_SPEED = 5; // distance moved per dt
     Constants.ALPHA_PARTICLE_INITIAL_SPEED = 5; // distance moved per dt
     Constants.NUCLEON_DIAMETER = 0.95;
     Constants.PHOTON_DIAMETER = 24;
     Constants.ELECTRON_HOLYWOOD_DIAMETER = 8;
-    
+
     //----------------------------------------------------------------------------
     // Ranges
     //----------------------------------------------------------------------------
-    
+
     Constants.SPECTROMETER_MIN_WAVELENGTH = Constants.MIN_WAVELENGTH;
     Constants.SPECTROMETER_MAX_WAVELENGTH = 7500; // nm
 
@@ -166,7 +166,7 @@ define(function (require) {
 
     AbstractAtomicModel.COLLISION_CLOSENESS = (Constants.PHOTON_DIAMETER / 2) + (Constants.ELECTRON_HOLYWOOD_DIAMETER / 2);
     AbstractAtomicModel.GROUND_STATE = 1;
-    
+
     Constants.AbstractAtomicModel = AbstractAtomicModel;
 
 
@@ -177,12 +177,12 @@ define(function (require) {
      *************************************************************************/
 
     var BilliardBallModel = {};
-    
+
     BilliardBallModel.DEFAULT_RADIUS = 30;
     BilliardBallModel.MIN_DEFLECTION_ANGLE = 120 * DEG_TO_RAD;
     BilliardBallModel.MAX_DEFLECTION_ANGLE = 170 * DEG_TO_RAD;
     BilliardBallModel.DEFLECTION_ANGLE_RANGE = range({ min: BilliardBallModel.MIN_DEFLECTION_ANGLE, max: BilliardBallModel.MAX_DEFLECTION_ANGLE });
-    
+
     Constants.BilliardBallModel = BilliardBallModel;
 
 
@@ -193,7 +193,7 @@ define(function (require) {
      *************************************************************************/
 
     var PlumPuddingModel = {};
-    
+
     // default radius of the atom, tweaked to match PlumPuddingNode image
     PlumPuddingModel.DEFAULT_RADIUS = 30;
     // maximum number of photons that can be absorbed
@@ -206,7 +206,7 @@ define(function (require) {
     PlumPuddingModel.PHOTON_ABSORPTION_PROBABILITY = 0.5; // 1.0 = 100%
     // number of discrete steps in the electron line
     PlumPuddingModel.ELECTRON_LINE_SEGMENTS = 30;
-    
+
     Constants.PlumPuddingModel = PlumPuddingModel;
 
 
@@ -217,13 +217,13 @@ define(function (require) {
      *************************************************************************/
 
     var SolarSystemModel = {};
-    
+
     /*
-     * NOTE! Tweak these VERY carefully, and test often! 
-     * They must be set so that the atom is destroyed before 
+     * NOTE! Tweak these VERY carefully, and test often!
+     * They must be set so that the atom is destroyed before
      * any photons or alpha particles reach it.
      */
-    
+
     // initial distance between electron and proton
     SolarSystemModel.ELECTRON_DISTANCE = 150;
     // amount the distance between the proton and electron is reduce per dt
@@ -234,7 +234,7 @@ define(function (require) {
     SolarSystemModel.ELECTRON_ANGLE_DELTA = 16 * DEG_TO_RAD;
     // scaling of electron's rotation delta
     SolarSystemModel.ELECTRON_ACCELERATION = 1.008;
-    
+
     Constants.SolarSystemModel = SolarSystemModel;
 
 
@@ -249,7 +249,7 @@ define(function (require) {
     // used to turn off aspects of this model from the Developer Controls dialog
     BohrModel.DEBUG_ABSORPTION_ENABLED = true;
     BohrModel.DEBUG_SPONTANEOUS_EMISSION_ENABLED = true;
-    BohrModel.DEBUG_STIMULATED_EMISSION_ENABLED = true; 
+    BohrModel.DEBUG_STIMULATED_EMISSION_ENABLED = true;
     // enabled debugging output
     BohrModel.DEBUG_OUTPUT_ENABLED = false;
 
@@ -298,10 +298,10 @@ define(function (require) {
     SchroedingerModel.DEBUG_REJECTED_TRANSITIONS = false;
     /*
      * This table defines the transition strengths for the primary state component (n).
-     * Some of the entries in this table are non-sensical, but their strengths are 
+     * Some of the entries in this table are non-sensical, but their strengths are
      * zero and it helps to have a symmetrical table.  This table was taken from
      * the simulation design document.
-     * 
+     *
      * Here's an example that shows how the table is indexed:
      * TRANSITION_STRENGTH[5][0] is the transition strength from n=6 to n=1
      */
@@ -365,7 +365,7 @@ define(function (require) {
 
     Constants.MetastableHandler = MetastableHandler;
 
-    
+
 
     /*************************************************************************
      **                                                                     **
@@ -385,8 +385,8 @@ define(function (require) {
     DeBroglieModelBrightnessSubView.MINUS_COLOR = '#000';
     // color used when amplitude = 0
     DeBroglieModelBrightnessSubView.ZERO_COLOR = Colors.interpolateHex(
-        DeBroglieModelBrightnessSubView.MINUS_COLOR, 
-        DeBroglieModelBrightnessSubView.PLUS_COLOR, 
+        DeBroglieModelBrightnessSubView.MINUS_COLOR,
+        DeBroglieModelBrightnessSubView.PLUS_COLOR,
         0.5
     );
 
@@ -417,7 +417,7 @@ define(function (require) {
 
     var DeBroglieModel3DSubView = {};
 
-    // How much to scale the orbit in the y dimension, in order to 
+    // How much to scale the orbit in the y dimension, in order to
     //   create an ellipse that represents the projection of the 3D orbit into 3D.
     //   See debugOrbitProjections method.
     //   If you change this value, you must also change FINAL_VIEW_ANGLE !!
@@ -430,12 +430,12 @@ define(function (require) {
     DeBroglieModel3DSubView.FINAL_VIEW_ANGLE = 70; // degrees, rotation about the x-axis
     // change is angle during view animation
     DeBroglieModel3DSubView.VIEW_ANGLE_DELTA = 5; // degrees
-    
+
     // DeBroglieModel3DSubView.ORBIT_VERTICIES = 200;
     // DeBroglieModel3DSubView.ORBIT_LINE_WIDTH = 1;
     // DeBroglieModel3DSubView.ORBIT_FRONT_COLOR = '#fff';
     // DeBroglieModel3DSubView.ORBIT_BACK_COLOR = '#eee';
-    
+
     DeBroglieModel3DSubView.WAVE_VERTICIES = 200;
     DeBroglieModel3DSubView.WAVE_LINE_WIDTH = 2;
     DeBroglieModel3DSubView.WAVE_COLOR = Constants.ELECTRON_COLOR;
@@ -454,31 +454,31 @@ define(function (require) {
     // Animation box dimensions, for convenience
     SchroedingerModelView.BOX_WIDTH = Constants.ANIMATION_BOX_SIZE.width;
     SchroedingerModelView.BOX_HEIGHT = Constants.ANIMATION_BOX_SIZE.height;
-        
+
     // Resolution of the grid, which covers 1/8 of the 3D space
     SchroedingerModelView.NUMBER_OF_HORIZONTAL_CELLS = 40;
     SchroedingerModelView.NUMBER_OF_VERTICAL_CELLS = SchroedingerModelView.NUMBER_OF_HORIZONTAL_CELLS;
     SchroedingerModelView.NUMBER_OF_DEPTH_CELLS = SchroedingerModelView.NUMBER_OF_HORIZONTAL_CELLS;
-    
+
     // 3D cell size
     SchroedingerModelView.CELL_WIDTH  = (Constants.ANIMATION_BOX_SIZE.width  / SchroedingerModelView.NUMBER_OF_HORIZONTAL_CELLS) / 2;
     SchroedingerModelView.CELL_HEIGHT = (Constants.ANIMATION_BOX_SIZE.height / SchroedingerModelView.NUMBER_OF_VERTICAL_CELLS) / 2;
     SchroedingerModelView.CELL_DEPTH  = (Constants.ANIMATION_BOX_SIZE.height / SchroedingerModelView.NUMBER_OF_DEPTH_CELLS) / 2;
-    
+
     // colors used to represent probability density -- MUST BE OPAQUE!
     SchroedingerModelView.MAX_RGBA = Colors.hexToRgb('#00C9FF'/*Constants.ELECTRON_COLOR*/);
     SchroedingerModelView.MAX_RGBA.a = 255;
     SchroedingerModelView.MIN_RGBA = Colors.hexToRgb('#000');
     SchroedingerModelView.MIN_RGBA.a = 0;
-        
+
     // margin between axes and animation box
     SchroedingerModelView.AXES_MARGIN = 20;
     SchroedingerModelView.HORIZONTAL_AXIS_LABEL = 'x';
     SchroedingerModelView.VERTICAL_AXIS_LABEL = 'z';
-    
+
     // margin between the state display and animation box
     SchroedingerModelView.STATE_MARGIN = 15;
-    
+
     // Should the brightness cache be fully populated the first time we visit Schrodinger?
     // DANGER! Fully populating the cache can take ~15 seconds!
     SchroedingerModelView.POPULATE_CACHE = false;
@@ -504,7 +504,7 @@ define(function (require) {
     EnergyDiagramView.SQUIGGLE_LINE_WIDTH = 1;
     EnergyDiagramView.SQUIGGLE_ARROW_HEAD_WIDTH = 20;
     EnergyDiagramView.SQUIGGLE_ARROW_HEAD_HEIGHT = 10;
-    
+
     EnergyDiagramView.UV_SQUIGGLE_PERIOD = 8; // pixels
     EnergyDiagramView.MIN_VISIBLE_SQUIGGLE_PERIOD = 10; // pixels
     EnergyDiagramView.MAX_VISIBLE_SQUIGGLE_PERIOD = 20; // pixels

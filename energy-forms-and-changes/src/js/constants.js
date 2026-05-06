@@ -17,7 +17,7 @@ define(function (require) {
      **                                                                     **
      *************************************************************************/
 
-    var Constants = {}; 
+    var Constants = {};
 
     Constants.ROOM_TEMPERATURE           = 296;    // In Kelvin.
     Constants.FREEZING_POINT_TEMPERATURE = 273.15; // In Kelvin.
@@ -39,7 +39,7 @@ define(function (require) {
     Constants.PERSPECTIVE_ANGLE = Math.atan2(-Constants.Z_TO_Y_OFFSET_MULTIPLIER, -Constants.Z_TO_X_OFFSET_MULTIPLIER);
     Constants.PERSPECTIVE_EDGE_PROPORTION = Math.sqrt(
         Math.pow(Constants.Z_TO_X_OFFSET_MULTIPLIER, 2) +
-        Math.pow(Constants.Z_TO_Y_OFFSET_MULTIPLIER, 2) 
+        Math.pow(Constants.Z_TO_Y_OFFSET_MULTIPLIER, 2)
     );
 
     // For comparing temperatures.
@@ -82,7 +82,7 @@ define(function (require) {
      */
     IntroSimulation.MIN_INTER_ELEMENT_DISTANCE = 1E-9; // In meters
 
-    /** 
+    /**
      * Threshold of temperature difference between the bodies in a multi-body
      *   system below which energy can be exchanged with air.
      */
@@ -92,7 +92,7 @@ define(function (require) {
     IntroSimulation.INITIAL_THERMOMETER_LOCATION = new Vector2( 100, 100 );
 
     IntroSimulation.NUM_THERMOMETERS = 3;
-    
+
     IntroSimulation.BEAKER_WIDTH = 0.085; // In meters.
     IntroSimulation.BEAKER_HEIGHT = IntroSimulation.BEAKER_WIDTH * 1.1;
 
@@ -129,7 +129,7 @@ define(function (require) {
      *************************************************************************/
 
     var Block = {};
-    
+
     // Height and width of all block surfaces, since it is a cube.
     Block.SURFACE_WIDTH = 0.045; // In meters
     // Number of slices where energy chunks may be placed.
@@ -142,7 +142,7 @@ define(function (require) {
 
     BlockView.PERSPECTIVE_ANGLE = Math.atan2(-Constants.Z_TO_Y_OFFSET_MULTIPLIER, -Constants.Z_TO_X_OFFSET_MULTIPLIER);
     BlockView.PERSPECTIVE_EDGE_PROPORTION = Math.sqrt(
-        Math.pow(Constants.Z_TO_X_OFFSET_MULTIPLIER, 2) + Math.pow(Constants.Z_TO_Y_OFFSET_MULTIPLIER, 2) 
+        Math.pow(Constants.Z_TO_X_OFFSET_MULTIPLIER, 2) + Math.pow(Constants.Z_TO_Y_OFFSET_MULTIPLIER, 2)
     );
     BlockView.LINE_WIDTH = 3;
 
@@ -171,7 +171,7 @@ define(function (require) {
 
     var BrickView = {};
 
-    BrickView.FILL_COLOR = '#d6492e'; 
+    BrickView.FILL_COLOR = '#d6492e';
     BrickView.TEXT_COLOR = '#000';
 
     Constants.BrickView = BrickView;
@@ -307,7 +307,7 @@ define(function (require) {
      *************************************************************************/
 
     var ThermometerView = {};
-    
+
     ThermometerView.NUM_TICK_MARKS = 13;
     ThermometerView.TICK_MARK_THICKNESS = 2; // pixels
     ThermometerView.LIQUID_COLOR = '#ed1c24';
@@ -334,7 +334,7 @@ define(function (require) {
     // 2D size of the air.  It is sized such that it will extend off the left,
     // right, and top edges of screen for the most common aspect ratios of the
     // view.
-    Air.WIDTH  = 0.7; 
+    Air.WIDTH  = 0.7;
     Air.HEIGHT = 0.3;
 
     // The thickness of the slice of air being modeled.  This is basically the
@@ -359,7 +359,7 @@ define(function (require) {
      **                             ENERGY TYPES                            **
      **                                                                     **
      *************************************************************************/
-    
+
     Constants.EnergyTypes = {
         THERMAL:    0,
         ELECTRICAL: 1,
@@ -402,12 +402,12 @@ define(function (require) {
     Constants.ENERGY_PER_CHUNK = Constants.numChunksToEnergy(2) - Constants.numChunksToEnergy(1);
 
     var EnergyChunkCollectionView = {};
-    
+
     EnergyChunkCollectionView.Z_DISTANCE_WHERE_FULLY_FADED = 0.1; // In meters
     EnergyChunkCollectionView.WIDTH = 0.012; // In meters
 
     Constants.EnergyChunkCollectionView = EnergyChunkCollectionView;
-    
+
 
     /*************************************************************************
      **                                                                     **
@@ -463,7 +463,7 @@ define(function (require) {
      *************************************************************************/
 
     /**
-     * Constants that control the rate of heat transfer between the various 
+     * Constants that control the rate of heat transfer between the various
      * elements that can contain heat and maps for looking up transfer
      * rates for any two model elements that are capable of exchanging heat.
      *
@@ -691,7 +691,7 @@ define(function (require) {
     SunView.PANEL_WIDTH  = 0.065;
     SunView.PANEL_HEIGHT = 0.088;
     SunView.PANEL_OFFSET = new Vector2(-0.05, 0.035);
-    
+
     SunView.SLIDER_WIDTH = 8;
     SunView.SLIDER_BG_FILL_TOP = '#444';
     SunView.SLIDER_BG_FILL_BOTTOM = '#fff';

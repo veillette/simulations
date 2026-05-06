@@ -35,7 +35,7 @@ define(function (require) {
             // Save the initial y
             this._initialY = this.getY();
             // Distance from top of arc to final y
-            this._totalArcHeight = AgingRock.FIRST_PART_ARC_HEIGHT - (AgingRock.FINAL_Y - this.getY()); 
+            this._totalArcHeight = AgingRock.FIRST_PART_ARC_HEIGHT - (AgingRock.FINAL_Y - this.getY());
             // Calculate the amount of growth needed per step in order to reach
             //   the right size by the end of the flight.
             this._growthPerStep = Math.pow(AgingRock.FINAL_ROCK_WIDTH / this.get('width'), 1 / AgingRock.FLY_COUNT);
@@ -96,10 +96,10 @@ define(function (require) {
                 // Grow
                 this.set('width',  this.get('width')  * this._growthPerStep);
                 this.set('height', this.get('height') * this._growthPerStep);
-                
+
                 // Rotate
                 this.rotate(AgingRock.ROTATION_PER_STEP);
-                
+
                 // Move to the next step
                 this._flyCounter--;
 
@@ -152,7 +152,7 @@ define(function (require) {
         getYFromEquation: function(x, h, k, a) {
             // This is a parabolic equation where x represents the time as a proportion
             //   of the current step vs the total number of steps in the animation and
-            //   where x = 1 finds us at the resting y value, which is zero.  
+            //   where x = 1 finds us at the resting y value, which is zero.
             var y = a * Math.pow(x - h, 2) + k;
             return y;
         },

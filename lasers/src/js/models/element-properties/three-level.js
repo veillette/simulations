@@ -9,7 +9,7 @@ define(function (require) {
     var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
 
     var LaserElementProperties = require('../laser-element-properties');
-    
+
     var Constants = require('../../constants');
     var groundStateEnergy = -13.6;
 

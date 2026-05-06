@@ -9,7 +9,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
 
     var Constants = require('constants');
@@ -18,7 +18,7 @@ define(function(require) {
     var Assets = require('assets');
 
     /**
-     * 
+     *
      */
     var ScreenView = PixiView.extend({
 
@@ -121,7 +121,7 @@ define(function(require) {
             var centerPercent = (xOffset - ScreenView.MASK_TL_CORNER.x) / (ScreenView.MASK_TR_CORNER.x - ScreenView.MASK_TL_CORNER.x);
             var topCenter    = ScreenView.MASK_TL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_TR_CORNER.y * centerPercent;
             var bottomCenter = ScreenView.MASK_BL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_BR_CORNER.y * centerPercent;
-            
+
             this.backMask.beginFill(0xFF0000, 0.8);
             this.backMask.moveTo(ScreenView.MASK_TL_CORNER.x - xOffset, ScreenView.MASK_TL_CORNER.y - yOffset);
             this.backMask.lineTo(0, topCenter - yOffset);

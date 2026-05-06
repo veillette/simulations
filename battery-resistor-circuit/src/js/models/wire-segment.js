@@ -7,7 +7,7 @@ define(function (require) {
     var Vector2 = require('common/math/vector2');
 
     /**
-     * 
+     *
      */
     var WireSegment = function(start, finish, scalarStart) {
         this.start = new Vector2(start);

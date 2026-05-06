@@ -11,7 +11,7 @@ define(function(require) {
     var Constants = require('../constants');
 
     /**
-     * 
+     *
      */
     var TubeView = PixiView.extend({
 

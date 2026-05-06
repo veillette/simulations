@@ -111,7 +111,7 @@ define(function(require) {
                 graphics.beginFill(0xFF0000, 1);
                 graphics.drawRect(this.getLeftPadding(), this.getTopPadding(), this.getAvailableWidth(), this.getAvailableHeight());
                 graphics.endFill();
-                this.stage.addChild(graphics);    
+                this.stage.addChild(graphics);
             }
         },
 
@@ -184,11 +184,11 @@ define(function(require) {
 
             if (AppView.windowIsShort()) {
                 var left = this.atomCanisterView.displayObject.x + this.atomCanisterView.width / 2;
-                this.$bucketButtonsWrapper.css('left', left + 'px'); 
+                this.$bucketButtonsWrapper.css('left', left + 'px');
             }
             else {
                 var right = this.width - this.atomCanisterView.displayObject.x - this.atomCanisterView.width / 2;
-                this.$bucketButtonsWrapper.css('right', right + 'px');    
+                this.$bucketButtonsWrapper.css('right', right + 'px');
             }
 
             // Calculate the bounds of the areas to be avoided when placing atoms
@@ -209,7 +209,7 @@ define(function(require) {
                     graphics.drawRect(viewArea.x, viewArea.y, viewArea.w, viewArea.h);
                 }
                 graphics.endFill();
-                this.stage.addChild(graphics);    
+                this.stage.addChild(graphics);
             }
 
             this.canisterLayer.addChild(this.atomCanisterView.displayObject);
@@ -217,7 +217,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
-            
+
             this.nucleusDecayChart.update(time, deltaTime, paused);
             this.atomCanisterView.update(time, deltaTime, paused);
 

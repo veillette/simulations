@@ -41,7 +41,7 @@ define(function (require) {
          * @return Vector2 the B-field vector
          */
         getBField: function(point) {
-            /* 
+            /*
              * Our models are based a magnet located at the origin, with the north pole
              *   pointing down the positive x-axis.  The point we receive is in global
              *   space, so transform the point to the magnet's local coordinate system,
@@ -55,8 +55,8 @@ define(function (require) {
                 .set(point)
                 .sub(this.get('position'))
                 .rotate(-this.get('direction'));
-                
-            
+
+
             // Get strength in magnet's local coordinate frame
             var bField = this.getBFieldRelative(relativePoint);
 

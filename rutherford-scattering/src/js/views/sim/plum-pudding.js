@@ -16,7 +16,7 @@ define(function(require) {
     var PlumPuddingView = RutherfordScatteringSimView.extend({
 
         events: _.extend(RutherfordScatteringSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {
@@ -26,7 +26,7 @@ define(function(require) {
             }, options);
 
             this.showAtomProperties = false;
-            
+
             RutherfordScatteringSimView.prototype.initialize.apply(this, [ options ]);
         },
 

@@ -131,10 +131,10 @@ define(function (require) {
 
 
     DatableItem.DATABLE_AIR = new DatableItem({
-        name: 'Datable Air', 
-        width: 0, 
-        rotation: 0, 
-        age: 0, 
+        name: 'Datable Air',
+        width: 0,
+        rotation: 0,
+        age: 0,
         isOrganic: true
     });
 

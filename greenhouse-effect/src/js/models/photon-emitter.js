@@ -5,7 +5,7 @@ define(function (require) {
     var Backbone = require('backbone');
 
     /**
-     * 
+     *
      */
     var PhotonEmitter = Backbone.Model.extend({
 

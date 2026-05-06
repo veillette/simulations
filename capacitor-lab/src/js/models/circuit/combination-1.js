@@ -12,7 +12,7 @@ define(function (require) {
 
     /**
      * Model of a circuit with a battery (B), 2 capacitors in series (C1, C2), and one additional in parallel (C3).
-     * 
+     *
      *   |-----|------|
      *   |     |      |
      *   |     C1     |
@@ -22,7 +22,7 @@ define(function (require) {
      *   |     C2     |
      *   |     |      |
      *   |-----|------|
-     * 
+     *
      * At first glance, this class appears to duplicate code from Combination2Circuit. But there are subtle
      *   differences, and the commonalities are only due to coincidences in the how the components are numbered
      *   in the circuit diagram.  It would be a mistake to extract common functionality based on these factors,

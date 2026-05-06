@@ -12,7 +12,7 @@ define(function (require) {
     var Core                = require('models/free-particle/core');
 
     /**
-     * 
+     *
      */
     var Resistance = function(start, end, coreCount, wirePatch, amplitude, freq, decay, system) {
         this.system = system;
@@ -35,7 +35,7 @@ define(function (require) {
      * Instance functions/properties
      */
     _.extend(Resistance.prototype, Law.prototype, {
-        
+
         /**
          * Note that this only gets called when the number of cores changes, because
          *   we remove it from the system at the end of this function and only add
@@ -69,14 +69,14 @@ define(function (require) {
                 var scalarPosition = this.start + (coreSpacing * i) + 15;
                 if (this.coreCount === 1)
                     scalarPosition = (this.end - this.start) / 2 + this.start;
-                
+
                 var x0 = this.wirePatch.getPosition(scalarPosition);
                 var axis = new Vector2(1, 0);
-                
+
                 var oscillator = new OscillatePropagator(x0, 0 /* instead of this.amplitude */, this.freq, this.decay, axis);
                 var core = new Core({
                     position: x0,
-                    origin: x0, 
+                    origin: x0,
                     scalarPosition: scalarPosition,
                     charge: 0,
                     propagator: oscillator
@@ -92,7 +92,7 @@ define(function (require) {
         getCoreSpacing: function() {
             if (this.coreCount <= 1)
                 return 0;
-            
+
             var coreSpan = this.end - this.start;
             var coreSpacing = coreSpan / (this.coreCount - 1);
 

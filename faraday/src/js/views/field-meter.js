@@ -11,12 +11,12 @@ define(function (require) {
 
     require('less!styles/field-meter');
 
-    var STRING_MAGNITUDE_NEGATIVE_ZERO = "-0.00";
-    var STRING_MAGNITUDE_POSITIVE_ZERO = "0.00";
-    var STRING_ANGLE_NEGATIVE_ZERO = "-0.00";
-    var STRING_ANGLE_POSITIVE_ZERO = "0.00";
-    var STRING_ANGLE_NEGATIVE_PI = "-180.00";
-    var STRING_ANGLE_POSITIVE_PI = "180.00";
+    var STRING_MAGNITUDE_NEGATIVE_ZERO = '-0.00';
+    var STRING_MAGNITUDE_POSITIVE_ZERO = '0.00';
+    var STRING_ANGLE_NEGATIVE_ZERO = '-0.00';
+    var STRING_ANGLE_POSITIVE_ZERO = '0.00';
+    var STRING_ANGLE_NEGATIVE_PI = '-180.00';
+    var STRING_ANGLE_POSITIVE_PI = '180.00';
 
     var dx,
         dy,
@@ -84,7 +84,7 @@ define(function (require) {
                     'transform': translate,
                 });
 
-                this.updateValues();    
+                this.updateValues();
             }
         },
 

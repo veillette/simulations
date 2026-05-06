@@ -32,7 +32,7 @@ define(function (require) {
          */
         getRadiometricAge: function() {
             var radiometricAge;
-            
+
             if (this.get('closureState') === Volcano.CLOSURE_NOT_POSSIBLE) {
                 // This means that the eruption hasn't started, so show the per-eruption age.
                 radiometricAge = Volcano.PRE_ERUPTION_INITIAL_AGE + this.getTotalAge();
@@ -45,10 +45,10 @@ define(function (require) {
                 // Done erupting.  The base class implementation is now relevant.
                 radiometricAge = AnimatedDatableItem.prototype.getRadiometricAge.apply(this, arguments);
             }
-            
+
             return radiometricAge;
         }
-        
+
     }, Constants.Volcano);
 
     return Volcano;

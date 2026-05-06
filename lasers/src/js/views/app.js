@@ -1,5 +1,5 @@
 define(function(require) {
-    
+
     'use strict';
 
     var _ = require('underscore');
@@ -90,7 +90,7 @@ define(function(require) {
 
         __TODO_settingSet: function(event) {
             _.each(this.simViews, function(simView) {
-                
+
             });
         },
 
@@ -143,7 +143,7 @@ define(function(require) {
 
         toggleHelp: function() {
             this.$('.help-btn').toggleClass('active');
-            
+
             if (this.$('.help-btn').hasClass('active'))
                 this.showHelp();
             else

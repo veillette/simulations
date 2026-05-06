@@ -25,7 +25,7 @@ define(function (require, exports, module) {
     var DatingGameSimulation = ItemDatingSimulation.extend({
 
         defaults: _.extend({}, ItemDatingSimulation.prototype.defaults, {
-            
+
         }),
 
         /**
@@ -45,7 +45,7 @@ define(function (require, exports, module) {
 
             var Images = Assets.Images;
             var PI = Math.PI;
-                
+
             // Add the datable objects.
             // Params:    name,                 image file,              position,              width, rotation, age,                                isOrganic
             this.addItem('House',               Images.HOUSE,            new Vector2(780, 400),   130,      0, HalfLifeInfo.convertYearsToMs(75),      true);
@@ -66,7 +66,7 @@ define(function (require, exports, module) {
             this.addItem('Wooden Cup',          Images.CUP,              new Vector2(700, 246),    30,  -PI/3, HalfLifeInfo.convertYearsToMs(1035),    true);
             this.addItem('Bone',                Images.BONE,             new Vector2(330, 246),    70,      0, HalfLifeInfo.convertYearsToMs(1450),    true);
             this.addItem('Human Skull',         Images.HUMAN_SKULL,      new Vector2(450, 190),    30,      1, HalfLifeInfo.convertYearsToMs(40E3),    true);
-            
+
             this.meter = new RadiometricDatingMeter({
                 position: DatingGameSimulation.INITIAL_METER_POSITION
             });

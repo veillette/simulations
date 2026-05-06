@@ -13,7 +13,7 @@ define(function (require) {
 
         /**
          * Tunnel to another location.
-         * 
+         *
          * @param center - Location from which to tunnel.
          * @param minDistance - Minimum tunneling distance, often zero.
          * @param maxDistance1 - The usual value used for the max tunneling distance.
@@ -25,7 +25,7 @@ define(function (require) {
         tunnel: function(center, minDistance, maxDistance1, maxDistance2) {
             // Does nothing in base class.
         },
-        
+
         /**
          * Jitter a little, meaning move a small amount from the current position
          *   then back.
@@ -40,7 +40,7 @@ define(function (require) {
         update: function() {
             // Update the position.
             this.setPosition(this.get('position').add(this.get('velocity')));
-            
+
             // Update the velocity.
             this.setVelocity(this.get('velocity').add(this.get('acceleration')));
         }

@@ -3,16 +3,16 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var VanillaMotionObject = require('common/models/motion-object-vanilla');
-    
+
     var EnergyTypes = require('constants').EnergyTypes;
 
     /**
-     * 
+     *
      */
     var EnergyChunk = VanillaMotionObject.extend({
-        
+
         defaults: _.extend({}, VanillaMotionObject.prototype.defaults, {
             // Used for some simple 3D layering effects.
             zPosition: 0,

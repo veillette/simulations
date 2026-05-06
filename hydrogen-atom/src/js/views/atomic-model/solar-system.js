@@ -6,7 +6,7 @@ define(function(require) {
     var AtomicModelView = require('hydrogen-atom/views/atomic-model');
 
     var Assets = require('assets');
-    
+
     /**
      * Represents the scene for the SolarSystemModel
      */
@@ -50,7 +50,7 @@ define(function(require) {
             var atomPosition = this.getViewPosition();
             this.protonSprite.x = atomPosition.x;
             this.protonSprite.y = atomPosition.y;
-            
+
             this.displayObject.addChild(this.electronSprite);
             this.displayObject.addChild(this.protonSprite);
 

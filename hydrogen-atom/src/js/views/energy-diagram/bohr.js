@@ -11,12 +11,12 @@ define(function(require) {
     // Margins inside the drawing area
     var X_MARGIN = 20;
     var Y_MARGIN = 10;
-    
+
     // Horizontal space between a state's line and its label
     var LINE_LABEL_SPACING = 10;
 
     /**
-     * 
+     *
      */
     var BohrEnergyDiagramView = EnergyDiagramView.extend({
 
@@ -99,7 +99,7 @@ define(function(require) {
                 var y1 = this.getYOffset(this._previousState);
                 var x2 = this.getXOffset(n) + (this.stateLineLength / 2);
                 var y2 = this.getYOffset(n);
-                this.drawSquiggle(ctx, x1, y1, x2, y2, wavelength);    
+                this.drawSquiggle(ctx, x1, y1, x2, y2, wavelength);
             }
 
             // Place the electron
@@ -115,7 +115,7 @@ define(function(require) {
         getXOffset: function(state) {
             return this.paddingLeft + this.xMargin;
         },
-        
+
         /**
          * Gets the y-offset that corresponds to a specific state.
          * This is used for positioning both the state lines and the electron.

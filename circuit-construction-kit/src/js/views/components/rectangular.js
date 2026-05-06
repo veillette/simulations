@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView    = require('common/v3/pixi/view');
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Colors      = require('common/colors/colors');
@@ -56,7 +56,7 @@ define(function(require) {
             this.sprite.anchor.y = this.anchorY;
 
             this.displayObject.addChild(this.sprite);
-            
+
             this.displayObject.buttonMode = true;
             this.displayObject.defaultCursor = 'move';
 
@@ -121,7 +121,7 @@ define(function(require) {
             if (Math.abs(scale) > 1E-4) {
                 this.displayObject.scale.x = scale;
                 this.displayObject.scale.y = scale;
-                
+
                 this.hoverLayer.scale.x = scale;
                 this.hoverLayer.scale.y = scale;
 
@@ -146,7 +146,7 @@ define(function(require) {
                 this.flame.gotoAndPlay((this.flame.totalFrames - 1) * Math.random());
             else
                 this.flame.stop();
-            
+
             this.flame.visible = this.model.get('isOnFire');
         },
 

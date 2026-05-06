@@ -5,7 +5,7 @@ define(function (require) {
     var Vector2 = require('common/math/vector2');
     var range   = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **

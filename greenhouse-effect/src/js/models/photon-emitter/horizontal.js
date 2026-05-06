@@ -10,7 +10,7 @@ define(function (require) {
     var Photon        = require('models/photon-basic');
 
     /**
-     * 
+     *
      */
     var HorizontalPhotonEmitter = PhotonEmitter.extend({
 

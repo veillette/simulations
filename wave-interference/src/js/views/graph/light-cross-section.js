@@ -56,7 +56,7 @@ define(function(require) {
 		},
 
 		/**
-		 * All the graphics initializing happens at the end of the 
+		 * All the graphics initializing happens at the end of the
 		 *   render function, and we need to make sure the vectors
 		 *   get initialized.
 		 */
@@ -107,7 +107,7 @@ define(function(require) {
 					this.calculatePoints(time, delta);
 
 				if (this.showCurves)
-					this.drawCurve(time, delta);	
+					this.drawCurve(time, delta);
 				if (this.showVectors)
 					this.drawVectors(time, delta);
 			}

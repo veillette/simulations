@@ -95,7 +95,7 @@ define(function(require) {
 				else {
 					$(event.target)
 						.removeClass('clicked')
-						.prop('disabled', false);	
+						.prop('disabled', false);
 				}
 			}, estimatedTime);
 		},

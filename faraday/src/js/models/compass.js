@@ -13,7 +13,7 @@ define(function (require) {
 
     /**
      * Compass is the model of a compass.
-     * 
+     *
      * Several types of compass behavior can be specified using setBehavior.
      *   In the case of KINEMATIC_BEHAVIOR, the compass needle attempts to be
      *   physically accurate with respect to force, friction, inertia, etc.
@@ -71,7 +71,7 @@ define(function (require) {
 
         /**
          * If rotational kinematics is enabled (see setRotationalKinematicsEnabled),
-         *   the compass needle's behavior is based on a Verlet algorithm.  The 
+         *   the compass needle's behavior is based on a Verlet algorithm.  The
          *   algorithm was reused from edu.colorado.phet.microwave.model.WaterMolecule
          *   in Ron LeMaster's "microwaves" simulation, with some minor changes.
          *   The algorithm was verified by Mike Dubson.

@@ -149,7 +149,7 @@ define(function (require, exports, module) {
                             width: MeasurementSimulation.FLYING_ROCK_WIDTH,
                             timeConversionFactor: MeasurementSimulation.INITIAL_ROCK_AGING_RATE
                         });
-                        
+
                         this.flyingRocks.add(rock);
 
                         this._rockEmissionCounter += this.getRockEmissionInterval();
@@ -159,7 +159,7 @@ define(function (require, exports, module) {
                 if (this.time >= MeasurementSimulation.AGING_ROCK_EMISSION_TIME && !this.agingRock) {
                     // Create the aging rock
                     this.agingRock = new AgingRock({
-                        position: MeasurementSimulation.VOLCANO_TOP_POSITION, 
+                        position: MeasurementSimulation.VOLCANO_TOP_POSITION,
                         width: MeasurementSimulation.INITIAL_AGING_ROCK_WIDTH,
                         timeConversionFactor: MeasurementSimulation.INITIAL_ROCK_AGING_RATE
                     });
@@ -175,24 +175,24 @@ define(function (require, exports, module) {
             }
 
             if (this._timeAccelerationCount > 0) {
-                
+
                 // The rate at which time is passing for the datable objects
                 //   is changing.  Make the necessary adjustments.
                 var incrementCount = MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL - this._timeAccelerationCount;
                 var agingRate = this.agingRock.get('timeConversionFactor'); // Assume all aging at same rate.
-                
+
                 // Calculate the new aging rate.  This is non-linear, because
                 // linear was tried and it didn't look good.
                 var newAgingRate = Math.min(
                     agingRate + Math.pow(2, incrementCount) * MeasurementSimulation.TIME_ACC_INCREMENT,
                     MeasurementSimulation.FINAL_ROCK_AGING_RATE
                 );
-                
+
                 for (i = 0; i < this.items.length; i++) {
                     // Set the new aging rate.
                     this.items.at(i).set('timeConversionFactor', newAgingRate);
                 }
-                
+
                 this._timeAccelerationCount--;
             }
 
@@ -243,7 +243,7 @@ define(function (require, exports, module) {
             this.play();
             // Create and add the tree
             this.agingTree = new AgingTree({
-                position: MeasurementSimulation.INITIAL_TREE_POSITION, 
+                position: MeasurementSimulation.INITIAL_TREE_POSITION,
                 width:    MeasurementSimulation.INITIAL_TREE_WIDTH,
                 timeConversionFactor: MeasurementSimulation.INITIAL_TREE_AGING_RATE
             });
@@ -269,9 +269,9 @@ define(function (require, exports, module) {
         agingRockClosureStateChanged: function(item, closureState) {
             if (closureState === AnimatedDatableItem.CLOSED) {
                 // Once closure occurs for the aging rock, the time scale speeds up.
-                this._timeAccelerationCount = MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL;    
+                this._timeAccelerationCount = MeasurementSimulation.TIME_ACC_COUNTER_RESET_VAL;
             }
-            
+
             this.volcano.set('closureState', closureState);
         },
 

@@ -7,7 +7,7 @@ define(function (require) {
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var AndWireRegion = function() {
         this.regions = [];

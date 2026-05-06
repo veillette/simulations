@@ -5,7 +5,7 @@ define(function(require) {
     var HalfLifeNucleusChooserView = require('radioactive-dating-game/views/nucleus-chooser/half-life');
 
     /**
-     * 
+     *
      */
     var DecayRatesNucleusChooserView = HalfLifeNucleusChooserView.extend({
 

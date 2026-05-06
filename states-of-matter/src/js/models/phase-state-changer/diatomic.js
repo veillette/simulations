@@ -132,7 +132,7 @@ define(function(require) {
             // Initialize the velocities and angles of the molecules.
             for (i = 0; i < numberOfMolecules; i++) {
                 // Assign each molecule an initial velocity.
-                moleculeVelocities[i].set( 
+                moleculeVelocities[i].set(
                     temperatureSqrt * gaussRandom(),
                     temperatureSqrt * gaussRandom()
                 );
@@ -144,9 +144,9 @@ define(function(require) {
             // Assign each molecule to a position.
             var moleculesPlaced = 0;
 
-            var centerPoint = new Vector2( 
+            var centerPoint = new Vector2(
                 this.simulation.getNormalizedContainerWidth() / 2,
-                this.simulation.getNormalizedContainerHeight() / 4 
+                this.simulation.getNormalizedContainerHeight() / 4
             );
             var currentLayer = 0;
             var particlesOnCurrentLayer = 0;
@@ -166,8 +166,8 @@ define(function(require) {
                     if (particlesOnCurrentLayer >= particlesThatWillFitOnCurrentLayer) {
                         // This layer is full - move to the next one.
                         currentLayer++;
-                        particlesThatWillFitOnCurrentLayer = currentLayer * 2 * Math.PI / ( 
-                            DiatomicPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE * DiatomicPhaseStateChanger.LIQUID_SPACING_FACTOR 
+                        particlesThatWillFitOnCurrentLayer = currentLayer * 2 * Math.PI / (
+                            DiatomicPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE * DiatomicPhaseStateChanger.LIQUID_SPACING_FACTOR
                         );
                         particlesOnCurrentLayer = 0;
                     }
@@ -215,9 +215,9 @@ define(function(require) {
                 moleculeCenterOfMassPositions[i].set(0, 0);
 
                 // Assign each molecule an initial velocity.
-                moleculeVelocities[i].set( 
+                moleculeVelocities[i].set(
                     temperatureSqrt * gaussRandom(),
-                    temperatureSqrt * gaussRandom() 
+                    temperatureSqrt * gaussRandom()
                 );
 
                 // Assign each molecule an initial rotational position.
@@ -238,7 +238,7 @@ define(function(require) {
                     // Pick a random position.
                     newPosX = DiatomicPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeX);
                     newPosY = DiatomicPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeY);
-                    
+
                     // See if this position is available.
                     var positionAvailable = true;
                     for (var k = 0; k < i; k++) {

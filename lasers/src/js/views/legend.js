@@ -24,7 +24,7 @@ define(function(require) {
     var templateHtml = require('text!templates/legend.html');
 
     /**
-     * 
+     *
      */
     var LegendView = Backbone.View.extend({
 

@@ -66,7 +66,7 @@ define(function (require) {
 
             'click #field-display-type-curve-with-vectors'  : 'displayCurveWithVectors',
             'click #field-display-type-curve'               : 'displayCurve',
-            'click #field-display-type-full-field'          : 'displayFullField', 
+            'click #field-display-type-full-field'          : 'displayFullField',
             'click #field-display-type-none'                : 'displayNoField',
 
             'click #field-sense-force-on-electron' : 'fieldSenseForceOnElectronClicked',

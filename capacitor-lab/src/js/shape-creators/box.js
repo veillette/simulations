@@ -4,7 +4,7 @@ define(function (require) {
 
     var _   = require('underscore');
     var SAT = require('sat');
- 
+
     var Vector2        = require('common/math/vector2');
     var PiecewiseCurve = require('common/math/piecewise-curve');
     var Colors         = require('common/colors/colors');
@@ -38,12 +38,12 @@ define(function (require) {
 
         /**
          * Top faces is a parallelogram.
-         * 
+         *
          *      p0 -------------- p1
          *      /                /
          *     /                /
          *   p3 --------------p2
-         * 
+         *
          */
         createTopFace: function(x, y, z, width, height, depth) {
             // Calculate points
@@ -65,12 +65,12 @@ define(function (require) {
 
         /**
          * Front face is a rectangle.
-         * 
+         *
          *   p0 --------------- p1
          *   |                  |
          *   |                  |
          *   p3 --------------- p2
-         * 
+         *
          */
         createFrontFace: function(x, y, z, width, height, depth) {
             // Calculate points
@@ -104,7 +104,7 @@ define(function (require) {
          *   |  /
          *   | /
          *   p3
-         * 
+         *
          */
         createRightSideFace: function(x, y, z, width, height, depth) {
             // Calculate points
@@ -140,7 +140,7 @@ define(function (require) {
 
         /**
          * Creates a box's silhouette.
-         * 
+         *
          *      p1 --------------- p2
          *      /                   |
          *     /                    |
@@ -148,7 +148,7 @@ define(function (require) {
          *   |                     /
          *   |                    /
          *   p5 --------------- p4
-         * 
+         *
          */
         createBoxSilhouette: function(x, y, z, width, height, depth) {
             var p0 = this._p0.set(this.mvt.modelToView(x - (width / 2), y,          z - (depth / 2)));
@@ -157,7 +157,7 @@ define(function (require) {
             var p3 = this._p3.set(this.mvt.modelToView(x + (width / 2), y + height, z + (depth / 2)));
             var p4 = this._p4.set(this.mvt.modelToView(x + (width / 2), y + height, z - (depth / 2)));
             var p5 = this._p5.set(this.mvt.modelToView(x - (width / 2), y + height, z - (depth / 2)));
-            
+
             var polygon = new SAT.Polygon(new SAT.Vector(), [
                 new SAT.Vector(p0.x, p0.y),
                 new SAT.Vector(p1.x, p1.y),
@@ -209,7 +209,7 @@ define(function (require) {
 
         /**
          * Draws an outline of the box onto a graphics object
-         * 
+         *
          *      p1 --------------- p2
          *      /                 / |
          *     /                 /  |
@@ -217,7 +217,7 @@ define(function (require) {
          *   |                  |  /
          *   |                  | /
          *   p5 --------------- p4
-         * 
+         *
          */
         outlineBox: function(graphics, outlineWidth, outlineColor, outlineAlpha, x, y, z, width, height, depth) {
             var p0 = this._p0.set(this.mvt.modelToView(x - (width / 2), y,          z - (depth / 2)));
@@ -227,7 +227,7 @@ define(function (require) {
             var p4 = this._p4.set(this.mvt.modelToView(x + (width / 2), y + height, z - (depth / 2)));
             var p5 = this._p5.set(this.mvt.modelToView(x - (width / 2), y + height, z - (depth / 2)));
             var p6 = this._p6.set(this.mvt.modelToView(x + (width / 2), y,          z - (depth / 2)));
-            
+
             graphics.lineStyle(outlineWidth, Colors.parseHex(outlineColor), outlineAlpha);
 
             graphics.moveTo(p0.x, p0.y);
@@ -245,13 +245,13 @@ define(function (require) {
 
         /**
          * Draws an outline of the back of the box onto a graphics object
-         * 
+         *
          *      p1
-         *       |                   
-         *       |                   
+         *       |
+         *       |
          *      p0 --------------- p2
-         *      /                   
-         *     /                   
+         *      /
+         *     /
          *   p3
          */
         outlineBoxBack: function(graphics, outlineWidth, outlineColor, outlineAlpha, x, y, z, width, height, depth) {
@@ -259,12 +259,12 @@ define(function (require) {
             var p1 = this._p1.set(this.mvt.modelToView(x - (width / 2), y,          z + (depth / 2)));
             var p2 = this._p2.set(this.mvt.modelToView(x + (width / 2), y + height, z + (depth / 2)));
             var p3 = this._p3.set(this.mvt.modelToView(x - (width / 2), y + height, z - (depth / 2)));
-            
+
             graphics.lineStyle(outlineWidth, Colors.parseHex(outlineColor), outlineAlpha);
 
             graphics.moveTo(p0.x, p0.y);
             graphics.lineTo(p1.x, p1.y);
-            
+
             graphics.moveTo(p0.x, p0.y);
             graphics.lineTo(p2.x, p2.y);
 

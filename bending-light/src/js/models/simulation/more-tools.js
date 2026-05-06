@@ -16,7 +16,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var MoreToolsSimulation = IntroSimulation.extend({
 
@@ -36,7 +36,7 @@ define(function (require, exports, module) {
                 probe1Position: new Vector2(WaveSensor.DEFAULT_PROBE1_X, WaveSensor.DEFAULT_PROBE1_Y),
                 probe2Position: new Vector2(WaveSensor.DEFAULT_PROBE2_X, WaveSensor.DEFAULT_PROBE2_Y)
             });
-            
+
             this.velocitySensor = new VelocitySensor({
                 position: new Vector2(VelocitySensor.DEFAULT_X, VelocitySensor.DEFAULT_Y)
             });
@@ -49,7 +49,7 @@ define(function (require, exports, module) {
             this.waveSensor.setProbe1Position(WaveSensor.DEFAULT_PROBE1_X, WaveSensor.DEFAULT_PROBE1_Y);
             this.waveSensor.setProbe2Position(WaveSensor.DEFAULT_PROBE2_X, WaveSensor.DEFAULT_PROBE2_Y);
             this.waveSensor.clearSamples();
-            
+
             this.velocitySensor.setPosition(VelocitySensor.DEFAULT_X, VelocitySensor.DEFAULT_Y);
         },
 

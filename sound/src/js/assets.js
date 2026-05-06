@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         SPEAKER_MAGNET:   'speaker-magnet.png',
         SPEAKER_CONE:     'speaker-cone.png',
         SPEAKER_SURROUND: 'speaker-surround.png',

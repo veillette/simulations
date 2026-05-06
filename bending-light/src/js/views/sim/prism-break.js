@@ -23,7 +23,7 @@ define(function(require) {
         template: _.template(simHtml),
 
         events: _.extend(BendingLightSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {
@@ -31,7 +31,7 @@ define(function(require) {
                 title: 'Prism Break',
                 name:  'prism-break'
             }, options);
-            
+
             BendingLightSimView.prototype.initialize.apply(this, [ options ]);
 
             this.initEnvironmentMediumControls();
@@ -81,7 +81,7 @@ define(function(require) {
          */
         reset: function() {
             BendingLightSimView.prototype.reset.apply(this);
-            
+
             this.prismBreakControlsView.reset();
         },
 

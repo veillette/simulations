@@ -40,7 +40,7 @@ define(function (require, exports, module) {
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
             fieldLatticeWidth: Constants.DISCRETENESS_RANGE.defaultValue
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,

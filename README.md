@@ -17,6 +17,12 @@ This repository holds all simulations that will be embedded into OpenStax textbo
   * Build changed simulations and assemble a top-level `dist` folder: `npm run dist`
   * Force-build all simulations: `npm run dist:all`
 
+### Linting
+  * Lint all sims from the repository root: `npm run lint`
+  * Auto-fix fixable lint issues across all sims: `npm run lint:fix`
+  * Lint only changed sims: `npm run lint:changed`
+  * Auto-fix only changed sims: `npm run lint:changed:fix`
+
 ### Deploying
   * Build and deploy all simulations to GitHub Pages: `npm run deploy`
 

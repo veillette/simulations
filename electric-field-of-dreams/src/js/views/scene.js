@@ -29,7 +29,7 @@ define(function(require) {
     var EFDSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -41,7 +41,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -179,7 +179,7 @@ define(function(require) {
         },
 
         createAndAddParticleView: function(particle) {
-            var particleView = new ParticleView({ 
+            var particleView = new ParticleView({
                 model: particle,
                 mvt: this.mvt
             });

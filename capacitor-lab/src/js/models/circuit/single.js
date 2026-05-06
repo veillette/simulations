@@ -11,13 +11,13 @@ define(function (require) {
      * Model of a circuit with a battery (B) connected to a single capacitor (C1).
      *   This is treated as a special case of a parallel circuit, with some added
      *   features that are specific to "Dielectric" module.
-     * 
+     *
      *   |-----|
      *   |     |
      *   B    C1
      *   |     |
      *   |-----|
-     * 
+     *
      * Unlike other circuits in this simulation, the battery can be disconnected.
      * When the battery is disconnected, plate charge can be controlled directly.
      */
@@ -43,7 +43,7 @@ define(function (require) {
 
             // Set default disconnected plate charge
             this.set('disconnectedPlateCharge', this.getTotalCharge());
-            
+
             // Bind event listeners
             this.on('change:batteryConnected', function() {
                 this.set('disconnectedPlateCharge', this.getTotalCharge());
@@ -113,7 +113,7 @@ define(function (require) {
                 else
                     voltage = 0;
             }
-            
+
             return voltage;
         },
 

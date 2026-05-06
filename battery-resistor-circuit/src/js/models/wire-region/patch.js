@@ -7,7 +7,7 @@ define(function (require) {
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var PatchWireRegion = function(min, max, wirePatch) {
         this.min = min;
@@ -22,8 +22,8 @@ define(function (require) {
 
         contains: function(wireParticle) {
             return (
-                wireParticle.wirePatch === this.wirePatch && 
-                this.max >= wireParticle.position && 
+                wireParticle.wirePatch === this.wirePatch &&
+                this.max >= wireParticle.position &&
                 this.min <= wireParticle.position
             );
         }

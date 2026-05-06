@@ -125,6 +125,6 @@ define(function(require) {
         }
 
     });
-    
+
     return MirrorView;
 });

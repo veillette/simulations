@@ -11,7 +11,7 @@ define(function (require) {
 
     /**
      * Model of a circuit with a battery (B) and N capacitors (C1...Cn) in parallel.
-     * 
+     *
      * |-----|------|------|
      * |     |      |      |
      * B     C1     C2    C3

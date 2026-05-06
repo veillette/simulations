@@ -51,7 +51,7 @@ define(function(require) {
 
             this.spokes = spokes;
             this.paddles = paddles;
-            
+
             //this.drawDebugOrigin(this.frontLayer);
         },
 

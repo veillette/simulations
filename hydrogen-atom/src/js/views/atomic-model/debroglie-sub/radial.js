@@ -13,7 +13,7 @@ define(function(require) {
     var Constants = require('constants');
     var RING_COLOR = Colors.parseHex(Constants.ELECTRON_COLOR);
 
-    
+
     /**
      * DeBroglieRadialDistanceNode represents the deBroglie model
      *   as a standing wave whose amplitude is proportional to the

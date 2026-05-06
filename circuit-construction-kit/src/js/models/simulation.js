@@ -21,14 +21,14 @@ define(function (require, exports, module) {
     var Assets = require('assets');
 
     /**
-     * 
+     *
      */
     var CCKSimulation = FixedIntervalSimulation.extend({
 
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
@@ -92,7 +92,7 @@ define(function (require, exports, module) {
                 this.solver.solve(this.circuit, deltaTime);
                 this.modelChanged = false;
             }
-            
+
             this.particleSet.update(time, deltaTime);
         },
 

@@ -12,7 +12,7 @@ define(function (require) {
     var MAX_NUM_ATOMS = Constants.MAX_NUM_ATOMS;
 
     /**
-     * 
+     *
      */
     var MoleculeForceAndMotionDataSet = function(atomsPerMolecule) {
         this.atomsPerMolecule = atomsPerMolecule;
@@ -144,7 +144,7 @@ define(function (require) {
          * Remove the molecule at the designated index.  This also removes all
          *   atoms and forces associated with the molecule and shifts the
          *   various arrays to compensate.
-         * 
+         *
          * This used to be a very expensive operation in the original, but I
          *   think this one will run pretty fast. - Patrick
          *

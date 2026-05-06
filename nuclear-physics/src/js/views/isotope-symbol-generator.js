@@ -31,7 +31,7 @@ define(function(require) {
             var chemicalSymbol = this.getChemicalSymbol(nucleusType);
             var isotopeNumber = this.getIsotopeNumber(nucleusType);
             var color = this.getColor(nucleusType);
-            
+
             return this.createSymbol(chemicalSymbol, isotopeNumber, color, fontSize, anchorX, anchorY);
         },
 
@@ -43,7 +43,7 @@ define(function(require) {
             var chemicalSymbol = this.getChemicalSymbol(nucleusType);
             var isotopeNumber = this.getIsotopeNumber(nucleusType);
             var color = this.getElementColor(nucleusType);
-            
+
             return this.createSymbol(chemicalSymbol, isotopeNumber, color, fontSize, anchorX, anchorY);
         },
 

@@ -13,7 +13,7 @@ define(function (require) {
     var DEGREES_TO_RADIANS = Math.PI / 180;
 
     /**
-     * 
+     *
      */
     var Cannon = Backbone.Model.extend({
 
@@ -26,7 +26,7 @@ define(function (require) {
         },
 
         initialize: function(attributes, options) {
-            
+
         },
 
         firingX: function() {

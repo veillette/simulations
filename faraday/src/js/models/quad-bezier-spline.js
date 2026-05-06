@@ -7,7 +7,7 @@ define(function (require) {
     var Vector2 = require('common/math/vector2');
 
     /**
-     * 
+     *
      */
     var QuadBezierSpline = function(startPoint, controlPoint, endPoint) {
         this.x1 = startPoint.x;

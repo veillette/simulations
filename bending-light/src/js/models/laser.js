@@ -22,7 +22,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Laser = Backbone.Model.extend({
 
@@ -46,7 +46,7 @@ define(function (require) {
             this._vec = new Vector2();
 
             this.set('pivotPoint', vectorPool.create().set(this.get('pivotPoint')));
-            this.set('emissionPoint', 
+            this.set('emissionPoint',
                 vectorPool.create().set(options.distanceFromPivot, 0).rotate(options.angle)
             );
 
@@ -108,14 +108,14 @@ define(function (require) {
                 this.set('emissionPoint', newEmissionPoint.add(x));
             else
                 this.set('emissionPoint', newEmissionPoint.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldEmissionPoint);
         },
 
         setEmissionPoint: function(x, y) {
             var oldEmissionPoint = this.get('emissionPoint');
-            
+
             if (x instanceof Vector2)
                 this.set('emissionPoint', vectorPool.create().set(x));
             else
@@ -133,14 +133,14 @@ define(function (require) {
                 this.set('pivotPoint', newPivotPoint.add(x));
             else
                 this.set('pivotPoint', newPivotPoint.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldPivotPoint);
         },
 
         setPivotPoint: function(x, y) {
             var oldPivotPoint = this.get('pivotPoint');
-            
+
             if (x instanceof Vector2)
                 this.set('pivotPoint', vectorPool.create().set(x));
             else

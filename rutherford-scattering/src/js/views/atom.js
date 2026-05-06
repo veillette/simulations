@@ -7,7 +7,7 @@ define(function(require) {
     var PIXI = require('pixi');
 
     var PixiView = require('common/v3/pixi/view');
-    
+
     var Constants = require('constants');
 
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');

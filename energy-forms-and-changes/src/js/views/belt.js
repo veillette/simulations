@@ -4,7 +4,7 @@ define(function(require) {
 
     var _ = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -112,15 +112,15 @@ define(function(require) {
 
             // Need to account for the width of the line in some cases
             var hlw = this.lineWidth / 2; // half line width
-            
+
 
             // Use the direction vector as a starting point and rotate it by theta to get
             //   a vector pointing to the tangent point, then normalize it and scale it so
-            //   it's the length of radius1, and offset it by our center point, and that 
+            //   it's the length of radius1, and offset it by our center point, and that
             //   will be our first tangent point.
         //  var c1TangentPointA = directionVector.clone().rotate(-thetaS).normalize().scale(radius1 + hlw).add(center1);
             var c1TangentPointB = directionVector.clone().rotate( thetaS).normalize().scale(radius1 + hlw).add(center1);
-           
+
 
             // And for the second circle, we could go the opposite way and then find the
             //   supplementary angle of theta or just do the exact same thing with center2.
@@ -128,12 +128,12 @@ define(function(require) {
          // var c2TangentPointB = directionVector.clone().rotate( thetaS).normalize().scale(radius2 + hlw).add(center2);
 
             // Angle between line connecting centers and the x-axis.
-            var directionVectorAngle = -Math.atan2(directionVector.y, directionVector.x); 
+            var directionVectorAngle = -Math.atan2(directionVector.y, directionVector.x);
 
-            // There are two arcs that wrap the edges of the two circles, so I need to 
+            // There are two arcs that wrap the edges of the two circles, so I need to
             //   know the start and end angle for each relative to 0, which in this
             //   case would be the 3 o'clock position (positive x-axis).
-            
+
             var arc1StartAngle = thetaS - directionVectorAngle;
             var arc1EndAngle = arc1StartAngle + Math.PI * 2 - (thetaS * 2);
             var arc2StartAngle = theta - directionVectorAngle + Math.PI * 2 - (theta * 2);
@@ -145,11 +145,11 @@ define(function(require) {
 
             // Draw belt shape
             this.graphics.moveTo(c1TangentPointB.x, c1TangentPointB.y);
-            this.graphics.arc(center1.x, center1.y, radius1 + hlw, arc1StartAngle, arc1EndAngle, false); 
+            this.graphics.arc(center1.x, center1.y, radius1 + hlw, arc1StartAngle, arc1EndAngle, false);
             this.graphics.lineTo(c2TangentPointA.x, c2TangentPointA.y);
-            this.graphics.arc(center2.x, center2.y, radius2 + hlw, arc2StartAngle, arc2EndAngle, false); 
+            this.graphics.arc(center2.x, center2.y, radius2 + hlw, arc2StartAngle, arc2EndAngle, false);
             this.graphics.lineTo(c1TangentPointB.x, c1TangentPointB.y);
-            this.graphics.arc(center1.x, center1.y, radius1 + hlw, arc1StartAngle + Math.PI / 32, arc1EndAngle, false); 
+            this.graphics.arc(center1.x, center1.y, radius1 + hlw, arc1StartAngle + Math.PI / 32, arc1EndAngle, false);
         },
 
         updateVisibility: function(model, visible) {

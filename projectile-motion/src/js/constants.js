@@ -7,7 +7,7 @@ define(function (require) {
     var range     = require('common/math/range');
     var Colors    = require('common/colors/colors');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **

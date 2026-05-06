@@ -34,7 +34,7 @@ define(function(require) {
     var CollisionLabSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -119,7 +119,7 @@ define(function(require) {
                     m + 185, // Top margin plus ball settings matrix
                     this.width - m - m - scpw - m,
                     this.height - m - 185 - 62 - m
-                ); 
+                );
 
                 if (this.oneDimensional) {
                     usableScreenSpace.y -= 88;
@@ -129,9 +129,9 @@ define(function(require) {
 
             var boundsRatio = bounds.w / bounds.h;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
-            
+
             if (AppView.windowIsShort() && !this.oneDimensional) {
                 this.viewOriginX = Math.round(usableScreenSpace.x);
                 this.viewOriginY = Math.round(usableScreenSpace.y + scale * bounds.h / 2);
@@ -164,7 +164,7 @@ define(function(require) {
         initKineticEnergyLabel: function() {
             this.$ui.append(
                 '<label class="kinetic-energy-label">' +
-                    'Kinetic Energy = <span class="kinetic-energy">0</span> J' + 
+                    'Kinetic Energy = <span class="kinetic-energy">0</span> J' +
                 '</label>'
             );
             this.$kineticEnergy = this.$ui.find('.kinetic-energy');
@@ -303,7 +303,7 @@ define(function(require) {
         },
 
         createAndAddBallView: function(ball) {
-            var ballView = new BallView({ 
+            var ballView = new BallView({
                 model: ball,
                 mvt: this.mvt,
                 simulation: this.simulation

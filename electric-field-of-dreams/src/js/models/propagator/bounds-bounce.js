@@ -9,7 +9,7 @@ define(function (require) {
     var Propagator = require('models/propagator');
 
     /**
-     * 
+     *
      */
     var BoundsBouncePropagator = function() {};
 

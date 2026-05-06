@@ -120,7 +120,7 @@ define(function (require) {
       var text = nbr;
 
       if (nbr % 1 == 0) {
-        text = text + ".0"
+        text = text + '.0'
         }
 
       return text;

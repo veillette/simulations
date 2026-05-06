@@ -10,7 +10,7 @@ define(function(require) {
     var BohrModel = require('hydrogen-atom/models/atomic-model/bohr');
 
     var Constants = require('constants');
-    
+
     /**
      * Represents the zoomed in view of the scene and what's happening at the atomic level
      */

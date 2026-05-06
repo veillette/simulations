@@ -14,7 +14,7 @@ define(function (require, exports, module) {
      */
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var MovingManSimulation = Simulation.extend({
 
@@ -35,7 +35,7 @@ define(function (require, exports, module) {
         history: [],
         time: 0,
         positionFormula: null,
-        
+
         /**
          * Initialization code for moving man simulation models
          */
@@ -187,9 +187,9 @@ define(function (require, exports, module) {
          * We need to set up some stuff before we can play back.  The
          *   PhET version sorted the history by the time closest to
          *   the current step time at each step and had a "todo" note
-         *   to make it something more efficient like a binary search, 
+         *   to make it something more efficient like a binary search,
          *   so I'm going ahead and implementing a binary search on a
-         *   presorted history instead of sorting states from all 
+         *   presorted history instead of sorting states from all
          *   frames on every frame.
          */
         play: function() {
@@ -215,7 +215,7 @@ define(function (require, exports, module) {
          * Called before switching to playback (non-recording) mode
          *   to get ready to read stored states in order. It sorts
          *   the array of historical states by time and then plucks
-         *   just the times out into a separate array for faster 
+         *   just the times out into a separate array for faster
          *   random access.
          */
         prepareForPlayback: function() {
@@ -279,7 +279,7 @@ define(function (require, exports, module) {
              */
             this.clearHistoryAfter(this.time);
 
-            this.set('timeScale', this.get('playbackSpeed'));    
+            this.set('timeScale', this.get('playbackSpeed'));
             this.set('recording', true);
         },
 
@@ -288,7 +288,7 @@ define(function (require, exports, module) {
          */
         stopRecording: function() {
             this.pause();
-            
+
             this.set('time', 0);
             this.time = 0;
 

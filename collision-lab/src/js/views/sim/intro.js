@@ -63,10 +63,10 @@ define(function (require) {
          * Returns a new ball settings view
          */
         createBallSettingsView: function(ball) {
-            return new BallSettingsView({ 
-                model: ball, 
+            return new BallSettingsView({
+                model: ball,
                 simulation: this.simulation,
-                oneDimensional: true, 
+                oneDimensional: true,
                 showMoreData: this.moreDataMode
             });
         }

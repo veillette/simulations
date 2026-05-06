@@ -200,7 +200,7 @@ define(function (require) {
          */
         toggleHelp: function() {
             this.$('.help-btn').toggleClass('active');
-            
+
             if (this.$('.help-btn').hasClass('active'))
                 this.sceneView.showHelpLabels();
             else
@@ -241,7 +241,7 @@ define(function (require) {
          * Shows/hides virtual image stuff
          */
         toggleVirtualImage: function() {
-            if ($(event.target).is(':checked')) 
+            if ($(event.target).is(':checked'))
                 this.sceneView.showVirtualImage();
             else
                 this.sceneView.hideVirtualImage();

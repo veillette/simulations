@@ -23,7 +23,7 @@ define(function (require, exports, module) {
     ];
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var MSSSimulation = Simulation.extend({
 
@@ -34,7 +34,7 @@ define(function (require, exports, module) {
             systemCentered: true,
             started: false
         }),
-        
+
         initialize: function(attributes, options) {
             this._forceVector = new Vector2();
 
@@ -79,7 +79,7 @@ define(function (require, exports, module) {
         reset: function() {
             for (var i = 0; i < this.get('numBodies'); i++)
                 this.bodies[i].reset();
-            
+
             this.maxAccel = 0;
             this.time = 0;
             this.cmMotionRemoved = false;
@@ -105,12 +105,12 @@ define(function (require, exports, module) {
                 while (this.frameAccumulator >= this.frameDuration) {
                     this.stepForwardNTimes(this.stepsPerFrame);
                     this.frameAccumulator -= this.frameDuration;
-                }    
+                }
             }
         },
 
         /**
-         * Steps forward N steps and then updates the bodies' 
+         * Steps forward N steps and then updates the bodies'
          *   final attribute values so we're not updating the
          *   views with intermediate steps unnecessarily.
          */
@@ -153,13 +153,13 @@ define(function (require, exports, module) {
                 pos = bodies[i].pos;
                 vel = bodies[i].vel;
                 acc = bodies[i].acc;
-                
+
                 // Update position
                 pos.x = pos.x + vel.x*dt + (0.5)*acc.x*dt*dt;
                 pos.y = pos.y + vel.y*dt + (0.5)*acc.y*dt*dt;
 
                 // Copy the current state of the acceleration vector
-                bodies[i].preAcc.set(acc); 
+                bodies[i].preAcc.set(acc);
             }
 
             this.setForcesAndAccels();
@@ -236,7 +236,7 @@ define(function (require, exports, module) {
             var delY = body2.pos.y - body1.pos.y;
             var distSq = delX*delX + delY*delY;
             var dist = Math.sqrt(distSq);
-            var product = GM1M2 / (distSq * dist); 
+            var product = GM1M2 / (distSq * dist);
 
             return this._forceVector.set(
                 product * delX,
@@ -294,7 +294,7 @@ define(function (require, exports, module) {
             this.pause();
 
             /* Note that we can afford to create new objects
-             *   in this function because a collision happens 
+             *   in this function because a collision happens
              *   a maximum of 3 times in a simulation's run.
              */
 
@@ -336,7 +336,7 @@ define(function (require, exports, module) {
 
             smallBody.destroyInCollision();
             this.trigger('collision', this, posCM);
-            
+
             this.setForcesAndAccels();
             this.maxAccel = 0;
 

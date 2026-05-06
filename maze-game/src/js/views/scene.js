@@ -27,7 +27,7 @@ define(function(require) {
     var MazeGameSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -37,7 +37,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -56,7 +56,7 @@ define(function(require) {
 
             var sceneRatio = this.width / sceneHeight;
             var levelRatio = levelWidth / levelHeight;
-            
+
             var scale = (sceneRatio > levelRatio) ? sceneHeight / levelHeight : this.width / levelWidth;
 
             this.viewOriginX = Math.round(this.width / 2);            // Center

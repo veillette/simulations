@@ -9,7 +9,7 @@ define(function (require) {
      * Basic building block model for all the elements in the intro tab scene
      */
     var EnergyUser = EnergySystemsElement.extend({
-        
+
         initialize: function(attributes, options) {
             EnergySystemsElement.prototype.initialize.apply(this, [attributes, options]);
 

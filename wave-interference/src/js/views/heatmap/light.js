@@ -8,8 +8,8 @@ define(function(require) {
 	                       require('../../utils/jquery-plugins');
 	var HeatmapView      = require('../heatmap');
 	var ScreenGraphView  = require('../graph/screen');
-	
-	
+
+
 
 	/*
 	 * Constants
@@ -99,7 +99,7 @@ define(function(require) {
 			else {
 				this.cellChecked[x][y] = true;
 				return HeatmapView.prototype.alphaFromCellValue.apply(this, [value, x, y]);
-			}			
+			}
 		},
 
 		/**
@@ -122,9 +122,9 @@ define(function(require) {
 		},
 
 		/**
-		 * Gets all the average colors on the right edge by taking the 
-		 *   particle color and multiplying it by the alpha derrived 
-		 *   from the average of each lattice value along the edge.  
+		 * Gets all the average colors on the right edge by taking the
+		 *   particle color and multiplying it by the alpha derrived
+		 *   from the average of each lattice value along the edge.
 		 *   Stores it in the [out] array given.
 		 */
 		getAvgEdgeColors: function(out) {

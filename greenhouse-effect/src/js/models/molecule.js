@@ -82,7 +82,7 @@ define(function (require) {
             this.constituentMolecules = [];
 
             // Whenever the position (center of gravity) is updated, we must also
-            //   update the 
+            //   update the
             this.on('change:position change:rotation', this.updateAtomPositions);
         },
 
@@ -214,7 +214,7 @@ define(function (require) {
             //   of how much time has passed, so I don't know why we even
             //   care about the second line unless the delta times were huge.
             // I think the answer may be in the fact that the original delta
-            //   time was in milliseconds, which *would* be a very large 
+            //   time was in milliseconds, which *would* be a very large
             //   delta time.  In my version, we pass deltaTime as seconds,
             //   which is very small, so I'm going to remove that addition
             //   of velocity until further notice.
@@ -291,14 +291,14 @@ define(function (require) {
 
         /**
          * Decides whether or not the molecule should absorb the offered
-         *   photon.  If the photon is absorbed, the matching absorption 
+         *   photon.  If the photon is absorbed, the matching absorption
          *   strategy is set so that it can control the molecule's post-
          *   absorption behavior. Returns whether photon was absorbed.
          */
         queryAbsorbPhoton: function(photon) {
             var absorbPhoton = false;
 
-            if (!this.isPhotonAbsorbed() && 
+            if (!this.isPhotonAbsorbed() &&
                 !this.isPhotonMarkedForPassThrough(photon) &&
                 this.absorptionHysteresisCountdownTime <= 0 &&
                 photon.get('position').distance(this.get('position')) < Molecule.PHOTON_ABSORPTION_DISTANCE) {
@@ -330,7 +330,7 @@ define(function (require) {
          * Returns whether a photon has been absorbed.
          */
         isPhotonAbsorbed: function() {
-            // If there is an active non-null photon absorption strategy, 
+            // If there is an active non-null photon absorption strategy,
             //   it indicates that a photon has been absorbed.
             return !(this.activePhotonAbsorptionStrategy instanceof PhotonAbsorptionStrategy.NullPhotonAbsorptionStrategy);
         },
@@ -343,7 +343,7 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         addPhotonAbsorptionStrategy: function(wavelength, strategy) {
             this.wavelengthToAbsorptionStrategy[wavelength] = strategy;

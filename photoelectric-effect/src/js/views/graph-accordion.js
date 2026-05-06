@@ -15,11 +15,11 @@ define(function(require) {
     var EnergyVsFrequencyGraphView  = require('views/graph/energy-vs-frequency');
 
     var html = require('text!templates/graph-accordion.html');
-    
+
     require('less!styles/graph-accordion');
 
     /**
-     * 
+     *
      */
     var GraphAccordionView = Backbone.View.extend({
 
@@ -129,13 +129,13 @@ define(function(require) {
             ctx.fillText('Experimental Parameters', leftPadding, leftPadding);
 
             ctx.fillStyle = '#000';
-            
+
             var intensityTitle;
             var intensityPercent;
 
             if (this.simulation.get('controlMode') === PEffectSimulation.INTENSITY) {
                 intensityTitle = 'Intensity';
-                intensityPercent = this.simulation.photonRateToIntensity( 
+                intensityPercent = this.simulation.photonRateToIntensity(
                     this.simulation.beam.get('photonsPerSecond') / PEffectSimulation.MAX_PHOTONS_PER_SECOND,
                     this.simulation.getWavelength()
                 );
@@ -215,7 +215,7 @@ define(function(require) {
                         break;
                     }
                 }
-                
+
                 // And close it
                 if ($graphToClose)
                     $graphToClose.removeClass('open');

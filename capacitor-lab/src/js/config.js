@@ -10,7 +10,7 @@
             text:       '../../node_modules/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
-            
+
             sat:                     '../../node_modules/sat/SAT',
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',

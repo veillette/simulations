@@ -23,7 +23,7 @@ define(function (require) {
 
         createTopTerminalSilhouette: function() {
             var pos = this.battery.get('position');
-            
+
             var w = Battery.TOP_TERMINAL_WIDTH;
             var h = Battery.TOP_TERMINAL_HEIGHT;
 
@@ -31,7 +31,7 @@ define(function (require) {
             var p1 = this._p1.set(this.mvt.modelToView(pos.x + w / 2, pos.y + Battery.TOP_TERMINAL_Y_OFFSET - (h / 2), 0));
             var p2 = this._p2.set(this.mvt.modelToView(pos.x + w / 2, pos.y + Battery.TOP_TERMINAL_Y_OFFSET + (h / 2), 0));
             var p3 = this._p3.set(this.mvt.modelToView(pos.x - w / 2, pos.y + Battery.TOP_TERMINAL_Y_OFFSET + (h / 2), 0));
-            
+
             var polygon = new SAT.Polygon(new SAT.Vector(), [
                 new SAT.Vector(p0.x, p0.y),
                 new SAT.Vector(p1.x, p1.y),

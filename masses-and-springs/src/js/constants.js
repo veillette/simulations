@@ -5,7 +5,7 @@ define(function (require) {
     var _ = require('underscore');
 
 
-    var Constants = {}; 
+    var Constants = {};
 
     var ColorConstants = {
         'cool-gray' : '#6a7686',

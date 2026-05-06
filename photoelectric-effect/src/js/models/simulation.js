@@ -29,7 +29,7 @@ define(function (require, exports, module) {
 
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var PEffectSimulation = DischargeLampsSimulation.extend({
 
@@ -37,7 +37,7 @@ define(function (require, exports, module) {
             viewMode: Constants.PEffectSimulation.BEAM_VIEW,
             controlMode: Constants.PEffectSimulation.INTENSITY
         }),
-        
+
         initialize: function(attributes, options) {
             DischargeLampsSimulation.prototype.initialize.apply(this, [attributes, options]);
         },
@@ -66,7 +66,7 @@ define(function (require, exports, module) {
                 beamWidth:           PEffectSimulation.BEAM_WIDTH,
                 maxPhotonsPerSecond: PEffectSimulation.MAX_PHOTONS_PER_SECOND,
                 photonsPerSecond:    0,
-                fanout:              PEffectSimulation.BEAM_FANOUT, 
+                fanout:              PEffectSimulation.BEAM_FANOUT,
                 speed:               Photon.DEFAULT_SPEED,
                 enabled:             true
             }, {
@@ -133,7 +133,7 @@ define(function (require, exports, module) {
             // Check for changes is state, and notify listeners of changes
             if (this.getCurrent() !== this.get('current'))
                 this.set('current', this.getCurrent());
-            
+
             if (this.getVoltage() !== this.get('voltage'))
                 this.set('voltage', this.getVoltage());
 
@@ -193,8 +193,8 @@ define(function (require, exports, module) {
                 var fractionOfPhotonsMoreEnergeticThanRetardingVoltage = Math.max(
                     0,
                     Math.min(
-                        (photonEnergyBeyondWorkFunction - retardingVoltage) / MetalEnergyAbsorptionStrategy.TOTAL_ENERGY_DEPTH, 
-                        1 
+                        (photonEnergyBeyondWorkFunction - retardingVoltage) / MetalEnergyAbsorptionStrategy.TOTAL_ENERGY_DEPTH,
+                        1
                     )
                 );
                 electronsPerSecondToAnode = electronsPerSecondFromTarget * fractionOfPhotonsMoreEnergeticThanRetardingVoltage;
@@ -211,7 +211,7 @@ define(function (require, exports, module) {
             // #3281: Any number of electrons <1 is effectively zero. This presents non-zero current readings when no electrons are reaching the anode.
             if (electronsPerSecondToAnode < 1)
                 electronsPerSecondToAnode = 0;
-            
+
             return electronsPerSecondToAnode * PEffectSimulation.CURRENT_JIMMY_FACTOR;
         },
 

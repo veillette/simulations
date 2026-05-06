@@ -35,7 +35,7 @@ define(function(require) {
 
             // UV texture
             this.uvTexture = Assets.Texture(Assets.Images.PHOTON_UV);
-            
+
             SpriteCollectionView.prototype.initialize.apply(this, arguments);
         },
 
@@ -70,7 +70,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             if (model.get('wavelength') < WavelengthColors.MIN_WAVELENGTH) {
                 sprite.texture = this.uvTexture;
                 sprite.tint = 0xFFFFFF;

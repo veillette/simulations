@@ -14,7 +14,7 @@ define(function (require) {
     var EnergyChunk                      = require('models/energy-chunk');
     var EnergyChunkDistributor           = require('models/energy-chunk-distributor');
     var EnergyChunkContainerSlice        = require('models/energy-chunk-container-slice');
-    
+
 
     /**
      * Constants
@@ -29,7 +29,7 @@ define(function (require) {
     };
 
     /**
-     * 
+     *
      */
     var Beaker = RectangularThermalMovableElement.extend({
 
@@ -76,7 +76,7 @@ define(function (require) {
             this._thermalContactArea = new ThermalContactArea(this._rect, true);
 
             this._steamTemperatureFunction = Functions.createLinearFunction(
-                0, 
+                0,
                 this.get('maxSteamHeight') * this.get('steamingProportion'),
                 this.get('temperature'),
                 Constants.ROOM_TEMPERATURE
@@ -84,7 +84,7 @@ define(function (require) {
 
             // Calling the parent's initialize function
             Beaker.__super__.initialize.apply(this, arguments);
-            
+
             this.set('maxSteamHeight', 2 * this.get('height'));
 
             // Surfaces used for stacking and thermal interaction.
@@ -137,7 +137,7 @@ define(function (require) {
             while (this.getNumEnergyChunks() < targetNumChunks) {
                 // Add a chunk at a random location in the beaker.
                 var chunk = EnergyChunk.create({
-                    energyType: EnergyChunk.THERMAL, 
+                    energyType: EnergyChunk.THERMAL,
                     position:   EnergyChunkDistributor.generateRandomLocation(initialChunkBounds)
                 });
                 //console.log(EnergyChunkDistributor.generateRandomLocation(initialChunkBounds));
@@ -203,7 +203,7 @@ define(function (require) {
 
         getSteamTemperature: function(heightAboveWater) {
             this._steamTemperatureFunction.set(
-                0, 
+                0,
                 this.get('maxSteamHeight') * this.get('steamingProportion'),
                 this.get('temperature'),
                 Constants.ROOM_TEMPERATURE

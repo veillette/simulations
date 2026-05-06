@@ -1,9 +1,9 @@
 define(function(require) {
-    
+
     'use strict';
 
     var NuclearPhysicsAppView = require('views/app');
-    
+
     var MultiNucleusBetaDecaySimView  = require('beta-decay/views/sim/multiple');
     var SingleNucleusBetaDecaySimView = require('beta-decay/views/sim/single');
 

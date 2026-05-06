@@ -56,7 +56,7 @@ define(function (require, exports, module) {
             furthestRecordedTime: 0, // Seconds
             maxRecordingTime:    20  // Seconds
         }),
-        
+
         initialize: function(attributes, options) {
             // The centerpiece
             this.ladybug = new Ladybug();
@@ -119,7 +119,7 @@ define(function (require, exports, module) {
          * Initializes the models used in the simulation
          */
         initComponents: function() {
-            
+
         },
 
         /**
@@ -185,7 +185,7 @@ define(function (require, exports, module) {
                     case UpdateMode.POSITION:
                         this.updatePositionMode(deltaTime);
                         break;
-                    case UpdateMode.VELOCITY: 
+                    case UpdateMode.VELOCITY:
                         this.updateVelocityMode(deltaTime);
                         break;
                     case UpdateMode.ACCELERATION:
@@ -208,9 +208,9 @@ define(function (require, exports, module) {
                 this.samplingMotionModel.addPointAndUpdate(this.getLastSamplePoint());
                 this.ladybug.setPosition(this.samplingMotionModel.getAverageMid());
 
-                // PhET: added fudge factors for getting the scale right with 
-                //   current settings of [samplingMotionModel and] used 
-                //   spreadsheet to make sure model v and a are approximately 
+                // PhET: added fudge factors for getting the scale right with
+                //   current settings of [samplingMotionModel and] used
+                //   spreadsheet to make sure model v and a are approximately
                 //   correct.
                 var vscale = (1 / deltaTime) / 10;
                 var ascale = vscale * vscale * 3.835;
@@ -238,13 +238,13 @@ define(function (require, exports, module) {
 
             this.ladybug.updatePositionFromVelocity(deltaTime);
             this.ladybug.setAcceleration(this.estimateAcceleration());
-            
+
             this.pointInDirectionOfMotion();
         },
 
         /**
-         * The update function for when we are in acceleration 
-         *   mode (when the ladybug is driven by its 
+         * The update function for when we are in acceleration
+         *   mode (when the ladybug is driven by its
          *   acceleration), this function updates all of the
          *   ladybug's motion properties according to the
          *   delta time (time between steps).
@@ -425,7 +425,7 @@ define(function (require, exports, module) {
         recordState: function() {
             var stateRecord = ladybugStateRecordPool.create();
             stateRecord.recordState(this.get('time'), this.ladybug);
-        
+
             // Check if we want to add it to the culled history
             if (!this.stateMatchesPrevious(stateRecord))
                 this.culledStateHistory.push(stateRecord);
@@ -466,7 +466,7 @@ define(function (require, exports, module) {
         findStateWithClosestTime: function(time) {
             if (!this._historyTimes)
                 return null;
-            
+
             var stateIndex = binarySearch.closest(this._historyTimes, time);
             return this.stateHistory[stateIndex];
         },
@@ -552,7 +552,7 @@ define(function (require, exports, module) {
          * Called before switching to playback (non-recording) mode
          *   to get ready to read stored states in order. It sorts
          *   the array of historical states by time and then plucks
-         *   just the times out into a separate array for faster 
+         *   just the times out into a separate array for faster
          *   random access.
          */
         prepareForPlayback: function() {

@@ -51,9 +51,9 @@ define(function (require) {
 
         update: function() {
             this.set('startX', this.get('battery').getX());
-            this.set('startY', 
-                this.get('battery').getY() + 
-                this.get('battery').getTopTerminalYOffset() - 
+            this.set('startY',
+                this.get('battery').getY() +
+                this.get('battery').getTopTerminalYOffset() -
                 this.get('startYOffset')
             );
         }
@@ -69,9 +69,9 @@ define(function (require) {
 
         update: function() {
             this.set('startX', this.get('battery').getX());
-            this.set('startY', 
-                this.get('battery').getY() + 
-                this.get('battery').getTopTerminalYOffset() + 
+            this.set('startY',
+                this.get('battery').getY() +
+                this.get('battery').getTopTerminalYOffset() +
                 this.get('startYOffset')
             );
         }

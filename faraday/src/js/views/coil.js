@@ -25,26 +25,26 @@ define(function(require) {
      * CoilGraphic is the graphical representation of a coil of wire.
      * In order to simulate objects passing "through" the coil, the coil graphic
      * consists of two layers, called the "foreground" and "background".
-     * 
+     *
      * The coil is drawn as a set of curves, with a "wire end" joined at the each
      * end of the coil.  The wire ends is where things can be connected to the coil
-     * (eg, a lightbulb or voltmeter). 
-     * 
-     * The coil optionally shows electrons flowing. The number of electrons is 
-     * a function of the coil radius and number of loops.  Electrons are part of 
+     * (eg, a lightbulb or voltmeter).
+     *
+     * The coil optionally shows electrons flowing. The number of electrons is
+     * a function of the coil radius and number of loops.  Electrons are part of
      * the simulation model, and they know about the path that they need to follow.
      * The path is a describe by a set of ElectronPathDescriptors.
-     * 
+     *
      * The set of ElectronPathDescriptors contains the information that the electrons
-     * need to determine which layer that are in (foreground or background) 
+     * need to determine which layer that are in (foreground or background)
      * and how to adjust ("scale") their speed so that they appear to flow at
      * the same rate in all curve segments.  (For example, the wire ends are
-     * significantly shorter curves that the other segments in the coil.) 
-     * 
+     * significantly shorter curves that the other segments in the coil.)
+     *
      * WARNING!  The updateCoil method in particular is very complicated, and
-     * the curves that it creates have been tuned so that all curve segments 
+     * the curves that it creates have been tuned so that all curve segments
      * are smoothly joined to form a 3D-looking coil.  If you change values,
-     * do so with caution, test frequently, and perform a close visual 
+     * do so with caution, test frequently, and perform a close visual
      * inspection of your changes.
      */
     var CoilView = PixiView.extend({
@@ -63,10 +63,10 @@ define(function(require) {
             this.foregroundLayerColor   = CoilView.FOREGROUND_COLOR;
             this.middlegroundColor = CoilView.MIDDLEGROUND_COLOR;
             this.backgroundLayerColor   = CoilView.BACKGROUND_COLOR;
-            
+
             this.electronPath = [];
             this.electrons = [];
-            
+
             this.numberOfLoops = -1; // force update
             this.loopRadius    = -1; // force update
             this.wireWidth     = -1; // force update
@@ -121,7 +121,7 @@ define(function(require) {
         disableElectronAnimation: function() {
             this.setElectronAnimationEnabled(false);
         },
-        
+
         /**
          * Determines whether animation of current flow is enabled.
          */
@@ -150,7 +150,7 @@ define(function(require) {
                 this.updateCoil();
             }
         },
-        
+
         isEndsConnected: function() {
             return this.endsConnected;
         },
@@ -173,10 +173,10 @@ define(function(require) {
             }
             return changed;
         },
-        
+
         /*
          * Determines if the electron animation has changed.
-         * 
+         *
          * @return true or false
          */
         electronsChanged: function() {
@@ -193,7 +193,7 @@ define(function(require) {
                 // Update the physical appearance of the coil.
                 if (this.coilChanged())
                     this.updateCoil();
-                
+
                 // Change the speed/direction of electrons to match the voltage.
                 if (this.electronAnimationEnabled && this.electronsChanged())
                     this.updateElectrons();
@@ -212,9 +212,9 @@ define(function(require) {
 
         /**
          * Updates the coil, recreating all graphics and electron model elements.
-         * 
+         *
          * WARNING! A lot of time was spent tweaking points so that the curves appear
-         * to form one 3D continuous coil.  Be very careful what you change, and visually 
+         * to form one 3D continuous coil.  Be very careful what you change, and visually
          * inspect the results closely.
          */
         updateCoil: function() {
@@ -236,10 +236,10 @@ define(function(require) {
             var numberOfLoops = this.model.get('numberOfLoops');
             var loopSpacing = Math.round(this.mvt.modelToViewDeltaX(this.model.get('loopSpacing')));
             var wireWidth = this.mvt.modelToViewDeltaX(this.model.get('wireWidth'));
-            
+
             // Start at the left-most loop, keeping the coil centered.
             var xStart = -(loopSpacing * (numberOfLoops - 1) / 2);
-            
+
             var leftEndPoint;
             var rightEndPoint;
 
@@ -257,15 +257,15 @@ define(function(require) {
 
             // bgCtx.fillStyle = '#00d';
             // bgCtx.fillRect(0, 0, 600, 600);
-            
+
             // Create the wire ends & loops from left to right.
             // Curves are created in the order that they are pieced together.
             for (var i = 0; i < numberOfLoops; i++) {
                 var xOffset = xStart + (i * loopSpacing);// + this.getWidth() / 2;
                 var yOffset = 0//Math.floor(radius) + 40;
-                
+
                 // If first loop (left)
-                if (i === 0) {     
+                if (i === 0) {
                     // Left wire end
                     leftEndPoint = this.createWireLeftEnd(bg, bgCtx, loopSpacing, xOffset, yOffset, radius);
 
@@ -276,16 +276,16 @@ define(function(require) {
                     // Back top (no wire end connected)
                     this.createWireBackTop(bg, bgCtx, loopSpacing, xOffset, yOffset, radius);
                 }
-                
+
                 // Back bottom
                 this.createWireBackBottom(bg, bgCtx, xOffset, yOffset, radius);
-                
+
                 // Front bottom
                 this.createWireFrontBottom(fg, fgCtx, xOffset, yOffset, radius);
 
                 // Front top
                 this.createWireFrontTop(fg, fgCtx, loopSpacing, xOffset, yOffset, radius);
-                
+
                 // If last loop (right)
                 if (i === numberOfLoops - 1) {
                     // Right wire end
@@ -313,17 +313,17 @@ define(function(require) {
             fgSprite.x = -this.width / 2;
             bgSprite.y = -this.height / 2 + this.yOffset;
             fgSprite.y = -this.height / 2 + this.yOffset;
-            
+
             // Add electrons to the coil.
             var speed = this.calculateElectronSpeed();
-            
+
             var leftEndIndex = 0;
             var rightEndIndex = this.electronPath.length - 1;
 
             // For each curve...
             for (var pathIndex = 0; pathIndex < this.electronPath.length; pathIndex++) {
                 /*
-                 * The wire ends are a different size, 
+                 * The wire ends are a different size,
                  * and therefore contain a different number of electrons.
                  */
                 var numberOfElectrons;
@@ -358,7 +358,7 @@ define(function(require) {
                     var parent = descriptor.getParent();
                     var electronView = new ElectronView({
                         mvt: this.mvt,
-                        model: electron 
+                        model: electron
                     });
                     parent.addChild(electronView.displayObject);
                     descriptor.getParent().addChild(electronView.displayObject);
@@ -372,7 +372,7 @@ define(function(require) {
         updateElectrons: function() {
             // Speed and direction is a function of the voltage.
             var speed = this.calculateElectronSpeed();
-            
+
             // Update all electrons.
             var numberOfElectrons = this.electrons.length;
             for (var i = 0; i < numberOfElectrons; i++) {
@@ -431,19 +431,19 @@ define(function(require) {
             var startPoint = this._startPoint.set(endPoint.x - this.mvt.modelToViewDeltaX(15), endPoint.y - this.mvt.modelToViewDeltaX(41)); // upper
             var controlPoint = this._controlPoint.set(endPoint.x - this.mvt.modelToViewDeltaX(20), endPoint.y - this.mvt.modelToViewDeltaX(20));
             var curve = new QuadBezierSpline(startPoint, controlPoint, endPoint);
-            
+
             // Scale the speed, since this curve is different than the others in the coil.
             var speedScale = (radius / ELECTRON_SPACING) / ELECTRONS_IN_LEFT_END;
             var d = new ElectronPathDescriptor(curve, background, ElectronPathDescriptor.BACKGROUND, speedScale);
             this.electronPath.push(d);
-            
+
             // Horizontal gradient, left to right.
             this.drawQuadBezierSpline(
-                ctx, curve, this.middlegroundColor, this.backgroundLayerColor, 
-                startPoint.x, yOffset, 
+                ctx, curve, this.middlegroundColor, this.backgroundLayerColor,
+                startPoint.x, yOffset,
                 endPoint.x, yOffset
             );
-            
+
             return new Vector2(startPoint);
         },
 
@@ -458,7 +458,7 @@ define(function(require) {
 
             var d = new ElectronPathDescriptor(curve, background, ElectronPathDescriptor.BACKGROUND);
             this.electronPath.push(d);
-            
+
             this.drawQuadBezierSpline(ctx, curve, this.backgroundLayerColor);
         },
 
@@ -476,8 +476,8 @@ define(function(require) {
 
             // Diagonal gradient, upper left to lower right.
             this.drawQuadBezierSpline(
-                ctx, curve, this.middlegroundColor, this.backgroundLayerColor, 
-                Math.floor(startPoint.x + (radius * 0.10)), -Math.floor(radius) + yOffset, 
+                ctx, curve, this.middlegroundColor, this.backgroundLayerColor,
+                Math.floor(startPoint.x + (radius * 0.10)), -Math.floor(radius) + yOffset,
                 xOffset, -Math.floor(radius * 0.92) + yOffset
             );
         },
@@ -496,8 +496,8 @@ define(function(require) {
 
             // Vertical gradient, upper to lower
             this.drawQuadBezierSpline(
-                ctx, curve, this.backgroundLayerColor, this.middlegroundColor, 
-                0, Math.floor(radius * 0.92) + yOffset, 
+                ctx, curve, this.backgroundLayerColor, this.middlegroundColor,
+                0, Math.floor(radius * 0.92) + yOffset,
                 0, Math.floor(radius) + yOffset
             );
         },
@@ -516,8 +516,8 @@ define(function(require) {
 
             // Horizontal gradient, left to right
             this.drawQuadBezierSpline(
-                ctx, curve, this.foregroundLayerColor, this.middlegroundColor, 
-                Math.floor(-radius * 0.25) + xOffset, yOffset, 
+                ctx, curve, this.foregroundLayerColor, this.middlegroundColor,
+                Math.floor(-radius * 0.25) + xOffset, yOffset,
                 Math.floor(-radius * 0.15) + xOffset, yOffset
             );
         },
@@ -533,11 +533,11 @@ define(function(require) {
 
             var d = new ElectronPathDescriptor(curve, foreground, ElectronPathDescriptor.FOREGROUND);
             this.electronPath.push(d);
-            
+
             // Horizontal gradient, left to right
             this.drawQuadBezierSpline(
-                ctx, curve, this.foregroundLayerColor, this.middlegroundColor, 
-                Math.floor(-radius * 0.25) + xOffset, yOffset, 
+                ctx, curve, this.foregroundLayerColor, this.middlegroundColor,
+                Math.floor(-radius * 0.25) + xOffset, yOffset,
                 Math.floor(-radius * 0.15) + xOffset, yOffset
             );
         },
@@ -557,7 +557,7 @@ define(function(require) {
             this.electronPath.push(d);
 
             this.drawQuadBezierSpline(ctx, curve, this.middlegroundColor);
-            
+
             return new Vector2(endPoint);
         },
 
@@ -586,7 +586,7 @@ define(function(require) {
             // Current below the threshold is effectively zero.
             if (Math.abs(currentAmplitude) < Constants.CURRENT_AMPLITUDE_THRESHOLD)
                 currentAmplitude = 0;
-            
+
             return currentAmplitude;
         }
 

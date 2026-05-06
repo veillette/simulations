@@ -19,9 +19,9 @@ define(function (require) {
             energyAbsorptionStrategy: null,
             meanStateLifetime: DischargeLampAtom.DEFAULT_STATE_LIFETIME
         }),
-        
+
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             options = _.extend({

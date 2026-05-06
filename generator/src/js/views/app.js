@@ -1,9 +1,9 @@
 define(function(require) {
-    
+
     'use strict';
 
     var FaradayAppView = require('views/app');
-    
+
     var GeneratorBarMagnetSimView     = require('./sim/bar-magnet');
     var GeneratorPickupCoilSimView    = require('./sim/pickup-coil');
     var GeneratorElectromagnetSimView = require('./sim/electromagnet');

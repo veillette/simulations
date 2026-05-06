@@ -47,7 +47,7 @@ define(function (require) {
                 this.decayTime = simulationTime + this.calculatePolonium211DecayTime();
             }
         },
-        
+
         /**
          * Return a value indicating whether or not the nucleus has decayed.
          */
@@ -60,7 +60,7 @@ define(function (require) {
 
         /**
          * This method generates a value indicating the number of milliseconds for
-         *   a Polonium 211 nucleus to decay.  This calculation is based on the 
+         *   a Polonium 211 nucleus to decay.  This calculation is based on the
          *   exponential decay formula and uses the decay constant for Polonium 211.
          */
         calculatePolonium211DecayTime: function(){

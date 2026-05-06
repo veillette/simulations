@@ -144,7 +144,7 @@ define(function(require) {
         },
 
         createAndAddPrismView: function(prism) {
-            var prismView = new PrismView({ 
+            var prismView = new PrismView({
                 mvt: this.mvt,
                 model: prism,
                 medium: this.simulation.prismMedium

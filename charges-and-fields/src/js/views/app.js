@@ -1,5 +1,5 @@
 define(function(require) {
-    
+
     'use strict';
 
     var PixiAppView = require('common/v3/pixi/view/app');

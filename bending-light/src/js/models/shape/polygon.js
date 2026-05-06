@@ -13,7 +13,7 @@ define(function (require) {
     var Intersection = require('models/intersection');
 
     /**
-     * 
+     *
      */
     var Polygon = function(points, referencePointIndex) {
         Shape.apply(this, arguments);
@@ -69,7 +69,7 @@ define(function (require) {
                     tail.x,               tail.y,
                     tail.x + direction.x, tail.y + direction.y
                 );
-                
+
                 if (intersection && intersection instanceof Vector2) {
                     // Choose the normal vector that points the opposite direction of
                     //   the incoming ray

@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     var SAT  = require('sat');
-    
+
     var PixiView = require('common/v3/pixi/view');
 
     var CapacitorShapeCreator = require('shape-creators/capacitor');
@@ -18,7 +18,7 @@ define(function(require) {
     var Polarity = Constants.Polarity;
 
     /**
-     * 
+     *
      */
     var CapacitorView = PixiView.extend({
 

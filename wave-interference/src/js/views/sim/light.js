@@ -38,7 +38,7 @@ define(function (require) {
 				segmentPotentialName: 'Mirror',
 				detectorYLabel: 'E-Field'
 			}, options);
-			
+
 			SimView.prototype.initialize.apply(this, [ options ]);
 		},
 

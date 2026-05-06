@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var ArrowView = require('common/v3/pixi/view/arrow');
     var Colors    = require('common/colors/colors');
@@ -14,7 +14,7 @@ define(function(require) {
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
     var Constants = require('constants');
-    
+
     var silent = { silent: true };
 
     var BodyView = PixiView.extend({
@@ -75,7 +75,7 @@ define(function(require) {
             this.body.buttonMode = true;
             this.body.defaultCursor = 'move';
 
-            this.arrowView = new ArrowView({ 
+            this.arrowView = new ArrowView({
                 model: this.arrowViewModel,
 
                 tailWidth:  BodyView.ARROW_TAIL_WIDTH,
@@ -87,7 +87,7 @@ define(function(require) {
             });
 
             this.initVelocityMarker();
-            
+
             this.displayObject.addChild(this.velocityMarker);
             this.displayObject.addChild(this.arrowView.displayObject);
             this.displayObject.addChild(this.body);
@@ -141,7 +141,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 this.displayObject.x += dx;
                 this.displayObject.y += dy;
 
@@ -172,7 +172,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
                 var x = local.x - this.dragOffset.x;
                 var y = local.y - this.dragOffset.y;
-                
+
                 this.velocityMarker.x = x;
                 this.velocityMarker.y = y;
 

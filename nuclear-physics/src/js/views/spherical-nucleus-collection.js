@@ -52,7 +52,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             if (model.hasDecayed())
                 sprite.tint = this.decayedColor;
             else

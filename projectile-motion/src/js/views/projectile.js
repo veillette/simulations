@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
 
@@ -32,7 +32,7 @@ define(function(require) {
          */
         initGraphics: function() {
             var projectileSprite = this.createProjectileSprite();
-            
+
             this.projectileSprite = projectileSprite;
             this.displayObject.addChild(projectileSprite);
 

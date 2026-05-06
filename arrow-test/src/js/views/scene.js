@@ -22,7 +22,7 @@ define(function(require) {
     var TemplateSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -53,24 +53,24 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
             PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.arrowView = new DraggableArrowView({ 
+            this.arrowView = new DraggableArrowView({
                 model: this.arrowViewModel,
                 dragFillColor: '#ff6b00'
             });
 
-            this.snappingArrowView = new DraggableArrowView({ 
+            this.snappingArrowView = new DraggableArrowView({
                 model: this.snappingArrowViewModel,
                 fillColor: '#00ECFF',
                 snappingEnabled: true
             });
 
-            this.anchoredArrowView = new DraggableArrowView({ 
+            this.anchoredArrowView = new DraggableArrowView({
                 model: this.anchoredArrowViewModel,
                 bodyDraggingEnabled: false
             });
@@ -81,7 +81,7 @@ define(function(require) {
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
-            
+
         },
 
     });

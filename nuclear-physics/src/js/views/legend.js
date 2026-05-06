@@ -17,7 +17,7 @@ define(function(require) {
     var templateHtml = require('text!templates/legend.html');
 
     /**
-     * 
+     *
      */
     var LegendView = Backbone.View.extend({
 
@@ -40,8 +40,8 @@ define(function(require) {
          */
         initMVT: function() {
             this.mvt = new ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0), 
-                new Vector2(0, 0), 
+                new Vector2(0, 0),
+                new Vector2(0, 0),
                 this.scale
             );
         },

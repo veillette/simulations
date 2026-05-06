@@ -13,7 +13,7 @@ define(function (require) {
     var EnergyContainerCategory = Constants.EnergyContainerCategory;
 
     /**
-     * 
+     *
      */
     var IronBlock = Block.extend({
 

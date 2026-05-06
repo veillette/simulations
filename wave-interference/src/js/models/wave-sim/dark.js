@@ -25,7 +25,7 @@ define(function (require) {
 					this.oscillators[index].set('enabled', oscillator.get('enabled'));
 				});
 			}, this);
-			
+
 		},
 
 		/*

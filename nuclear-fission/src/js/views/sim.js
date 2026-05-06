@@ -14,7 +14,7 @@ define(function (require) {
     require('less!nuclear-fission/styles/playback-controls');
 
     /**
-     * 
+     *
      */
     var NuclearFissionSimView = NuclearPhysicsSimView.extend({
 

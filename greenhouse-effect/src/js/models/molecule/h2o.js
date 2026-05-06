@@ -73,7 +73,7 @@ define(function (require) {
             var maxHydrogenDisplacement = 18;
 
             this.getInitialAtomCogOffset(this.oxygenAtom).set(
-                0, 
+                0,
                 INITIAL_OXYGEN_VERTICAL_OFFSET - multFactor * maxOxygenDisplacement
             );
             this.getInitialAtomCogOffset(this.hydrogenAtom1).set(

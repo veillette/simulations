@@ -9,7 +9,7 @@ define(function (require) {
     var BoundsBouncePropagator = require('models/propagator/bounds-bounce');
 
     /**
-     * 
+     *
      */
     var EastBouncePropagator = function(xMax, distFromWall) {
         this.xMax = xMax;
@@ -31,7 +31,7 @@ define(function (require) {
             // TODO: See if this is a mistake in the original. I think it's supposed to be this.xMax - this.distFromWall
             return this._vec.set(this.xMax - this.distFromWall, oldPosition.y);
         },
-        
+
         getNewVelocity: function(oldVelocity) {
             var x = -Math.abs(oldVelocity.x);
             return this._vec.set(x - this.distFromWall, oldVelocity.y);

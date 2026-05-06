@@ -37,7 +37,7 @@ define(function(require) {
                 burnerStandWidth,
                 burnerStandHeight
             );
-            
+
             this.initBurnerView(burnerStandRect);
             this.initBurnerStandView(burnerStandRect);
             this.initSteam();
@@ -157,7 +157,7 @@ define(function(require) {
                 .set(this.spoutTipPosition)
                 .add(this.spoutDirection().scale(cloudCenterDistance));
             //console.log(cloudCenter);
-            
+
             // Activate new particles
             while (this.steamParticleEmissionCounter > emissionInterval) {
                 this.emitSteamParticle(time, steamingProportion, cloudCenterDistance);
@@ -199,7 +199,7 @@ define(function(require) {
 
                 // Fade out when it nears the end of its life
                 if (percentLifeSpent >= TeapotView.STEAM_PARTICLE_FADE_POINT)
-                    particle.alpha = (percentLifeLeft / (1 - TeapotView.STEAM_PARTICLE_FADE_POINT)) * baseAlpha;            
+                    particle.alpha = (percentLifeLeft / (1 - TeapotView.STEAM_PARTICLE_FADE_POINT)) * baseAlpha;
 
                 // Apply repellant force on particles inversely related
                 //   to the distance from the center of the cloud.
@@ -214,7 +214,7 @@ define(function(require) {
                 }
 
                 if (particle.hasEnteredCloud) {
-                    // If it has entered the cloud, keep it in the cloud 
+                    // If it has entered the cloud, keep it in the cloud
                     //   by applying a force relative to the distance from
                     //   the center (for from the edge of the circle in).
                     edgeRepellantFactor = particleCloudCenterDistance / steamCloudRadius;
@@ -241,7 +241,7 @@ define(function(require) {
 
             var scale = TeapotView.STEAM_PARTICLE_RADIUS_RANGE.min / (steamParticleTexture.width / 2);
             var angle = this.spoutAngle() + (Math.random() * TeapotView.STEAM_EMISSION_ANGLE) - (TeapotView.STEAM_EMISSION_ANGLE / 2);
-            
+
             var particle = this.dormantSteamParticles.pop();
             if (particle) {
                 particle.x = this.spoutTipPosition.x;
@@ -256,7 +256,7 @@ define(function(require) {
                 // console.log(this.spoutTipPosition);
                 particle.timeToLive = TeapotView.STEAM_PARTICLE_LIFE_RANGE.random() * steamingProportion;
                 particle.lifeEndsAt = time + particle.timeToLive;
-                this.activeSteamParticles.push(particle);    
+                this.activeSteamParticles.push(particle);
             }
 
             return particle;

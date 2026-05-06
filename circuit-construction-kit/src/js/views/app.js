@@ -1,5 +1,5 @@
 define(function(require) {
-    
+
     'use strict';
 
     var $ = require('jquery');
@@ -41,7 +41,7 @@ define(function(require) {
 
         toggleHelp: function() {
             this.$('.help-btn').toggleClass('active');
-            
+
             if (this.$('.help-btn').hasClass('active'))
                 this.simViews[0].showHelp();
             else

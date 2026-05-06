@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
     var range    = require('common/math/range');
@@ -52,9 +52,9 @@ define(function(require) {
             this.handle.buttonMode = true;
             this.handle.defaultCursor = 'move';
 
-            this.handleYRange = range({ 
-                min: -this.base.height + this.handle.height * 0.24, 
-                max: -this.base.height + this.handle.height * 0.9 
+            this.handleYRange = range({
+                min: -this.base.height + this.handle.height * 0.24,
+                max: -this.base.height + this.handle.height * 0.9
             });
             this.handle.y = this.handleYRange.lerp(0.8);
 
@@ -73,7 +73,7 @@ define(function(require) {
             if (this.dragging) {
                 var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
                 var y = local.y - this.dragOffset.y;
-                
+
                 if (y > this.handleYRange.max)
                     y = this.handleYRange.max;
                 if (y < this.handleYRange.min)
@@ -87,7 +87,7 @@ define(function(require) {
                         this.pumpAmount = 0;
                     }
                 }
-                    
+
                 this.handle.y = y;
             }
         },

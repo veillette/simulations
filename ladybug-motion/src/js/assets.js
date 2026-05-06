@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         LADYBUG: 'ladybug',
         LADYBUG_OPEN_WINGS: 'ladybug-open-wings'
     };

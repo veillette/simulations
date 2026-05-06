@@ -85,7 +85,7 @@ define(function(require) {
 
 		draw: function() {
 			if (glMatrix.vec2.distance(this.tail, this.head) !== 0) {
-			
+
 				// Get normalized direction vector
 				glMatrix.vec2.sub(this._direction, this.head, this.tail);
 				glMatrix.vec2.normalize(this._direction, this._direction);

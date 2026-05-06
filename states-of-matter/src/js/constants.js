@@ -5,7 +5,7 @@ define(function (require) {
     var Rectangle = require('common/math/rectangle');
     var Vector2   = require('common/math/vector2');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -30,7 +30,7 @@ define(function (require) {
     Constants.EPSILON_FOR_WATER = 200;           // Epsilon/k-Boltzmann is in Kelvin.
     Constants.SIGMA_FOR_WATER = 444;             // In picometers.
 
-    // Max and min values for parameters of Lennard-Jones potential 
+    // Max and min values for parameters of Lennard-Jones potential
     // calculations.  These are used in places were non-normalized LJ
     // calculations are made, graphed, and otherwise controlled.
     Constants.MAX_SIGMA = 500;      // In picometers.
@@ -38,7 +38,7 @@ define(function (require) {
     Constants.MAX_EPSILON = 450;    // Epsilon/k-Boltzmann is in Kelvin.
     Constants.MIN_EPSILON = 20;     // Epsilon/k-Boltzmann is in Kelvin.
 
-    // Constants used to describe the the spatial relationship between 
+    // Constants used to describe the the spatial relationship between
     Constants.THETA_HOH = 120 * Math.PI / 180;  // This is not quite the real value for a water
     // molecule, but it is close and worked better in
     // the simulation.
@@ -50,7 +50,7 @@ define(function (require) {
     Constants.BONDED_PARTICLE_DISTANCE = 0.9;  // In particle diameters.
 
     // Boltzmann's constant.
-    Constants.K_BOLTZMANN = 1.38E-23; 
+    Constants.K_BOLTZMANN = 1.38E-23;
 
 
     /*************************************************************************
@@ -237,7 +237,7 @@ define(function (require) {
     WaterPhaseStateChanger.GAS_SPACING_FACTOR = 1.0;
 
     Constants.WaterPhaseStateChanger = WaterPhaseStateChanger;
-    
+
 
     /*************************************************************************
      **                                                                     **
@@ -429,7 +429,7 @@ define(function (require) {
     PhaseDiagramView.SLOPE_IN_2ND_REGION =
         (PhaseDiagramView.CRITICAL_POINT_TEMPERATURE_ON_DIAGRAM - PhaseDiagramView.TRIPLE_POINT_TEMPERATURE_ON_DIAGRAM) /
         (PhaseDiagramView.CRITICAL_POINT_TEMPERATURE_IN_MODEL - PhaseDiagramView.TRIPLE_POINT_TEMPERATURE_IN_MODEL);
-    PhaseDiagramView.OFFSET_IN_2ND_REGION = PhaseDiagramView.TRIPLE_POINT_TEMPERATURE_ON_DIAGRAM - 
+    PhaseDiagramView.OFFSET_IN_2ND_REGION = PhaseDiagramView.TRIPLE_POINT_TEMPERATURE_ON_DIAGRAM -
         (PhaseDiagramView.SLOPE_IN_2ND_REGION * PhaseDiagramView.TRIPLE_POINT_TEMPERATURE_IN_MODEL);
     PhaseDiagramView.PRESSURE_FACTOR = 35;
 

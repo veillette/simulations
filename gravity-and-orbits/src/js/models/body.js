@@ -9,7 +9,7 @@ define(function (require) {
     var BodyStateRecord = require('models/body-state-record');
 
     /**
-     * 
+     *
      */
     var Body = ForceAndMotionObject.extend({
 
@@ -25,7 +25,7 @@ define(function (require) {
             radius:   1,
             density:  1,
             fixed:    false, // True if the object doesn't move when the physics engine runs
-            
+
             // State properties
             userControlled: false, // Whether the user is currently controlling the position
             exploded:       false,
@@ -35,16 +35,16 @@ define(function (require) {
             /**
              * Though the user can change the mass of these bodies, they are by default set
              *   to a value that corresponds to an object that most users are familiar with.
-             *   For example, the "planet" body would have a referenceMassLabel of "Earth" 
+             *   For example, the "planet" body would have a referenceMassLabel of "Earth"
              *   and a referenceMass of the earth's mass.
              */
             referenceMass: 1,
             referenceMassLabel: 'a Model-T'
         }),
-        
+
         initialize: function(attributes, options) {
             ForceAndMotionObject.prototype.initialize.apply(this, arguments);
-            
+
             // Derived properties
             this.set('minMass', this.get('mass') / 2);
             this.set('maxMass', this.get('mass') * 2);
@@ -58,11 +58,11 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         // update: function(time, delta) {
 
-            
+
         // },
 
 
@@ -110,7 +110,7 @@ define(function (require) {
         massChanged: function(body, mass) {
             // Derived from: density = mass/volume, and volume = 4/3 pi r r r
             var radius = Math.pow(
-                3 * mass / 4 / Math.PI / this.get('density'), 
+                3 * mass / 4 / Math.PI / this.get('density'),
                 1 / 3
             );
             this.set('radius', radius);

@@ -8,7 +8,7 @@ define(function (require) {
 
     var DEG_TO_RAD = Math.PI / 180;
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -61,7 +61,7 @@ define(function (require) {
     Magnesium.NAME = '?????';
     Magnesium.ENERGY_LEVELS = [ -13.6 ];
     Magnesium.WORK_FUNCTION = 3.7;
-    
+
     Constants.Magnesium = Magnesium;
 
 
@@ -107,7 +107,7 @@ define(function (require) {
      *************************************************************************/
 
     var PEffectSimulation = {};
-    
+
     PEffectSimulation.ELECTRON_MODEL_SIMPLE = 1;
     PEffectSimulation.ELECTRON_MODEL_REALISTIC = 2;
 
@@ -172,7 +172,7 @@ define(function (require) {
 
     Constants.MetalEnergyAbsorptionStrategy = MetalEnergyAbsorptionStrategy;
 
-    
+
 
 
     return Constants;

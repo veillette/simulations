@@ -70,9 +70,9 @@ define(function(require) {
 			length = this.waveSimulation.lattice.width;
 			points = this.points;
 			for (i = 0; i < length; i++) {
-				points[i] = { 
-					x: 0, 
-					y: 0 
+				points[i] = {
+					x: 0,
+					y: 0
 				};
 			}
 		},
@@ -94,7 +94,7 @@ define(function(require) {
 			j = parseInt(this.waveSimulation.get('crossSectionY') * this.waveSimulation.heightRatio);
 			if (j > latHeight - 1)
 				j = latHeight - 1;
-			
+
 			length = this.portrait ? latHeight : latWidth;
 			for (i = 0; i < length; i++) {
 				points[i].x = i * xSpacing;

@@ -14,7 +14,7 @@ define(function(require) {
     var RAD_TO_DEG = 180 / Math.PI;
 
     /**
-     * 
+     *
      */
     var SensorView = ReservoirObjectView.extend({
 
@@ -45,7 +45,7 @@ define(function(require) {
                     headWidth:  18,
                     headLength: 18
                 });
-                this.displayObject.addChild(this.arrowView.displayObject);    
+                this.displayObject.addChild(this.arrowView.displayObject);
 
                 // Add text
                 var textSettings = {
@@ -67,7 +67,7 @@ define(function(require) {
         updateInfo: function() {
             var efield = this.simulation.getE(
                 this.mvt.viewToModelX(this.displayObject.x),
-                this.mvt.viewToModelY(this.displayObject.y) 
+                this.mvt.viewToModelY(this.displayObject.y)
             );
 
             // Update arrow

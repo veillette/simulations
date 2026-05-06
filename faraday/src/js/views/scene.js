@@ -35,7 +35,7 @@ define(function(require) {
         magnetModel: undefined,
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -49,7 +49,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         postRender: function() {
@@ -94,7 +94,7 @@ define(function(require) {
             var simWidth  = Constants.SCENE_WIDTH;
             var simHeight = Constants.SCENE_HEIGHT;
 
-            // ...to the usable screen space that we have  
+            // ...to the usable screen space that we have
             var leftMargin  = 0;
             var rightMargin = 0;
             if (AppView.windowIsShort()) {
@@ -109,9 +109,9 @@ define(function(require) {
 
             var simRatio = simWidth / simHeight;
             var screenRatio = usableWidth / usableHeight;
-            
+
             var scale = (screenRatio > simRatio) ? usableHeight / simHeight : usableWidth / simWidth;
-            
+
             this.viewOriginX = leftMargin + (usableWidth - (simWidth * scale)) / 2; // Center it
             this.viewOriginY = 0;
 
@@ -126,7 +126,7 @@ define(function(require) {
             this.bFieldOutsideView = new BFieldOutsideView({
                 mvt: this.mvt,
                 magnetModel: this.magnetModel,
-                xSpacing:    Constants.GRID_SPACING, 
+                xSpacing:    Constants.GRID_SPACING,
                 ySpacing:    Constants.GRID_SPACING,
                 needleWidth: Constants.GRID_NEEDLE_WIDTH,
                 bounds: new Rectangle(0, 0, this.width, this.height)

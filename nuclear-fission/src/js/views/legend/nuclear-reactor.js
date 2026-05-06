@@ -5,7 +5,7 @@ define(function(require) {
     var OneNucleusLegendView = require('nuclear-fission/views/legend/one-nucleus');
 
     /**
-     * 
+     *
      */
     var NuclearReactorLegendView = OneNucleusLegendView.extend({
 

@@ -7,8 +7,8 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * This is a base class for classes that implement the Verlet algorithm 
-     *   for simulating molecular interactions based on the Lennard-Jones 
+     * This is a base class for classes that implement the Verlet algorithm
+     *   for simulating molecular interactions based on the Lennard-Jones
      *   potential.
      */
     var VerletAlgorithm = function(simulation) {

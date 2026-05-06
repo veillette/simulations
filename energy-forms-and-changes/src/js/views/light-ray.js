@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView       = require('common/v3/pixi/view');
     var Vector2        = require('common/math/vector2');
     var PiecewiseCurve = require('common/math/piecewise-curve');
@@ -51,9 +51,9 @@ define(function(require) {
         },
 
         initBounds: function() {
-            /* I can actually just use my PieceWise curve of the line to 
-             *   calculate the bounds and origin of the bounding box that 
-             *   I'll use for the canvas as well as for translating points 
+            /* I can actually just use my PieceWise curve of the line to
+             *   calculate the bounds and origin of the bounding box that
+             *   I'll use for the canvas as well as for translating points
              *   to be relative to the canvas.
              */
             this.bounds = this.ray.getBounds();
@@ -226,7 +226,7 @@ define(function(require) {
                     this.debugGraphics.drawCircle(local.x, local.y, 4);
                     this.debugGraphics.endFill();
                 }
-                
+
                 //console.log(length);
             }
             return exitPoint;
@@ -308,7 +308,7 @@ define(function(require) {
 
             gradient.addColorStop(0, this.colorWithAlpha(startOpacity));
             gradient.addColorStop(1, this.colorWithAlpha(opacityAtEndPoint));
-            
+
             // Draw the line
             this.graphicsContext.lineWidth = this.lineWidth;
             this.graphicsContext.strokeStyle = gradient;
@@ -328,7 +328,7 @@ define(function(require) {
                 this.debugGraphics.beginFill(0xFF8800, 1);
                 this.debugGraphics.drawCircle(end.x, end.y, 5);
                 this.debugGraphics.endFill();
-               
+
                 // this.graphicsContext.beginPath();
                 // this.graphicsContext.arc(start.x, start.y, 3, 0, Math.PI * 2);
                 // this.graphicsContext.fillStyle = '#00ffff';

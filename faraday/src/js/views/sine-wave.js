@@ -11,7 +11,7 @@ define(function(require) {
 
     /**
      * SinWaveGraphic is the graphical representation of a sine wave.
-     * 
+     *
      * A set of line segments is draw to approximate the curve. The curve is
      *   constrained to be drawn within some viewport. The amplitude determines
      *   the height of the curve, while the frequency determines how many
@@ -57,14 +57,14 @@ define(function(require) {
         setMaxCycles: function(maxCycles) {
             this.maxCycles = maxCycles;
         },
-        
+
         /**
          * Gets the number of cycles that will be displayed when the frequency == 1.0.
          */
         getMaxCycles: function() {
             return this.maxCycles;
         },
-        
+
         /**
          * Sets the amplitude of the displayed wave.
          */
@@ -78,33 +78,33 @@ define(function(require) {
         getAmplitude: function() {
             return this.amplitude;
         },
-        
+
         /**
          * Sets the frequency of the displayed wave.
          */
         setFrequency: function(frequency) {
             this.frequency = frequency;
         },
-        
+
         /**
          * Gets the frequency.
          */
         getFrequency: function() {
             return this.frequency;
         },
-        
+
         /**
          * Gets the start angle, the angle at the leftmost point on the wave.
-         * 
+         *
          * @return the start angle, in radians
          */
         getStartAngle: function() {
             return this.startAngle;
         },
-        
+
         /**
          * Gets the end angle, the angle at the rightmost point on the wave.
-         * 
+         *
          * @return the end angle, in radians
          */
         getEndAngle: function() {

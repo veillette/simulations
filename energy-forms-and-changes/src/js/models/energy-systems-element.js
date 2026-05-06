@@ -4,7 +4,7 @@ define(function (require) {
 
     var Vector2            = require('common/math/vector2');
     var PositionableObject = require('common/models/positionable-object');
-    
+
     var EnergyChunkCollection = require('models/energy-chunk-collection');
 
     /**
@@ -16,7 +16,7 @@ define(function (require) {
             active: false,
             opacity: 0
         },
-        
+
         initialize: function(attributes, options) {
             PositionableObject.prototype.initialize.apply(this, [attributes, options]);
 

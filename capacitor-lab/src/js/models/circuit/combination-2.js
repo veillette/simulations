@@ -12,7 +12,7 @@ define(function (require) {
 
     /**
      * Model of a circuit with a battery (B), 2 capacitors in parallel (C2, C3), and one additional in series (C1).
-     * 
+     *
      *   |-----|
      *   |     |
      *   |    C1
@@ -22,7 +22,7 @@ define(function (require) {
      *   |     C2    C3
      *   |     |      |
      *   |-----|------|
-     * 
+     *
      * At first glance, this class appears to duplicate code from Combination1Circuit. But there are subtle
      *   differences, and the commonalities are only due to coincidences in the how the components are numbered in
      *   the circuit diagram.  It would be a mistake to extract common functionality based on these factors, since
@@ -68,7 +68,7 @@ define(function (require) {
                 dielectricMaterial: config.dielectricMaterial,
                 dielectricOffset: config.dielectricOffset
             });
-            
+
             x += config.capacitorXSpacing;
             var c3 = new Capacitor({
                 position: new Vector3(x, y, z),

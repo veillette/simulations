@@ -9,7 +9,7 @@ define(function(require) {
     var AppView  = require('common/v3/app/app');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
-    
+
     var Assets = require('assets');
 
     var Constants = require('constants');
@@ -109,7 +109,7 @@ define(function(require) {
             graphics.drawEllipse(rightCenter.x, rightCenter.y, ellipseWidth, ellipseHeight);
 
             // Draw lines connecting to numbers
-            var calculationTopY = AppView.windowIsShort() ? 
+            var calculationTopY = AppView.windowIsShort() ?
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
             var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
@@ -144,7 +144,7 @@ define(function(require) {
         },
 
         updateCalculationPosition: function() {
-            var calculationTopY = AppView.windowIsShort() ? 
+            var calculationTopY = AppView.windowIsShort() ?
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
             var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));

@@ -20,7 +20,7 @@ define(function(require) {
 
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
             if (!options.simulation)

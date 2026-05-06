@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Vector2     = require('common/math/vector2');
 
@@ -19,7 +19,7 @@ define(function(require) {
      */
     var LightBulbView = ComponentView.extend({
 
-        contextMenuContent: 
+        contextMenuContent:
             '<li><a class="change-resistance-btn"><span class="fa fa-bolt"></span>&nbsp; Change Resistance</a></li>' +
             '<li><a class="flip-btn"><span class="fa fa-arrows-h"></span>&nbsp; Show Connection at Left</a></li>' +
             '<li><a class="show-value-btn"><span class="fa fa-square-o"></span>&nbsp; Show Value</a></li>' +
@@ -71,7 +71,7 @@ define(function(require) {
 
             this.displayObject.addChild(this.filamentView.displayObject);
             this.displayObject.addChild(this.spriteLayer);
-            
+
             this.displayObject.buttonMode = true;
             this.displayObject.defaultCursor = 'move';
         },
@@ -128,7 +128,7 @@ define(function(require) {
             if (Math.abs(scale) > 1E-4) {
                 this.spriteLayer.scale.x = scale;
                 this.spriteLayer.scale.y = scale;
-                
+
                 this.hoverLayer.scale.x = scale;
                 this.hoverLayer.scale.y = scale;
 
@@ -170,7 +170,7 @@ define(function(require) {
 
             if (isNaN(intensity))
                 throw 'intensity NaN';
-            
+
             this.onSprite.alpha = intensity;
             this.glow.alpha = intensity;
         },

@@ -7,7 +7,7 @@ define(function(require) {
 
     var defineInputUpdateLocks = require('common/locks/define-locks');
     var Colors                 = require('common/colors/colors');
-    
+
     var ObjectView = require('views/object');
 
     var Constants = require('constants');
@@ -62,7 +62,7 @@ define(function(require) {
 
         initGraphics: function() {
             ObjectView.prototype.initGraphics.apply(this, arguments);
-    
+
             var secondPointMarker = new PIXI.Graphics();
             secondPointMarker.lineStyle(1, 0xFFFFFF, 1);
             secondPointMarker.beginFill(SECOND_POINT_COLOR, SourceObjectView.SECOND_POINT_ALPHA);
@@ -100,7 +100,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.objectContainer.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.objectContainer.y - this.dragOffset.y;
-                
+
                 this.objectContainer.x += dx;
                 this.objectContainer.y += dy;
 
@@ -130,7 +130,7 @@ define(function(require) {
             if (this.draggingSecondPoint) {
                 var dx = event.data.global.x - this.secondPoint.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.secondPoint.y - this.dragOffset.y;
-                
+
                 if (this.model.get('type') !== Types.LIGHT) {
                     // If we're not in lamp mode, we need to constrain movement
                     dx = 0;

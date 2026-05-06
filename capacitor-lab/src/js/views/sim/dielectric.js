@@ -7,7 +7,7 @@ define(function (require) {
 
     var CapacitorLabSimView = require('views/sim');
     var DielectricSceneView = require('views/scene/dielectric');
-    
+
     var DielectricSimulation = require('models/simulation/dielectric');
 
     var Constants = require('constants');
@@ -15,7 +15,7 @@ define(function (require) {
     var dielectricHtml = require('text!templates/dielectric.html');
 
     /**
-     * 
+     *
      */
     var DielectricSimView = CapacitorLabSimView.extend({
 
@@ -30,7 +30,7 @@ define(function (require) {
         events: _.extend({}, CapacitorLabSimView.prototype.events, {
             'slide .dielectric-constant-slider' : 'changeDielectricConstant',
             'change .dielectric-material'       : 'changeDielectricMaterial',
-            
+
             'click #hide-all-charges'    : 'hideAllCharges',
             'click #show-all-charges'    : 'showAllCharges',
             'click #show-excess-charges' : 'showExcessCharges',

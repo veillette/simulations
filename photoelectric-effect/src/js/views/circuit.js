@@ -8,7 +8,7 @@ define(function(require) {
 
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
-    
+
     var DischargeLampsConstants = require('discharge-lamps/constants');
 
     var TargetMaterials = require('models/target-materials');

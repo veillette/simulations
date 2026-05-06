@@ -126,7 +126,7 @@ define(function(require) {
 
             var centerPoint = new Vector2(
                 this.simulation.getNormalizedContainerWidth() / 2,
-                this.simulation.getNormalizedContainerHeight() / 4 
+                this.simulation.getNormalizedContainerHeight() / 4
             );
             var currentLayer = 0;
             var particlesOnCurrentLayer = 0;
@@ -183,7 +183,7 @@ define(function(require) {
             var moleculeCenterOfMassPositions = this.simulation.moleculeDataSet.moleculeCenterOfMassPositions;
             var moleculeVelocities = this.simulation.moleculeDataSet.moleculeVelocities;
             var i, j;
-            
+
             for (i = 0; i < numberOfAtoms; i++) {
                 // Temporarily position the particles at (0,0).
                 moleculeCenterOfMassPositions[i].set(0, 0);
@@ -205,7 +205,7 @@ define(function(require) {
                     // Pick a random position.
                     newPosX = MonatomicPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeX);
                     newPosY = MonatomicPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeY);
-                    
+
                     // See if this position is available.
                     var positionAvailable = true;
                     for (var k = 0; k < i; k++) {

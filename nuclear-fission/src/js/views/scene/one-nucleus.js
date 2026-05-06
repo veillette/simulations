@@ -52,7 +52,7 @@ define(function(require) {
         },
 
         reset: function() {
-            
+
         },
 
         getTopPadding: function() {

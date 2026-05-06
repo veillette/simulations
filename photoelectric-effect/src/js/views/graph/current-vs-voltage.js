@@ -11,7 +11,7 @@ define(function(require) {
     var GraphView = require('views/graph');
 
     /**
-     * 
+     *
      */
     var CurrentVsVoltageGraphView = GraphView.extend({
 
@@ -61,7 +61,7 @@ define(function(require) {
             var dv = 0.1 * Math.sign(voltage - this.lastVoltageRecorded);
             for (var v = this.lastVoltageRecorded + dv; Math.abs(v - voltage) > Math.abs(dv); v += dv)
                 this.points.push(this.createPoint(v, simulation.getCurrentForVoltage(v)));
-            
+
             this.points.push(this.createPoint(voltage, current));
             this.lastVoltageRecorded = voltage;
 
@@ -73,7 +73,7 @@ define(function(require) {
                 this.points.push(this.createPoint());
 
             this.points[this.points.length - 1].set(
-                this.simulation.getVoltage(), 
+                this.simulation.getVoltage(),
                 this.simulation.getCurrent()
             );
 

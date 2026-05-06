@@ -52,14 +52,14 @@ define(function(require) {
 
             // Update center of mass positions and angles for the molecules.
             this._updateCenterOfMassPositions(
-                numberOfMolecules, 
-                moleculeCenterOfMassPositions, 
-                moleculeVelocities, 
-                moleculeForces, 
-                moleculeRotationRates, 
+                numberOfMolecules,
+                moleculeCenterOfMassPositions,
+                moleculeVelocities,
+                moleculeForces,
+                moleculeRotationRates,
                 moleculeRotationAngles,
-                moleculeTorques, 
-                massInverse, 
+                moleculeTorques,
+                massInverse,
                 inertiaInverse
             );
 
@@ -68,13 +68,13 @@ define(function(require) {
             // Calculate the force from the walls.  This force is assumed to act
             //    on the center of mass, so there is no torque.
             var pressureZoneWallForce = this._calculateWallAndGravityForces(
-                nextMoleculeForces, 
-                nextMoleculeTorques, 
-                numberOfMolecules, 
-                moleculeCenterOfMassPositions, 
-                normalizedContainerWidth, 
-                normalizedContainerHeight, 
-                gravitationalAcceleration, 
+                nextMoleculeForces,
+                nextMoleculeTorques,
+                numberOfMolecules,
+                moleculeCenterOfMassPositions,
+                normalizedContainerWidth,
+                normalizedContainerHeight,
+                gravitationalAcceleration,
                 temperatureSetPoint
             );
 
@@ -88,27 +88,27 @@ define(function(require) {
 
             // Calculate the force and torque due to inter-particle interactions.
             this._calculateInteractionForces(
-                nextMoleculeForces, 
-                nextMoleculeTorques, 
-                moleculeDataSet.numberOfSafeMolecules, 
-                moleculeCenterOfMassPositions, 
-                atomPositions, 
+                nextMoleculeForces,
+                nextMoleculeTorques,
+                moleculeDataSet.numberOfSafeMolecules,
+                moleculeCenterOfMassPositions,
+                atomPositions,
                 temperatureSetPoint
             );
 
             // Update the velocities and rotation rates and calculate kinetic
             // energy.
             this._calculateVelocitiesAndRotationRates(
-                moleculeVelocities, 
-                moleculeTorques, 
-                moleculeRotationRates, 
-                numberOfMolecules, 
-                moleculeForces, 
-                nextMoleculeForces, 
-                moleculeDataSet.moleculeMass, 
-                moleculeDataSet.moleculeRotationalInertia, 
-                nextMoleculeTorques, 
-                massInverse, 
+                moleculeVelocities,
+                moleculeTorques,
+                moleculeRotationRates,
+                numberOfMolecules,
+                moleculeForces,
+                nextMoleculeForces,
+                moleculeDataSet.moleculeMass,
+                moleculeDataSet.moleculeRotationalInertia,
+                nextMoleculeTorques,
+                massInverse,
                 inertiaInverse
             );
         },
@@ -153,11 +153,11 @@ define(function(require) {
         _updateCenterOfMassPositions: function(numberOfMolecules, moleculeCenterOfMassPositions, moleculeVelocities, moleculeForces, moleculeRotationRates, moleculeRotationAngles, moleculeTorques, massInverse, inertiaInverse) {
             for (var i = 0; i < numberOfMolecules; i++) {
 
-                var xPos = moleculeCenterOfMassPositions[i].x + 
-                    (VerletAlgorithm.TIME_STEP * moleculeVelocities[i].x) + 
+                var xPos = moleculeCenterOfMassPositions[i].x +
+                    (VerletAlgorithm.TIME_STEP * moleculeVelocities[i].x) +
                     (VerletAlgorithm.TIME_STEP_SQR_HALF * moleculeForces[i].x * massInverse);
 
-                var yPos = moleculeCenterOfMassPositions[i].y + 
+                var yPos = moleculeCenterOfMassPositions[i].y +
                     (VerletAlgorithm.TIME_STEP * moleculeVelocities[i].y) +
                     (VerletAlgorithm.TIME_STEP_SQR_HALF * moleculeForces[i].y * massInverse);
 
@@ -169,7 +169,7 @@ define(function(require) {
         },
 
         /**
-         * Calculates the force from the walls.  This force is assumed to 
+         * Calculates the force from the walls.  This force is assumed to
          *   act on the center of mass, so there is no torque.
          */
         _calculateWallAndGravityForces: function(nextMoleculeForces, nextMoleculeTorques, numberOfMolecules, moleculeCenterOfMassPositions, normalizedContainerWidth, normalizedContainerHeight, gravitationalAcceleration, temperatureSetPoint) {
@@ -183,8 +183,8 @@ define(function(require) {
 
                 // Get the force values caused by the container walls.
                 this.calculateWallForce(
-                    moleculeCenterOfMassPositions[i], 
-                    normalizedContainerWidth, 
+                    moleculeCenterOfMassPositions[i],
+                    normalizedContainerWidth,
                     normalizedContainerHeight,
                     nextMoleculeForces[i]
                 );
@@ -354,7 +354,7 @@ define(function(require) {
             // Record the calculated temperature.
             this.temperature = (centersOfMassKineticEnergy + rotationalKineticEnergy) / numberOfMolecules / 1.5;
         }
-        
+
     });
 
     /**

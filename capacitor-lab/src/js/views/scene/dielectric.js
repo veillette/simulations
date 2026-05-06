@@ -20,7 +20,7 @@ define(function(require) {
     var DielectricSceneView = CapacitorLabSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -55,7 +55,7 @@ define(function(require) {
             CapacitorLabSceneView.prototype.postRender.apply(this, arguments);
 
             var $btns = this.$ui.find('.connect-battery-btn, .disconnect-battery-btn');
-            
+
             if (AppView.windowIsShort()) {
                 $btns.css('top', Math.round(this.height * 0.110) + 'px');
                 $btns.css('left', '15px');
@@ -82,7 +82,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             CapacitorLabSceneView.prototype._update.apply(this, arguments);
-            
+
             this.circuitView.update(time, deltaTime);
         },
 
@@ -95,7 +95,7 @@ define(function(require) {
         },
 
         /**
-         * 
+         *
          */
         getIntersectingCapacitorView: function(point) {
             return this.circuitView.getIntersectingCapacitorView(point);

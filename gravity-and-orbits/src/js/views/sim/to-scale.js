@@ -32,7 +32,7 @@ define(function(require) {
                 title: 'Actual Scale',
                 name:  'to-scale'
             }, options);
-            
+
             GOSimView.prototype.initialize.apply(this, [ options ]);
 
             this.initMeasuringTapeView();

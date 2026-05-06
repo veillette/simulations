@@ -16,7 +16,7 @@ define(function(require) {
 		options = _.extend({
 			initialValue: 0
 		}, options);
-		
+
 		// Object properties
 		this.data   = options.data || []; // The lattice point values
 		this.width  = options.width || (options.data && options.data.length ? options.data[0].length : 60);
@@ -36,7 +36,7 @@ define(function(require) {
 				this.data.push(row);
 			}
 		}
-		
+
 	};
 
 	/*
@@ -60,7 +60,7 @@ define(function(require) {
 
 		/**
 		 * Finds the average value in a square sample space centered on the
-		 *   specified (x,y) cooridnate. Sample size here is more like a 
+		 *   specified (x,y) cooridnate. Sample size here is more like a
 		 *   radius in that it's half [- 1] of the square's side length.
 		 */
 		avg: function(x, y, sampleSize) {
@@ -135,11 +135,11 @@ define(function(require) {
 		},
 
 		/**
-		 * Copies just a specified area from a source lattice to a 
+		 * Copies just a specified area from a source lattice to a
 		 *   specified area in this one.  This function has a lot
 		 *   of parameters, and while it would be cleaner to use
 		 *   an options object, I want to minimize load on the
-		 *   garbage collector in this function because it is used 
+		 *   garbage collector in this function because it is used
 		 *   multiple times each frame.
 		 */
 		copyArea: function(source, width, height, srcOffsetX, srcOffsetY, dstOffsetX, dstOffsetY) {
@@ -151,7 +151,7 @@ define(function(require) {
 		},
 
 		/**
-		 * Resets all values to a specific one.  If an initial 
+		 * Resets all values to a specific one.  If an initial
 		 *   value was originally specified, it uses that as a
 		 *   fallback.
 		 */
@@ -162,7 +162,7 @@ define(function(require) {
 				else
 					initialValue = this.initialValue;
 			}
-				
+
 			for (i = 0; i < this.width; i++) {
 				for (j = 0; j < this.height; j++) {
 					this.data[i][j] = initialValue;

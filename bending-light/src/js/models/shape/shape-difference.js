@@ -10,7 +10,7 @@ define(function (require) {
 
     /**
      * Creates a shape that is the difference of two shapes. It contains a point x iff: A contains x && B does not contain x
-     * 
+     *
      * CSG intro: https://secure.wikimedia.org/wikipedia/en/wiki/Constructive_solid_geometry
      * Rationale for intersection: http://groups.csail.mit.edu/graphics/classes/6.838/F01/lectures/SmoothSurfaces/0the_s040.html
      *
@@ -50,8 +50,8 @@ define(function (require) {
          */
         toPiecewiseCurve: function() {
             return this.clipPiecewiseCurves(
-                this.a.toPiecewiseCurve(), 
-                this.b.toPiecewiseCurve(), 
+                this.a.toPiecewiseCurve(),
+                this.b.toPiecewiseCurve(),
                 ClipperLib.ClipType.ctDifference
             );
         },

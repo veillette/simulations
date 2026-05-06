@@ -66,7 +66,7 @@ define(function(require) {
 				options.y.label = options.yLabel;
 
 			GraphView.prototype.initialize.apply(this, [options]);
-			
+
 			// Save options
 			this.latticePoint  = options.latticePoint;
 			this.historyLength = options.historyLength;
@@ -82,7 +82,7 @@ define(function(require) {
 		renderContainer: function() {
 			this.$el.html(this.template(this.graphInfo));
 
-			
+
 		},
 
 		/**
@@ -123,7 +123,7 @@ define(function(require) {
 		},
 
 		/**
-		 * This needs to be called within the loop because the starting 
+		 * This needs to be called within the loop because the starting
 		 *   offset is based off of time.
 		 */
 		initOffsets: function(time) {
@@ -152,14 +152,14 @@ define(function(require) {
 		 */
 		initPoints: function() {
 			this.points = [];
-			this.points.push({ 
-				x: 0, 
+			this.points.push({
+				x: 0,
 				y: this.valueToY(0)
 			});
 		},
 
 		/**
-		 * Overrides the GraphView's update method to make sure we 
+		 * Overrides the GraphView's update method to make sure we
 		 *   initialize the offsets with the right starting time.
 		 */
 		update: function(time, delta) {
@@ -179,7 +179,7 @@ define(function(require) {
 		calculatePoints: function(time, delta) {
 			points   = this.points;
 			height   = this.height;
-			
+
 			this.xOffset += delta * this.graphingSpeed; // pixels per millisecond
 			while (this.xOffset > this.xSpacing) {
 				this.xOffset -= this.xSpacing;
@@ -211,8 +211,8 @@ define(function(require) {
 				points[points.length - 1].y = this.getCurrentY();
 			}
 			else {
-				points.push({ 
-					x: 0, 
+				points.push({
+					x: 0,
 					y: this.getCurrentY()
 				});
 			}
@@ -230,7 +230,7 @@ define(function(require) {
 			length = this.points.length;
 			if (length === this.historyLength) {
 				for (i = 0; i < length; i++)
-					points[i].x = (i * xSpacing) - xOffset;	
+					points[i].x = (i * xSpacing) - xOffset;
 			}
 			else {
 				for (i = 0; i < length; i++)
@@ -292,7 +292,7 @@ define(function(require) {
 
 			// Draw x-axis numbers and ticks
 			this.drawXAxisLabel();
-			
+
 		},
 
 		drawXAxisLabel: function(time, delta) {
@@ -325,7 +325,7 @@ define(function(require) {
 			length = this.xAxisNumbers.length;
 			for (i = 0; i < length; i++)
 				context.fillText(this.xAxisNumbers[i], this.gridCellWidth * i + xOffset, this.numberY);
-			
+
 		},
 
 		calculateGraphLayout: function(time, delta) {

@@ -34,7 +34,7 @@ define(function(require) {
     var IntroSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -44,10 +44,10 @@ define(function(require) {
         },
 
         /**
-         * Renders 
+         * Renders
          */
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -63,7 +63,7 @@ define(function(require) {
 
             this.viewOriginX = Math.round(this.width / 2);
             this.viewOriginY = Math.round(this.height - labBenchSurfaceTexture.height * 0.64); //Math.round(this.height * 0.85);//my failed attempt at making it less magic and more data-based
-            
+
             this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
                 new Vector2(0, 0),
                 new Vector2(this.viewOriginX, this.viewOriginY),
@@ -123,8 +123,8 @@ define(function(require) {
         },
 
         initAir: function() {
-            var air = new AirView({ 
-                model: this.simulation.air, 
+            var air = new AirView({
+                model: this.simulation.air,
                 mvt: this.mvt
             });
             this.airLayer.addChild(air.displayObject);
@@ -138,9 +138,9 @@ define(function(require) {
         initBlocks: function() {
             var freeAreaAbove = 500;
             var movementConstraintBounds = new Rectangle(
-                0, 
-                0 - freeAreaAbove, 
-                this.width, 
+                0,
+                0 - freeAreaAbove,
+                this.width,
                 this.viewOriginY + freeAreaAbove
             );
             var movementConstraint = _.bind(function(model, newPosition) {
@@ -156,9 +156,9 @@ define(function(require) {
             else {
                 lineWidth = Math.round(Constants.BlockView.LINE_WIDTH * (this.mvt.getXScale() / 2000));
                 font = Constants.IntroElementView.SMALL_TEXT_FONT;
-            } 
+            }
 
-            this.brickView = new BrickView({ 
+            this.brickView = new BrickView({
                 model: this.simulation.brick,
                 mvt: this.mvt,
                 simulation: this.simulation,
@@ -174,9 +174,9 @@ define(function(require) {
             this.brickLayer.addChild(this.brickView.energyChunkLayer);
             this.brickLayer.addChild(this.brickView.displayObject);
             this.blockLayer.addChild(this.brickLayer);
-            
-            this.ironBlockView = new BlockView({ 
-                model: this.simulation.ironBlock, 
+
+            this.ironBlockView = new BlockView({
+                model: this.simulation.ironBlock,
                 mvt: this.mvt,
                 simulation: this.simulation,
                 movementConstraintBounds: movementConstraintBounds,
@@ -212,9 +212,9 @@ define(function(require) {
         initBeaker: function() {
             var freeAreaAbove = 500;
             var movementConstraintBounds = new Rectangle(
-                0, 
-                0 - freeAreaAbove, 
-                this.width, 
+                0,
+                0 - freeAreaAbove,
+                this.width,
                 this.viewOriginY + freeAreaAbove
             );
             var movementConstraint = _.bind(function(model, newPosition) {
@@ -297,9 +297,9 @@ define(function(require) {
                 });
                 this.listenTo(thermometerView, 'drag-end', function() {
                     rect.set(
-                        thermometerView.displayObject.x, 
+                        thermometerView.displayObject.x,
                         thermometerView.displayObject.y - thermometerView.displayObject.height,
-                        thermometerView.displayObject.width, 
+                        thermometerView.displayObject.width,
                         thermometerView.displayObject.height
                     );
                     if (thermometerClips.overlaps(rect)) {

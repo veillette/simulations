@@ -8,7 +8,7 @@ define(function(require) {
 
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
-    
+
     var Assets = require('assets');
     var Constants = require('constants');
     // var STICK_COLOR = Colors.parseHex(Constants.RayGunView.STICK_COLOR);

@@ -67,7 +67,7 @@ define(function (require) {
 
                 if (junctionSet.indexOf(branch.get('startJunction')) === -1)
                     junctionSet.push(branch.get('startJunction'));
-                
+
                 if (junctionSet.indexOf(branch.get('endJunction')) === -1)
                     junctionSet.push(branch.get('endJunction'));
             }
@@ -90,7 +90,7 @@ define(function (require) {
                 junctionSet[i].setPosition(junctionSet[i].get('position'));
 
             this.circuit.fireBranchesMoved(branchesToNotify);
-            
+
             return this;
         }
 

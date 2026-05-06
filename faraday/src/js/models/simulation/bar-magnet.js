@@ -22,7 +22,7 @@ define(function (require, exports, module) {
         defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -50,7 +50,7 @@ define(function (require, exports, module) {
                 position: BarMagnetSimulation.COMPASS_LOCATION,
                 behavior: Compass.KINEMATIC_BEHAVIOR
             }, {
-                magnetModel: this.barMagnet 
+                magnetModel: this.barMagnet
             });
 
             // Field Meter
@@ -72,7 +72,7 @@ define(function (require, exports, module) {
 
         _update: function(time, deltaTime) {
             FaradaySimulation.prototype._update.apply(this, arguments);
-            
+
             this.compass.update(time, deltaTime);
             this.fieldMeter.update(time, deltaTime);
         }

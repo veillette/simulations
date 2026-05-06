@@ -14,7 +14,7 @@ define(function (require) {
         defaults: _.extend({}, PositionableObject.prototype.defaults, {
             supportingSurface: null
         }),
-        
+
         initialize: function(attributes, options) {
             PositionableObject.prototype.initialize.apply(this, [options]);
         },
@@ -73,7 +73,7 @@ define(function (require) {
          */
         isStackedUpon: function(element) {
             return this.get('supportingSurface') && (
-                this.get('supportingSurface').owner === element || 
+                this.get('supportingSurface').owner === element ||
                 this.get('supportingSurface').owner.isStackedUpon(element)
             );
         },

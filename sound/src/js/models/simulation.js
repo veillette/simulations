@@ -18,7 +18,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var SoundSimulation = FixedIntervalSimulation.extend({
 
@@ -28,7 +28,7 @@ define(function (require, exports, module) {
             propagationSpeed: Constants.PROPAGATION_SPEED,
             audioEnabled: false
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
@@ -50,16 +50,16 @@ define(function (require, exports, module) {
         initComponents: function() {
             this.waveMedium = new WaveMedium();
 
-            this.primaryWavefront = new Wavefront({ 
-                maxAmplitude: this.get('amplitude'), 
-                propagationSpeed: this.get('propagationSpeed') 
+            this.primaryWavefront = new Wavefront({
+                maxAmplitude: this.get('amplitude'),
+                propagationSpeed: this.get('propagationSpeed')
             });
             this.primaryWavefront.set('waveFunction', WaveFunction.SineWaveFunction(this.primaryWavefront));
             this.waveMedium.addWavefront(this.primaryWavefront);
 
-            this.octaveWavefront = new Wavefront({ 
-                maxAmplitude: this.get('amplitude'), 
-                propagationSpeed: this.get('propagationSpeed') 
+            this.octaveWavefront = new Wavefront({
+                maxAmplitude: this.get('amplitude'),
+                propagationSpeed: this.get('propagationSpeed')
             });
             this.octaveWavefront.set('waveFunction', WaveFunction.SineWaveFunction(this.octaveWavefront));
             this.octaveWavefront.set('maxAmplitude', 0);
@@ -73,7 +73,7 @@ define(function (require, exports, module) {
 
             this.personListener = this.createPersonListener();
             this.personListener.setPosition(Constants.DEFAULT_LISTENER_X, Constants.DEFAULT_LISTENER_Y);
-            
+
             this.setListenerToSpeaker();
 
             //this.octaveOscillator.setHarmonicFactor(2);
@@ -126,7 +126,7 @@ define(function (require, exports, module) {
 
         frequencyChanged: function(simulation, frequency) {
             this.primaryWavefront.set('frequency', frequency / Constants.FREQUENCY_DISPLAY_FACTOR);
-            this.octaveWavefront.set('frequency', 2 * frequency / Constants.FREQUENCY_DISPLAY_FACTOR);    
+            this.octaveWavefront.set('frequency', 2 * frequency / Constants.FREQUENCY_DISPLAY_FACTOR);
         },
 
         amplitudeChanged: function(simulation, amplitude) {

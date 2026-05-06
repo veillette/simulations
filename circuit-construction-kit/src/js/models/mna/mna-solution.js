@@ -7,7 +7,7 @@ define(function (require) {
 
     var MNAResistor          = require('models/mna/elements/resistor');
     var MNACompanionResistor = require('models/mna/elements/companion-resistor');
-    
+
     var pool = Pool({
         init: function() {
             return new MNASolution();
@@ -17,7 +17,7 @@ define(function (require) {
     var DEFAULT_EPSILON = 1E-6;
 
     /**
-     * 
+     *
      */
     var MNASolution = function() {};
 
@@ -85,7 +85,7 @@ define(function (require) {
             if (epsilon === undefined)
                 epsilon = DEFAULT_EPSILON;
 
-            if (!this.arraysEqual(this.getNodes(), solution.getNodes()) || 
+            if (!this.arraysEqual(this.getNodes(), solution.getNodes()) ||
                 !this.branchArraysEqual(this.getBranches(), solution.getBranches(), epsilon)
             ) {
                 return false;
@@ -93,10 +93,10 @@ define(function (require) {
             else {
                 var sameVoltages = true;
                 for (var node in this.nodeVoltages) {
-                    if (this.nodeVoltages.hasOwnProperty(node) && 
+                    if (this.nodeVoltages.hasOwnProperty(node) &&
                         !this.numbersApproxEqual(
-                            this.nodeVoltages[node], 
-                            solution.getNodeVoltage(node), 
+                            this.nodeVoltages[node],
+                            solution.getNodeVoltage(node),
                             epsilon
                         )
                     ) {
@@ -106,10 +106,10 @@ define(function (require) {
                 }
                 var sameCurrents = true;
                 for (var elementId in this.branchCurrents) {
-                    if (this.branchCurrents.hasOwnProperty(elementId) && 
+                    if (this.branchCurrents.hasOwnProperty(elementId) &&
                         !this.numbersApproxEqual(
-                            this.branchCurrents[elementId].currentSolution, 
-                            solution.getCurrent(this.branchCurrents[elementId]), 
+                            this.branchCurrents[elementId].currentSolution,
+                            solution.getCurrent(this.branchCurrents[elementId]),
                             epsilon
                         )
                     ) {
@@ -152,7 +152,7 @@ define(function (require) {
                     totalNodes++;
                 }
             }
- 
+
             var averageVoltDist = (totalNodes > 0) ? distanceVoltage / totalNodes : 0;
 
             return averageVoltDist + Math.abs(this.getAverageCurrentMags() - solution.getAverageCurrentMags());

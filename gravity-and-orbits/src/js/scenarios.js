@@ -251,14 +251,14 @@ define(function (require) {
                     fixed: true // Sun shouldn't move in friendly modes
                 }),
                 new Planet({
-                    mass:   EARTH_MASS * FRIENDLY_EARTH_MASS_SCALE, 
+                    mass:   EARTH_MASS * FRIENDLY_EARTH_MASS_SCALE,
                     radius: EARTH_RADIUS * 800,
                     position: new Vector2(EARTH_PERIHELION, 0),
                     velocity: new Vector2(0, EARTH_ORBITAL_SPEED_AT_PERIHELION)
                 })
             ],
             simulationAttributes: {
-                // Have to artificially scale up the time readout so that Sun/Earth/Moon mode 
+                // Have to artificially scale up the time readout so that Sun/Earth/Moon mode
                 //   has a stable orbit with correct periods since masses are nonphysical
                 timeScale: 365 / 334
             },
@@ -269,8 +269,8 @@ define(function (require) {
                 gridOrigin: new Vector2(0, 0),
                 defaultOrbitalPeriod: SEC_PER_YEAR,
                 velocityScale: SUN_MODES_VELOCITY_SCALE,
-                // To balance increased mass and so that forces are 1/2 grid cell in default 
-                //   conditions, hand tuned by checking that reducing the distance by a 
+                // To balance increased mass and so that forces are 1/2 grid cell in default
+                //   conditions, hand tuned by checking that reducing the distance by a
                 //   factor of 2 increases the force arrow by a factor of 4
                 forceScale: FORCE_SCALE * 120 * (0.573 / FRIENDLY_EARTH_MASS_SCALE),
                 timeReadoutFunction: formatScaledDays,
@@ -299,7 +299,7 @@ define(function (require) {
                 })
             ],
             simulationAttributes: {
-                // Have to artificially scale up the time readout so that Sun/Earth/Moon mode 
+                // Have to artificially scale up the time readout so that Sun/Earth/Moon mode
                 //   has a stable orbit with correct periods since masses are nonphysical
                 timeScale: 365 / 334
             },
@@ -310,8 +310,8 @@ define(function (require) {
                 gridOrigin: new Vector2(0, 0),
                 defaultOrbitalPeriod: SEC_PER_YEAR,
                 velocityScale: SUN_MODES_VELOCITY_SCALE,
-                // To balance increased mass and so that forces are 1/2 grid cell in default 
-                //   conditions, hand tuned by checking that reducing the distance by a 
+                // To balance increased mass and so that forces are 1/2 grid cell in default
+                //   conditions, hand tuned by checking that reducing the distance by a
                 //   factor of 2 increases the force arrow by a factor of 4
                 forceScale: FORCE_SCALE * 120 * (0.573 / FRIENDLY_EARTH_MASS_SCALE),
                 timeReadoutFunction: formatScaledDays,

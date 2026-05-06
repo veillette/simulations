@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var range     = require('common/math/range');
 
@@ -284,7 +284,7 @@ define(function(require) {
                 this.finishWinTile.visible = true;
                 this.startFinishWinPulse();
             }
-            else 
+            else
                 this.finishWinTile.visible = false;
 
             this.changeFinishPulseVisibility();

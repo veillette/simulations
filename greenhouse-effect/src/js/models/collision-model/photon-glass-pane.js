@@ -28,7 +28,7 @@ define(function (require) {
                 //     photon.get('position').x + photon.get('velocity').x * deltaTime,
                 //     photon.get('position').y + photon.get('velocity').y * deltaTime
                 // );
-                
+
                 p0.set(
                     photon.get('position').x - photon.get('velocity').x * deltaTime,
                     photon.get('position').y - photon.get('velocity').y * deltaTime
@@ -44,18 +44,18 @@ define(function (require) {
                     glassPane.get('bounds').y + glassPane.get('bounds').h / 2,
 
                     // Second line
-                    p0.x, 
-                    p0.y, 
-                    p1.x, 
+                    p0.x,
+                    p0.y,
+                    p1.x,
                     p1.y
                 );
 
                 // if (photonCrossedGlassPaneCenterline)
                 //     console.log(
                 //         // Second line
-                //         p0.x, 
-                //         p0.y, 
-                //         p1.x, 
+                //         p0.x,
+                //         p0.y,
+                //         p1.x,
                 //         p1.y
                 //     )
 
@@ -98,7 +98,7 @@ define(function (require) {
         }
 
     };
-    
+
 
     return PhotonGlassPaneCollisionModel;
 });

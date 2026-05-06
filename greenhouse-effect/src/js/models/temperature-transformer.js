@@ -7,7 +7,7 @@ define(function (require) {
     /**
      * For transforming a temperature according to a system
      *   of linear equations.  The TemperatureTransformer
-     *   will use multiple instances of this object to 
+     *   will use multiple instances of this object to
      *   transform temperature values with a wider range
      *   than one pair of equations would give.
      */
@@ -66,7 +66,7 @@ define(function (require) {
                 //   have been a bug.  They weren't stacked on top of each
                 //   other like I've done here to be able to see with the
                 //   naked eye that the statemetns are exactly identical.
-                if (temperature >= this.transformationValues[i][0] && 
+                if (temperature >= this.transformationValues[i][0] &&
                     temperature >= this.transformationValues[i][0]) {
                     transform = this.transforms[i];
                 }
@@ -74,7 +74,7 @@ define(function (require) {
 
             if (!transform)
                 throw 'No temperature transform found.';
-            
+
             return transform.transformTemperature(temperature);
         }
 

@@ -21,7 +21,7 @@ define(function(require) {
     var IntroSimView = MovingManSimView.extend({
 
         events: _.extend(MovingManSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {
@@ -29,7 +29,7 @@ define(function(require) {
                 title: 'Introduction',
                 name:  'intro'
             }, options);
-            
+
             MovingManSimView.prototype.initialize.apply(this, [ options ]);
 
             this.listenTo(this.simulation, 'change:paused', this.pausedChanged);

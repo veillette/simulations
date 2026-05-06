@@ -28,7 +28,7 @@ define(function (require, exports, module) {
             nucleusType: Constants.SingleNucleusBetaDecaySimulation.DEFAULT_NUCLEUS_TYPE,
             halfLife: undefined
         }),
-        
+
         initialize: function(attributes, options) {
             this._newNucleusOptions = { simulation: this };
 
@@ -64,7 +64,7 @@ define(function (require, exports, module) {
         _update: function(time, deltaTime) {
             if (this.atomicNucleus)
                 this.atomicNucleus.update(time, deltaTime);
-            
+
             // Move any emitted particles that have been produced by decay events.
             for (var i = 0; i < this.emittedParticles.length; i++)
                 this.emittedParticles.at(i).update();
@@ -76,7 +76,7 @@ define(function (require, exports, module) {
         resetNucleus: function() {
             // Reset the nucleus
             this.atomicNucleus.reset();
-            
+
             // Activate decay right away.
             this.atomicNucleus.activateDecay(this.time);
 
@@ -87,12 +87,12 @@ define(function (require, exports, module) {
             if (this.atomicNucleus !== null) {
                 // Remove listener from current nucleus.
                 this.stopListening(this.atomicNucleus);
-                
+
                 // Remove the nucleus itself and inform any listeners of its demise.
                 this.atomicNucleus = null;
                 this.trigger('nucleus-removed');
             }
-            
+
             // Remove any existing emitted particles and also let any listeners know
             //   of their demise.
             this.destroyParticles();
@@ -109,15 +109,15 @@ define(function (require, exports, module) {
                 console.warn('Warning: Removing existing nucleus before adding new one.');
                 this.removeCurrentNucleus();
             }
-            
+
             this.atomicNucleus = this.createNucleus();
 
             this.set('halfLife', this.atomicNucleus.get('halfLife'), { silent: true });
-            
+
             // In this model, the nucleus is activated (so that it is moving
             //   towards decay) right away.
             this.atomicNucleus.activateDecay(this.time);
-            
+
             // Inform any listeners of the changes.
             this.trigger('nucleus-added', this.atomicNucleus);
         },

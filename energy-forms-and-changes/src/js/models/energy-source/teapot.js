@@ -24,7 +24,7 @@ define(function (require) {
             energyProductionRate: 0,
             steamPowerableElementInPlace: false
         }),
-        
+
         initialize: function(attributes, options) {
             EnergySource.prototype.initialize.apply(this, [attributes, options]);
 
@@ -74,7 +74,7 @@ define(function (require) {
                         position: initialPosition
                     });
                     this.energyChunks.add(newChunk);
-                    
+
                     // Create a 'mover' for the chunk
                     var travelDistance = newChunk.get('position').distance(spoutPosition);
                     this.energyChunkMovers.push(new EnergyChunkPathMover(
@@ -124,7 +124,7 @@ define(function (require) {
                 var energyProductionDecreaseRate = this.get('energyProductionRate') * Teapot.COOLING_CONSTANT; // Analogous to friction.
                 this.set('energyProductionRate', Math.min(
                     this.get('energyProductionRate') + energyProductionIncreaseRate * deltaTime - energyProductionDecreaseRate * deltaTime,
-                    Constants.MAX_ENERGY_PRODUCTION_RATE 
+                    Constants.MAX_ENERGY_PRODUCTION_RATE
                 )); // Analogous to velocity.
            }
            else {
@@ -141,7 +141,7 @@ define(function (require) {
             );
 
             var chunk = EnergyChunk.create({
-                energyType: EnergyChunk.THERMAL, 
+                energyType: EnergyChunk.THERMAL,
                 position:   initialPosition
             });
 
@@ -177,7 +177,7 @@ define(function (require) {
                             chunk.set('energyType', EnergyTypes.MECHANICAL);
                         }
                         // Set this chunk on a path to the base of the spout.
-                        
+
                         var travelDistance = chunk.get('position').distance(spoutPosition);
                         this.energyChunkMovers.push(new EnergyChunkPathMover(
                             chunk,

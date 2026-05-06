@@ -70,6 +70,53 @@ export function getUpdatedSimDirNames() {
 }
 
 /**
+ * Runs eslint in each sim directory from the repo root.
+ * Defaults to changed sims; pass forceAll=true for all sims.
+ */
+export async function lintSims({
+    forceAll = false,
+    fix = false,
+} = {}) {
+    const simDirs = forceAll ? getAllSimDirs() : getUpdatedSimDirs();
+
+    if (simDirs.length === 0) {
+        console.log('>> No changed simulations to lint.');
+        return;
+    }
+
+    let failed = 0;
+    for (const dir of simDirs) {
+        const args = [
+            'eslint',
+            'src/**/*.js',
+            '--ignore-pattern', 'src/js/lib/**/*.js',
+        ];
+        if (fix) {
+            args.push('--fix');
+        }
+
+        const proc = spawn('npx', args, {
+            cwd: dir,
+            stdio: 'inherit',
+        });
+
+        // eslint-disable-next-line no-await-in-loop
+        const code = await new Promise(resolve => proc.on('close', resolve));
+        if (code !== 0) {
+            failed++;
+        }
+    }
+
+    const mode = fix ? 'lint+fix' : 'lint';
+    const passed = simDirs.length - failed;
+    console.log(`>> ${mode} finished: ${passed}/${simDirs.length} simulation(s) passed`);
+
+    if (failed > 0) {
+        throw new Error(`${failed} simulation(s) failed ${mode}`);
+    }
+}
+
+/**
  * Runs `grunt dist` in each changed (or all) sim directory in parallel.
  */
 export async function runDists(forceAll = false) {

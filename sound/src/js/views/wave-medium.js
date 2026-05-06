@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var Backbone = require('backbone');
-    
+
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
 

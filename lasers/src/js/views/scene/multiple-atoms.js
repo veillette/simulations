@@ -27,7 +27,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -35,7 +35,7 @@ define(function(require) {
 
             this.initAtoms();
             this.initLamps();
-            
+
 
             this.determineLaserWaveViewVisibility();
 
@@ -53,7 +53,7 @@ define(function(require) {
             else {
                 this.viewOriginX = 150;
                 this.viewOriginY = 80;
-                scale = 0.98; 
+                scale = 0.98;
             }
 
             this.mvt = ModelViewTransform.createSinglePointScaleMapping(

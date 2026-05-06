@@ -13,7 +13,7 @@ define(function(require) {
 
 
 	/**
-	 * WaterHeatmapView is the water simulation version of the HeatmapView 
+	 * WaterHeatmapView is the water simulation version of the HeatmapView
 	 *   that uses different sub-views where necessary.
 	 */
 	var WaterHeatmapView = HeatmapView.extend({

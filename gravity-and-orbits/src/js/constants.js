@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -57,7 +57,7 @@ define(function (require) {
 
     // The percent difference between reference mass and current mass at which
     //   we switch to a generic body image.
-    BodyView.GENERIC_BODY_THRESHOLD = 0.05; 
+    BodyView.GENERIC_BODY_THRESHOLD = 0.05;
     BodyView.MIN_DIAMETER = 2;
 
     BodyView.ARROW_TAIL_WIDTH  = 5;

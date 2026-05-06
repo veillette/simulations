@@ -31,7 +31,7 @@ define(function(require) {
     var RadioWavesSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -41,7 +41,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -69,9 +69,9 @@ define(function(require) {
 
             var boundsRatio = bounds.w / bounds.h;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
-            
+
             this.viewOriginX = Math.round(usableScreenSpace.x);
             this.viewOriginY = Math.round(this.height - bounds.h * scale);
 
@@ -131,7 +131,7 @@ define(function(require) {
         },
 
         initElectronPositionPlots: function() {
-            var r = AppView.windowIsShort() ? 
+            var r = AppView.windowIsShort() ?
                 this.width - (13 + 192) - 4 :
                 this.width - (20 + 192) - 4;
             var m = AppView.windowIsShort() ? 13 : 20;
@@ -195,7 +195,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             if (!paused) {
-                   
+
             }
         },
 
@@ -204,7 +204,7 @@ define(function(require) {
                 this.fieldLatticeView.update();
                 if (this.showingPositionPlots) {
                     this.transmittingElectronPositionPlot.update();
-                    this.receivingElectronPositionPlot.update();    
+                    this.receivingElectronPositionPlot.update();
                 }
             }
         },

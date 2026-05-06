@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView           = require('common/v3/pixi/view');
     var ThermometerView    = require('common/v3/pixi/view/thermometer');
     var Vector2            = require('common/math/vector2');
@@ -331,12 +331,12 @@ define(function(require) {
             if (this.dragging) {
                 var local = event.data.getLocalPosition(this.displayObject, this._dragLocation);
                 var y = local.y - this.dragOffset.y;
-                
+
                 if (y > this.lidYRange.max)
                     y = this.lidYRange.max;
                 if (y < this.lidYRange.min)
                     y = this.lidYRange.min;
-                    
+
                 //this.lid.y = y;
                 var rangePercent = this.lidYRange.percent(y);
                 var targetHeight = Constants.CONTAINER_BOUNDS.h * (1 - rangePercent);

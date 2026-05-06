@@ -170,7 +170,7 @@ define(function(require) {
 
             var targetProbeHeight = this.mvt.modelToViewDeltaY(VoltmeterView.PROBE_HEIGHT); // in pixels
             var scale = targetProbeHeight / this.redProbe.texture.height;
-            
+
             this.redProbe.scale.x = this.blackProbe.scale.x = scale;
             this.redProbe.scale.y = this.blackProbe.scale.y = scale;
 

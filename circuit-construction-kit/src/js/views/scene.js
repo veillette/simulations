@@ -41,7 +41,7 @@ define(function(require) {
     var CCKSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -51,7 +51,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         postRender: function() {
@@ -86,7 +86,7 @@ define(function(require) {
             else {
                 this.viewOriginX = Math.round(this.width  / 2);
                 this.viewOriginY = Math.round(this.height / 2);
-                this.baseScale = 76;  
+                this.baseScale = 76;
             }
 
             this.zoomScale = 1;
@@ -208,7 +208,7 @@ define(function(require) {
             else
                 this.ammeterToolbox.setPosition(20 + this.ammeterToolbox.width + 20, 20);
 
-            
+
             this.ammeterToolbox.hide();
             this.stage.addChild(this.ammeterToolbox.displayObject);
         },

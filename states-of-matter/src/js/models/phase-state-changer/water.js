@@ -80,7 +80,7 @@ define(function(require) {
             for (i = 0; i < numberOfMolecules; i++) {
 
                 // Assign each molecule an initial velocity.
-                moleculeVelocities[i].set( 
+                moleculeVelocities[i].set(
                     temperatureSqrt * gaussRandom(),
                     temperatureSqrt * gaussRandom()
                 );
@@ -138,7 +138,7 @@ define(function(require) {
             for (i = 0; i < numberOfMolecules; i++) {
 
                 // Assign each molecule an initial velocity.
-                moleculeVelocities[i].set( 
+                moleculeVelocities[i].set(
                     temperatureSqrt * gaussRandom(),
                     temperatureSqrt * gaussRandom()
                 );
@@ -150,9 +150,9 @@ define(function(require) {
             // Assign each molecule to a position.
             var moleculesPlaced = 0;
 
-            var centerPoint = new Vector2( 
+            var centerPoint = new Vector2(
                 this.simulation.getNormalizedContainerWidth() / 2,
-                this.simulation.getNormalizedContainerHeight() / 4 
+                this.simulation.getNormalizedContainerHeight() / 4
             );
             var currentLayer = 0;
             var particlesOnCurrentLayer = 0;
@@ -160,8 +160,8 @@ define(function(require) {
 
             for (i = 0; i < numberOfMolecules; i++ ) {
                 for (j = 0; j < WaterPhaseStateChanger.MAX_PLACEMENT_ATTEMPTS; j++ ) {
-                    var distanceFromCenter = currentLayer * 
-                        WaterPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE * 
+                    var distanceFromCenter = currentLayer *
+                        WaterPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE *
                         WaterPhaseStateChanger.LIQUID_SPACING_FACTOR;
                     var angle = (particlesOnCurrentLayer / particlesThatWillFitOnCurrentLayer * 2 * Math.PI) + (
                         particlesThatWillFitOnCurrentLayer / (4 * Math.PI)
@@ -176,9 +176,9 @@ define(function(require) {
                         currentLayer++;
                         particlesThatWillFitOnCurrentLayer = Math.floor(
                             currentLayer * 2 * Math.PI / (
-                                WaterPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE * 
+                                WaterPhaseStateChanger.MIN_INITIAL_DIAMETER_DISTANCE *
                                 WaterPhaseStateChanger.LIQUID_SPACING_FACTOR
-                            ) 
+                            )
                         );
                         particlesOnCurrentLayer = 0;
                     }
@@ -226,7 +226,7 @@ define(function(require) {
                 moleculeCenterOfMassPositions[i].set(0, 0);
 
                 // Assign each molecule an initial velocity.
-                moleculeVelocities[i].set( 
+                moleculeVelocities[i].set(
                     temperatureSqrt * gaussRandom(),
                     temperatureSqrt * gaussRandom()
                 );
@@ -249,7 +249,7 @@ define(function(require) {
                     // Pick a random position.
                     newPosX = WaterPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeX);
                     newPosY = WaterPhaseStateChanger.MIN_INITIAL_PARTICLE_TO_WALL_DISTANCE + (Math.random() * rangeY);
-                    
+
                     // See if this position is available.
                     var positionAvailable = true;
                     for (var k = 0; k < i; k++) {

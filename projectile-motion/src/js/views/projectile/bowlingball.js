@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var Bowlingball = require('models/projectile/bowlingball');
 
     var ProjectileView = require('views/projectile');
@@ -16,7 +16,7 @@ define(function(require) {
             sprite.anchor.y = 0.5;
             return sprite;
         },
-        
+
         createRestingProjectileSprite: function() {
             var sprite = Assets.createSprite(Assets.Images.BOWLINGBALL_IMPACT);
             sprite.anchor.x = 0.5;

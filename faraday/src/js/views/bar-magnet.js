@@ -12,7 +12,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var BarMagnetView = PixiView.extend({
 
@@ -94,7 +94,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
                 var x = local.x - this.dragOffset.x;
                 var y = local.y - this.dragOffset.y;
-                
+
                 var mx = this.mvt.viewToModelX(x);
                 var my = this.mvt.viewToModelY(y);
 

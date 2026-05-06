@@ -4,7 +4,7 @@ define(function(require) {
 
     var PIXI       = require('pixi');
     var ClipperLib = require('clipper-lib');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     var Vector2   = require('common/math/vector2');
@@ -55,7 +55,7 @@ define(function(require) {
             this.wavesCanvas = document.createElement('canvas');
             this.wavesCanvas.width = this.width;
             this.wavesCanvas.height = this.height;
-            this.wavesContext = this.wavesCanvas.getContext("2d");
+            this.wavesContext = this.wavesCanvas.getContext('2d');
         },
 
         initClipper: function() {
@@ -77,7 +77,7 @@ define(function(require) {
             }
 
             this.beamClipper = new ClipperLib.Clipper();
-            
+
         },
 
         draw: function() {
@@ -169,7 +169,7 @@ define(function(require) {
                 var black = 'rgba(0, 0, 0, ' + this.alphaFromRay(rays[i]) + ')';
 
                 // The problem with translating the code for phase offsets from the original
-                //   is that they have the cyclical gradients which automatically handle 
+                //   is that they have the cyclical gradients which automatically handle
                 //   repeating, so it doesn't matter where the offset is.  They use huge
                 //   offsets that go off the screen, but we need to start at the right place.
                 var partialPeriodOffset = (rays[i].getPhaseOffset() % (2 * Math.PI)) / (2 * Math.PI);
@@ -188,13 +188,13 @@ define(function(require) {
                     gradient.addColorStop(percentForOnePeriod * (p + 0.5), beamColor);
                 }
                 gradient.addColorStop(1, black);
-                
+
                 ctx.fillStyle = gradient;
 
                 // Calculate and apply the wave shape
                 var paths = this.getWaveShape(rays[i], p0, p1);
                 var polygon = paths[0];
-                
+
                 if (polygon && polygon.length) {
                     ctx.beginPath();
                     ctx.moveTo(polygon[0].X, polygon[0].Y);
@@ -214,7 +214,7 @@ define(function(require) {
 
         rgbaFromRay: function(ray) {
             return Constants.wavelengthToRgba(
-                ray.getLaserWavelength(), 
+                ray.getLaserWavelength(),
                 this.alphaFromRay(ray)
             );
         },
@@ -314,7 +314,7 @@ define(function(require) {
             this.beamCorner3.set(0,           beamWidth / 2);
 
             // Rotate and then translate the points
-            
+
             this.beamCorner0.rotate(angle).add(p0.x, p0.y);
             this.beamCorner1.rotate(angle).add(p0.x, p0.y);
             this.beamCorner2.rotate(angle).add(p0.x, p0.y);
@@ -341,9 +341,9 @@ define(function(require) {
             this.beamClipper.AddPath(this.beamClipPath,    ClipperLib.PolyType.ptClip,    true);
 
             var succeeded = this.beamClipper.Execute(
-                ClipperLib.ClipType.ctDifference, 
-                this.beamSolutionPaths, 
-                ClipperLib.PolyFillType.pftNonZero, 
+                ClipperLib.ClipType.ctDifference,
+                this.beamSolutionPaths,
+                ClipperLib.PolyFillType.pftNonZero,
                 ClipperLib.PolyFillType.pftNonZero
             );
 

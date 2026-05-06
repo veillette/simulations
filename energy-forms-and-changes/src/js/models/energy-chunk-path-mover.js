@@ -6,7 +6,7 @@ define(function (require) {
     var Vector2   = require('common/math/vector2');
 
     /**
-     * 
+     *
      */
     var EnergyChunkPathMover = function(energyChunk, path, velocity) {
         this.energyChunk = energyChunk;

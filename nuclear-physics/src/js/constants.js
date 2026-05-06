@@ -7,7 +7,7 @@ define(function (require) {
     var HalfLifeInfo = require('models/half-life-info');
     var NucleusType  = require('models/nucleus-type');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -38,7 +38,7 @@ define(function (require) {
     Constants.URANIUM_236_LABEL_COLOR               = '#f80';
     Constants.URANIUM_238_LABEL_COLOR               = '#ff0';
     Constants.URANIUM_239_LABEL_COLOR               = '#fff';
-    
+
     // Color for nuclei when represented as a circle or sphere.
     Constants.HYDROGEN_COLOR = '#FFC0DB';
     Constants.HELIUM_COLOR = '#0ff';
@@ -49,7 +49,7 @@ define(function (require) {
     Constants.POLONIUM_COLOR = '#f80';
     Constants.CUSTOM_NUCLEUS_PRE_DECAY_COLOR = '#9F1E75';
     Constants.CUSTOM_NUCLEUS_POST_DECAY_COLOR = '#78b04a';
-    
+
     // Colors for the strata in the Radioactive Dating Game, assumed to go
     // from top to bottom.
     // public static final ArrayList<Color> strataColors = new ArrayList<Color>();
@@ -74,7 +74,7 @@ define(function (require) {
     Constants.NEUTRON_COLOR      = '#888';
     Constants.ELECTRON_COLOR     = '#069EC7';
     Constants.ANTINEUTRINO_COLOR = '#00C800';
-    
+
     Constants.DEFAULT_CUSTOM_NUCLEUS_HALF_LIFE = HalfLifeInfo.convertYearsToMs(100E3);
 
 
@@ -121,12 +121,12 @@ define(function (require) {
     var AlphaParticle = {};
 
     AlphaParticle.MAX_AUTO_TRANSLATE_AMT = 0.75;
-    
+
     // Possible states for tunneling.
     AlphaParticle.IN_NUCLEUS               = 0;
     AlphaParticle.TUNNELING_OUT_OF_NUCLEUS = 1;
     AlphaParticle.TUNNELED_OUT_OF_NUCLEUS  = 2;
-    
+
     // Distance at which we consider the particle done tunneling, in fm.
     AlphaParticle.MAX_TUNNELING_DISTANCE = 1000;
 
@@ -519,8 +519,8 @@ define(function (require) {
     //   of the proportion of the chart height.
     NucleusDecayChart.BUNCHING_OFFSETS = [
         new Vector2( 0,      0),
-        new Vector2(-0.02,  -0.025), 
-        new Vector2( 0.025, -0.02), 
+        new Vector2(-0.02,  -0.025),
+        new Vector2( 0.025, -0.02),
         new Vector2( 0.015,  0.025),
         new Vector2(-0.015,  0.015)
     ];
@@ -563,7 +563,7 @@ define(function (require) {
 
     Constants.AtomCanisterView = AtomCanisterView;
 
-    
+
 
 
     return Constants;

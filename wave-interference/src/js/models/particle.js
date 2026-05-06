@@ -2,7 +2,7 @@
 define(function(require) {
 
 	'use strict';
-	
+
 	var _        = require('underscore');
 	var glMatrix = require('glmatrix');
 
@@ -31,7 +31,7 @@ define(function(require) {
 			this.lattice = options.lattice;
 		else
 			throw 'Particle requires a lattice to render.';
-		
+
 		this.spacingBetweenCells = options.spacingBetweenCells;
 
 		this.homeX = options.i;
@@ -90,7 +90,7 @@ define(function(require) {
 			searchResults = this.searchForTarget();
 			bestPoint = searchResults.location;
 			if (bestPoint !== null) {
-				/* 
+				/*
 				 * Modified the block structure and got rid of code
 				 *   that wasn't actually getting executed.
 				 */
@@ -108,7 +108,7 @@ define(function(require) {
 					accelScale = 1;
 					frictionScale = 1;
 				}
-				
+
 				vec = this._vec;
 				vec[0] = prefX - this.destinationX;
 				vec[1] = prefY - this.destinationY;
@@ -162,7 +162,7 @@ define(function(require) {
 					if (this.inBounds(homeX + i, homeY + j)) {
 						if (bestPoint === null || (
 								this.lattice.getValue( homeX + i, homeY + j ) < bestValue &&
-								Utils.lineLength(homeX, homeY, homeX + i, homeY + j) <= HALF_WINDOW_SIZE 
+								Utils.lineLength(homeX, homeY, homeX + i, homeY + j) <= HALF_WINDOW_SIZE
 							)
 						) {
 							bestPoint = this._bestPoint;

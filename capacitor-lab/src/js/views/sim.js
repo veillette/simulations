@@ -102,7 +102,7 @@ define(function (require) {
                 model: this.simulation,
                 dragFrame: this.el
             });
-            
+
             this.plateChargeMeterView = new PlateChargeMeterView({
                 model: this.simulation,
                 dragFrame: this.el
@@ -203,7 +203,7 @@ define(function (require) {
 
             this.sceneView.showPlateCharges();
             this.sceneView.hideEFieldLines();
-            
+
             this.capacitanceMeterView.hide();
             this.plateChargeMeterView.hide();
             this.storedEnergyMeterView.hide();

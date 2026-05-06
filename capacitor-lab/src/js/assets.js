@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         BATTERY_UP:   'battery-up.png',
         BATTERY_DOWN: 'battery-down.png',
         VOLTMETER:    'voltmeter.png',

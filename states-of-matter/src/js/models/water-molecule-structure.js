@@ -7,22 +7,22 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * This defines the structure of the water molecule as the 
-     *   distances of the atoms in the x and y from the center 
+     * This defines the structure of the water molecule as the
+     *   distances of the atoms in the x and y from the center
      *   of mass when the rotational angle is zero.
      */
     var atoms = [
-        { 
-            x: 0, 
-            y: 0 
+        {
+            x: 0,
+            y: 0
         },
-        { 
-            x: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN, 
-            y: 0 
+        {
+            x: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN,
+            y: 0
         },
-        { 
-            x: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN * Math.cos(Constants.THETA_HOH), 
-            y: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN * Math.sin(Constants.THETA_HOH) 
+        {
+            x: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN * Math.cos(Constants.THETA_HOH),
+            y: Constants.DISTANCE_FROM_OXYGEN_TO_HYDROGEN * Math.sin(Constants.THETA_HOH)
         }
     ];
 
@@ -53,7 +53,7 @@ define(function (require) {
         rotationalInertia: rotationalInertia
 
     };
-    
+
 
     return WaterMoleculeStructure;
 });

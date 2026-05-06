@@ -3,7 +3,7 @@ define(function (require, exports, module) {
     'use strict';
 
     /**
-     * 
+     *
      */
     var NoiseGenerator = {
 
@@ -22,10 +22,10 @@ define(function (require, exports, module) {
 
             if (voltageNoise > maxNoise)
                 voltageNoise = maxNoise;
-            
+
             if (voltageNoise < -maxNoise)
                 voltageNoise = -maxNoise;
-            
+
             var voltageDisplay = trueVoltage + voltageNoise;
             return voltageDisplay;
         }

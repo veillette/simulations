@@ -12,12 +12,12 @@ define(function (require) {
     var BohrModel     = require('hydrogen-atom/models/atomic-model/bohr');
     var Photon        = require('hydrogen-atom/models/photon');
     var AlphaParticle = require('hydrogen-atom/models/alpha-particle');
-    
+
     var Constants = require('constants');
 
     /**
      * Gun is the model of a gun that can fire either photons or alpha particles.
-     * It is located at a point in space with a specific orientation and it 
+     * It is located at a point in space with a specific orientation and it
      * has a nozzle with a specific width.
      * The gun's local origin is at the center of its nozzle.
      * When firing photons, it shoots a beam of light that wavelength and intensity.
@@ -33,7 +33,7 @@ define(function (require) {
             lightType: Constants.Gun.DEFAULT_LIGHT_TYPE, // type of light (white or monochromatic)
             lightIntensity: Constants.Gun.DEFAULT_LIGHT_INTENSITY, // intensity of the light, 0.0-1.0
             wavelength: Constants.Gun.DEFAULT_WAVELENGTH, // wavelength of the light
-            minWavelength: 0, 
+            minWavelength: 0,
             maxWavelength: 0, // range of wavelength
             alphaParticlesIntensity: Constants.Gun.DEFAULT_ALPHA_PARTICLE_INTENSITY, // intensity of the alpha particles, 0.0-1.0
             maxParticles: undefined // particles in the animation box when gun intensity is 100%
@@ -63,28 +63,28 @@ define(function (require) {
         isPhotonsMode: function() {
             return (this.get('mode') === Gun.MODE_PHOTONS);
         },
-        
+
         /**
          * Is the gun in the mode to fire alpha particles?
          */
         isAlphaParticlesMode: function() {
             return (this.get('mode') === Gun.MODE_ALPHA_PARTICLES);
         },
-        
+
         /**
          * Is the gun configured to fire white light?
          */
         isWhiteLightType: function() {
             return (this.get('lightType') == Gun.LIGHT_WHITE);
         },
-        
+
         /**
          * Is the gun configured to fire monochromatic light?
          */
         isMonochromaticLightType: function() {
-            return (this.get('lightType') == Gun.LIGHT_MONOCHROME);   
+            return (this.get('lightType') == Gun.LIGHT_MONOCHROME);
         },
-        
+
         /**
          * Gets the color assoociate with the gun's monochromatic wavelength.
          */
@@ -105,7 +105,7 @@ define(function (require) {
                 return WavelengthColors.nmToHex(wavelength);
             }
         },
-        
+
         /**
          * Gets the color of the gun's beam.
          * The alpha component of the Color returned corresponds to the intensity.
@@ -129,7 +129,7 @@ define(function (require) {
             var beamColor = this.getBeamColor();
             if (beamColor) {
                 return (this.isPhotonsMode() ?
-                    this.get('lightIntensity') : 
+                    this.get('lightIntensity') :
                     this.get('alphaParticlesIntensity')
                 );
             }
@@ -139,15 +139,15 @@ define(function (require) {
 
         /**
          * Gets a wavelength that would be appropriate for a new photon.
-         * 
+         *
          * For monochromatic light, we simply use the value of the gun's
          * monochromatic wavelength.
-         * 
+         *
          * For white light, the wavelength is randomly chosen.
          * Instead of simply picking a wavelength from the gun's entire range,
-         * we give a higher weight to those wavelengths that are would cause 
+         * we give a higher weight to those wavelengths that are would cause
          * a transition from state 1 to some other state.  We consider only
-         * the wavelengths relevant to state=1 because all of the other 
+         * the wavelengths relevant to state=1 because all of the other
          * transitions are very improbably in practice. This increases the
          * probability that the photon we fire will interact with the atom.
          */
@@ -157,7 +157,7 @@ define(function (require) {
             if (this.isMonochromaticLightType()) {
                 wavelength = this.get('wavelength');
             }
-            else { 
+            else {
                 // White light
                 if (Math.random() < Gun.TRANSITION_WAVELENGTHS_WEIGHT) {
                     // Choose a random transition wavelength
@@ -168,13 +168,13 @@ define(function (require) {
                     wavelength = this.visibleWavelengthRange.random();
                 }
             }
-            
+
             if (!(wavelength >= this.get('minWavelength') && wavelength <= this.get('maxWavelength')))
                 throw 'Random wavelength is not within the required range.';
 
             return wavelength;
         },
-        
+
         /**
          * Gets a random point along the gun's nozzle.
          * This is based on the nozzle width, gun position, and gun orientation.
@@ -191,7 +191,7 @@ define(function (require) {
             p.rotate(this.get('orientation'));
             // Translate by the gun's position
             p.add(this.getPosition());
-            
+
             return p;
         },
 
@@ -207,43 +207,43 @@ define(function (require) {
                     this.fireAlphaParticle(deltaTime);
             }
         },
-        
+
         /**
          * Fires one photon from the center of the gun.
          */
         fireOnePhotonFromCenter: function(wavelength) {
             // Fire from the center of the gun's nozzle
             var position = this._position.set(1, 0);
-            
+
             // Rotate by the gun's orientation
             position.rotate(this.get('orientation'));
             // Translate by the gun's position
             position.add(this.getPosition());
-            
+
             // Other photon properties
             var orientation = this.get('orientation');
             var speed = Constants.PHOTON_INITIAL_SPEED;
 
             // Fire a new photon
             this.firePhotonFired(Photon.create({
-                wavelength: wavelength, 
-                position: position, 
-                orientation: orientation, 
+                wavelength: wavelength,
+                position: position,
+                orientation: orientation,
                 speed: speed
             }));
         },
-        
+
         /**
          * Fires a photon when it's time to do so.
          * Each photon is fired from a random location along the gun's nozzle.
          */
         firePhoton: function(deltaTime) {
             this.dtSinceGunFired += (this.get('lightIntensity') * deltaTime);
-            
+
             // Fire a photon?
             if (this.dtSinceGunFired >= this.dtPerGunFired) {
                 this.dtSinceGunFired = this.dtSinceGunFired % this.dtPerGunFired;
-                
+
                 // Photon properties
                 var position = this.getRandomNozzlePoint();
                 var orientation = this.get('orientation');
@@ -252,14 +252,14 @@ define(function (require) {
 
                 // Fire a new photon
                 this.firePhotonFired(Photon.create({
-                    wavelength: wavelength, 
-                    position: position, 
-                    orientation: orientation, 
+                    wavelength: wavelength,
+                    position: position,
+                    orientation: orientation,
                     speed: speed
                 }));
             }
         },
-        
+
         /**
          * Fires an alpha particle when it's time to do so.
          * Each alpha particle is fired from a random location along the gun's nozzle.
@@ -269,7 +269,7 @@ define(function (require) {
 
             if (this.dtSinceGunFired >= this.dtPerGunFired) {
                 this.dtSinceGunFired = this.dtSinceGunFired % this.dtPerGunFired;
-                
+
                 // Pick a randon location along the gun's nozzle width
                 var position = this.getRandomNozzlePoint();
                 // Direction of alpha particle is same as gun's orientation.
@@ -278,8 +278,8 @@ define(function (require) {
 
                 // Fire a new alpha particle
                 this.fireAlphaParticleFired(AlphaParticle.create({
-                    position: position, 
-                    orientation: orientation, 
+                    position: position,
+                    orientation: orientation,
                     speed: speed
                 }));
             }
@@ -289,7 +289,7 @@ define(function (require) {
         firePhotonFired: function(photon) {
             this.trigger('photon-fired', photon);
         },
-        
+
         // Fires when an alpha particle is fired.
         fireAlphaParticleFired: function(alphaParticle) {
             this.trigger('alpha-particle-fired', alphaParticle);

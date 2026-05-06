@@ -13,11 +13,11 @@ define(function(require) {
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
     var html = require('text!../../templates/prisms-panel.html');
-    
+
     require('less!styles/prisms-panel');
 
     /**
-     * 
+     *
      */
     var PrismsPanelView = Backbone.View.extend({
 
@@ -72,7 +72,7 @@ define(function(require) {
 
     // Add input/update locking functionality to the prototype
     defineInputUpdateLocks(PrismsPanelView);
-    
+
 
     return PrismsPanelView;
 });

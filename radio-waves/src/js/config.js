@@ -10,12 +10,12 @@
             text:       '../../node_modules/requirejs-text/text',
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
-            
+
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
             'bootstrap-select':      '../../node_modules/bootstrap-select/js/bootstrap-select',
             'bootstrap-select-less': '../../node_modules/bootstrap-select/less/bootstrap-select',
-            
+
             'filters':               '../../node_modules/filters-shimmed/index',
             'lib/median':            '../../node_modules/filters-shimmed/lib/median',
             'lib/average':           '../../node_modules/filters-shimmed/lib/average',

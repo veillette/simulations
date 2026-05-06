@@ -49,7 +49,7 @@ define(function (require) {
         propagate: function(deltaTime, particle) {
             this.time += deltaTime;
             this.amplitude = this.amplitude * this.amplitudeScale;
-            
+
             var scale = this.amplitude * Math.sin(this.time * this.freq);
             var position = this._pos
                 .set(this.position0)

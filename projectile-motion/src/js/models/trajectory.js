@@ -33,7 +33,7 @@ define(function (require) {
             this.x = this.get('initialX');               // Current position; start at origin
             this.y = this.get('initialY');
             this.lastX = 0;                              // Position at previous time step
-            this.lastY = 0;                    
+            this.lastY = 0;
             this.v = this.vInit;                         // Speed of projectile
             this.vX = this.vInit * Math.cos(this.theta); // X- and y-components of velocity
             this.vY = this.vInit * Math.sin(this.theta);
@@ -60,20 +60,20 @@ define(function (require) {
                 t += dt;
                 this.x = this.x + this.vX * dt;
                 this.y = this.y + this.vY * dt - (0.5) * GRAVITY * dt * dt;
-                this.vY = this.vY - GRAVITY * dt;  //vX is constant 
+                this.vY = this.vY - GRAVITY * dt;  //vX is constant
                 this.v = Math.sqrt(this.vX * this.vX + this.vY * this.vY);
 
             }
-            else { 
+            else {
                 // If air resistance is so large that results are unphysical, then reduce time step
                 if (this.B * this.v * dt > 0.25)
                     dt /= (B * this.v * dt / 0.25);
-                
+
                 t += dt;
                 this.v = Math.sqrt(this.vX * this.vX + this.vY * this.vY);
                 this.aX = -this.B * this.v * this.vX;
                 this.aY = -GRAVITY - this.B * this.v * this.vY;
-                
+
                 this.x = this.x + this.vX * dt + (0.5) * this.aX * dt * dt;
                 this.y = this.y + this.vY * dt + (0.5) * this.aY * dt * dt;
                 this.vX = this.vX + this.aX * dt;
@@ -83,7 +83,7 @@ define(function (require) {
 
             // See if projectile is below ground
             var finished = false;
-            if (this.y < GROUND_Y) { 
+            if (this.y < GROUND_Y) {
                 // Backtrack to moment when projectile hit ground
                 var dy = this.y - GROUND_Y;
                 var vYGround = -Math.sqrt(this.vY * this.vY - 2 * this.aY * dy);   //vY at ground level
@@ -98,7 +98,7 @@ define(function (require) {
 
                 finished = true;
             }
-            
+
             this.get('projectile').set('x', this.x);
             this.get('projectile').set('y', this.y);
             this.get('projectile').set('rotation', Math.atan2(-this.vY, this.vX));

@@ -31,7 +31,7 @@ define(function(require) {
                 originY: 0,
                 targetX: 0,
                 targetY: 0,
-                minLength: null 
+                minLength: null
             });
             this.scale = 1;
             this.value = 0;

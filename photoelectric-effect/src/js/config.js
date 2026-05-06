@@ -19,7 +19,7 @@
 
             'lasers':          '../../../lasers/src/js',
             'discharge-lamps': '../../../discharge-lamps/src/js',
-            
+
             views:      '../js/views',
             models:     '../js/models',
             assets:     '../js/assets',

@@ -30,7 +30,7 @@ define(function (require, exports, module) {
             nucleusType: undefined,
             halfLife: undefined
         }),
-        
+
         initialize: function(attributes, options) {
             this._jitterOffsets = [];
             this._jitterOffsetCount = 0;
@@ -118,7 +118,7 @@ define(function (require, exports, module) {
             var length = Math.random() * this.maxJitterLength;
             if (length > MultiNucleusDecaySimulation.DEFAULT_JITTER_LENGTH)
                 length = MultiNucleusDecaySimulation.DEFAULT_JITTER_LENGTH;
-            
+
             var angle = Math.random() * Math.PI * 2;
             offset.set(Math.cos(angle) * length, Math.sin(angle) * length);
         },
@@ -126,7 +126,7 @@ define(function (require, exports, module) {
         /**
          * Reset all nuclei that are either active (meaning that they could decay
          *   at any time) or decayed.
-         * 
+         *
          * @return - The number of nuclei that are reset.
          */
         resetActiveAndDecayedNuclei: function() {
@@ -190,7 +190,7 @@ define(function (require, exports, module) {
 
             var newNucleus = this.createNucleus();
             newNucleus.setPosition(x, y);
-            
+
             this.atomicNuclei.add(newNucleus);
 
             this._jitterOffsets.push(new Vector2());
@@ -223,14 +223,14 @@ define(function (require, exports, module) {
         getNucleusBounds: function(x, y, width, height) {
             return this._nucleusBounds;
         },
-        
+
         /**
          * Get the current total number of nuclei in the model.
          */
         getTotalNumNuclei: function() {
             return this.atomicNuclei.length;
         },
-        
+
         /**
          * Get the number of decayed nuclei in the model.
          */
@@ -242,7 +242,7 @@ define(function (require, exports, module) {
             }
             return decayCount;
         },
-        
+
         /**
          * Get the number of active nuclei, meaning nuclei that are being clocked
          * and are progressing towards decay.
@@ -261,14 +261,14 @@ define(function (require, exports, module) {
          */
         halfLifeChanged: function(simulation, halfLife) {
             // Verify that the current nucleus is custom.
-            if (this.get('halfLife') !== undefined && 
-                this.get('nucleusType') !== NucleusType.HEAVY_CUSTOM && 
+            if (this.get('halfLife') !== undefined &&
+                this.get('nucleusType') !== NucleusType.HEAVY_CUSTOM &&
                 this.get('nucleusType') !== NucleusType.LIGHT_CUSTOM
             ) {
                 console.warning('Warning: Can only set half life for custom nucleus, ignoring request.');
                 return;
             }
-            
+
             // Set the new half life value.
             for (var i = 0; i < this.atomicNuclei.length; i++)
                 this.atomicNuclei.at(i).set('halfLife', halfLife);
@@ -285,7 +285,7 @@ define(function (require, exports, module) {
             //   be modified if a more general approach is needed.
             // this.addMaxNuclei();
             this.removeAllNuclei();
-            
+
             // Set jitter length to 0 so that it will be set correctly the
             //   next time a jitter offset is generated.
             this.maxJitterLength = 0;

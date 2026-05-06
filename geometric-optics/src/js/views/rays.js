@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -106,7 +106,7 @@ define(function(require) {
             if (this.secondPointVisible) {
                 this._sourcePoint.set(this.mvt.modelToView(this.simulation.sourceObject.get('secondPoint')));
                 this._targetPoint.set(this.mvt.modelToView(this.simulation.targetImage.get('secondPoint')));
-                this.drawRays(this.targetPointRays, this.targetPointColor, this._sourcePoint, this._targetPoint);    
+                this.drawRays(this.targetPointRays, this.targetPointColor, this._sourcePoint, this._targetPoint);
             }
             else
                 this.targetPointRays.clear();
@@ -252,7 +252,7 @@ define(function(require) {
                             graphics.lineStyle(RaysView.LINE_WIDTH, this.virtualRayColor, 0.6);
                             graphics.lineTo(Cx, Cy);
                         }
-                    } 
+                    }
                     else {
                         graphics.moveTo(Ax, Ay);
                         graphics.lineStyle(RaysView.LINE_WIDTH, color, RaysView.LINE_ALPHA);
@@ -317,7 +317,7 @@ define(function(require) {
             var lensX = this.mvt.modelToViewX(this.simulation.lens.get('position').x);
             var lensY = this.mvt.modelToViewY(this.simulation.lens.get('position').y);
             var lensDiameter = this.mvt.modelToViewDeltaX(this.simulation.lens.get('diameter'));
-            
+
             this.topGuide.x = lensX;
             this.topGuide.y = lensY - lensDiameter / 2 + RaysView.LENS_TIP_OFFSET;
 

@@ -59,7 +59,7 @@ define(function (require) {
 
         renderBarMeter: function() {
             this.$el.html(this.template());
-            
+
             this.$('.bar-meter-bar').css('background-color', this.barColor);
             this.$('.bar-meter-overflow').css('color', this.barColor);
             this.$('.bar-meter-title').html(this.title);

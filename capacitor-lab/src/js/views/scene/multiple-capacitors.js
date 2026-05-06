@@ -13,7 +13,7 @@ define(function(require) {
     var MultipleCapacitorsSceneView = CapacitorLabSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -60,7 +60,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             CapacitorLabSceneView.prototype._update.apply(this, arguments);
-            
+
             for (var i = 0; i < this.circuitViews.length; i++)
                 this.circuitViews[i].update(time, deltaTime);
         },
@@ -74,7 +74,7 @@ define(function(require) {
         },
 
         /**
-         * 
+         *
          */
         getIntersectingCapacitorView: function(point) {
             return this.circuitViews[this.simulation.get('currentCircuitIndex')].getIntersectingCapacitorView(point);
@@ -83,7 +83,7 @@ define(function(require) {
         circuitChanged: function(simulation, circuit) {
             for (var i = 0; i < this.circuitViews.length; i++)
                 this.circuitViews[i].hide();
-            
+
             this.circuitViews[simulation.get('currentCircuitIndex')].show();
         },
 

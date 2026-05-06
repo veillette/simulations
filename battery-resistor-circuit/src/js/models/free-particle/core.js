@@ -19,7 +19,7 @@ define(function (require) {
     var FreeParticle = require('models/free-particle');
 
     /**
-     * 
+     *
      */
     var Core = FreeParticle.extend({
 
@@ -37,7 +37,7 @@ define(function (require) {
 
         setOrigin: function(x, y) {
             var oldOrigin = this.get('origin');
-            
+
             if (x instanceof Vector2)
                 this.set('origin', vectorPool.create().set(x));
             else

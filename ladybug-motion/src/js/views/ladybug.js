@@ -159,7 +159,7 @@ define(function(require) {
         drag: function(event) {
             if (this.dragging) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                
+
                 var x = this.mvt.viewToModelX(local.x);
                 var y = this.mvt.viewToModelY(local.y);
 
@@ -174,7 +174,7 @@ define(function(require) {
         },
 
         update: function(time, deltaTime, paused) {
-            
+
         },
 
         velocityChanged: function(model, velocity) {

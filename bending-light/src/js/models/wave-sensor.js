@@ -28,7 +28,7 @@ define(function (require) {
     });
 
     /**
-     * 
+     *
      */
     var WaveSensor = Backbone.Model.extend({
 
@@ -38,7 +38,7 @@ define(function (require) {
             probe1Position: null,
             probe2Position: null
         },
-        
+
         initialize: function(attributes, options) {
             // Create vectors
             this.set('bodyPosition',   vectorPool.create().set(this.get('bodyPosition')));
@@ -93,7 +93,7 @@ define(function (require) {
 
         setBodyPosition: function(x, y) {
             var oldBodyPosition = this.get('bodyPosition');
-            
+
             if (x instanceof Vector2)
                 this.set('bodyPosition', vectorPool.create().set(x));
             else
@@ -111,14 +111,14 @@ define(function (require) {
                 this.set('bodyPosition', newBodyPosition.add(x));
             else
                 this.set('bodyPosition', newBodyPosition.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldBodyPosition);
         },
 
         setProbe1Position: function(x, y) {
             var oldProbePosition = this.get('probe1Position');
-            
+
             if (x instanceof Vector2)
                 this.set('probe1Position', vectorPool.create().set(x));
             else
@@ -136,14 +136,14 @@ define(function (require) {
                 this.set('probe1Position', newProbe1Position.add(x));
             else
                 this.set('probe1Position', newProbe1Position.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldProbe1Position);
         },
 
         setProbe2Position: function(x, y) {
             var oldProbePosition = this.get('probe2Position');
-            
+
             if (x instanceof Vector2)
                 this.set('probe2Position', vectorPool.create().set(x));
             else
@@ -161,7 +161,7 @@ define(function (require) {
                 this.set('probe2Position', newProbe2Position.add(x));
             else
                 this.set('probe2Position', newProbe2Position.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldProbe2Position);
         },

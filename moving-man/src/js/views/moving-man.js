@@ -26,7 +26,7 @@ define(function (require, exports, module) {
     /**
      * The moving man view is the focus of the application.  He
      *   represents the state of the moving man model and animates
-     *   with changes to the model.  The user can also drag him, 
+     *   with changes to the model.  The user can also drag him,
      *   changing his position and derivative variables in turn.
      */
     var MovingManView = SimDraggable.extend({
@@ -148,8 +148,8 @@ define(function (require, exports, module) {
             this._lastAcceleration = this._acceleration;
             this._acceleration = this.movingMan.get('acceleration');
 
-            if (!this.updateOnNextFrame && 
-                this._position === this._lastPosition && 
+            if (!this.updateOnNextFrame &&
+                this._position === this._lastPosition &&
                 this._velocity === this._lastVelocity &&
                 this._acceleration === this._lastAcceleration)
                 return;

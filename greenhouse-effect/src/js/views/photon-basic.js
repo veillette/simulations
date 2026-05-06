@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView = require('common/v3/pixi/view');
 
     var Assets    = require('assets');
@@ -34,7 +34,7 @@ define(function(require) {
     var BasicPhotonView = PixiView.extend({
 
         /**
-         * Overrides PixiView's initializeDisplayObject function 
+         * Overrides PixiView's initializeDisplayObject function
          *   make the displayObject a sprite right off the bat so
          *   we don't waste memory and processor time creating a
          *   container that we don't want.
@@ -43,7 +43,7 @@ define(function(require) {
             initTextures();
 
             if (this.model.get('wavelength') > 6E-7)
-                this.displayObject = new PIXI.Sprite(Textures.INFRARED); 
+                this.displayObject = new PIXI.Sprite(Textures.INFRARED);
             else
                 this.displayObject = new PIXI.Sprite(Textures.SUNLIGHT);
 
@@ -88,7 +88,7 @@ define(function(require) {
             this.displayObject.y = viewPos.y;
         },
 
-        /** 
+        /**
          * Get new info from the model
          */
         update: function(deltaTime) {

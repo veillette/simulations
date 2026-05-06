@@ -13,14 +13,14 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var FaradaySimulation = FixedIntervalSimulation.extend({
 
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 framesPerSecond:   Constants.CLOCK_FRAME_RATE,

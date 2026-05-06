@@ -184,9 +184,9 @@ define(function (require) {
 			angle = segment.getAngle();
 
 			lineLength = Utils.lineLength(
-				segment.start.x * xSpacing, 
-				segment.start.y * ySpacing, 
-				segment.end.x * xSpacing, 
+				segment.start.x * xSpacing,
+				segment.start.y * ySpacing,
+				segment.end.x * xSpacing,
 				segment.end.y * ySpacing
 			);
 
@@ -211,7 +211,7 @@ define(function (require) {
 				'-ms-transform-origin': transformOrigin,
 				'transform-origin': transformOrigin,
 			});
-			
+
 			// Make sure the handles are circles
 			this.$('.segment-handle').width(this.$('.segment-handle').height());
 		}

@@ -35,7 +35,7 @@ define(function (require) {
 
                 if (this.age < this.closureAge)
                     throw 'Age is less than closure age.';
-                
+
                 return this.age - this.closureAge;
             }
         },

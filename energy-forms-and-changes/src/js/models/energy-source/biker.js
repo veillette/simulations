@@ -25,7 +25,7 @@ define(function (require) {
             targetCrankAngularVelocity: 0,
             mechanicalPoweredSystemIsNext: false
         }),
-        
+
         initialize: function(attributes, options) {
             EnergySource.prototype.initialize.apply(this, [attributes, options]);
 
@@ -83,7 +83,7 @@ define(function (require) {
             for (var i = 0; i < Biker.INITIAL_NUM_ENERGY_CHUNKS; i++) {
                 displacement.set((Math.random() - 0.5) * 0.02, 0).rotate(Math.PI * 0.7);
                 this.energyChunks.add(EnergyChunk.create({
-                    energyType: EnergyTypes.CHEMICAL, 
+                    energyType: EnergyTypes.CHEMICAL,
                     position:   this.offsetPosition(nominalInitialoffset).add(displacement)
                 }));
             }
@@ -247,7 +247,7 @@ define(function (require) {
             var crankPosition = currentPosition.clone().add(Biker.BIKE_CRANK_OFFSET);
             if (currentPosition.y > crankPosition.y) {
                 // Only add the crank position if the current position
-                //   indicates that the chunk hasn't reached the crank 
+                //   indicates that the chunk hasn't reached the crank
                 //   yet.
                 path.push(new Vector2(centerPosition).add(Biker.BIKE_CRANK_OFFSET));
             }
@@ -293,8 +293,8 @@ define(function (require) {
 
         /**
          * Set the crank to a position where a very small amount of motion will
-         *   cause a new image to be chosen.  This is generally done when the 
-         *   biker stops so that the animation starts right away the next time 
+         *   cause a new image to be chosen.  This is generally done when the
+         *   biker stops so that the animation starts right away the next time
          *   the motion starts.
          */
         setCrankToPoisedPosition: function() {

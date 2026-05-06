@@ -4,7 +4,7 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var PixiView          = require('common/v3/pixi/view');
     var PressureGaugeView = require('common/v3/pixi/view/pressure-gauge');
     var Colors            = require('common/colors/colors');
@@ -14,7 +14,7 @@ define(function(require) {
 
     /**
      * A box that surrounds the speaker that we can drain air
-     *   from and that has a pressure gauge. 
+     *   from and that has a pressure gauge.
      */
     var BoxView = PixiView.extend({
 
@@ -74,12 +74,12 @@ define(function(require) {
                 connectorColor1: '#000',
                 connectorColor2: this.colorString
             });
-            
+
             this.displayObject.addChild(this.pressureGaugeView.displayObject);
         },
 
         /**
-         * 
+         *
          */
         update: function(time, deltaTime, paused) {
             if (!paused) {
@@ -121,7 +121,7 @@ define(function(require) {
             this.boxFill.scale.y = scale;
             this.boxOutline.scale.x = scale;
             this.boxOutline.scale.y = scale;
-            
+
             this.positionPressureGauge();
         },
 

@@ -17,7 +17,7 @@ define(function(require) {
     var templateHtml = require('text!templates/nucleus-chooser.html');
 
     /**
-     * 
+     *
      */
     var NucleusChooserView = Backbone.View.extend({
 
@@ -47,8 +47,8 @@ define(function(require) {
          */
         initMVT: function() {
             this.mvt = new ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0), 
-                new Vector2(0, 0), 
+                new Vector2(0, 0),
+                new Vector2(0, 0),
                 this.scale
             );
         },
@@ -114,11 +114,11 @@ define(function(require) {
                 };
             });
 
-            this.$el.html(this.template({ 
+            this.$el.html(this.template({
                 items: items,
                 imageContainerWidth: maxWidth / 2,
                 spacingOffset: this.spacingOffset,
-                unique: this.cid 
+                unique: this.cid
             }));
 
             return this;

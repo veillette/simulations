@@ -28,7 +28,7 @@ define(function(require) {
 
         initialize: function(options) {
             this.maxDielectricEField = options.maxDielectricEField;
-            
+
             // Cached objects
             this._vec3 = new Vector3();
 
@@ -123,7 +123,7 @@ define(function(require) {
             this.displayObject.x = viewPos.x;
             this.displayObject.y = viewPos.y;
         },
- 
+
         updateMVT: function(mvt) {
             this.mvt = mvt;
 

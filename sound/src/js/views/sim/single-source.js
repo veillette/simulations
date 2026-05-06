@@ -8,7 +8,7 @@ define(function (require) {
     var SingleSourceSceneView = require('views/scene/single-source');
 
     /**
-     * 
+     *
      */
     var SingleSourceSimView = SoundSimView.extend({
 

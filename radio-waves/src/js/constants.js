@@ -6,7 +6,7 @@ define(function (require) {
     var Rectangle = require('common/math/rectangle');
     var range     = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **

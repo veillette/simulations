@@ -5,7 +5,7 @@ define(function (require) {
     var WavelengthColors = require('common/colors/wavelength');
     var range            = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -13,17 +13,17 @@ define(function (require) {
      **                                                                     **
      *************************************************************************/
 
-    
+
     Constants.SPEED_OF_LIGHT = 2.99792458E8;
     Constants.WAVELENGTH_RED = 650E-9;
     Constants.WHITE_LIGHT = 1;
 
-    // To come up with a good time scale dt, use lambda = v/f.  
+    // To come up with a good time scale dt, use lambda = v/f.
     // For lambda = RED_WAVELENGTH and C=SPEED_OF_LIGHT, we have f=4.612E14
     Constants.RED_LIGHT_FREQUENCY = Constants.SPEED_OF_LIGHT / Constants.WAVELENGTH_RED;
 
     // Speed up by a factor of 2.5 because default wave view was moving too slow
-    Constants.TIME_SPEEDUP_SCALE = 2.5; 
+    Constants.TIME_SPEEDUP_SCALE = 2.5;
 
     // Thirty frames per cycle times the speedup scale
     Constants.MAX_DT = 1.0 / Constants.RED_LIGHT_FREQUENCY / 30 * Constants.TIME_SPEEDUP_SCALE;
@@ -34,7 +34,7 @@ define(function (require) {
 
     Constants.DT_RANGE = range({ min: Constants.MIN_DT, max: Constants.MAX_DT });
 
-    // A good size for the units being used in the sim; used to determine the 
+    // A good size for the units being used in the sim; used to determine the
     //   dimensions of various model objects
     Constants.CHARACTERISTIC_LENGTH = Constants.WAVELENGTH_RED;
 
@@ -107,7 +107,7 @@ define(function (require) {
      *************************************************************************/
 
     var Laser = {};
-    
+
     // So the refracted wave mode doesn't get too big because at angle = PI
     //   it would become infinite.  This value was determined by printing out
     //   actual angle values at runtime and sampling a good value.

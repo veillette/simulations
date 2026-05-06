@@ -4,7 +4,7 @@ define(function (require) {
 
     var _    = require('underscore');
     var Pool = require('object-pool');
-    
+
     var pool = Pool({
         init: function() {
             return new DynamicState();
@@ -12,7 +12,7 @@ define(function (require) {
     });
 
     /**
-     * 
+     *
      */
     var DynamicState = function(dynamicCircuit, solution) {
         // Call init with any arguments passed to the constructor

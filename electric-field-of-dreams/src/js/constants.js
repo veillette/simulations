@@ -4,7 +4,7 @@ define(function (require) {
 
     var range = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -84,7 +84,7 @@ define(function (require) {
      **                         EXTERNAL FIELD VIEW                         **
      **                                                                     **
      *************************************************************************/
-    
+
     var ElectricFieldView = {};
 
     ElectricFieldView.ARROW_TAIL_WIDTH  = 2;

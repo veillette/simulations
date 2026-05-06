@@ -26,7 +26,7 @@ define(function(require) {
          */
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
             this.buttonWidth = 126;
@@ -97,7 +97,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             if (this._nucleusAdded) {
-                
+
                 this._nucleusAdded = false;
             }
 
@@ -121,7 +121,7 @@ define(function(require) {
                 isotope1Color = Colors.parseHex(IsotopeSymbolGenerator.getColor(nucleusType));
                 isotope2Color = Colors.parseHex(IsotopeSymbolGenerator.getColor(AtomicNucleus.getPostDecayNucleusType(nucleusType)));
             }
-            
+
             var radius = 25;
             var numActive  = this.simulation.getNumActiveNuclei();
             var numDecayed = this.simulation.getNumDecayedNuclei();
@@ -144,12 +144,12 @@ define(function(require) {
 
                 if (numActive > 0) {
                     graphics.moveTo(0, 0);
-                    graphics.lineTo(radius, 0);     
+                    graphics.lineTo(radius, 0);
                 }
 
                 graphics.lineStyle(1, 0x000000, 1);
                 graphics.moveTo(0, 0);
-                graphics.drawCircle(0, 0, radius);   
+                graphics.drawCircle(0, 0, radius);
             }
 
             this.isotope1Counter.text = numActive;
@@ -212,7 +212,7 @@ define(function(require) {
         nucleusTypeChanged: function(simulation, nucleusType) {
             this.clearNuclei();
             this.updatePieChart();
-            
+
             NucleusDecayChart.prototype.nucleusTypeChanged.apply(this, arguments);
         },
 

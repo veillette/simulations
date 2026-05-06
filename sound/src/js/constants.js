@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
 
-    var Constants = {}; 
+    var Constants = {};
 
 
     /*************************************************************************
@@ -15,7 +15,7 @@ define(function (require) {
     var Wavefront = {};
 
     // Number of sample values we keep track of
-    Wavefront.SAMPLE_LENGTH = 400; 
+    Wavefront.SAMPLE_LENGTH = 400;
     // The length in meters that the sample values span
     Wavefront.LENGTH_IN_METERS = 12;
 
@@ -75,7 +75,7 @@ define(function (require) {
     var SIM_SECONDS_PER_SECOND = Constants.DT_PER_FRAME * FRAMES_PER_SECOND;
     Constants.TIME_REPORTING_SCALE = SIM_TIME_REPORTING_SCALE * SIM_SECONDS_PER_SECOND;
 
-    Constants.MIN_FREQUENCY =    0;    // Herz 
+    Constants.MIN_FREQUENCY =    0;    // Herz
     Constants.MAX_FREQUENCY = 1000;    // Herz
     Constants.DEFAULT_FREQUENCY = 500; // Herz
 

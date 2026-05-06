@@ -23,7 +23,7 @@ define(function(require) {
             this.listenTo(this.simulation.glassPanes, 'add',            this.glassPaneAdded);
             this.listenTo(this.simulation.glassPanes, 'remove destroy', this.glassPaneRemoved);
         },
-        
+
         initGraphics: function() {
             BaseGreenhouseSceneView.prototype.initGraphics.apply(this, arguments);
 
@@ -81,7 +81,7 @@ define(function(require) {
         },
 
         createAndAddGlassPaneView: function(glassPane) {
-            var glassPaneView = new GlassPaneView({ 
+            var glassPaneView = new GlassPaneView({
                 model: glassPane,
                 mvt: this.mvt
             });

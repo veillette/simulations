@@ -18,7 +18,7 @@ define(function (require) {
      *   the unoccluded shapes that are drawn in the scene, but it also needs
      *   to create occluded shapes like the original PhET version to be used
      *   in detecting which object a 2D point lies in (for determining where
-     *   the tip of a probe is for the meter tools).  
+     *   the tip of a probe is for the meter tools).
      *
      *  Note: Instead of using Java's Constructive Area Geometry to determine
      *   these occluded shapes by area subtraction, I will just use arithmetic
@@ -57,11 +57,11 @@ define(function (require) {
         createTopPlateSilhouette: function() {
             var pos = this.capacitor.get('position');
             return this.createBoxSilhouette(
-                pos.x, 
-                this.capacitor.getTopPlateCenter().y, 
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getTopPlateCenter().y,
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -69,11 +69,11 @@ define(function (require) {
         createBottomPlateSilhouette: function() {
             var pos = this.capacitor.get('position');
             return this.createBoxSilhouette(
-                pos.x, 
-                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'), 
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'),
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -81,11 +81,11 @@ define(function (require) {
         createDielectricSilhouette: function() {
             var pos = this.capacitor.get('position');
             return this.createBoxSilhouette(
-                pos.x + this.capacitor.get('dielectricOffset'), 
-                pos.y - this.capacitor.getDielectricHeight() / 2, 
-                pos.z, 
-                this.capacitor.getDielectricWidth(), 
-                this.capacitor.getDielectricHeight(), 
+                pos.x + this.capacitor.get('dielectricOffset'),
+                pos.y - this.capacitor.getDielectricHeight() / 2,
+                pos.z,
+                this.capacitor.getDielectricWidth(),
+                this.capacitor.getDielectricHeight(),
                 this.capacitor.getDielectricDepth()
             );
         },
@@ -96,11 +96,11 @@ define(function (require) {
             var airWidth   = this.capacitor.get('dielectricOffset');
 
             return this.createBoxSilhouette(
-                pos.x - (plateWidth / 2) + (airWidth / 2), 
-                pos.y - this.capacitor.getDielectricHeight() / 2, 
-                pos.z, 
-                airWidth, 
-                this.capacitor.getDielectricHeight(), 
+                pos.x - (plateWidth / 2) + (airWidth / 2),
+                pos.y - this.capacitor.getDielectricHeight() / 2,
+                pos.z,
+                airWidth,
+                this.capacitor.getDielectricHeight(),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -130,7 +130,7 @@ define(function (require) {
          * Creates the visible portion of the dielectric between the plates,
          *   which is partially occluded by the top plate. If it's not between
          *   the plates at all, it will return an empty PiecewiseCurve.
-         *    
+         *
          *             p1
          *            /|
          *           / |
@@ -177,7 +177,7 @@ define(function (require) {
          *   the top plate.  The distanceFromEdge parameter is how far in
          *   from the right edge we are drawing, according to the following
          *   diagram where [w] is the distanceFromEdge.
-         *    
+         *
          *               p1
          *              /|
          *             / |
@@ -247,11 +247,11 @@ define(function (require) {
                 graphics,
                 baseFillColor,
                 fillAlpha,
-                pos.x, 
-                this.capacitor.getTopPlateCenter().y, 
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getTopPlateCenter().y,
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -262,11 +262,11 @@ define(function (require) {
                 graphics,
                 baseFillColor,
                 fillAlpha,
-                pos.x, 
-                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'), 
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'),
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -277,11 +277,11 @@ define(function (require) {
                 graphics,
                 baseFillColor,
                 fillAlpha,
-                pos.x + this.capacitor.get('dielectricOffset'), 
-                pos.y - this.capacitor.getDielectricHeight() / 2, 
-                pos.z, 
-                this.capacitor.getDielectricWidth(), 
-                this.capacitor.getDielectricHeight(), 
+                pos.x + this.capacitor.get('dielectricOffset'),
+                pos.y - this.capacitor.getDielectricHeight() / 2,
+                pos.z,
+                this.capacitor.getDielectricWidth(),
+                this.capacitor.getDielectricHeight(),
                 this.capacitor.getDielectricDepth()
             );
         },
@@ -290,14 +290,14 @@ define(function (require) {
             var pos = this.capacitor.get('position');
             return this.outlineBox(
                 graphics,
-                outlineWidth, 
+                outlineWidth,
                 outlineColor,
                 outlineAlpha,
-                pos.x, 
-                this.capacitor.getTopPlateCenter().y, 
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getTopPlateCenter().y,
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -306,14 +306,14 @@ define(function (require) {
             var pos = this.capacitor.get('position');
             return this.outlineBox(
                 graphics,
-                outlineWidth, 
+                outlineWidth,
                 outlineColor,
                 outlineAlpha,
-                pos.x, 
-                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'),  
-                pos.z, 
-                this.capacitor.get('plateWidth'), 
-                this.capacitor.get('plateHeight'), 
+                pos.x,
+                this.capacitor.getBottomPlateCenter().y - this.capacitor.get('plateHeight'),
+                pos.z,
+                this.capacitor.get('plateWidth'),
+                this.capacitor.get('plateHeight'),
                 this.capacitor.get('plateDepth')
             );
         },
@@ -322,14 +322,14 @@ define(function (require) {
             var pos = this.capacitor.get('position');
             return this.outlineBox(
                 graphics,
-                outlineWidth, 
+                outlineWidth,
                 outlineColor,
                 outlineAlpha,
-                pos.x + this.capacitor.get('dielectricOffset'), 
-                pos.y - this.capacitor.getDielectricHeight() / 2, 
-                pos.z, 
-                this.capacitor.getDielectricWidth(), 
-                this.capacitor.getDielectricHeight(), 
+                pos.x + this.capacitor.get('dielectricOffset'),
+                pos.y - this.capacitor.getDielectricHeight() / 2,
+                pos.z,
+                this.capacitor.getDielectricWidth(),
+                this.capacitor.getDielectricHeight(),
                 this.capacitor.getDielectricDepth()
             );
         },
@@ -338,14 +338,14 @@ define(function (require) {
             var pos = this.capacitor.get('position');
             return this.outlineBoxBack(
                 graphics,
-                outlineWidth, 
+                outlineWidth,
                 outlineColor,
                 outlineAlpha,
-                pos.x + this.capacitor.get('dielectricOffset'), 
-                pos.y - this.capacitor.getDielectricHeight() / 2, 
-                pos.z, 
-                this.capacitor.getDielectricWidth(), 
-                this.capacitor.getDielectricHeight(), 
+                pos.x + this.capacitor.get('dielectricOffset'),
+                pos.y - this.capacitor.getDielectricHeight() / 2,
+                pos.z,
+                this.capacitor.getDielectricWidth(),
+                this.capacitor.getDielectricHeight(),
                 this.capacitor.getDielectricDepth()
             );
         },

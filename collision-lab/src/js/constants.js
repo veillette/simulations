@@ -5,7 +5,7 @@ define(function (require) {
     var Vector2   = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -159,7 +159,7 @@ define(function (require) {
     MomentaDiagram.DEFAULT_SCALE = 24;
     MomentaDiagram.MIN_SCALE = 16;
     MomentaDiagram.MAX_SCALE = 52;
-    
+
 
     Constants.MomentaDiagram = MomentaDiagram;
 

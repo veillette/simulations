@@ -10,29 +10,29 @@ define(function (require) {
     var AbstractAtomicModel  = require('hydrogen-atom/models/atomic-model');
     var Photon               = require('hydrogen-atom/models/photon');
     var RutherfordScattering = require('hydrogen-atom/models/rutherford-scattering');
-    
+
     var Constants = require('constants');
 
     /**
      * PlumPuddingModel models the hydrogen atom as plum pudding.
-     * 
+     *
      * Physical representation:
      *   The proton is a blob of pudding (or "goo"), modeled as a circle.
-     *   An electron oscillates inside the goo along a straight line 
+     *   An electron oscillates inside the goo along a straight line
      *   that passes through the center of the goo and has its end points
-     *   on the circle.  
-     * 
+     *   on the circle.
+     *
      * Collision behavior:
      *   Photons collide with the electron when they are "close".
-     *   Alpha particles collide with the goo and are deflected 
+     *   Alpha particles collide with the goo and are deflected
      *   using a Rutherford scattering algorithm.
-     * 
+     *
      * Absorption behavior:
      *   The electron can absorb N photons.
      *   When any photon collides with the electron, it is absorbed with
      *   some probability, and (if absorbed) causes the electron to start oscillating.
      *   Alpha particles are not absorbed.
-     * 
+     *
      * Emission behavior:
      *   The electron can emit one UV photon for each photon absorbed.
      *   Photons are emitted at the electron's location.
@@ -63,7 +63,7 @@ define(function (require) {
             this.electronLineEnd = new Vector2();
             // the electron's direction of motion, relative to the X (horizontal) axis
             this.electronDirectionPositive = false;
-            
+
             // is the electron moving?
             this.electronIsMoving = false;
             // how many times has the electron crossed the atom's center since it started moving?
@@ -86,12 +86,12 @@ define(function (require) {
             var y = RandomUtils.randomSign() * this.get('radius') * Math.cos(angle);
             this.electronLineStart.set(-x, -y);
             this.electronLineEnd.set(x, y);
-            
+
             if (this.electronLineStart.x >= this.electronLineEnd.x) // required by moveElectron()
                 throw 'Starting x must be greater than ending x';
-            
+
             this.electronDirectionPositive = RandomUtils.randomBoolean();
-            
+
             // move electron back to center
             this.setElectronOffset(0, 0);
         },
@@ -105,11 +105,11 @@ define(function (require) {
         update: function(time, deltaTime) {
            if (this.numberOfPhotonsAbsorbed > 0) {
                 this.electronIsMoving = true;
-                
+
                 // Move the electron
                 var amplitude = this.getElectronAmplitude();
                 this.moveElectron(deltaTime, amplitude);
-                
+
                 // Randomly emit a photon after completing an oscillation cycle
                 if (this.getNumberOfElectronOscillations() !== 0) {
                     if (Math.random() < PlumPuddingModel.PHOTON_EMISSION_PROBABILITY) {
@@ -152,7 +152,7 @@ define(function (require) {
         getElectronAmplitude: function() {
             return (this.numberOfPhotonsAbsorbed / PlumPuddingModel.MAX_PHOTONS_ABSORBED);
         },
-        
+
         /**
          * Gets the sign (+-) that corresponds to the electron's direction.
          *   +x is to the right, +y is down.
@@ -160,34 +160,34 @@ define(function (require) {
         getElectronDirectionSign: function() {
             return ((this.electronDirectionPositive === true) ? +1 : -1);
         },
-        
+
         /**
          * Changes the electron's direction.
          */
         changeElectronDirection: function() {
             this.electronDirectionPositive = !this.electronDirectionPositive;
         },
-        
+
         /**
-         * Gets the number of oscillations that the electron has completed 
+         * Gets the number of oscillations that the electron has completed
          * since it started moving. This is a function of the number of times
          * the electron has crossed the center of the atom.
          */
         getNumberOfElectronOscillations: function() {
             return (this.numberOfZeroCrossings % 2);
         },
-        
+
         /**
          * Determines if the sign (+-) on two numbers is different.
          */
         signIsDifferent: function(d1, d2) {
             return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0));
         },
-        
+
         //----------------------------------------------------------------------------
         // Photon absorption and emission
         //----------------------------------------------------------------------------
-        
+
         /**
          * Cannot absorb a photon if any of these are true:
          *   - the photon was emitted by the atom
@@ -195,14 +195,14 @@ define(function (require) {
          *   - we've emitted out last photon and haven't completed oscillation.
          */
         canAbsorb: function(photon) {
-            return !(photon.isEmitted() || 
+            return !(photon.isEmitted() ||
                 this.numberOfPhotonsAbsorbed === PlumPuddingModel.MAX_PHOTONS_ABSORBED || (
-                    this.numberOfPhotonsAbsorbed === 0 && 
+                    this.numberOfPhotonsAbsorbed === 0 &&
                     this.electronIsMoving
                 )
             );
         },
-        
+
         /**
          * Attempts to absorb the specified photon.
          */
@@ -222,26 +222,26 @@ define(function (require) {
             }
             return absorbed;
         },
-        
+
         /**
          * Emits a photon from the electron's location, at a random orientation.
          */
         emitPhoton: function() {
             if (this.numberOfPhotonsAbsorbed > 0) {
                 this.numberOfPhotonsAbsorbed--;
-                
+
                 // Use the electron's position
                 var position = this.electronPosition;
                 // Pick a random orientation
                 var orientation = RandomUtils.randomAngle();
                 var speed = Constants.PHOTON_INITIAL_SPEED;
-                
+
                 // Create and emit a photon
                 this.firePhotonEmitted(Photon.create({
-                    wavelength: PlumPuddingModel.PHOTON_EMISSION_WAVELENGTH, 
-                    position: position, 
-                    orientation: orientation, 
-                    speed: speed, 
+                    wavelength: PlumPuddingModel.PHOTON_EMISSION_WAVELENGTH,
+                    position: position,
+                    orientation: orientation,
+                    speed: speed,
                     emitted: true
                 }));
             }
@@ -259,15 +259,15 @@ define(function (require) {
 
         /**
          * Moves an alpha particle using a Rutherford Scattering algorithm.
-         * 
+         *
          * WORKAROUND -
          *   If the particle is "close" to the atom's center, then it simply
-         *   passes through at constant speed.  This is a workaround for a 
-         *   problem in RutherfordScattering; particles get stuck at the 
+         *   passes through at constant speed.  This is a workaround for a
+         *   problem in RutherfordScattering; particles get stuck at the
          *   center of the plum pudding atom, or they seem to stick slightly
-         *   and then accelerate off.  The value of "closeness" was set 
+         *   and then accelerate off.  The value of "closeness" was set
          *   through trial and error, to eliminate these problems while still
-         *   making the motion look continuous. This workaround assumes that 
+         *   making the motion look continuous. This workaround assumes that
          *   alpha particles are moving vertically from bottom to top.
          */
         moveAlphaParticle: function(alphaParticle, deltaTime) {
@@ -286,8 +286,8 @@ define(function (require) {
             // assert( _electronLine.getX1() < _electronLine.getX2() );
             // assert( Math.abs( _electronLine.getX1() ) == Math.abs( _electronLine.getX2() ) );
             // assert( Math.abs( _electronLine.getY1() ) == Math.abs( _electronLine.getY2() ) );
-            
-            // Remember the old offset 
+
+            // Remember the old offset
             var xo = this.electronOffset.x;
             var yo = this.electronOffset.y;
 

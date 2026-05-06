@@ -7,7 +7,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var CollisionEvent = function(distThreshold, amplitudeThreshold, oscillateFactory) {
         this.velocityToZero = Number.POSITIVE_INFINITY;

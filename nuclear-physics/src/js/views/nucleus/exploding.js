@@ -17,7 +17,7 @@ define(function(require) {
     var EXPLOSION_FILL_COLOR    = Colors.parseHex(Constants.ExplodingNucleusView.EXPLOSION_FILL_COLOR);
 
     /**
-     * 
+     *
      */
     var ExplodingNucleusView = NucleusView.extend({
 
@@ -41,7 +41,7 @@ define(function(require) {
             this.explosionGraphics = new PIXI.Graphics();
             this.explosionGraphics.visible = false;
             this.displayObject.addChild(this.explosionGraphics);
-            
+
             NucleusView.prototype.initGraphics.apply(this, arguments);
         },
 
@@ -79,13 +79,13 @@ define(function(require) {
                 }
                 else {
                     explosionGraphics.visible = false;
-                }    
+                }
             }
         },
 
         nucleusChanged: function() {
             NucleusView.prototype.nucleusChanged.apply(this, arguments);
-            
+
             if (this.model.hasDecayed()) {
                 // Kick off the explosion graphic.
                 this.explosionGraphics.clear();

@@ -43,7 +43,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var BRCSimulation = FixedIntervalSimulation.extend({
 
@@ -52,7 +52,7 @@ define(function (require, exports, module) {
             voltage: Constants.VOLTAGE_RANGE.defaultValue,
             current: 0
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
@@ -135,14 +135,14 @@ define(function (require, exports, module) {
             var system = new System();
             this.system = system;
 
-            var resistance = new Resistance( 
-                Constants.CORE_START, 
-                Constants.CORE_END, 
-                Constants.DEFAULT_NUM_CORES, 
-                loopWirePatch, 
-                Constants.DEFAULT_AMPLITUDE, 
-                Constants.DEFAULT_FREQUENCY, 
-                Constants.DEFAULT_DECAY, 
+            var resistance = new Resistance(
+                Constants.CORE_START,
+                Constants.CORE_END,
+                Constants.DEFAULT_NUM_CORES,
+                loopWirePatch,
+                Constants.DEFAULT_AMPLITUDE,
+                Constants.DEFAULT_FREQUENCY,
+                Constants.DEFAULT_DECAY,
                 system
             );
             this.resistance = resistance;
@@ -150,7 +150,7 @@ define(function (require, exports, module) {
             this.resistorLeft  = topLeftInset.x;
             this.resistorRight = topRightInset.x;
             this.resistorY     = topRightInset.y;
-            
+
             // Battery stuff
             var batteryRegion = new SimplePatchRegion(batteryWirePatch);
             var batteryProps = new CompositePropagator(); // original: cpr
@@ -179,7 +179,7 @@ define(function (require, exports, module) {
             var coulombForce = new CoulombForce(coulombForceParameters, wireSystem); // original: cf
 
             var batteryForcePropagator = new BatteryForcePropagator(0, 10 * Constants.MAX_VEL); // original: fp
-            batteryForcePropagator.addForce(coulombForce); 
+            batteryForcePropagator.addForce(coulombForce);
             // Add a coulomb force from the end of batteryWirePatch onto the beginning of loopWirePatch
             batteryForcePropagator.addForce(new AdjacentPatchCoulombForceEndToBeginning(coulombForceParameters, wireSystem, batteryWirePatch, loopWirePatch));
             batteryForcePropagator.addForce(new AdjacentPatchCoulombForceBeginningToEnd(coulombForceParameters, wireSystem, batteryWirePatch, loopWirePatch));
@@ -211,10 +211,10 @@ define(function (require, exports, module) {
             resistance.layoutCores();
             var axis = new Vector2(1, 2);
             var oscillateFactory = new OscillateFactory(
-                Constants.V_TO_AMP_SCALE, 
-                Constants.DEFAULT_DECAY, 
-                Constants.DEFAULT_FREQUENCY, 
-                Constants.MAX_ACC, 
+                Constants.V_TO_AMP_SCALE,
+                Constants.DEFAULT_DECAY,
+                Constants.DEFAULT_FREQUENCY,
+                Constants.MAX_ACC,
                 axis
             );
             var collisionEvent = new CollisionEvent(Constants.COLLISION_DIST, Constants.AMPLITUDE_THRESHOLD, oscillateFactory);
@@ -231,8 +231,8 @@ define(function (require, exports, module) {
                     continue;
 
                 var electron = new Electron({
-                    propagator: props, 
-                    wirePatch: circuit.getPatch(position), 
+                    propagator: props,
+                    wirePatch: circuit.getPatch(position),
                     collisionEvent: collisionEvent,
                     velocity: 0,
                     position: circuit.getLocalPosition(position, circuit.getPatch(position))

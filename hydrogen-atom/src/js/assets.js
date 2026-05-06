@@ -8,7 +8,7 @@ define(function (require) {
     // Prepend a path to the nuclear physics images before we add our local project images
     _.each(Assets.Images, function(value, key) {
       if(!/src\/img\//.test(value)){
-        Assets.Images[key] = '../../../rutherford-scattering/src/img/' + value;        
+        Assets.Images[key] = '../../../rutherford-scattering/src/img/' + value;
       }
     });
 

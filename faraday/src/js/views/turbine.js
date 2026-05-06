@@ -14,7 +14,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var TurbineView = PixiView.extend({
 
@@ -158,7 +158,7 @@ define(function(require) {
          */
         update: function() {
             this.displayObject.visible = this.model.get('enabled');
-            
+
             if (this.displayObject.visible) {
                // Location
                this.updatePosition(this.model, this.model.get('position'));

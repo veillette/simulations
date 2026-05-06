@@ -4,7 +4,7 @@ define(function (require) {
 
     var range = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -13,8 +13,8 @@ define(function (require) {
      *************************************************************************/
 
     Constants.BODY_COLORS = [
-    	// 'yellow', 
-        // 'magenta', 
+    	// 'yellow',
+        // 'magenta',
         // 'cyan',
         // 'green'
 
@@ -33,7 +33,7 @@ define(function (require) {
         '#3C8282',
         '#50AD50'
     ];
-    
+
     Constants.MAX_BODIES = Constants.BODY_COLORS.length;
     Constants.MIN_BODIES = 2;
     Constants.MIN_BODY_MASS = 0.000001;

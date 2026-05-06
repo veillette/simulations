@@ -31,7 +31,7 @@ define(function (require) {
      *   at the outer edge are guaranteed to be on the coil.
      */
     var ConstantNumberOfSamplePointsStrategy = function(numberOfSamplePoints) {
-        this.numberOfSamplePoints = numberOfSamplePoints;  
+        this.numberOfSamplePoints = numberOfSamplePoints;
     };
 
     /**
@@ -112,7 +112,7 @@ define(function (require) {
 
     SamplePointsStrategy.ConstantNumberOfSamplePointsStrategy = ConstantNumberOfSamplePointsStrategy;
     SamplePointsStrategy.VariableNumberOfSamplePointsStrategy = VariableNumberOfSamplePointsStrategy;
-    
+
 
     return SamplePointsStrategy;
 });

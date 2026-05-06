@@ -106,7 +106,7 @@ define(function (require) {
             var lambda = this.get('propagationSpeed') / (Constants.DT_PER_FRAME * this.getFrequencyAtTime(time));
             // The original code had the following return statement:
             //   return lambda * 6.2;
-            // And this comment went along with it: "I'm sorry to say I'm not 
+            // And this comment went along with it: "I'm sorry to say I'm not
             //   sure just why 6.2 is the right factor here, but it works.
             return lambda;
         },
@@ -149,7 +149,7 @@ define(function (require) {
                 this.amplitude[j] = a;
                 if (this.frequencyAtTime[j] !== this.get('frequency'))
                     this.frequencyAtTime[j] = this.get('frequency');
-                if (this.maxAmplitudeAtTime[j] !== this.get('maxAmplitude')) 
+                if (this.maxAmplitudeAtTime[j] !== this.get('maxAmplitude'))
                     this.maxAmplitudeAtTime[j] = this.get('maxAmplitude');
             }
         },

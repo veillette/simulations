@@ -15,7 +15,7 @@ define(function (require) {
     var clearBtnHtml = require('text!templates/clear-btn.html');
 
     /**
-     * 
+     *
      */
     var MeasureSimView = SoundSimView.extend({
 
@@ -62,7 +62,7 @@ define(function (require) {
                 decimals: 4,
                 position: {
                     x : AppView.windowIsShort() ? 648 : 642,
-                    y : AppView.windowIsShort() ? 256 : 328 
+                    y : AppView.windowIsShort() ? 256 : 328
                 }
             });
 

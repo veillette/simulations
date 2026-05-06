@@ -9,11 +9,11 @@ define(function(require) {
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
     var html = require('text!../../templates/toolbox.html');
-    
+
     require('less!styles/toolbox');
 
     /**
-     * 
+     *
      */
     var ToolboxView = Backbone.View.extend({
 
@@ -29,7 +29,7 @@ define(function(require) {
          *   tools: {
          *     key: {
          *       title:       string,
-         *       label:       string [optional], 
+         *       label:       string [optional],
          *       img:         string (url),
          *       activate:    function,
          *       deactivate:  function,
@@ -86,7 +86,7 @@ define(function(require) {
 
     // Add input/update locking functionality to the prototype
     defineInputUpdateLocks(ToolboxView);
-    
+
 
     return ToolboxView;
 });

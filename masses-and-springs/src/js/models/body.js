@@ -12,7 +12,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var Body = Backbone.Model.extend({
 
@@ -84,7 +84,7 @@ define(function (require, exports, module) {
             this.bounced = 0;
 
             if(restingY){
-                this.restingY = restingY;                
+                this.restingY = restingY;
             }
         },
 

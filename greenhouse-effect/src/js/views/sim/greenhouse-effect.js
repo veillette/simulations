@@ -70,7 +70,7 @@ define(function (require) {
          */
         renderScaffolding: function() {
             BaseGreenhouseSimView.prototype.renderScaffolding.apply(this, arguments);
-            
+
             var scale = Constants.Atmosphere.CONCENTRATION_RESOLUTION;
             this.$concentrationSlider = this.$('.concentration-slider').noUiSlider({
                 connect: 'lower',

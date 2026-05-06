@@ -92,7 +92,7 @@ define(function(require) {
                 graphics.beginFill(0xFF0000, 1);
                 graphics.drawRect(this.getLeftPadding(), this.getTopPadding(), this.getAvailableWidth(), this.getAvailableHeight());
                 graphics.endFill();
-                this.stage.addChild(graphics);    
+                this.stage.addChild(graphics);
             }
         },
 
@@ -159,7 +159,7 @@ define(function(require) {
                     graphics.drawRect(viewArea.x, viewArea.y, viewArea.w, viewArea.h);
                 }
                 graphics.endFill();
-                this.stage.addChild(graphics);    
+                this.stage.addChild(graphics);
             }
 
             this.canisterLayer.addChild(this.atomCanisterView.displayObject);
@@ -195,7 +195,7 @@ define(function(require) {
 
         _update: function(time, deltaTime, paused, timeScale) {
             NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
-            
+
             this.atomCanisterView.update(time, deltaTime, paused);
             this.nucleusCollectionView.update(time, deltaTime, paused);
             this.decayRatesGraphView.update(time, deltaTime, paused);

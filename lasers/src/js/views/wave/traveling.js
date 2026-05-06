@@ -16,7 +16,7 @@ define(function(require) {
 
             var graphics = this.displayObject;
             var origin = this._origin.set(this.mvt.modelToView(this.origin));
-            
+
             for (var i = 0; i < this.numPoints; i++) {
                 var x = this.dx * i;
                 var y = this.amplitude * Math.sin(((x - this.elapsedTime) / this.lambda) * Math.PI);
@@ -32,6 +32,6 @@ define(function(require) {
         }
 
     });
-    
+
     return TravelingWaveView;
 });

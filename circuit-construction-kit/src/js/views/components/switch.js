@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Vector2     = require('common/math/vector2');
 
@@ -82,8 +82,8 @@ define(function(require) {
 
         initHandleHoverGraphics: function() {
             var mask = Assets.createSprite(
-                this.circuit.get('schematic') ? 
-                    Assets.Images.SCHEMATIC_SWITCH_HANDLE_MASK : 
+                this.circuit.get('schematic') ?
+                    Assets.Images.SCHEMATIC_SWITCH_HANDLE_MASK :
                     Assets.Images.SWITCH_HANDLE_MASK
             );
             mask.anchor.x = this.handle.anchor.x;
@@ -171,7 +171,7 @@ define(function(require) {
             if (this.dragging || !SwitchView.someComponentIsDragging()) {
                 this.hovering = true;
                 if (!this.handleHovering)
-                    this.showHoverGraphics();    
+                    this.showHoverGraphics();
             }
         },
 
@@ -190,11 +190,11 @@ define(function(require) {
                     this.hideHandleHoverGraphics();
                 else
                     this.showHoverGraphics();
-            }  
+            }
         },
 
         showHandleHoverGraphics: function() {
-            this.handleHoverGraphics.visible = true; 
+            this.handleHoverGraphics.visible = true;
         },
 
         hideHandleHoverGraphics: function() {

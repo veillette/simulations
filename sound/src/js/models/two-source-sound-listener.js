@@ -53,7 +53,7 @@ define(function (require) {
          */
         setOrigin2: function(x, y, options) {
             var oldOrigin = this.get('origin2');
-            
+
             if (x instanceof Vector2)
                 this.set('origin2', vectorPool.create().set(x), y);
             else
@@ -63,7 +63,7 @@ define(function (require) {
             vectorPool.remove(oldOrigin);
         },
 
-        /** 
+        /**
          * Avoid memory leaks from the pool.
          */
         destroy: function(options) {
@@ -94,7 +94,7 @@ define(function (require) {
             //   wavefront amplitudes times the cosine of the phase angle.
             var amplitudeA = simulation.get('amplitude');
             var maxAmplitude = amplitudeA * Math.abs(Math.cos(theta));
-            
+
             var currentOctaveAmplitude = simulation.octaveWavefront.getMaxAmplitudeAtTime(wavefrontDistA);
             var currentFrequency = wavefront.getFrequencyAtTime(wavefrontDistA);
 

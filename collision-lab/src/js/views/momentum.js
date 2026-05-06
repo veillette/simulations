@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView           = require('common/v3/pixi/view');
     var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
     var Colors             = require('common/colors/colors');
@@ -43,7 +43,7 @@ define(function(require) {
         },
 
         initArrow: function() {
-            this.arrowView = new DraggableArrowView({ 
+            this.arrowView = new DraggableArrowView({
                 model: this.arrowViewModel,
 
                 headDraggingEnabled: false,

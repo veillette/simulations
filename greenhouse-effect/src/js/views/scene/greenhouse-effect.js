@@ -38,7 +38,7 @@ define(function(require) {
             this.$composition1750   = this.$ui.find('#composition-summary-1750');
             this.$compositionIceAge = this.$ui.find('#composition-summary-ice-age');
         },
-        
+
         initGraphics: function() {
             BaseGreenhouseSceneView.prototype.initGraphics.apply(this, arguments);
 
@@ -98,7 +98,7 @@ define(function(require) {
         },
 
         initReflectivityAssessment: function() {
-            
+
             // Create a hidden canvas that looks the same
             var canvas = document.createElement('canvas');
             canvas.width  = this.width;
@@ -109,7 +109,7 @@ define(function(require) {
             var iceAgeImage = this.bgIceAge.texture.baseTexture.source;
             var x = this.width / 2 - this.bgIceAge.width / 2;
             var y = this.height - this.bgIceAge.height;
-            
+
             ctx.drawImage(iceAgeImage, x, y, this.bgIceAge.width, this.bgIceAge.height);
 
             this.reflectivityContext = ctx;
@@ -163,7 +163,7 @@ define(function(require) {
         },
 
         createAndAddCloudView: function(cloud) {
-            var cloudView = new CloudView({ 
+            var cloudView = new CloudView({
                 model: cloud,
                 mvt: this.mvt
             });
@@ -212,7 +212,7 @@ define(function(require) {
         getReflectivity: function(photon) {
             var reflectivity = 0;
 
-            if (this.bgIceAge.visible && 
+            if (this.bgIceAge.visible &&
                 photon.get('velocity').y < 0 &&
                 photon.get('wavelength') === Constants.SUNLIGHT_WAVELENGTH
             ) {

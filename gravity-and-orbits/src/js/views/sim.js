@@ -260,7 +260,7 @@ define(function (require) {
          * Returns a new body settings view
          */
         createBodySettingsView: function(body) {
-            return new BodySettingsView({ 
+            return new BodySettingsView({
                 model: body,
                 simulation: this.simulation
             });

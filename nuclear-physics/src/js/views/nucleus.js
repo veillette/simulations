@@ -12,7 +12,7 @@ define(function(require) {
     var IsotopeSymbolGenerator    = require('views/isotope-symbol-generator');
 
     /**
-     * 
+     *
      */
     var NucleusView = PixiView.extend({
 
@@ -87,7 +87,7 @@ define(function(require) {
                     fontSize = this.nucleusSprite.width * 0.36;
                 else
                     fontSize = this.mvt.modelToViewDeltaX(this.model.get('diameter')) * 0.55;
-                    
+
                 this.symbol = IsotopeSymbolGenerator.generate(this.model, fontSize);
                 this.displayObject.addChild(this.symbol);
             }

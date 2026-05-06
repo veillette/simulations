@@ -170,7 +170,7 @@ define(function(require) {
                 if (this._fogTimer >= this.fogTimeOffset) {
                     this.fog.alpha += deltaTime * 0.7;
                     if (this.fog.alpha > 1)
-                        this.fog.alpha = 1;    
+                        this.fog.alpha = 1;
                 }
             }
             else if (this._volcanoCooling) {
@@ -259,9 +259,9 @@ define(function(require) {
         pausedChanged: function(simulation, paused) {
             if (this.tremorSound.getTime() > 0 && !this.tremorSound.isEnded()) {
                 if (paused)
-                    this.tremorSound.pause(); 
+                    this.tremorSound.pause();
                 else
-                    this.tremorSound.play();    
+                    this.tremorSound.play();
             }
             else if (!paused && this._volcanoErupting) {
                 // If it hasn't been playing but we're unpausing during the volcano eruption,

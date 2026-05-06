@@ -70,12 +70,12 @@ define(function(require) {
             this.backLayer        = new PIXI.Container();
             this.energyChunkLayer = new PIXI.Container();
             this.frontLayer       = new PIXI.Container();
-            
+
             // Get a version of the rectangle that defines the beaker size and
             //   location in the view.
             this.beakerViewRect = this.mvt.modelToViewScale(this.model.getRawOutlineRect()).clone();
             this.ellipseHeight = this.beakerViewRect.w * BeakerView.PERSPECTIVE_PROPORTION;
-            
+
             this.initBeaker();
             this.initFluid();
             this.initLabel();
@@ -83,7 +83,7 @@ define(function(require) {
             this.initSteam();
 
             this.initDebugSlices();
-            
+
             // Calculate the bounding box for the dragging bounds
             this.boundingBox = this.beakerViewRect.clone();
         },
@@ -318,7 +318,7 @@ define(function(require) {
         reset: function() {
             ThermalElementView.prototype.reset.apply(this);
 
-            
+
         },
 
         calculateDragBounds: function(dx, dy) {
@@ -419,7 +419,7 @@ define(function(require) {
             // Add any new steam particles
             if (steamingProportion > 0) {
                 var particlesToProduce = BeakerView.STEAM_PARTICLE_PRODUCTION_RATE_RANGE.lerp(steamingProportion) * deltaTime;
-                
+
                 this.particleProductionRemainder += particlesToProduce % 1;
                 if (this.particleProductionRemainder >= 1) {
                     particlesToProduce += Math.floor(this.particleProductionRemainder);

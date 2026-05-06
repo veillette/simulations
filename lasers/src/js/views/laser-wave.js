@@ -197,6 +197,6 @@ define(function(require) {
         }
 
     });
-    
+
     return LaserWaveView;
 });

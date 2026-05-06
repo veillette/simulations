@@ -48,7 +48,7 @@ define(function(require) {
 
             this.frontLayer.addChild(converter);
             this.frontLayer.addChild(connector);
-            
+
             //this.drawDebugOrigin(this.frontLayer);
         },
 

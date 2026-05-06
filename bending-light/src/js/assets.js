@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         LASER_ON:               'laser-on',
         LASER_OFF:              'laser-off',
         INTENSITY_METER_BODY:   'intensity-meter-body',

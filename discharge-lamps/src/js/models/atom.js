@@ -48,7 +48,7 @@ define(function (require) {
             var energyEmissionStrategy;
             if (this.get('energyEmissionStrategy'))
                 energyEmissionStrategy = this.get('energyEmissionStrategy');
-            
+
             this.setElementProperties(options.elementProperties);
             this.setCurrentState(options.elementProperties.getStates()[0]);
 

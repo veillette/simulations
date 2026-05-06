@@ -7,7 +7,7 @@ define(function (require) {
     var Rectangle = require('common/math/rectangle');
 
     /**
-     * 
+     *
      */
     var GlassPane = Backbone.Model.extend({
 

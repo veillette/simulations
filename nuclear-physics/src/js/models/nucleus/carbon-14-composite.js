@@ -38,7 +38,7 @@ define(function (require) {
                         this.agitationFactor = Carbon14CompositeNucleus.CARBON_14_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 case 7:
                     // Nitrogen
                     if (this.get('numNeutrons') === 7) {
@@ -46,12 +46,12 @@ define(function (require) {
                         this.agitationFactor = Carbon14CompositeNucleus.NITROGEN_14_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 default:
                     // If we reach this point in the code, there is a problem
                     //   somewhere that should be debugged.
                     console.error('Error: Unexpected atomic weight in beta decay nucleus.');
-            }        
+            }
         },
 
     }, Constants.Carbon14CompositeNucleus);

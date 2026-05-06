@@ -6,7 +6,7 @@ define(function(require) {
 	var _        = require('underscore');
 	var Backbone = require('backbone'); Backbone.$ = $;
 	var PIXI     = require('pixi');
-	
+
 	var Utils                = require('../utils/utils');
 	var OscillatorView       = require('./oscillator');
 	var BarrierView          = require('./barrier');
@@ -30,7 +30,7 @@ define(function(require) {
 	/**
 	 * HeatmapView is the main focus of the app.  It shows the values of the 2D lattice
 	 *   on a graph with two axes (default x and y but dependent on the WaveSimulation).
-	 *   Includes the containing panel, the (colored) heatmap itself, axis labels and 
+	 *   Includes the containing panel, the (colored) heatmap itself, axis labels and
 	 *   measurements, and interactive components including the barriers, cross-section
 	 *   slider, and (for now) oscillator controls.
 	 *
@@ -282,7 +282,7 @@ define(function(require) {
 				width  = this.waveSimulation.lattice.width;
 				height = this.waveSimulation.lattice.height;
 			// }
-				
+
 
 			brightness = this.brightness;
 
@@ -456,7 +456,7 @@ define(function(require) {
 		},
 
 		/**
-		 * Takes a top and left offset of a point relative to the 
+		 * Takes a top and left offset of a point relative to the
 		 *   HTML document and returns an object containing x and
 		 *   y in lattice coordinates. Returns the closest integer
 		 *   x and y, making sure rounding doesn't take it out of
@@ -465,7 +465,7 @@ define(function(require) {
 		offsetToPoint: function(top, left) {
 			var x = this.heatmapToLatticeXCoordinates(left - this.offset.left * this.zoom);
 			var y = this.heatmapToLatticeYCoordinates(top  - this.offset.top  * this.zoom);
-			
+
 			if (this.isVisiblePoint(x, y)) {
 				x = Math.round(x);
 				y = Math.round(y);

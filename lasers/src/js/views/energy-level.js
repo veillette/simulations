@@ -17,7 +17,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EnergyLevelView = PixiView.extend({
 
@@ -58,7 +58,7 @@ define(function(require) {
             this.paddingLeft = 80;
             this.minLifetime = options.minLifetime;
             this.maxLifetime = options.maxLifetime;
-            
+
             // Initialize the graphics
             this.initGraphics();
 
@@ -101,7 +101,7 @@ define(function(require) {
 
                 this.displayObject.addChild(this.arrowGraphics);
             }
-            
+
             this.displayObject.addChild(this.wavelengthColorGraphics);
             this.displayObject.addChild(this.atomSprite);
             this.displayObject.addChild(this.dragHandle);
@@ -134,7 +134,7 @@ define(function(require) {
             });
             this.sliderView.displayObject.x = this.width - maxWidth;
             this.sliderView.displayObject.y = 0;
-            
+
 
             // Bind events
             this.listenTo(this.sliderView, 'slide', this.slideLifetime);

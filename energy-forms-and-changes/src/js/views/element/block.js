@@ -38,7 +38,7 @@ define(function(require) {
             this.displayObject.addChild(this.outlineBack);
             this.displayObject.addChild(this.faces);
             this.displayObject.addChild(this.outlineFront);
-            
+
             var rect = this.mvt.modelToViewScale(Block.getRawShape());
             var perspectiveEdgeSize = this.mvt.modelToViewDeltaX(this.model.getRect().w * Constants.PERSPECTIVE_EDGE_PROPORTION);
 

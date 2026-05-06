@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/pixi/view');
                    require('common/pixi/draw-arrow');
     var Colors   = require('common/colors/colors');
@@ -37,7 +37,7 @@ define(function(require) {
             var y = Math.round(this.mvt.modelToViewY(this.simulation.minY));
             var w = Math.round(this.mvt.modelToViewDeltaX(this.simulation.width));
             var h = Math.round(this.mvt.modelToViewDeltaY(this.simulation.height));
-            
+
             var tailWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_TAIL_WIDTH));
             var headWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_WIDTH));
             var headLength = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_LENGTH));
@@ -71,7 +71,7 @@ define(function(require) {
                             tailWidth, headWidth, headLength
                         );
                     }
-                    
+
                     oy += yStep;
                 }
 

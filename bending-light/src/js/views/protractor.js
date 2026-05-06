@@ -78,7 +78,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 this.displayObject.x += dx;
                 this.displayObject.y += dy;
             }

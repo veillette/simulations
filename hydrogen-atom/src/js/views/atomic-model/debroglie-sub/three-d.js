@@ -8,7 +8,7 @@ define(function(require) {
     var Wireframe3DView       = require('hydrogen-atom/views/wireframe-3d');
 
     var Constants = require('constants');
-    
+
     /**
      * Represents the scene for the DeBroglieModel
      */
@@ -90,7 +90,7 @@ define(function(require) {
             var maxHeight = DeBroglieModel3DSubView.MAX_HEIGHT;
 
             this.wireframeView.reset();
-            
+
             for (var i = 0; i < numberOfVerticies; i++) {
                 var angle = i * deltaAngle;
                 var x = radius * Math.cos(angle);

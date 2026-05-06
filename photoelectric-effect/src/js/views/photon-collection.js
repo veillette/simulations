@@ -20,7 +20,7 @@ define(function(require) {
         initialize: function(options) {
             // A map of wavelengths to colors for caching
             this.colors = {};
-            
+
             SpriteCollectionView.prototype.initialize.apply(this, arguments);
 
             this.simulation = options.simulation;
@@ -53,7 +53,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             sprite.tint = this.getColorFromWavelength(model.get('wavelength'));
         },
 

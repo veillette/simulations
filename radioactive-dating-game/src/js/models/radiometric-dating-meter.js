@@ -43,26 +43,26 @@ define(function (require) {
         getPercentageOfDatingElementRemaining: function() {
             if (!this.get('itemBeingTouched'))
                 return NaN;
-            
+
             var halflife;
-            
+
             if (this.get('nucleusType') === NucleusType.HEAVY_CUSTOM)
                 halflife = this.get('halfLifeOfCustomNucleus');
             else
                 halflife = HalfLifeInfo.getHalfLifeForNucleusType(this.get('nucleusType'));
-            
+
             if (this.get('itemBeingTouched').isOrganic() && this.get('nucleusType') === NucleusType.URANIUM_238) {
                 // For the purposes of this sim, organic materials do not contain
                 //   any U238, nor matter how old they are.
                 return 0;
             }
-            
+
             if (!this.get('itemBeingTouched').isOrganic() && this.get('nucleusType') === NucleusType.CARBON_14) {
                 // For the purposes of this sim, inorganic materials do not
                 //   contain any Carbon 14.
                 return 0;
             }
-            
+
             if (this.get('itemBeingTouched').getRadiometricAge() <= 0) {
                 return 100;
             }
@@ -81,7 +81,7 @@ define(function (require) {
                         return;
                     }
                 }
-                this.set('itemBeingTouched', null);    
+                this.set('itemBeingTouched', null);
             }
             else {
                 this.set('itemBeingTouched', DatableItem.DATABLE_AIR);

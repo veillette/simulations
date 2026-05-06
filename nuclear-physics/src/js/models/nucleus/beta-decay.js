@@ -51,7 +51,7 @@ define(function (require) {
             var electron = Electron.create({
                 position: this.get('position'),
                 velocity: new Vector2(
-                    Math.cos(angle) * AbstractBetaDecayNucleus.ELECTRON_EMISSION_SPEED, 
+                    Math.cos(angle) * AbstractBetaDecayNucleus.ELECTRON_EMISSION_SPEED,
                     Math.sin(angle) * AbstractBetaDecayNucleus.ELECTRON_EMISSION_SPEED
                 )
             });
@@ -61,7 +61,7 @@ define(function (require) {
             var antineutrino = Antineutrino.create({
                 position: this.get('position'),
                 velocity: new Vector2(
-                    Math.cos(angle) * AbstractBetaDecayNucleus.ANTINEUTRINO_EMISSION_SPEED, 
+                    Math.cos(angle) * AbstractBetaDecayNucleus.ANTINEUTRINO_EMISSION_SPEED,
                     Math.sin(angle) * AbstractBetaDecayNucleus.ANTINEUTRINO_EMISSION_SPEED
                 )
             });

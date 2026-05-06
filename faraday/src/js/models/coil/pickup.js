@@ -85,7 +85,7 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
 
         /**
@@ -145,7 +145,7 @@ define(function (require) {
             var sumBx = 0;
             var samplePoint = this._samplePoint;
             for (var i = 0; i < this.samplePoints.length; i++) {
-                samplePoint.x = this.get('position').x + this.samplePoints[i].x; 
+                samplePoint.x = this.get('position').x + this.samplePoints[i].x;
                 samplePoint.y = this.get('position').y + this.samplePoints[i].y;
 
                 if (this.get('direction') !== 0) {

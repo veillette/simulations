@@ -7,7 +7,7 @@ define(function (require) {
     var Propagator = require('models/propagator');
 
     /**
-     * 
+     *
      */
     var BatteryForcePropagator = function(minSpeed, maxSpeed) {
         this.minSpeed = minSpeed;
@@ -25,7 +25,7 @@ define(function (require) {
             var f = 0;
             for (var i = 0; i < this.forces.length; i++)
                 f += this.forces[i].getForce(particle);
-            
+
             var m = particle.mass;
             var v = particle.velocity;
             var x = particle.position;
@@ -46,7 +46,7 @@ define(function (require) {
                 else if (v > -this.minSpeed)
                     v = -this.minSpeed;
             }
-            
+
             particle.velocity = v;
             particle.position += v * deltaTime;
         },

@@ -17,9 +17,9 @@ define(function (require) {
         },
 
         equals: function(obj) {
-            if (this === obj) 
+            if (this === obj)
                 return true;
-            
+
             if (!obj || this.prototype !== obj.prototype)
                 return false;
 

@@ -15,7 +15,7 @@ define(function (require) {
      *   projected through the lens.  It listens for changes in the
      *   original object and uses the properties of the lens and
      *   relative positions of the points in the source object and
-     *   the lens.  Note that it extends the SourceObject because 
+     *   the lens.  Note that it extends the SourceObject because
      *   the target image is supposed to be an image representation
      *   of the source object and will therefore have shared traits.
      */
@@ -92,7 +92,7 @@ define(function (require) {
 
             var dx = this.lens.get('position').x - sourcePoint.x;
             var dy = this.lens.get('position').y - sourcePoint.y;
-            
+
             return this._point
                 .set(this.lens.get('position'))
                 .add(

@@ -38,7 +38,7 @@ define(function(require) {
     var ChargesAndFieldsSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -54,7 +54,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -89,7 +89,7 @@ define(function(require) {
             }
 
             this.simulation.setBoundsDimensions(widthInMeters, heightInMeters);
-            
+
             this.viewOriginX = Math.round(this.width / 2 - (widthInMeters / 2) * scale);
             this.viewOriginY = 0;
 
@@ -186,7 +186,7 @@ define(function(require) {
                 equipotentialPlotLayer: this.equipotentialPlots,
                 equipotentialLabelLayer: this.equipotentialLabels
             });
-            
+
             if (AppView.windowIsShort()) {
                 this.voltageTool.displayObject.x = this.width - this.voltageTool.width / 2 - 16;
                 this.voltageTool.displayObject.y = this.height - this.voltageTool.height - 30;
@@ -282,14 +282,14 @@ define(function(require) {
         createAndAddChargeView: function(charge) {
             var chargeView;
             if (charge.get('sign') > 0) {
-                chargeView = new PositiveChargeView({ 
+                chargeView = new PositiveChargeView({
                     model: charge,
                     mvt: this.mvt,
                     reservoir: this.positiveChargeReservoir
                 });
             }
             else {
-                chargeView = new NegativeChargeView({ 
+                chargeView = new NegativeChargeView({
                     model: charge,
                     mvt: this.mvt,
                     reservoir: this.negativeChargeReservoir
@@ -328,7 +328,7 @@ define(function(require) {
         },
 
         createAndAddSensorView: function(sensor) {
-            var sensorView = new SensorView({ 
+            var sensorView = new SensorView({
                 simulation: this.simulation,
                 model: sensor,
                 mvt: this.mvt,

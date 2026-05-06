@@ -19,7 +19,7 @@ define(function(require) {
     var ANCHOR_COLOR    = Colors.parseHex(Constants.CompassView.ANCHOR_COLOR);
 
     /**
-     * 
+     *
      */
     var CompassView = PixiView.extend({
 
@@ -56,7 +56,7 @@ define(function(require) {
         initGraphics: function() {
             this.needle = new PIXI.Sprite(CompassNeedleTexture.create(this.mvt.modelToViewDeltaX(CompassView.NEEDLE_WIDTH)));
             this.needle.anchor.x = this.needle.anchor.y = 0.5;
-            
+
             this.graphics = new PIXI.Graphics();
 
             this.displayObject.addChild(this.needle);
@@ -132,7 +132,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
                 var x = local.x - this.dragOffset.x;
                 var y = local.y - this.dragOffset.y;
-                
+
                 var mx = this.mvt.viewToModelX(x);
                 var my = this.mvt.viewToModelY(y);
 

@@ -35,7 +35,7 @@ define(function(require) {
     var EnergySystemsSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -47,10 +47,10 @@ define(function(require) {
         },
 
         /**
-         * Renders 
+         * Renders
          */
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -105,8 +105,8 @@ define(function(require) {
         },
 
         initAir: function() {
-            var air = new AirView({ 
-                model: this.simulation.air, 
+            var air = new AirView({
+                model: this.simulation.air,
                 mvt: this.mvt
             });
             this.airLayer.addChild(air.displayObject);

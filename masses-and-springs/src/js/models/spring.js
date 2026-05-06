@@ -12,7 +12,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var Spring = Backbone.Model.extend({
 

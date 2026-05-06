@@ -7,7 +7,7 @@ define(function (require) {
     var Force = require('models/force');
 
     /**
-     * 
+     *
      */
     var FrictionForce = function(value) {
         this.value = value;

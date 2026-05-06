@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView       = require('common/v3/pixi/view');
                          require('common/v3/pixi/draw-arrow');
     var Colors         = require('common/colors/colors');
@@ -58,14 +58,14 @@ define(function(require) {
             var panel = Assets.createSprite(Assets.Images.VELOCITY_SENSOR_BODY);
             panel.anchor.x = 1 / 2;
             panel.anchor.y = (94 / 120);
-            
+
             var arrow = new PIXI.Graphics();
             arrow.beginFill(this.arrowColor, 1);
             arrow.drawArrow(
-                panel.width *  (6 / 160), 0, 
-                panel.width * (20 / 160), 0, 
-                panel.width *  (4 / 160), 
-                panel.width *  (8 / 160), 
+                panel.width *  (6 / 160), 0,
+                panel.width * (20 / 160), 0,
+                panel.width *  (4 / 160),
+                panel.width *  (8 / 160),
                 panel.width *  (6 / 160)
             );
             arrow.endFill();
@@ -97,7 +97,7 @@ define(function(require) {
         },
 
         initPanel: function() {
-            
+
         },
 
         updatePosition: function(model, position) {
@@ -156,7 +156,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 

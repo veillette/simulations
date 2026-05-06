@@ -15,24 +15,24 @@ define(function (require) {
 
     /**
      * Base class for any wire that connects a battery (B) to one of more capacitors (C1...Cn).
-     * 
+     *
      * For the "top" subclass, the wire looks like this:
-     * 
+     *
      *   |-----|------|--...--|
      *   |     |      |       |
      *   B     C1    C2       Cn
-     * 
+     *
      * For the "bottom" subclass, the wire looks like this:
-     * 
+     *
      *   B     C1    C2       Cn
      *   |     |      |       |
      *   |-----|------|--...--|
-     * 
+     *
      */
     var BatteryToCapacitorsWire = Wire.extend({
 
         /**
-         * Initializes a new BatteryToCapacitorsWires object.  
+         * Initializes a new BatteryToCapacitorsWires object.
          *
          *   Required options: {
          *      connectionPoint: either ConnectionPoint.TOP or ConnectionPoint.BOTTOM,
@@ -40,7 +40,7 @@ define(function (require) {
          *      battery:         battery object,
          *      capacitors:      array of capacitor objects
          *   }
-         *   
+         *
          */
         initialize: function(attributes, options) {
             Wire.prototype.initialize.apply(this, [attributes, options]);

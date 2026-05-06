@@ -8,7 +8,7 @@ define(function (require) {
 
     /**
      * This is a particle that can move independently in 2D space.  It is
-     *   different from a WireParticle in that it isn't constrained to 
+     *   different from a WireParticle in that it isn't constrained to
      *   the path of a wire and moves in two dimensions instead of one.
      *
      * Note that this is a departure in naming from the original.  I made

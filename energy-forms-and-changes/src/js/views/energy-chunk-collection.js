@@ -5,7 +5,7 @@ define(function(require) {
     var SpriteCollectionView = require('common/v3/pixi/view/sprite-collection');
 
     var EnergyChunk = require('models/energy-chunk');
-    
+
     var Assets = require('assets');
 
     var Textures;
@@ -18,14 +18,14 @@ define(function(require) {
             Textures[EnergyChunk.LIGHT]      = Assets.Texture(Assets.Images.E_LIGHT_BLANK);
             Textures[EnergyChunk.CHEMICAL]   = Assets.Texture(Assets.Images.E_CHEM_BLANK_LIGHT);
             Textures[EnergyChunk.HIDDEN]     = Assets.Texture(Assets.Images.E_DASHED_BLANK);
-        }    
+        }
     };
 
     var Constants = require('constants');
 
     var WIDTH                        = Constants.EnergyChunkCollectionView.WIDTH;
     var Z_DISTANCE_WHERE_FULLY_FADED = Constants.EnergyChunkCollectionView.Z_DISTANCE_WHERE_FULLY_FADED;
-    
+
 
     /**
      * A view that renders photon sprites for every photon in the sim
@@ -53,7 +53,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             sprite.visible = model.get('visible');
             sprite.alpha = (model.get('zPosition') < 0) ?
                 Math.max((Z_DISTANCE_WHERE_FULLY_FADED + model.get('zPosition')) / Z_DISTANCE_WHERE_FULLY_FADED, 0) :

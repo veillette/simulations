@@ -32,7 +32,7 @@ define(function (require, exports, module) {
             numU238Nuclei: 0,
             percentU235Fissioned: 0
         }),
-        
+
         initialize: function(attributes, options) {
             // Cached objects
             this._point = new Vector2();
@@ -309,8 +309,8 @@ define(function (require, exports, module) {
         createU235Nucleus: function(position) {
             return Uranium235Nucleus.create({
                 simulation: this,
-                position: position, 
-                fissionInterval: 0 
+                position: position,
+                fissionInterval: 0
             });
         },
 
@@ -366,8 +366,8 @@ define(function (require, exports, module) {
          */
         getChangedNucleiExist: function() {
             return (
-                this.daughterNuclei.length > 0 || 
-                this.u239Nuclei.length > 0 || 
+                this.daughterNuclei.length > 0 ||
+                this.u239Nuclei.length > 0 ||
                 this.ghostDaughterNuclei > 0
             );
         },
@@ -518,7 +518,7 @@ define(function (require, exports, module) {
                         nucleus.setAcceleration(xAcc, yAcc);
                         daughterNucleus.setVelocity(-xVel, -yVel);
                         daughterNucleus.setAcceleration(-xAcc, -yAcc);
-                        
+
                         if (!(nucleus instanceof Uranium235Nucleus))
                             throw 'Nucleus in fission event expected to be Uranium-235';
 

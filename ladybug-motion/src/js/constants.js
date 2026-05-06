@@ -4,7 +4,7 @@ define(function (require) {
 
     var range = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -82,9 +82,9 @@ define(function (require) {
     LadybugTraceView.NEW_OPACITY = 1;
     LadybugTraceView.OLD_OPACITY = 0.15;
     LadybugTraceView.SECONDS_TO_BE_OLD = 2; // seconds
-    LadybugTraceView.NEW_OPACITY_RANGE = range({ 
-        min: LadybugTraceView.NEW_OPACITY, 
-        max: LadybugTraceView.OLD_OPACITY 
+    LadybugTraceView.NEW_OPACITY_RANGE = range({
+        min: LadybugTraceView.NEW_OPACITY,
+        max: LadybugTraceView.OLD_OPACITY
     });
 
     Constants.LadybugTraceView = LadybugTraceView;

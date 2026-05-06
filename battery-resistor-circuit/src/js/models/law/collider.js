@@ -8,7 +8,7 @@ define(function (require) {
     var Core = require('models/free-particle/core');
 
     /**
-     * 
+     *
      */
     var Collider = function(wireSystem, collisionEvent, wirePatch) {
         this.wireSystem = wireSystem;

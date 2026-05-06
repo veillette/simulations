@@ -23,11 +23,11 @@ define(function (require, exports, module) {
             photonSpeedScale: Constants.MULTI_ATOM_PHOTON_SPEED,
             pumpingPhotonViewMode: Constants.PHOTON_CURTAIN
         }),
-        
+
         initialize: function(attributes, options) {
             BaseLasersSimulation.prototype.initialize.apply(this, [attributes, options]);
 
-            
+
         },
 
         /**
@@ -65,7 +65,7 @@ define(function (require, exports, module) {
                 });
 
                 var diameter = atom.get('radius') * 2;
-                
+
                 atom.setPosition(
                     tubeBounds.x + Math.random() * (tubeBounds.w - diameter * 2) + diameter,
                     tubeBounds.y + Math.random() * (tubeBounds.h - diameter * 2) + diameter
@@ -109,7 +109,7 @@ define(function (require, exports, module) {
         _update: function(time, deltaTime) {
             BaseLasersSimulation.prototype._update.apply(this, arguments);
 
-            
+
         }
 
     });

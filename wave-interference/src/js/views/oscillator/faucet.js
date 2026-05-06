@@ -34,7 +34,7 @@ define(function(require) {
 			this.$el.html(this.template({ unique: this.cid }));
 			this.$graphic = this.$('.oscillator-graphic');
 
-			
+
 			this.$stream = $('<div class="stream">').appendTo(this.$graphic.find('.part-1'));
 
 			this.$stagedDrops = [];
@@ -66,7 +66,7 @@ define(function(require) {
 		update: function(time, delta) {
 			if (!this.waveSimulation.paused) {
 				/**
-				 * Keep track of our own time so we can actually pause 
+				 * Keep track of our own time so we can actually pause
 				 *   the animation if the simulation is paused.
 				 */
 				this.time += delta;

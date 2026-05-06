@@ -66,7 +66,7 @@ define(function(require) {
             else {
                 this.viewOriginX = 4;
                 this.viewOriginY = 30;
-                scale = 1; 
+                scale = 1;
             }
 
             this.mvt = ModelViewTransform.createSinglePointScaleMapping(

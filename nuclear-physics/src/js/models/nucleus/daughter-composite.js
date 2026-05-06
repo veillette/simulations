@@ -33,7 +33,7 @@ define(function (require) {
             this.numAlphas = 0;
             this.set('numProtons', 0);
             this.set('numNeutrons', 0);
-            
+
             // Notify all listeners of the change to our atomic weight.
             this.triggerNucleusChange(null);
         },
@@ -56,7 +56,7 @@ define(function (require) {
                         this.agitationFactor = DaughterCompositeNucleus.DEFAULT_AGITATION_FACTOR;
                     }
                     break;
-                    
+
                 default:
                     this.agitationFactor = DaughterCompositeNucleus.DEFAULT_AGITATION_FACTOR;
                     break;

@@ -7,7 +7,7 @@ define(function (require) {
     var Pool = require('object-pool');
 
     var Vector2 = require('common/math/vector2');
-    
+
     var pool = Pool({
         init: function() {
             return new Intersection();
@@ -15,7 +15,7 @@ define(function (require) {
     });
 
     /**
-     * Models the intersection between a light ray and an interface, needed so we 
+     * Models the intersection between a light ray and an interface, needed so we
      *   can optionally depict normals at each intersection.
      *
      * Constructor parameters:

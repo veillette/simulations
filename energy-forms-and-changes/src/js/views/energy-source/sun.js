@@ -23,7 +23,7 @@ define(function(require) {
 
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
             EnergySourceView.prototype.initialize.apply(this, [options]);
@@ -34,7 +34,7 @@ define(function(require) {
 
             var sunRadius = this.mvt.modelToViewDeltaX(Constants.Sun.RADIUS);
             var sunCenter = this.mvt.modelToViewDelta(Constants.Sun.OFFSET_TO_CENTER_OF_SUN);
-            
+
             this.initSky(sunCenter);
             this.initOrb(sunRadius, sunCenter);
             this.initRays(sunRadius, sunCenter);
@@ -64,10 +64,10 @@ define(function(require) {
         initOrb: function(sunRadius, sunCenter) {
             // Create a texture
             var sunTexture = PIXI.Texture.generateCircleTexture(
-                sunRadius, 
-                0, 
-                sunRadius * SunView.GRADIENT_END, 
-                SunView.INNER_FILL_COLOR, 
+                sunRadius,
+                0,
+                sunRadius * SunView.GRADIENT_END,
+                SunView.INNER_FILL_COLOR,
                 SunView.OUTER_FILL_COLOR,
                 SunView.LINE_WIDTH,
                 SunView.LINE_COLOR
@@ -88,10 +88,10 @@ define(function(require) {
         initRays: function(sunRadius, sunCenter) {
             // Create a ray source
             var raySource = new LightRaySourceView({
-                center:      sunCenter, 
-                innerRadius: sunRadius, 
-                outerRadius: 600, //SunView.RAY_DISTANCE,      
-                numRays:     40,            
+                center:      sunCenter,
+                innerRadius: sunRadius,
+                outerRadius: 600, //SunView.RAY_DISTANCE,
+                numRays:     40,
                 color:       SunView.RAY_COLOR
             });
 
@@ -145,7 +145,7 @@ define(function(require) {
             // Move it
             panel.x = panelOffset.x;
             panel.y = panelOffset.y;
-            
+
             // Add it
             this.displayObject.addChild(panel);
 
@@ -171,7 +171,7 @@ define(function(require) {
             var gradient = ctx.createLinearGradient(0, 0, 0, bgHeight);
             gradient.addColorStop(0, SunView.SLIDER_BG_FILL_TOP);
             gradient.addColorStop(1, SunView.SLIDER_BG_FILL_BOTTOM);
-            
+
             ctx.fillStyle = gradient;
             ctx.lineWidth   = 1;
             ctx.strokeStyle = SunView.SLIDER_BG_LINE_COLOR;
@@ -193,7 +193,7 @@ define(function(require) {
                 direction: 'rtl',
 
                 background: sliderBackground,
-                
+
                 handleColor: SunView.SLIDER_HANDLE_FILL_COLOR,
                 handleLineColor: SunView.SLIDER_HANDLE_LINE_COLOR,
                 handleLineWidth: 2,
@@ -241,8 +241,8 @@ define(function(require) {
             title.anchor.y = 0;
             title.x = panelWidth * 0.1;
             title.y = panelHeight * 0.1;
-            panel.addChild(title);    
-            
+            panel.addChild(title);
+
             // Create little cloud icon
             var cloudIcon = Assets.createSprite(Assets.Images.CLOUD_1);
             cloudIcon.scale.x = cloudIcon.scale.y = (SunView.CLOUD_ICON_WIDTH / cloudIcon.width) * this.getImageScale();
@@ -296,7 +296,7 @@ define(function(require) {
                     });
                     this.solarPanelAbsorptionShape.cid = 'solar-panel';
                 }
-                
+
                 this.raySource.addLightAbsorbingShape(this.solarPanelAbsorptionShape);
                 this.raySource.update();
             }

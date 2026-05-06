@@ -10,7 +10,7 @@ define(function(require) {
     var DeBroglieModelRadialSubView     = require('hydrogen-atom/views/atomic-model/debroglie-sub/radial');
     var DeBroglieModel3DSubView         = require('hydrogen-atom/views/atomic-model/debroglie-sub/three-d');
     var DeBroglieModelBrightnessSubView = require('hydrogen-atom/views/atomic-model/debroglie-sub/brightness');
-    
+
     /**
      * Represents the scene for the DeBroglieModel
      */
@@ -51,7 +51,7 @@ define(function(require) {
             var self = this;
 
             this.$select = $(
-                '<select class="debroglie-view-mode">' + 
+                '<select class="debroglie-view-mode">' +
                     '<option value="' + DeBroglieViewModes.RADIAL_DISTANCE + '">Radial View</option>' +
                     '<option value="' + DeBroglieViewModes.HEIGHT_3D       + '">3D View</option>' +
                     '<option value="' + DeBroglieViewModes.BRIGHTNESS      + '">Brightness View</option>' +

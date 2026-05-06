@@ -8,7 +8,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         GRAB_BAG:              'grab-bag.png',
         SCHEMATIC_GRAB_BAG:    'grab-bag-schematic.png',
         ELECTRON:              'electron-dark.png',
@@ -63,7 +63,7 @@ define(function (require) {
         SCHEMATIC_INDUCTOR_MASK:      'components/schematic/inductor-mask.png',
         SCHEMATIC_CAPACITOR:          'components/schematic/capacitor.png',
         SCHEMATIC_CAPACITOR_MASK:     'components/schematic/capacitor-mask.png',
-        
+
         DOG:                'components/grab-bag/dog.png',
         DOG_MASK:           'components/grab-bag/dog-mask.png',
         DOLLAR:             'components/grab-bag/dollar.png',

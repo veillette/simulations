@@ -18,7 +18,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var ProjectileMotionSimulation = Simulation.extend({
 
@@ -29,13 +29,13 @@ define(function (require, exports, module) {
             currentProjectile: null, // Current projectile instance that is set for launch or is in motion
             currentTrajectory: null  // Current trajectory instance--not created until cannon is fired
         }),
-        
+
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
 
             /* We always keep a projectile object that sits and waits to be launched
              *   so that the user can modify the projectile's properties.
-             */   
+             */
             this.set('currentProjectile', new Projectile());
 
             this.on('change:altitude', function() {

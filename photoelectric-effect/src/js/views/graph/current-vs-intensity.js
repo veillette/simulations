@@ -9,7 +9,7 @@ define(function(require) {
     var GraphView = require('views/graph');
 
     /**
-     * 
+     *
      */
     var CurrentVsIntensityGraphView = GraphView.extend({
 
@@ -52,7 +52,7 @@ define(function(require) {
 
         addPoint: function() {
             this.points.push(this.createPoint(
-                this.getBeamIntensity(), 
+                this.getBeamIntensity(),
                 this.simulation.getCurrent()
             ));
 
@@ -64,7 +64,7 @@ define(function(require) {
                 this.points.push(this.createPoint());
 
             this.points[this.points.length - 1].set(
-                this.getBeamIntensity(), 
+                this.getBeamIntensity(),
                 this.simulation.getCurrent()
             );
 

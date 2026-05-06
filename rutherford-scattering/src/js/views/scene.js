@@ -28,7 +28,7 @@ define(function(require) {
     var RutherfordScatteringSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -36,7 +36,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initBoxMVT: function(){

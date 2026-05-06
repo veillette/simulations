@@ -6,7 +6,7 @@ define(function (require) {
     var range   = require('common/math/range');
 
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **

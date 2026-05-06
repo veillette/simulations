@@ -65,7 +65,7 @@ define(function (require) {
 
             for (var i = 0; i < this.segments.length; i++)
                 curve.lineTo(this.segments[i].end.x, this.segments[i].end.y);
-            
+
             return curve;
         },
 
@@ -76,11 +76,11 @@ define(function (require) {
         recompute: function() {
             if (!this.get('startJunction') || !this.get('endJunction'))
                 return;
-            
+
             var tilt = Constants.TILT;
             if (!this.get('connectAtRight'))
                 tilt = -tilt;
-            
+
             this.northDir
                 .set(this.get('endJunction').get('position'))
                 .sub(this.get('startJunction').get('position'))
@@ -93,7 +93,7 @@ define(function (require) {
 
             if (!this.get('connectAtRight'))
                 this.eastDir.scale(-1);
-            
+
             if (this.isNaN(this.northDir) || this.isNaN(this.eastDir)) {
                 console.error('Bulb basis set is not a number.');
                 return;
@@ -104,7 +104,7 @@ define(function (require) {
             var firstPoint = new Vector2(this.getPoint(-this.get('resistorWidth') * 0.35, Constants.BULB_DIMENSION.height * 0.4));
             if (isNaN(firstPoint.x) || isNaN(firstPoint.y))
                 throw 'Point was nan: ' + firstPoint;
-            
+
             var origin = this.get('startJunction').get('position');
             this.reset(this.getVector(0.01, 0.04).add(origin), firstPoint);
             this.appendPointFromVector(this.getVector(-this.get('resistorWidth') * 0.15,  Constants.BULB_DIMENSION.height * 0.25));

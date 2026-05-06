@@ -37,7 +37,7 @@ define(function (require) {
             this.a.translate(dx, dy);
             this.b.translate(dx, dy);
         },
-        
+
         /**
          * Rotates the shape
          */
@@ -51,8 +51,8 @@ define(function (require) {
          */
         toPiecewiseCurve: function() {
             return this.clipPiecewiseCurves(
-                this.a.toPiecewiseCurve(), 
-                this.b.toPiecewiseCurve(), 
+                this.a.toPiecewiseCurve(),
+                this.b.toPiecewiseCurve(),
                 ClipperLib.ClipType.ctIntersection
             );
         },
@@ -116,7 +116,7 @@ define(function (require) {
         contains: function(point) {
             return this.a.contains(point) && this.b.contains(point);
         },
-        
+
         /**
          * Clones this shape instance and returns it
          */

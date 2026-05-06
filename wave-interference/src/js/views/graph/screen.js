@@ -72,8 +72,8 @@ define(function(require) {
 			this.colors = [];
 			for (j = 0; j < this.waveSimulation.lattice.height; j++) {
 				this.colors[j] = {
-					r: 0, 
-					g: 0, 
+					r: 0,
+					g: 0,
 					b: 0
 				};
 			}
@@ -186,9 +186,9 @@ define(function(require) {
 
 		/**
 		 * Adds up the rgb values of the colors in the color history
-		 *   (mitigated by their alpha values) and scales down these 
-		 *   sums according to magic numbers from PhET and stores the 
-		 *   resulting colors in an array to be used for painting to 
+		 *   (mitigated by their alpha values) and scales down these
+		 *   sums according to magic numbers from PhET and stores the
+		 *   resulting colors in an array to be used for painting to
 		 *   the screen graphic and manipulating the intensity graph.
 		 */
 		calculateColors: function() {
@@ -204,8 +204,8 @@ define(function(require) {
 			var height = this.waveSimulation.lattice.height;
 			for (var j = 0; j < height; j++) {
 				color = colors[j];
-				color.r = 0; 
-				color.g = 0; 
+				color.r = 0;
+				color.g = 0;
 				color.b = 0;
 				for (var h = 0; h < this.colorHistoryLength; h++) {
 					color.r += this.colorHistory[h][j].r * this.colorHistory[h][j].a;
@@ -236,9 +236,9 @@ define(function(require) {
 					this.time += this.timestep;
 
 					this._update(time, delta);
-					
+
 					this.accumulator -= this.timestep;
-				}	
+				}
 			}
 		},
 
@@ -272,7 +272,7 @@ define(function(require) {
 		hide: function(event) {
 			if (this.toggling)
 				return;
-			
+
 			StaticGraphView.prototype.hide.apply(this, [event]);
 
 			this.heatmapView.disableScreenMode();

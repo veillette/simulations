@@ -73,19 +73,19 @@ define(function (require) {
                 var multFactor = Math.sin(vibrationRadians);
 
                 this.getInitialAtomCogOffset(this.hydrogenAtom1).set(
-                    -ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_X,  
+                    -ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_X,
                      ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_Y
                 );
                 this.getInitialAtomCogOffset(this.hydrogenAtom2).set(
-                    ROTATED_INITIAL_C_H_DISTANCE - multFactor * H_VIBRATION_DISTANCE_X,  
+                    ROTATED_INITIAL_C_H_DISTANCE - multFactor * H_VIBRATION_DISTANCE_X,
                     ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_Y
                 );
                 this.getInitialAtomCogOffset(this.hydrogenAtom3).set(
-                    -ROTATED_INITIAL_C_H_DISTANCE - multFactor * H_VIBRATION_DISTANCE_X, 
+                    -ROTATED_INITIAL_C_H_DISTANCE - multFactor * H_VIBRATION_DISTANCE_X,
                     -ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_Y
                 );
                 this.getInitialAtomCogOffset(this.hydrogenAtom4).set(
-                    ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_X, 
+                    ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_X,
                     -ROTATED_INITIAL_C_H_DISTANCE + multFactor * H_VIBRATION_DISTANCE_Y
                 );
 

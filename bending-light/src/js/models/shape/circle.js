@@ -12,7 +12,7 @@ define(function (require) {
     var Intersection = require('models/intersection');
 
     /**
-     * 
+     *
      */
     var Circle = function(radius) {
         Shape.apply(this, arguments);
@@ -69,12 +69,12 @@ define(function (require) {
         getIntersections: function(tail, direction) {
             // Find the intersections between the infinite ray's line (not a segment) and the circle
             var points = LineIntersection.lineCircleIntersection(
-                tail.x, 
-                tail.y, 
-                tail.x + direction.x, 
-                tail.y + direction.y, 
-                this.center.x, 
-                this.center.y, 
+                tail.x,
+                tail.y,
+                tail.x + direction.x,
+                tail.y + direction.y,
+                this.center.x,
+                this.center.y,
                 this.radius
             );
 

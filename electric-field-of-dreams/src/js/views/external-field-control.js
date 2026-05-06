@@ -54,7 +54,7 @@ define(function(require) {
 
         initPanel: function() {
             var panel = new PIXI.Container();
-            
+
             var background = new PIXI.Graphics();
             var controlArea = new PIXI.Graphics();
             panel.addChild(background);
@@ -80,7 +80,7 @@ define(function(require) {
             controlArea.beginFill(ARROW_AREA_COLOR, ExternalFieldControlView.ARROW_AREA_ALPHA);
             controlArea.drawRect(0, 0, aw, ah);
             controlArea.endFill();
-            
+
             this.areaMask = new PIXI.Graphics();
             this.areaMask.x = -ExternalFieldControlView.AREA_WIDTH  - ExternalFieldControlView.PANEL_PADDING;
             this.areaMask.y = -ExternalFieldControlView.AREA_HEIGHT - ExternalFieldControlView.PANEL_PADDING;

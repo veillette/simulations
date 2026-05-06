@@ -100,7 +100,7 @@ define(function(require) {
             this.initPanel();
             this.initTube();
             this.initGeigerProbe();
-            
+
             this.updateMVT(this.mvt);
         },
 
@@ -354,7 +354,7 @@ define(function(require) {
                 text = 'Uranium-238';
             else
                 text = 'Custom';
-            
+
             this.$el.find('.readout-label').html(text + ':');
             this.updateReadout();
         },

@@ -41,7 +41,7 @@ define(function(require) {
             var woodXOffsetPercent = 13 / 270; // Percent of total texture width
             var woodYOffsetPercent = 19 / 139; // Percent of total texture width
             var woodWidthPercent  = 236 / 270; // Percent of total texture width
-            
+
             var base = Assets.createSprite(Assets.Images.THERMOMETER_CLIP_BASE);
             var targetSpriteWidth = this.mvt.modelToViewDeltaX(ThermometerClipsView.BASE_WIDTH / woodWidthPercent); // in pixels
             var scale = targetSpriteWidth / base.texture.width;
@@ -53,12 +53,12 @@ define(function(require) {
             this.backLayer        = new PIXI.Container();
             this.thermometerLayer = new PIXI.Container();
             this.frontLayer       = new PIXI.Container();
-            
+
             this.displayObject.addChild(base);
             this.displayObject.addChild(this.backLayer);
             this.displayObject.addChild(this.thermometerLayer);
             this.displayObject.addChild(this.frontLayer);
-            
+
             var width = this.mvt.modelToViewDeltaX(ThermometerClipsView.BASE_WIDTH);
             var height = width * (108 / 236);
             var spacing = width / (this.numThermometerSpots + 1);
@@ -82,7 +82,7 @@ define(function(require) {
                 backClip.scale.y = frontClip.scale.y = clipScale;
 
                 point = new PIXI.Point(
-                    this.x + spacing / 2 + i * spacing - backClip.width * (1 - clipXAnchor), 
+                    this.x + spacing / 2 + i * spacing - backClip.width * (1 - clipXAnchor),
                     this.y + height / 2
                 );
 
@@ -132,7 +132,7 @@ define(function(require) {
         },
 
         /**
-         * Attempts to place a thermometer near a point. If the nearest 
+         * Attempts to place a thermometer near a point. If the nearest
          *   anchor point already has a thermometer, it tries to place
          *   it in the next nearest position and so on.
          */

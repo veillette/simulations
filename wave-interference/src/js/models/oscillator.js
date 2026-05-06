@@ -115,7 +115,7 @@ define(function(require) {
 		/**
 		 * Fire a pulse that just goes through one oscillation.
 		 *
-		 * Returns an estimate in milliseconds of when the pulse will end 
+		 * Returns an estimate in milliseconds of when the pulse will end
 		 *   or false if it is currently pulsing.
 		 */
 		firePulse: function() {
@@ -150,7 +150,7 @@ define(function(require) {
 		getNextPeakTime: function() {
 			/*
 			 * let f = frequency, t = time
-			 *   (ft % 1) is the remainder portion of ft keeping it from 
+			 *   (ft % 1) is the remainder portion of ft keeping it from
 			 *   being an integer. Therefore ((ft % 1) / f) is the time
 			 *   portion that is keeping ft from being an integer, since
 			 *   frequency is a constant in this context.
@@ -159,7 +159,7 @@ define(function(require) {
 
 			/* (this.time - remainderTime) gets us the previous peak, so we
 			 *   add a period to get the next one.
-			 */ 
+			 */
 			return this.time - remainderTime + this.period();
 		},
 

@@ -23,13 +23,13 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var IntroSimulation = FixedIntervalSimulation.extend({
 
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {}),
-        
-        
+
+
         initialize: function(attributes, options) {
 
             options = options || {};
@@ -50,8 +50,8 @@ define(function (require, exports, module) {
             this.brick     = new Brick(    { position: new Vector2(-0.1,   0) });
             this.ironBlock = new IronBlock({ position: new Vector2(-0.175, 0) });
 
-            this.beaker = new BeakerContainer({ 
-                position: new Vector2(-0.015, 0), 
+            this.beaker = new BeakerContainer({
+                position: new Vector2(-0.015, 0),
                 potentiallyContainedObjects: [
                     this.brick,
                     this.ironBlock
@@ -130,10 +130,10 @@ define(function (require, exports, module) {
 
         /**
          * This is called on a reset to set the simulation
-         *   components back to defaults.  The inherited 
+         *   components back to defaults.  The inherited
          *   behavior is to just call initComponents, but
-         *   since we want to manually reset each component 
-         *   in this simulation instead of clearing them 
+         *   since we want to manually reset each component
+         *   in this simulation instead of clearing them
          *   out and starting over, we override this
          *   function.
          */
@@ -157,14 +157,14 @@ define(function (require, exports, module) {
         },
 
         /**
-         * 
+         *
          */
         fastForward: function() {
             this.set('timeScale', Constants.FAST_FORWARD_TIMESCALE);
         },
 
         /**
-         * 
+         *
          */
         _update: function(time, deltaTime) {
             // For the time slider and anything else relying on time
@@ -176,7 +176,7 @@ define(function (require, exports, module) {
             // Update the fluid level in the beaker, which could be displaced by
             //   one or more of the blocks.
             this.beaker.updateFluidLevel([
-                this.brick.getRect(), 
+                this.brick.getRect(),
                 this.ironBlock.getRect()
             ]);
 
@@ -188,7 +188,7 @@ define(function (require, exports, module) {
         },
 
         /**
-         * PhET Original explanation: 
+         * PhET Original explanation:
          *   "Cause any user-movable model elements that are not supported by a
          *      surface to fall (or, in some cases, jump up) towards the nearest
          *      supporting surface."
@@ -200,7 +200,7 @@ define(function (require, exports, module) {
                 // If the user is moving it, do nothing; if it's already at rest, do nothing.
                 if (!element.get('userControlled') && !element.getSupportingSurface() && element.get('position').y !== 0) {
                     var minYPos = 0;
-                    
+
                     // Determine whether there is something below this element that
                     //   it can land upon.
                     var potentialSupportingSurface = this.findBestSupportSurface(element);
@@ -213,7 +213,7 @@ define(function (require, exports, module) {
                         element.setX(targetX);
                         //console.log('done setting x');
                     }
-                    
+
                     // Calculate a proposed Y position based on gravitational falling.
                     var acceleration = -9.8; // meters/s*s
                     var velocity = element.get('verticalVelocity') + acceleration * deltaTime;
@@ -236,7 +236,7 @@ define(function (require, exports, module) {
         },
 
         /**
-         * 
+         *
          */
         _exchangeEnergy: function(time, deltaTime) {
             var i;
@@ -371,11 +371,11 @@ define(function (require, exports, module) {
                                 // make sure that the sides of the energy chunk,
                                 // and not just the center, stay in bounds.
                                 var energyChunkWidth = 0.01;
-                                initialMotionConstraints = this._initialMotionConstraints.set( 
+                                initialMotionConstraints = this._initialMotionConstraints.set(
                                     element.getRect().x + energyChunkWidth / 2,
                                     element.getRect().y,
                                     element.getRect().w - energyChunkWidth,
-                                    element.getRect().h 
+                                    element.getRect().h
                                 );
                             }
                             this.air.addEnergyChunk(chunk, initialMotionConstraints);
@@ -426,7 +426,7 @@ define(function (require, exports, module) {
             //   difficult z-order issues.
             var standPerspectiveExtension = this.leftBurner.getOutlineRect().h * Burner.EDGE_TO_HEIGHT_RATIO * Math.cos(Constants.BurnerStandView.PERSPECTIVE_ANGLE) / 2;
             var burnerRectX = this.leftBurner.getOutlineRect().x - standPerspectiveExtension - (element !== this.beaker ? blockPerspectiveExtension : 0);
-            var burnerBlockingRect = this._burnerBlockingRect.set( 
+            var burnerBlockingRect = this._burnerBlockingRect.set(
                 burnerRectX,
                 this.leftBurner.getOutlineRect().y,
                 this.rightBurner.getOutlineRect().right() - burnerRectX,
@@ -453,14 +453,14 @@ define(function (require, exports, module) {
                     this.beaker.getRect().h + blockPerspectiveExtension
                 );
                 var beakerBottom = this._beakerBottom.set(
-                    this.beaker.getRect().left(), 
-                    this.beaker.getRect().bottom(), 
-                    this.beaker.getRect().w, 
+                    this.beaker.getRect().left(),
+                    this.beaker.getRect().bottom(),
+                    this.beaker.getRect().w,
                     testRectThickness
                 );
 
                 // Do not restrict the model element's motion in positive Y
-                //   direction if the beaker is sitting on top of the model 
+                //   direction if the beaker is sitting on top of the model
                 //   element - the beaker will simply be lifted up.
                 var restrictPositiveY = !this.beaker.isStackedUpon(element);
 
@@ -487,7 +487,7 @@ define(function (require, exports, module) {
                     // Special handling for the beaker - block it at the outer
                     // edge of the block instead of the center in order to
                     // simplify z-order handling.
-                    testRect.set( 
+                    testRect.set(
                         testRect.x - blockPerspectiveExtension,
                         testRect.y,
                         testRect.w + blockPerspectiveExtension * 2,
@@ -524,7 +524,7 @@ define(function (require, exports, module) {
             var translation;
 
             translation = this.checkOverlapOnProposedTranslation(movingRect, stationaryRect, proposedTranslation, restrictPosY);
-            
+
             if (translation)
                 return translation;
 
@@ -659,14 +659,14 @@ define(function (require, exports, module) {
                     // There is at least some overlap.  Determine if this surface
                     //   is the best one so far.
                     var surfaceOverlap = this.getHorizontalOverlap(potentialSupportingElement.getTopSurface(), element.getBottomSurface());
-                    
+
                     // The following nasty 'if' clause determines if the potential
                     //   supporting surface is a better one than we currently have
                     //   based on whether we have one at all, or has more overlap
                     //   than the previous best choice, or is directly above the
                     //   current one.
                     if (bestOverlappingSurface === null || (
-                            surfaceOverlap > this.getHorizontalOverlap(bestOverlappingSurface, element.getBottomSurface()) && 
+                            surfaceOverlap > this.getHorizontalOverlap(bestOverlappingSurface, element.getBottomSurface()) &&
                             !this.isDirectlyAbove(bestOverlappingSurface, potentialSupportingElement.getTopSurface())
                         ) || (
                             this.isDirectlyAbove(potentialSupportingElement.getTopSurface(), bestOverlappingSurface)
@@ -696,7 +696,7 @@ define(function (require, exports, module) {
             var highestMin = Math.max(s1.xMin, s2.xMin);
             return Math.max(lowestMax - highestMin, 0);
         },
-        
+
         /**
          * Returns true if surface s1's center is above surface s2.
          */
@@ -734,13 +734,13 @@ define(function (require, exports, module) {
                 if (this.blocks[i].getProjectedShape().contains(location))
                     return this.blocks[i];
             }
-            
+
             // Test if this point is in the water or steam associated with the beaker.
             if (this.beaker.getThermalContactArea().getBounds().contains(location) ||
                 (this.beaker.getSteamArea().contains(location) && this.beaker.get('steamingProportion') > 0)) {
                 return this.beaker;
             }
-            
+
             // Test if the point is a burner.
             for (var j = 0; j < this.burners.length; j++) {
                 if (this.burners[j].getFlameIceRect().contains(location))
@@ -764,9 +764,9 @@ define(function (require, exports, module) {
             var beakerLeft  = this.beaker.getRect().center().x - blockWidthIncludingPerspective / 2;
             var beakerRight = this.beaker.getRect().center().x + blockWidthIncludingPerspective / 2;
             var thermometerX = thermometer.get('position').x;
-            if (thermometer.previous('sensedElement') === this.beaker && 
-                !thermometer.get('userControlled') && 
-                thermometerX >= beakerLeft && 
+            if (thermometer.previous('sensedElement') === this.beaker &&
+                !thermometer.get('userControlled') &&
+                thermometerX >= beakerLeft &&
                 thermometerX <= beakerRight
             ) {
                 thermometer.set('userControlled', true);

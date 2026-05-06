@@ -26,7 +26,7 @@
             common:    '../../../common',
 
             'nuclear-physics': '../../../nuclear-physics/src/js/',
-            
+
             'nuclear-fission':           '.',
             'nuclear-fission/templates': '../templates',
             'nuclear-fission/styles':    '../styles'

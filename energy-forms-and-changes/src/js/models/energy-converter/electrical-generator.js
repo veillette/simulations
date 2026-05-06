@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2 = require('common/math/vector2');
 
     var EnergyConverter       = require('models/energy-converter');
@@ -26,7 +26,7 @@ define(function (require) {
             //   incoming energy, with no rotational inertia.
             directCouplingMode: false,
         }),
-        
+
         initialize: function(attributes, options) {
             EnergyConverter.prototype.initialize.apply(this, [attributes, options]);
 
@@ -60,14 +60,14 @@ define(function (require) {
 
         updateWheelRotation: function(deltaTime, incomingEnergy) {
             // Convention is positive is counter clockwise.
-            var incomingEnergyDirectionSign = Math.sin(incomingEnergy.direction) > 0 ? -1 : 1; 
+            var incomingEnergyDirectionSign = Math.sin(incomingEnergy.direction) > 0 ? -1 : 1;
 
             // Handle different wheel rotation modes
             if (this.get('directCouplingMode')) {
                 // Treat the wheel as though it is directly coupled to the
                 //   energy source, e.g. through a belt or drive shaft.
                 if (incomingEnergy.type === EnergyTypes.MECHANICAL) {
-                    this.wheelRotationalVelocity = (incomingEnergy.amount / deltaTime) / Constants.MAX_ENERGY_PRODUCTION_RATE * ElectricalGenerator.MAX_ROTATIONAL_VELOCITY * incomingEnergyDirectionSign; 
+                    this.wheelRotationalVelocity = (incomingEnergy.amount / deltaTime) / Constants.MAX_ENERGY_PRODUCTION_RATE * ElectricalGenerator.MAX_ROTATIONAL_VELOCITY * incomingEnergyDirectionSign;
                     this.set('wheelRotationalAngle', this.get('wheelRotationalAngle') + this.wheelRotationalVelocity * deltaTime);
                 }
             }
@@ -84,7 +84,7 @@ define(function (require) {
 
                 this.wheelRotationalVelocity += angularAcceleration * deltaTime;
                 this.wheelRotationalVelocity = Math.min(ElectricalGenerator.MAX_ROTATIONAL_VELOCITY, Math.max(-ElectricalGenerator.MAX_ROTATIONAL_VELOCITY, this.wheelRotationalVelocity));
-                
+
                 if (Math.abs(this.wheelRotationalVelocity) < 1E-3) {
                     // Prevent the wheel from moving forever.
                     this.wheelRotationalVelocity = 0;
@@ -129,7 +129,7 @@ define(function (require) {
                                 Constants.ENERGY_CHUNK_VELOCITY
                             ));
                             break;
-                        case EnergyTypes.ELECTRICAL: 
+                        case EnergyTypes.ELECTRICAL:
                             // This electrical energy chunk has traveled to the
                             //   end of its path, so transfer it to the next
                             //   energy system.

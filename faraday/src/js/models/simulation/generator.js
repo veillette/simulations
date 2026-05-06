@@ -25,7 +25,7 @@ define(function (require, exports, module) {
         defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -54,7 +54,7 @@ define(function (require, exports, module) {
                 position: GeneratorSimulation.COMPASS_LOCATION,
                 behavior: Compass.SIMPLE_BEHAVIOR
             }, {
-                magnetModel: this.turbine 
+                magnetModel: this.turbine
             });
 
             // Field Meter
@@ -106,7 +106,7 @@ define(function (require, exports, module) {
 
         _update: function(time, deltaTime) {
             FaradaySimulation.prototype._update.apply(this, arguments);
-            
+
             this.turbine.update(time, deltaTime);
             this.compass.update(time, deltaTime);
             this.fieldMeter.update(time, deltaTime);

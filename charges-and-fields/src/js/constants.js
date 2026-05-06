@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -14,7 +14,7 @@ define(function (require) {
     Constants.SIM_HEIGHT_IN_METERS = 6; // Meters
 
     // The k value in the original was 0.5 * 1E6, but that had been scaled to
-    //   flash screen units, so we're scaling it by the factor that would have 
+    //   flash screen units, so we're scaling it by the factor that would have
     //   converted their screen units to their meters according to the legend
     //   on their grid.
     var flashToMetersRatio = (6 / 640);

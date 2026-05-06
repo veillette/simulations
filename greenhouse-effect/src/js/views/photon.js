@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var BasicPhotonView = require('views/photon-basic');
     /**
      * A view that represents a photon

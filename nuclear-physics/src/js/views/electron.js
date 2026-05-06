@@ -6,7 +6,7 @@ define(function(require) {
     var SubatomicParticleView     = require('views/subatomic-particle');
 
     /**
-     * 
+     *
      */
     var ElectronView = SubatomicParticleView.extend({
 

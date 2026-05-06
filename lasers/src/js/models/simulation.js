@@ -30,14 +30,14 @@ define(function (require, exports, module) {
     var Constants = require('../constants');
 
     /**
-     * 
+     *
      */
     var LasersSimulation = QuantumSimulation.extend({
 
         defaults: _.extend({}, QuantumSimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 framesPerSecond: Constants.FPS,
@@ -79,7 +79,7 @@ define(function (require, exports, module) {
             this.lasingPhotons = new VanillaCollection();
             this.atoms = new Backbone.Collection();
             this.mirrors = [];
-            
+
             // Set up the system of collision experts
             this.collisionExperts = [];
             this.collisionExperts.push(SphereSphereExpert);
@@ -106,20 +106,20 @@ define(function (require, exports, module) {
             var groundState = this.getGroundState();
             for (var i = 0; i < this.atoms.length; i++)
                 this.atoms.at(i).setCurrentState(groundState);
-            
+
             // Clear all photons
             for (var k = this.photons.length - 1; k >= 0; k--)
                 this.photons.at(k).destroy();
-            
+
             this.numPhotons = 0;
         },
 
         _update: function(time, deltaTime) {
             QuantumSimulation.prototype._update.apply(this, arguments);
-            
+
             // Update all the models in the system
             this.updateModels(time, deltaTime);
-            
+
             // Check to see if any photons need to be taken out of the system
             this.numPhotons = 0;
             for (var i = this.photons.length - 1; i >= 0; i--) {
@@ -151,10 +151,10 @@ define(function (require, exports, module) {
 
         addModel: function(model) {
             this.models.push(model);
-            
+
             if (model instanceof Mirror)
                 this.mirrors.push(model);
-            
+
             if (model instanceof Tube)
                 this.tube = model;
         },
@@ -169,7 +169,7 @@ define(function (require, exports, module) {
                     if (index !== -1)
                         this.mirrors.splice(index, 1);
                 }
-                
+
                 if (model instanceof Tube && this.tube === model)
                     this.tube = null;
 
@@ -235,7 +235,7 @@ define(function (require, exports, module) {
         setStimulatingBeam: function(seedBeam) {
             if (this.seedBeam)
                 this.removeModel(this.seedBeam);
-            
+
             this.addModel(seedBeam);
             this.seedBeam = seedBeam;
         },
@@ -247,7 +247,7 @@ define(function (require, exports, module) {
         setPumpingBeam: function(pumpingBeam) {
             if (this.pumpingBeam)
                 this.removeModel(this.pumpingBeam);
-            
+
             this.addModel(pumpingBeam);
             this.pumpingBeam = pumpingBeam;
         },
@@ -274,7 +274,7 @@ define(function (require, exports, module) {
 
         getNumAtomsWithState: function(state) {
             var count = 0;
-            
+
             for (var i = 0; i < this.atoms.length; i++) {
                 if (this.atoms.at(i).getCurrentState().equals(state))
                     count++;
@@ -318,8 +318,8 @@ define(function (require, exports, module) {
                 var transitionEnergy = state.get('energyLevel') - e0;
                 var beamEnergy = PhysicsUtil.wavelengthToEnergy(beam.getWavelength());
 
-                if (beam.get('enabled') && 
-                    beam.get('photonsPerSecond') > 0 && 
+                if (beam.get('enabled') &&
+                    beam.get('photonsPerSecond') > 0 &&
                     Math.abs(beamEnergy - transitionEnergy) < QuantumConfig.ENERGY_TOLERANCE
                 ) {
                     var match = this._matchObject;
@@ -350,7 +350,7 @@ define(function (require, exports, module) {
             // Test each photon against the atoms in the section the photon is in
             for (var i = 0; i < this.photons.length; i++) {
                 var photon = this.photons.at(i);
-                if (this.tube.getBounds().contains(photon.getPosition()) || 
+                if (this.tube.getBounds().contains(photon.getPosition()) ||
                     this.tube.getBounds().contains(photon.getPreviousPosition())
                 ) {
                     for (var j = 0; j < this.atoms.length; j++) {
@@ -399,7 +399,7 @@ define(function (require, exports, module) {
         checkCollisionsBetweenListAndBody: function(collidablesA, body) {
             for (var i = 0; i < collidablesA.length; i++) {
                 var collidable = collidablesA[i];
-                if (body.getBounds().contains(collidable.getPosition()) || 
+                if (body.getBounds().contains(collidable.getPosition()) ||
                     body.getBounds().contains(collidable.getPreviousPosition())
                 ) {
                     for (var k = 0; k < this.collisionExperts.length; k++) {
@@ -412,7 +412,7 @@ define(function (require, exports, module) {
         isLasingPhoton: function(photon) {
             var middleToGroundEnergyDiff = this.getMiddleEnergyState().get('energyLevel') - this.getGroundState().get('energyLevel');
             return (
-                Math.abs(photon.getVelocity().angle() % Math.PI) < this.angleWindow && 
+                Math.abs(photon.getVelocity().angle() % Math.PI) < this.angleWindow &&
                 Math.abs(photon.getEnergy() - middleToGroundEnergyDiff) <= QuantumConfig.ENERGY_TOLERANCE
             );
         }

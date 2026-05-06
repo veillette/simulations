@@ -67,7 +67,7 @@ define(function(require) {
         initMVT: function() {
             var modelHeight = this.simulation.getHeight();
             var scale = this.height / modelHeight;
-            
+
             this.viewOriginX = Math.round(this.width / 2 - this.centerOffsetLeft);
             this.viewOriginY = Math.round(this.height / 2);
 

@@ -131,8 +131,8 @@ define(function(require) {
                 rightArea.y = y;
 
                 var sumBtn = this.createToggleButton(
-                    Assets.Images.EFD_CHECK_BTN_ON, 
-                    Assets.Images.EFD_CHECK_BTN_OFF, 
+                    Assets.Images.EFD_CHECK_BTN_ON,
+                    Assets.Images.EFD_CHECK_BTN_OFF,
                     function() {
                         self.sumArrow.show();
                     },
@@ -145,8 +145,8 @@ define(function(require) {
                 this.sumBtn = sumBtn;
 
                 var dielectricBtn = this.createToggleButton(
-                    Assets.Images.EFD_CHECK_BTN_ON, 
-                    Assets.Images.EFD_CHECK_BTN_OFF, 
+                    Assets.Images.EFD_CHECK_BTN_ON,
+                    Assets.Images.EFD_CHECK_BTN_OFF,
                     function() {
                         self.dielectricArrow.show();
                     },
@@ -201,8 +201,8 @@ define(function(require) {
             }
 
             var plateBtn = this.createToggleButton(
-                Assets.Images.EFD_CHECK_BTN_ON, 
-                Assets.Images.EFD_CHECK_BTN_OFF, 
+                Assets.Images.EFD_CHECK_BTN_ON,
+                Assets.Images.EFD_CHECK_BTN_OFF,
                 function() {
                     self.plateArrow.show();
                 },
@@ -318,8 +318,8 @@ define(function(require) {
             var self = this;
 
             var showValuesBtn = this.createToggleButton(
-                Assets.Images.EFD_SHOW_VALUES_BTN_ON, 
-                Assets.Images.EFD_SHOW_VALUES_BTN_OFF, 
+                Assets.Images.EFD_SHOW_VALUES_BTN_ON,
+                Assets.Images.EFD_SHOW_VALUES_BTN_OFF,
                 function() {
                     self.showValues();
                 },
@@ -418,7 +418,7 @@ define(function(require) {
 
             var targetProbeHeight = this.mvt.modelToViewDeltaY(EFieldDetectorView.PROBE_HEIGHT); // in pixels
             var scale = targetProbeHeight / this.probe.texture.height;
-            
+
             this.probe.scale.x = scale;
             this.probe.scale.y = scale;
 
@@ -457,7 +457,7 @@ define(function(require) {
                     sumEField        = this.simulation.get('circuit').getEffectiveEFieldAt(capacitor);
                 }
             }
-            
+
             if (platesEField) {
                 this.plateArrow.setValue(platesEField);
                 this.plateArrow.centerOn(this.displayWidth / 2, this.displayHeight / 2);
@@ -474,7 +474,7 @@ define(function(require) {
                 }
                 else {
                     this.sumArrow.setValue(0);
-                    this.sumArrow.centerOn(this.displayWidth / 2, this.displayHeight / 2); 
+                    this.sumArrow.centerOn(this.displayWidth / 2, this.displayHeight / 2);
                 }
 
                 // This has to happen before the dielectric arrow is positioned
@@ -482,7 +482,7 @@ define(function(require) {
                     this.sumArrow.alignTextAbove();
                 else
                     this.sumArrow.alignTextBelow();
-                
+
                 if (dielectricEField) {
                     this.dielectricArrow.setValue(-dielectricEField);
                     this.dielectricArrow.moveToY(this.plateArrow.getTargetY());

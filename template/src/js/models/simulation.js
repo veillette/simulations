@@ -12,14 +12,14 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var TemplateSimulation = Simulation.extend({
 
         defaults: _.extend(Simulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -29,11 +29,11 @@ define(function (require, exports, module) {
          * Initializes the models used in the simulation
          */
         initComponents: function() {
-            
+
         },
 
         _update: function(time, deltaTime) {
-            
+
         }
 
     });

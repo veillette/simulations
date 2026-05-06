@@ -23,7 +23,7 @@ define(function (require) {
             cloudiness: 0,
             solarPanel: null
         }),
-        
+
         initialize: function(attributes, options) {
             EnergySource.prototype.initialize.apply(this, [attributes, options]);
 
@@ -120,8 +120,8 @@ define(function (require) {
                 energyProduced = Constants.MAX_ENERGY_PRODUCTION_RATE * (1 - this.get('cloudiness')) * deltaTime;
             }
 
-            return { 
-                type: EnergyTypes.LIGHT, 
+            return {
+                type: EnergyTypes.LIGHT,
                 amount: energyProduced
             };
         },
@@ -155,7 +155,7 @@ define(function (require) {
                             .sub(this.sunPosition)
                             .angle();
 
-                        if (cloud.getShape().contains(chunk.get('position')) && 
+                        if (cloud.getShape().contains(chunk.get('position')) &&
                             !this.energyChunksPassingThroughClouds.get(chunk) &&
                             Math.abs(chunk.get('velocity').angle() - angleFromSunToChunk < Math.PI / 10)
                         ) {
@@ -216,7 +216,7 @@ define(function (require) {
             this.energyChunks.add(chunk);
         },
 
-        /** 
+        /**
          * Choose the angle for the emission of an energy chunk from the sun.
          *   This uses history and probability to make the distribution somewhat
          *   even but still random looking.

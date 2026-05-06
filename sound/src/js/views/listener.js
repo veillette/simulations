@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var PixiView               = require('common/v3/pixi/view');
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
@@ -68,7 +68,7 @@ define(function(require) {
                 if (this.disableYMovement)
                     this.person.defaultCursor = 'ew-resize';
                 else
-                    this.person.defaultCursor = 'move';    
+                    this.person.defaultCursor = 'move';
             }
         },
 
@@ -105,7 +105,7 @@ define(function(require) {
         dragStart: function(event) {
             if (this.disableMovement)
                 return;
-            
+
             this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
             this.dragging = true;
         },

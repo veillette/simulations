@@ -22,7 +22,7 @@ define(function (require) {
     var MNACompanionResistor        = require('models/mna/elements/companion-resistor');
     var MNACompanionBattery         = require('models/mna/elements/companion-battery');
     var IntermediateDynamicSolution = require('models/mna/intermediate-dynamic-solution');
-    
+
     var pool = Pool({
         init: function() {
             return new DynamicCircuit();
@@ -32,7 +32,7 @@ define(function (require) {
     var _parseInt = function(value) { return parseInt(value); };
 
     /**
-     * 
+     *
      */
     var DynamicCircuit = function() {};
 
@@ -90,7 +90,7 @@ define(function (require) {
         /**
          * Creates a new MNACircuit representation of this DynamicCircuit instance
          *   with the given deltaTime and returns it.  Also fills a given array
-         *   of currentCompanions with functions for getting currents from 
+         *   of currentCompanions with functions for getting currents from
          *   companion components.
          */
         toMNACircuit: function(deltaTime, currentCompanions) {
@@ -100,7 +100,7 @@ define(function (require) {
             var companionResistors = [];
             var companionCurrents  = [];
 
-            
+
             // usedNodes is supposed to be a HashSet, but it's only used in this function to find
             //   out at what number to start creating node indices for inductors and capacitors,
             //   so I'm just going to make it an array but store the values as keys.
@@ -215,11 +215,11 @@ define(function (require) {
                 updatedInductors.push(this.inductors[i].cloneWithSolution(solution));
 
             return DynamicCircuit.create(
-                this.batteries, 
-                this.resistors, 
-                this.currents, 
-                this.resistiveBatteries, 
-                updatedCapacitors, 
+                this.batteries,
+                this.resistors,
+                this.currents,
+                this.resistiveBatteries,
+                updatedCapacitors,
                 updatedInductors
             );
         },
@@ -234,7 +234,7 @@ define(function (require) {
             this.destroyElements(this.resistiveBatteries);
             this.destroyElements(this.capacitors);
             this.destroyElements(this.inductors);
-            
+
             pool.remove(this);
         },
 
@@ -287,12 +287,12 @@ define(function (require) {
                     batteries.push(MNAResistiveBattery.fromCircuitComponent(circuit, branch));
                 }
                 else if (
-                    branch instanceof Resistor || 
-                    branch instanceof Wire     || 
-                    branch instanceof Filament || 
-                    branch instanceof Filament || 
-                    branch instanceof Bulb     || 
-                    branch instanceof Bulb     || 
+                    branch instanceof Resistor ||
+                    branch instanceof Wire     ||
+                    branch instanceof Filament ||
+                    branch instanceof Filament ||
+                    branch instanceof Bulb     ||
+                    branch instanceof Bulb     ||
                     branch instanceof SeriesAmmeter
                 ) {
                     resistors.push(MNAResistor.fromCircuitComponent(circuit, branch));

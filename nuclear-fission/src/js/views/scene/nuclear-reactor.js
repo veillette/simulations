@@ -40,7 +40,7 @@ define(function(require) {
         },
 
         reset: function() {
-            
+
         },
 
         initMVT: function() {

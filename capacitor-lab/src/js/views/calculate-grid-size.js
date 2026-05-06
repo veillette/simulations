@@ -50,7 +50,7 @@ define(function(require) {
                 columns = numberOfObjects;
             }
         }
-        
+
         returnObj.columns = columns;
         returnObj.rows = rows;
 

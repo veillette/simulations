@@ -5,7 +5,7 @@ define(function (require) {
     var Vector2   = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -13,7 +13,7 @@ define(function (require) {
      **                                                                     **
      *************************************************************************/
 
-    Constants.SPEED_OF_LIGHT = 0.01 * 1000; 
+    Constants.SPEED_OF_LIGHT = 0.01 * 1000;
 
     // Plank's constant
     Constants.h = 6.6310E-34;
@@ -176,14 +176,14 @@ define(function (require) {
 
     // Choices of targets for the photons.
     var PhotonTargets = {
-        SINGLE_CO_MOLECULE:      0, 
-        SINGLE_CO2_MOLECULE:     1, 
-        SINGLE_H2O_MOLECULE:     2, 
+        SINGLE_CO_MOLECULE:      0,
+        SINGLE_CO2_MOLECULE:     1,
+        SINGLE_H2O_MOLECULE:     2,
         SINGLE_CH4_MOLECULE:     3,
-        SINGLE_N2O_MOLECULE:     4, 
-        SINGLE_N2_MOLECULE:      5, 
-        SINGLE_NO2_MOLECULE:     6, 
-        SINGLE_O2_MOLECULE:      7, 
+        SINGLE_N2O_MOLECULE:     4,
+        SINGLE_N2_MOLECULE:      5,
+        SINGLE_NO2_MOLECULE:     6,
+        SINGLE_O2_MOLECULE:      7,
         SINGLE_O3_MOLECULE:      8,
         CONFIGURABLE_ATMOSPHERE: 9
     };

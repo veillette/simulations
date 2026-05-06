@@ -60,7 +60,7 @@ define(function (require) {
          */
         recordImpact: function(impact) {
             this.cumulativeImpactAmount += impact;
-            
+
             if (!this.get('exploded') && (this.cumulativeImpactAmount > ContainmentVessel.CONTAINMENT_EXPLOSION_THRESHOLD)) {
                 this.explode();
             }
@@ -103,7 +103,7 @@ define(function (require) {
         getNearestContainmentPoint: function(point){
             var angle = Math.atan2(point.y, point.x);
             return this._nearestPoint.set(
-                Math.cos(angle) * this.get('radius'), 
+                Math.cos(angle) * this.get('radius'),
                 Math.sin(angle) * this.get('radius')
             );
         },
@@ -119,9 +119,9 @@ define(function (require) {
          */
         updateApertureRect: function() {
             this.apertureRect.set(
-                -this.get('radius') - (ContainmentVessel.APERTURE_WIDTH / 2), 
-                -ContainmentVessel.APERTURE_HEIGHT / 2, 
-                ContainmentVessel.APERTURE_WIDTH, 
+                -this.get('radius') - (ContainmentVessel.APERTURE_WIDTH / 2),
+                -ContainmentVessel.APERTURE_HEIGHT / 2,
+                ContainmentVessel.APERTURE_WIDTH,
                 ContainmentVessel.APERTURE_HEIGHT
             );
         },

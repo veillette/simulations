@@ -13,7 +13,7 @@ define(function (require) {
     var Term           = require('models/mna/term');
     var Equation       = require('models/mna/equation');
     var MNASolution    = require('models/mna/mna-solution');
-    
+
     var pool = Pool({
         init: function() {
             return new MNACircuit();
@@ -31,7 +31,7 @@ define(function (require) {
     var debug = false;
 
     /**
-     * 
+     *
      */
     var MNACircuit = function(batteries, resistors, currentSources) {
         // Call init with any arguments passed to the constructor
@@ -137,7 +137,7 @@ define(function (require) {
                     nodeTerms.push(Term.createWithOwner(this, -1 / resistors[i].resistance, UnknownVoltage.createWithOwner(this, resistors[i].node0)));
                 }
             }
-            
+
             return nodeTerms;
         },
 
@@ -220,7 +220,7 @@ define(function (require) {
                     if (elements[i].containsNode(n) && visited.indexOf(elements[i].getOpposite(n)) === -1 && toVisit.indexOf(elements[i].getOpposite(n)) === -1)
                         toVisit.push(elements[i].getOpposite(n));
                 }
-                
+
                 toVisit.shift();
             }
             return visited;
@@ -247,10 +247,10 @@ define(function (require) {
             for (i = 0; i < batteries.length; i++) {
                 list.push(
                     Equation.createWithOwner(
-                        this, 
-                        batteries[i].voltage, 
+                        this,
+                        batteries[i].voltage,
                         [
-                            Term.createWithOwner(this, -1, UnknownVoltage.createWithOwner(this, batteries[i].node0)), 
+                            Term.createWithOwner(this, -1, UnknownVoltage.createWithOwner(this, batteries[i].node0)),
                             Term.createWithOwner(this,  1, UnknownVoltage.createWithOwner(this, batteries[i].node1))
                         ]
                     )
@@ -262,15 +262,15 @@ define(function (require) {
                 if (resistors[i].resistance === 0) {
                     list.push(
                         Equation.createWithOwner(
-                            this, 
-                            0, 
+                            this,
+                            0,
                             [
-                                Term.createWithOwner(this,  1, UnknownVoltage.createWithOwner(this, resistors[i].node0)), 
+                                Term.createWithOwner(this,  1, UnknownVoltage.createWithOwner(this, resistors[i].node0)),
                                 Term.createWithOwner(this, -1, UnknownVoltage.createWithOwner(this, resistors[i].node1))
                             ]
-                            
+
                         )
-                    );    
+                    );
                 }
             }
 
@@ -305,7 +305,7 @@ define(function (require) {
 
                 this.unknownCurrents = unknowns;
             }
-            
+
             return this.unknownCurrents;
         },
 
@@ -374,7 +374,7 @@ define(function (require) {
             Equation.destroyAllOwnedBy(this);
             UnknownCurrent.destroyAllOwnedBy(this);
             UnknownVoltage.destroyAllOwnedBy(this);
-            
+
             pool.remove(this);
         },
 

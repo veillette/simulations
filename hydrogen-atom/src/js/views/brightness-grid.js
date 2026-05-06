@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
 
@@ -59,7 +59,7 @@ define(function(require) {
                     graphics.beginFill(color, alpha);
 
                     x = col * w;
-                    z = row * h; 
+                    z = row * h;
 
                     graphics.drawRect(centerX + x,     centerZ + z,     w, h);
                     graphics.drawRect(centerX + x,     centerZ - z - h, w, h);

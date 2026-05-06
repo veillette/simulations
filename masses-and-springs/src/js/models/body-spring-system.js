@@ -12,13 +12,13 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var BodySpringSystem = Backbone.Model.extend({
 
         defaults: {
             period : 0, //period of system, zero until a mass is added
-            b : 0,      //friction constant: F_drag = -b*v 
+            b : 0,      //friction constant: F_drag = -b*v
             velocity : 0,       //velocity of mass(body) always initialized to zero,
             deltaY : 0,
             maxY : 1.24

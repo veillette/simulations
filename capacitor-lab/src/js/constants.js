@@ -8,7 +8,7 @@ define(function (require) {
 
     var DEG_TO_RAD = Math.PI / 180;
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -48,7 +48,7 @@ define(function (require) {
      *   have modeled the circuit in a vacuum, because we want the E-Field component due to the
      *   environment to be zero.  With air, we have a small Dielectric vector of up to 4 V/m shown
      *   on the E-Field Detector when the Plate Charge control is set to its maximum.
-     *  
+     *
      *   Rather than change "air" to "vacuum" in numerous places throughout the code and design doc,
      *   it was suggested that we simply set the dielectric constant of air to 1.0.  I was hesitant to
      *   do this, since I think it's going to cause future problems.  But Kathy P. bet me a 6-pack of
@@ -275,7 +275,7 @@ define(function (require) {
 
 
     var DielectricTotalChargeView = {};
-    
+
     DielectricTotalChargeView.SYMBOL_SPACING = Constants.PLATE_SEPARATION_RANGE.max * 0.3; // In meters
     DielectricTotalChargeView.SYMBOL_SPACING_EXPONENT = 1 / 4;
     DielectricTotalChargeView.NEGATIVE_CHARGE_OFFSET_RANGE = range({ min: 0, max: DielectricTotalChargeView.SYMBOL_SPACING / 2 });

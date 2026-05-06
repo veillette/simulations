@@ -5,22 +5,22 @@ define(function (require) {
     var _ = require('underscore');
 
     var AbstractAtomicModel = require('hydrogen-atom/models/atomic-model');
-    
+
     var Constants = require('constants');
 
     /**
      * BilliardBallModel models the hydrogen atom as a billiard ball.
-     * 
+     *
      * Physical representation:
      *   The ball is spherical, with its local origin at its center.
-     * 
+     *
      * Collision behavior:
      *   When photons and alpha particles collide with the ball,
      *   they bounce off as if the ball were a rigid body.
-     * 
+     *
      * Absorption behavior:
      *   Does not absorb photons or alpha particles.
-     * 
+     *
      * Emission behavior:
      *   Does not emit photons or alpha particles.
      */
@@ -33,7 +33,7 @@ define(function (require) {
         initialize: function(attributes, options) {
             AbstractAtomicModel.prototype.initialize.apply(this, [attributes, options]);
 
-            
+
         },
 
         /**
@@ -67,7 +67,7 @@ define(function (require) {
                 var orientation = alphaParticle.get('orientation') + deflection;
                 alphaParticle.set('orientation', orientation);
             }
-            
+
             AbstractAtomicModel.prototype.moveAlphaParticle.apply(this, arguments);
         },
 

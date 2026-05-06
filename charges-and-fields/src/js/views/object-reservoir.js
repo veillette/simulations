@@ -16,7 +16,7 @@ define(function(require) {
 
     /**
      * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from 
+     *   user creates new objects with this view.  Dragging from
      *   the view creates a new object and places it in the scene,
      *   while dragging an existing object back onto this view
      *   destroys it.

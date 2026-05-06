@@ -123,10 +123,10 @@ define(function(require) {
 
                 // Fade particles out when they reach the end of their lives
                 if (percentLifeLeft < (1 - VolcanoSmokeView.PARTICLE_FADE_POINT))
-                    particle.alpha = (percentLifeLeft / (1 - VolcanoSmokeView.PARTICLE_FADE_POINT)) * VolcanoSmokeView.PARTICLE_ALPHA;  
+                    particle.alpha = (percentLifeLeft / (1 - VolcanoSmokeView.PARTICLE_FADE_POINT)) * VolcanoSmokeView.PARTICLE_ALPHA;
             }
         },
-        
+
         emitSmokeParticle: function() {
             if (!this.dormantSmokeParticles.length) {
                 console.log('not enough particles')

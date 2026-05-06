@@ -30,7 +30,7 @@ define(function (require) {
                 xPos = moleculeCenterOfMassPositions[i].x + cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
                 yPos = moleculeCenterOfMassPositions[i].y + sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
                 atomPositions[i * 2].set(xPos, yPos);
-                
+
                 xPos = moleculeCenterOfMassPositions[i].x - cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
                 yPos = moleculeCenterOfMassPositions[i].y - sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
                 atomPositions[i * 2 + 1].set(xPos, yPos);

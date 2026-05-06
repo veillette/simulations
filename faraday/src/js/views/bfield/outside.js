@@ -7,7 +7,7 @@ define(function(require) {
     var AbstractBFieldView = require('views/bfield');
 
     /**
-     * 
+     *
      */
     var BFieldOutsideView = AbstractBFieldView.extend({
 
@@ -15,11 +15,11 @@ define(function(require) {
             var bounds = this.bounds;
             var xSpacing = this.mvt.modelToViewDeltaX(this.xSpacing);
             var ySpacing = this.mvt.modelToViewDeltaY(this.ySpacing);
-            
+
             // Determine how many points are needed to fill the apparatus panel.
             var xCount = Math.floor(bounds.w / xSpacing) + 1;
             var yCount = Math.floor(bounds.h / ySpacing) + 1;
-            
+
             // Create the grid points.
             for (var i = 0; i < xCount; i++) {
                 for (var j = 0; j < yCount; j++) {

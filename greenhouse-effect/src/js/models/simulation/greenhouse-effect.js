@@ -25,11 +25,11 @@ define(function (require, exports, module) {
     var GreenhouseEffectSimulation = BaseGreenhouseSimulation.extend({
 
         defaults: _.extend(BaseGreenhouseSimulation.prototype.defaults, {
-            
+
         }),
-        
+
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             BaseGreenhouseSimulation.prototype.initialize.apply(this, [attributes, options]);
@@ -77,7 +77,7 @@ define(function (require, exports, module) {
          */
         resetComponents: function() {
             BaseGreenhouseSimulation.prototype.resetComponents.apply(this, arguments);
-            
+
             this.atmosphere.set('greenhouseGasConcentration', Atmosphere.GREENHOUSE_GAS_CONCENTRATION_TODAY);
             this.clouds.reset();
         },
@@ -92,7 +92,7 @@ define(function (require, exports, module) {
             for (var i = 0; i < this.clouds.length; i++)
                 PhotonCloudCollisionModel.handle(photon, this.clouds.at(i));
         },
-        
+
         /**
          * If there are any available clouds to add, adds a
          *   cloud to the model.

@@ -54,7 +54,7 @@ define(function(require) {
             this.background.anchor.x = 0.5;
             this.background.y = this.height;
             this.background.x = this.width / 2;
-            
+
             this.backgroundLayer.addChild(this.background);
         },
 
@@ -81,8 +81,8 @@ define(function(require) {
         },
 
         updateBackgroundScale: function() {
-            var targetSceneWidth = AppView.windowIsShort() ? 
-                LandscapeView.SHORT_SCREEN_BACKGROUND_WIDTH : 
+            var targetSceneWidth = AppView.windowIsShort() ?
+                LandscapeView.SHORT_SCREEN_BACKGROUND_WIDTH :
                 LandscapeView.DEFAULT_BACKGROUND_WIDTH; // In pixels
             var scale = targetSceneWidth / this.background.width;
             this.background.scale.x = scale;
@@ -102,8 +102,8 @@ define(function(require) {
     }, _.extend({}, Constants.LandscapeView, {
 
         createMVT: function(width, height) {
-            var scale = AppView.windowIsShort() ? 
-                LandscapeView.SHORT_SCREEN_BACKGROUND_WIDTH / LandscapeView.BACKGROUND_IMAGE_WIDTH: 
+            var scale = AppView.windowIsShort() ?
+                LandscapeView.SHORT_SCREEN_BACKGROUND_WIDTH / LandscapeView.BACKGROUND_IMAGE_WIDTH:
                 LandscapeView.DEFAULT_BACKGROUND_WIDTH      / LandscapeView.BACKGROUND_IMAGE_WIDTH;
 
             return ModelViewTransform.createSinglePointScaleInvertedYMapping(

@@ -27,7 +27,7 @@ define(function (require) {
         },
 
         /**
-         * Returns the distance from a point to the inner 
+         * Returns the distance from a point to the inner
          *   diameter of the annulus.
          */
         distanceFromInnerDiameter: function(point) {

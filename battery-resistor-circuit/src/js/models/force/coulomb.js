@@ -7,7 +7,7 @@ define(function (require) {
     var Force = require('models/force');
 
     /**
-     * 
+     *
      */
     var CoulombForce = function(params, system) {
         this.system = system;

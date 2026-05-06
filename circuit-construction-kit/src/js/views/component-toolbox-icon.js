@@ -12,7 +12,7 @@ define(function(require) {
 
     /**
      * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from 
+     *   user creates new objects with this view.  Dragging from
      *   the view creates a new object and places it in the scene,
      *   while dragging an existing object back onto this view
      *   destroys it.
@@ -86,7 +86,7 @@ define(function(require) {
 
             sprite.anchor.x = 0.5;
             sprite.x = this.width / 2;
-            var scale;    
+            var scale;
             if (sprite.texture.width > sprite.texture.height)
                 scale = this.width / sprite.texture.width;
             else
@@ -160,7 +160,7 @@ define(function(require) {
 
         dragStart: function(event) {
             this.dragging = true;
-            
+
             this.componentView = this.createComponentView(event.data.global.x, event.data.global.y);
             this.simulation.circuit.addBranch(this.componentView.model);
             this.dummyLayer.addChild(this.componentView.displayObject);

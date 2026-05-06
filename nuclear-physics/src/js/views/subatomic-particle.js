@@ -5,7 +5,7 @@ define(function(require) {
     var PixiView = require('common/v3/pixi/view');
 
     /**
-     * 
+     *
      */
     var SubatomicParticleView = PixiView.extend({
 

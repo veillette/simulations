@@ -20,7 +20,7 @@ define(function (require) {
          */
         decay: function(deltaTime) {
             AtomicNucleus.prototype.decay.apply(this, arguments);
-            
+
             this.set('numNeutrons', this.get('numNeutrons') - 2);
             this.set('numProtons',  this.get('numProtons')  - 2);
 

@@ -7,14 +7,14 @@ define(function (require, exports, module) {
     var Simulation = require('common/simulation/simulation');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var CapacitorLabSimulation = Simulation.extend({
 
         defaults: _.extend(Simulation.prototype.defaults, {
             circuit: null
         }),
-        
+
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -24,7 +24,7 @@ define(function (require, exports, module) {
          * Initializes the models used in the simulation
          */
         initComponents: function() {
-            
+
         },
 
         /**
@@ -36,7 +36,7 @@ define(function (require, exports, module) {
         },
 
         _update: function(time, deltaTime) {
-            
+
         }
 
     });

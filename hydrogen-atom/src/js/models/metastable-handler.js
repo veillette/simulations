@@ -10,13 +10,13 @@ define(function (require) {
 
     /**
      * MetastableHandler handles a case where the Schrodinger model
-     * can get stuck in state (n,l,m) = (2,0,0). This state is known as a 
+     * can get stuck in state (n,l,m) = (2,0,0). This state is known as a
      * metastable state. The only way to get out of this state is to absorb
      * a photon that takes the atom to a higher state.
-     * 
+     *
      * While the gun is shooting white light and the atom is in state (2,0,0),
      * we fire an absorbable photon at the atom's center every MAX_STUCK_TIME milliseconds.
-     * 
+     *
      * This solution assumes that the centers of the gun and atom are vertically aligned.
      * If that is not the case, a warning is printed to System.err.
      */
@@ -45,7 +45,7 @@ define(function (require) {
                 if (this.stuckTime >= MetastableHandler.MAX_STUCK_TIME) {
                     console.log('atom has been stuck for ' + this.stuckTime + ' time units');
                     this.fireRandomAbsorbablePhoton();
-                    /* 
+                    /*
                      * Restart the timer, but don't clear the stuck flag.
                      * If the photon we fire is not absorbed, we may need to fire another one.
                      */
@@ -59,8 +59,8 @@ define(function (require) {
          */
         fireRandomAbsorbablePhoton: function() {
             this.fireAbsorbablePhoton(
-                MetastableHandler.METASTABLE_N + 
-                1 + 
+                MetastableHandler.METASTABLE_N +
+                1 +
                 RandomUtils.randomInteger(this.SchroedingerModel.getNumberOfStates() - MetastableHandler.METASTABLE_N)
             );
         },
@@ -85,7 +85,7 @@ define(function (require) {
             // Assumes that the centers of the gun and atom are vertically aligned
             if (this.gun.getX() !== this.atom.getX())
                 console.warn('photon will not hit atom, centers of gun and atom are not vertically aligned!');
-            
+
             // Determine the wavelength needed to move the atom to the higher state.
             var wavelength = this.SchroedingerModel.getWavelengthAbsorbed(MetastableHandler.METASTABLE_N, n);
             console.log('firing an absorbable photon, n=' + n + ' wavelength=' + wavelength);
@@ -104,8 +104,8 @@ define(function (require) {
         electronStateChanged: function(atom, electronState) {
             // the value of n has changed
             if (!this.stuck && this.atom.stateEquals(
-                MetastableHandler.METASTABLE_N, 
-                MetastableHandler.METASTABLE_L, 
+                MetastableHandler.METASTABLE_N,
+                MetastableHandler.METASTABLE_L,
                 MetastableHandler.METASTABLE_M
             )) {
                 // we have entered the metastable state, set the stuck flag and timer
@@ -115,8 +115,8 @@ define(function (require) {
                 this.fireEnteredMetastableState();
             }
             else if (this.stuck && !this.atom.stateEquals(
-                MetastableHandler.METASTABLE_N, 
-                MetastableHandler.METASTABLE_L, 
+                MetastableHandler.METASTABLE_N,
+                MetastableHandler.METASTABLE_L,
                 MetastableHandler.METASTABLE_M
             )) {
                 // we have transitioned out of the metastable state, clear the stuck flag and timer

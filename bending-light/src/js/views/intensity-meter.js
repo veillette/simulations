@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
 
@@ -178,7 +178,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.body.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.body.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 
@@ -199,7 +199,7 @@ define(function(require) {
             if (this.draggingSensor) {
                 var dx = event.data.global.x - this.sensor.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.sensor.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 

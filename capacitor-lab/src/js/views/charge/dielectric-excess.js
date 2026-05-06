@@ -15,7 +15,7 @@ define(function(require) {
      * Shows the excess dielectric charge (Q_excess_dielectric). Charges appear on
      *   the surface of the dielectric where it contacts the plates, so charges
      *   appear on the right face only when the dielectric is fully inserted.
-     * 
+     *
      * All model coordinates are relative to the dielectric's local coordinate
      *   frame, where the origin is at the 3D geometric center of the dielectric.
      */
@@ -23,7 +23,7 @@ define(function(require) {
 
         initialize: function(options) {
             this.maxExcessDielectricPlateCharge = options.maxExcessDielectricPlateCharge;
-            
+
             // Cached objects
             this._vec3 = new Vector3();
 
@@ -76,7 +76,7 @@ define(function(require) {
                 var yOffset = this.mvt.viewToModelDeltaY(ChargeView.SYMBOL_WIDTH);
                 var zOffset = dz / 2;
 
-                // 
+                //
                 var topOffset    = -capacitor.get('plateSeparation') / 2;
                 var bottomOffset =  capacitor.get('plateSeparation') / 2;
 
@@ -142,7 +142,7 @@ define(function(require) {
             this.displayObject.x = viewPos.x;
             this.displayObject.y = viewPos.y;
         },
- 
+
         updateMVT: function(mvt) {
             this.mvt = mvt;
 

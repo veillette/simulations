@@ -13,7 +13,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var PickupCoilSimView = FaradaySimView.extend({
 
@@ -73,7 +73,7 @@ define(function (require) {
          */
         resetComponents: function() {
             FaradaySimView.prototype.resetComponents.apply(this);
-            
+
             this.resetBarMagnetControls();
             this.resetPickupCoilControls();
         },

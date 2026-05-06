@@ -15,7 +15,7 @@ define(function(require) {
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     /**
-     * 
+     *
      */
     var OneNucleusLegendView = LegendView.extend({
 

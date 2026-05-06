@@ -7,7 +7,7 @@ define(function(require) {
                    require('common/v3/pixi/draw-arrow');
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
-    
+
     var Constants = require('constants');
 
     var CONTAINMENT_VESSEL_COLOR       = Colors.parseHex(Constants.ContainmentVesselView.CONTAINMENT_VESSEL_COLOR);
@@ -134,7 +134,7 @@ define(function(require) {
             var tailLength = length - headLength;
 
             graphics.beginFill(color, 1);
-            
+
             // Draw the arrow tail in a special way
             var margin = 2; // Margin
             var sectionHeight = Math.floor(tailLength * 0.3);
@@ -209,7 +209,7 @@ define(function(require) {
         getRingHitArea: function(radius, thickness) {
             var innerRadius = radius;
             var outerRadius = radius + thickness;
-            
+
             // We need to find the angle between those points on the circle's
             //   circumference that correspond to the top and bottom of the
             //   container's aperture, relative to the center of the container.
@@ -228,7 +228,7 @@ define(function(require) {
             var startingY = -halfApertureHeight;
             var endingX = -Math.sqrt(innerRadius * innerRadius - halfApertureHeight * halfApertureHeight);
             var endingY = -halfApertureHeight;
-            
+
             var i;
             var points = [];
 
@@ -314,16 +314,16 @@ define(function(require) {
                 var graphics = new PIXI.Graphics();
                 this.drawVessel(graphics, CONTAINMENT_VESSEL_COLOR);
                 graphics.mask = apertureMask;
-                
+
                 var sliceMask = new PIXI.Graphics();
                 sliceMask.beginFill();
                 sliceMask.moveTo(0, 0);
                 sliceMask.lineTo(
-                    Math.cos(cumulativeRadians + rotationalOffset) * sliceRadius, 
+                    Math.cos(cumulativeRadians + rotationalOffset) * sliceRadius,
                     Math.sin(cumulativeRadians + rotationalOffset) * sliceRadius
                 );
                 sliceMask.lineTo(
-                    Math.cos(cumulativeRadians + theta + rotationalOffset) * sliceRadius, 
+                    Math.cos(cumulativeRadians + theta + rotationalOffset) * sliceRadius,
                     Math.sin(cumulativeRadians + theta + rotationalOffset) * sliceRadius
                 );
 
@@ -457,11 +457,11 @@ define(function(require) {
             if (exploded) {
                 this.defaultLayer.visible = false;
                 this.initExplosion();
-                this.explosionLayer.visible = true;    
+                this.explosionLayer.visible = true;
             }
             else {
                 this.defaultLayer.visible = true;
-                this.explosionLayer.visible = false;  
+                this.explosionLayer.visible = false;
             }
         }
 

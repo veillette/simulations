@@ -109,7 +109,7 @@ define(function (require) {
          */
         resetComponents: function() {
             NuclearFissionSimView.prototype.resetComponents.apply(this);
-            
+
             this.sceneView.reset();
         },
 
@@ -132,13 +132,13 @@ define(function (require) {
 
             var uranium235 = Uranium235Nucleus.create();
             var uranium235Img = PixiToImage.displayObjectToDataURI(
-                ParticleGraphicsGenerator.generateLabeledNucleus(uranium235, iconMVT, this.sceneView.renderer, false, iconLabelScale, true), 
+                ParticleGraphicsGenerator.generateLabeledNucleus(uranium235, iconMVT, this.sceneView.renderer, false, iconLabelScale, true),
                 1
             );
 
             var uranium238 = Uranium238Nucleus.create();
             var uranium238Img = PixiToImage.displayObjectToDataURI(
-                ParticleGraphicsGenerator.generateLabeledNucleus(uranium238, iconMVT, this.sceneView.renderer, false, iconLabelScale, true), 
+                ParticleGraphicsGenerator.generateLabeledNucleus(uranium238, iconMVT, this.sceneView.renderer, false, iconLabelScale, true),
                 1
             );
 
@@ -325,7 +325,7 @@ define(function (require) {
                 if (this.$explosionOverlay)
                     this.$explosionOverlay.remove();
                 this.$el.removeClass('exploded');
-            } 
+            }
         }
 
     });

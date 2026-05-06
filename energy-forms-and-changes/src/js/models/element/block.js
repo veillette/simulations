@@ -16,7 +16,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Block = RectangularThermalMovableElement.extend({
 

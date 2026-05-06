@@ -17,7 +17,7 @@ define(function(require) {
     var template2DHtml = require('text!templates/ball-settings-2d-item.html');
 
     /**
-     * 
+     *
      */
     var BallSettingsView = Backbone.View.extend({
 

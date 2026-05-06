@@ -15,13 +15,13 @@ define(function(require) {
             var graphics = this.displayObject;
             var origin = this._origin.set(this.mvt.modelToView(this.origin));
             var a = Math.sin((this.elapsedTime / this.period) * Math.PI);
-            
+
             graphics.moveTo(origin.x, origin.y);
 
             for (var i = 0; i < this.numPoints; i += 3) {
                 var x = this.dx * i;
                 var y = this.amplitude * (a * Math.sin((x / this.lambda) * Math.PI));
-                
+
                 graphics.lineTo(x + origin.x, y + origin.y);
             }
 
@@ -30,6 +30,6 @@ define(function(require) {
         }
 
     });
-    
+
     return StandingWaveView;
 });

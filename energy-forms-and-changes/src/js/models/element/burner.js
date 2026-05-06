@@ -21,7 +21,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Burner = IntroElement.extend({
 
@@ -48,8 +48,8 @@ define(function (require) {
             //   dropping objects on top of burner.
             var perspectiveCompensation = this.getOutlineRect().h * Burner.EDGE_TO_HEIGHT_RATIO * Math.cos(Burner.PERSPECTIVE_ANGLE);
             this.topSurface = new HorizontalSurface(
-                this.getOutlineRect().left() - perspectiveCompensation, 
-                this.getOutlineRect().right() + perspectiveCompensation, 
+                this.getOutlineRect().left() - perspectiveCompensation,
+                this.getOutlineRect().right() + perspectiveCompensation,
                 this.getOutlineRect().top(),
                 this
             );
@@ -182,8 +182,8 @@ define(function (require) {
             if (this.energyChunkList.length) {
                 this.energyChunkList.each(function(chunk) {
                     if (chunk.get('position').distance(this.get('position')) > Burner.ENERGY_CHUNK_CAPTURE_DISTANCE && (
-                            closestChunk === null || 
-                            chunk.get('position').distance(point) < closestChunk.get('position').distance(point) 
+                            closestChunk === null ||
+                            chunk.get('position').distance(point) < closestChunk.get('position').distance(point)
                         )
                     ) {
                         // Found a closer chunk.
@@ -204,7 +204,7 @@ define(function (require) {
             if (closestChunk === null && this.get('heatCoolLevel') > 0) {
                 // Create an energy chunk.
                 closestChunk = EnergyChunk.create({
-                    energyType: EnergyChunk.THERMAL, 
+                    energyType: EnergyChunk.THERMAL,
                     position:   new Vector2(this.getEnergyChunkStartEndPoint())
                 });
             }

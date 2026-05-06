@@ -1,13 +1,13 @@
 define(function (require) {
 
     'use strict';
-    
+
     var Rectangle = require('common/math/rectangle');
 
     var PhotonAbsorber = require('models/photon-absorber');
 
     /**
-     * 
+     *
      */
     var BlackHole = PhotonAbsorber.extend({
 

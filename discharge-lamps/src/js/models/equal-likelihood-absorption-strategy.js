@@ -6,9 +6,9 @@ define(function (require) {
 
     /**
      * Pick a state between that of the next higher energy state and the highest energy state
-     *   that could be reached given the energy of the electron hitting the atom. The 
+     *   that could be reached given the energy of the electron hitting the atom. The
      *   likelihood of any of those states being selected is the same.
-     * 
+     *
      * Assumes that the atom's array of states is sorted in ascending order of energy.
      */
     var EqualLikelihoodAbsorptionStrategy = EnergyAbsorptionStrategy.extend({

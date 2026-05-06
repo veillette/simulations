@@ -36,22 +36,22 @@ define(function (require) {
          */
         update: function() {
             var sourceCoilModel = this.get('sourceCoilModel');
-            /* 
+            /*
              * The magnet size is a circle that has the same radius as the coil.
              * Adding half the wire width makes it look a little better.
              */
             var diameter = (2 * sourceCoilModel.get('radius')) +  (sourceCoilModel.get('wireWidth') / 2);
             this.set('width',  diameter);
             this.set('height', diameter);
-            
+
             // Current amplitude is proportional to amplitude of the current source.
             var amplitude = this.get('currentSource').get('amplitude');
             sourceCoilModel.set('currentAmplitude', amplitude);
-            
+
             // Compute the electromagnet's emf amplitude.
             amplitude = (sourceCoilModel.get('numberOfLoops') / Constants.ELECTROMAGNET_LOOPS_MAX) * amplitude;
             amplitude = clamp(-1, amplitude, 1);
-            
+
             // Flip the polarity
             if (amplitude >= 0 && this.get('isFlipped')) {
                 this.flipPolarity();
@@ -61,10 +61,10 @@ define(function (require) {
                 this.flipPolarity();
                 this.set('isFlipped', true);
             }
-            
-            /* 
+
+            /*
              * Set the strength.
-             * This is a bit of a "fudge". 
+             * This is a bit of a "fudge".
              * We set the strength of the magnet to be proportional to its emf.
              */
             var strength = Math.abs(amplitude) * this.get('maxStrength');

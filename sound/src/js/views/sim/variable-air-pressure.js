@@ -10,9 +10,9 @@ define(function (require) {
     var VariableAirPressureSceneView = require('views/scene/variable-air-pressure');
 
     var airDensityControlsHtml = require('text!templates/air-density-controls.html');
-        
+
     /**
-     * 
+     *
      */
     var VariableAirPressureSimView = SoundSimView.extend({
 

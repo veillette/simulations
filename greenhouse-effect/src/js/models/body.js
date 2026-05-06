@@ -38,7 +38,7 @@ define(function (require) {
          * Calculates and returns the body's kinetic energy.
          */
         getKineticEnergy: function() {
-            return (this.get('mass') * this.get('velocity').lengthSq() / 2) + 
+            return (this.get('mass') * this.get('velocity').lengthSq() / 2) +
                 (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2);
         }
 

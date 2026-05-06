@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
                    require('common/v3/pixi/draw-arrow');
     var Colors   = require('common/colors/colors');
@@ -113,8 +113,8 @@ define(function(require) {
             this.rotationArrows.drawArrow(
                 startX, 0,
                 endX,   yExtent,
-                this.arrowTailWidth, 
-                this.arrowHeadWidth, 
+                this.arrowTailWidth,
+                this.arrowHeadWidth,
                 this.arrowHeadLength
             );
             this.rotationArrows.endFill();
@@ -123,8 +123,8 @@ define(function(require) {
             this.rotationArrows.drawArrow(
                 startX, 0,
                 endX,   -yExtent,
-                this.arrowTailWidth, 
-                this.arrowHeadWidth, 
+                this.arrowTailWidth,
+                this.arrowHeadWidth,
                 this.arrowHeadLength
             );
             this.rotationArrows.endFill();
@@ -144,7 +144,7 @@ define(function(require) {
         },
 
         initDragAreas: function() {
-            
+
             var bodyArea = new PIXI.Rectangle(-this.spriteWidth, -this.spriteHeight / 2, this.spriteWidth, this.spriteHeight);
 
             if (!this.rotateOnly) {
@@ -257,7 +257,7 @@ define(function(require) {
         dragTranslateAreaStart: function(event) {
             if (!this.rotateOnly) {
                 this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-                this.draggingTranslateArea = true;    
+                this.draggingTranslateArea = true;
             }
         },
 
@@ -265,7 +265,7 @@ define(function(require) {
             if (this.draggingTranslateArea) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 
@@ -308,7 +308,7 @@ define(function(require) {
         translateAreaHover: function() {
             if (!this.draggingRotateArea) {
                 this.translateAreaHovering = true;
-                this.translationArrows.visible = true;    
+                this.translationArrows.visible = true;
             }
         },
 
@@ -324,7 +324,7 @@ define(function(require) {
                 this.rotationArrows.visible = true;
             }
         },
-        
+
         rotateAreaUnhover: function() {
             this.rotateAreaHovering = false;
             if (!this.draggingRotateArea)

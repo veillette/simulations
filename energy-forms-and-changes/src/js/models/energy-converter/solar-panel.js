@@ -1,7 +1,7 @@
 define(function (require) {
 
     'use strict';
-    
+
     var Vector2 = require('common/math/vector2');
 
     var EnergyConverter       = require('models/energy-converter');
@@ -13,7 +13,7 @@ define(function (require) {
 
 
     var SolarPanel = EnergyConverter.extend({
-        
+
         initialize: function(attributes, options) {
             EnergyConverter.prototype.initialize.apply(this, [attributes, options]);
 
@@ -211,7 +211,7 @@ define(function (require) {
             var travelTime = distanceToConvergencePoint / chunkVelocity;
             var projectedArrivalTime = time + travelTime;
 
-            // Calculate the minimum spacing based on the number of chunks on 
+            // Calculate the minimum spacing based on the number of chunks on
             //   the panel.
             var minArrivalTimeSpacing = numChunksOnPanel <= 3 ? SolarPanel.MIN_INTER_CHUNK_TIME : SolarPanel.MIN_INTER_CHUNK_TIME / (numChunksOnPanel - 2);
 
@@ -259,7 +259,7 @@ define(function (require) {
                 amount: this.energyOutputRate
             };
         },
-        
+
     }, Constants.SolarPanel);
 
     return SolarPanel;

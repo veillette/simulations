@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         SPHERE:             'sphere.png',
         PHOTON:             'photon.png',
         PHOTON_COMET:       'photon-comet.png',

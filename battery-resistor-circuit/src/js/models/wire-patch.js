@@ -9,7 +9,7 @@ define(function (require) {
     var WireSegment = require('models/wire-segment');
 
     /**
-     * 
+     *
      */
     var WirePatch = function() {
         this.segments = [];
@@ -29,10 +29,10 @@ define(function (require) {
 
             while (dist > length)
                 dist -= length;
-            
+
             while (dist < 0)
                 dist += length;
-            
+
             for (var i = 0; i < this.segments.length; i++) {
                 if (this.segments[i].contains(dist))
                     return this.segments[i].getPosition(dist);
@@ -56,7 +56,7 @@ define(function (require) {
         appendSegmentAt: function(x, y) {
             if (this.segments.length === 0)
                 throw 'No wires specified.';
-            
+
             if (x instanceof Vector2) {
                 y = x.y;
                 x = x.x;
@@ -91,7 +91,7 @@ define(function (require) {
                 y = x.y;
                 x = x.x;
             }
-            
+
             var start = new Vector2(x, y);
             var end = new Vector2(dx, dy).add(start);
 

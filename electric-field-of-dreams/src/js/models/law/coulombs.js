@@ -9,7 +9,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var CoulombsLaw = function(k, range, minDist) {
         this.k = k;

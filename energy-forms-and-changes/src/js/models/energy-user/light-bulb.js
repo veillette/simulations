@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2 = require('common/math/vector2');
 
     var EnergyUser            = require('models/energy-user');
@@ -25,10 +25,10 @@ define(function (require) {
 
             // Most other classes don't need this info this info, and really it should be designed
             //   to not need it, but for the sake of sticking with the original algorithms and not
-            //   introducing new bugs, we're going to keep it. 
-            energyChunksVisible: false 
+            //   introducing new bugs, we're going to keep it.
+            energyChunksVisible: false
         }),
-        
+
         initialize: function(attributes, options) {
             EnergyUser.prototype.initialize.apply(this, [attributes, options]);
 
@@ -40,7 +40,7 @@ define(function (require) {
             this.set('proportionOfThermalChunksRadiated', this.get('hasFilament') ? 0.35 : 0.2);
 
             this._radiatePoint = new Vector2();
-        },  
+        },
 
         update: function(time, deltaTime, incomingEnergy) {
             if (this.active()) {

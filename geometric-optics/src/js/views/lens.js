@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var defineInputUpdateLocks = require('common/locks/define-locks');
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
@@ -153,7 +153,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 this.displayObject.x += dx;
                 this.displayObject.y += dy;
 

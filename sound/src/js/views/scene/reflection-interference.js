@@ -88,8 +88,8 @@ define(function(require) {
             //   off.
             var realOrigin = this.waveMediumView.getOrigin();
             var reflectedOrigin = Reflection.reflectPointAcrossLine(
-                realOrigin, 
-                this.reflectionLine.getMidPoint(), 
+                realOrigin,
+                this.reflectionLine.getMidPoint(),
                 this.reflectionLine.getAngle()
             );
 

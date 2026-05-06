@@ -16,7 +16,7 @@ define(function(require) {
     var RutherfordAtomView = RutherfordScatteringSimView.extend({
 
         events: _.extend(RutherfordScatteringSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {

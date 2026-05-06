@@ -24,7 +24,7 @@ define(function(require) {
         template: _.template(simHtml),
 
         events: _.extend(BendingLightSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {
@@ -32,7 +32,7 @@ define(function(require) {
                 title: 'Intro',
                 name:  'intro'
             }, options);
-            
+
             BendingLightSimView.prototype.initialize.apply(this, [ options ]);
 
             this.initMediumControls();
@@ -131,7 +131,7 @@ define(function(require) {
          */
         reset: function() {
             BendingLightSimView.prototype.reset.apply(this);
-            
+
             this.toolboxView.reset();
             this.laserControlsView.reset();
         },

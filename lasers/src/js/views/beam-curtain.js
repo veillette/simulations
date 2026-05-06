@@ -66,7 +66,7 @@ define(function(require) {
             var waveRgb = WavelengthColors.nmToRgba(this.model.get('wavelength'), 1, true);
             // Our interpolation value is the color value of the wave as a percent
             var valuePercent = ((waveRgb.r + waveRgb.g + waveRgb.b) / 3) / 255;
-            
+
             var finalColor = Colors.interpolateRgba(levelRgba, waveRgb, valuePercent);
             finalColor.a = (255 - level) / 255;
 
@@ -83,6 +83,6 @@ define(function(require) {
         }
 
     });
-    
+
     return BeamCurtainView;
 });

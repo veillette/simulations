@@ -18,7 +18,7 @@ define(function(require) {
 
     /**
      * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from 
+     *   user creates new objects with this view.  Dragging from
      *   the view creates a new object and places it in the scene,
      *   while dragging an existing object back onto this view
      *   destroys it.
@@ -238,7 +238,7 @@ define(function(require) {
             var radius = windowRadius * 0.7;
             var dummy;
             var vec = new Vector2();
-            
+
             for (var n = 0; n < numberOfDummies; n++) {
                 vec.set(radius, 0).rotate(startingAngle + n * angleStep);
 
@@ -337,7 +337,7 @@ define(function(require) {
                     // Innocent until proven guilty.
                     openSpotFound = true;
 
-                    if (this.pointInsideInvalidArea(x, y) || 
+                    if (this.pointInsideInvalidArea(x, y) ||
                         this.pointTooCloseToOtherNuclei(x, y, minInterNucleusDistance)
                     ) {
                         openSpotFound = false;

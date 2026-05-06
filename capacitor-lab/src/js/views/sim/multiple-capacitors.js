@@ -15,7 +15,7 @@ define(function (require) {
     var circuitsHtml = require('text!templates/circuits.html');
 
     /**
-     * 
+     *
      */
     var MultipleCapacitorsSimView = CapacitorLabSimView.extend({
 

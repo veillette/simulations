@@ -14,7 +14,7 @@ define(function (require) {
     var simHtml = require('text!templates/multiple-atoms-sim.html');
 
     /**
-     * 
+     *
      */
     var MultipleAtomsSimView = LasersSimView.extend({
 
@@ -91,7 +91,7 @@ define(function (require) {
          */
         postRender: function() {
             LasersSimView.prototype.postRender.apply(this);
-            
+
             this.laserControlsView.postRender();
         },
 
@@ -100,7 +100,7 @@ define(function (require) {
          */
         resetComponents: function() {
             LasersSimView.prototype.resetComponents.apply(this);
-            
+
             this.laserControlsView.reset();
         },
 

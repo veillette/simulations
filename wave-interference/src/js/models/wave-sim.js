@@ -62,7 +62,7 @@ define(function (require) {
 
 			crossSectionY: null
 		},
-		
+
 		initialize: function(options) {
 
 			// Event listeners
@@ -147,7 +147,7 @@ define(function (require) {
 		},
 
 		initOscillators: function() {
-			this.oscillators = [];	
+			this.oscillators = [];
 
 			for (i = 0; i < 2; i++) {
 				this.oscillators.push(new Oscillator({
@@ -200,8 +200,8 @@ define(function (require) {
 		 *   for accuracy--especially since the propagator isn't based
 		 *   off of time but acts in discrete steps--we need a way to
 		 *   keep track of step intervals independent of the varying
-		 *   intervals created by window.requestAnimationFrame. This 
-		 *   clever solution was found here: 
+		 *   intervals created by window.requestAnimationFrame. This
+		 *   clever solution was found here:
 		 *
 		 *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
 		 */
@@ -214,11 +214,11 @@ define(function (require) {
 					this.time += this.timestep;
 
 					this._update();
-					
+
 					this.accumulator -= this.timestep;
-				}	
+				}
 			}
-			
+
 		},
 
 		/**
@@ -254,7 +254,7 @@ define(function (require) {
 			if (padding === undefined)
 				return this.lattice.contains(x, y);
 			else {
-				return this.lattice.contains(x - padding, y - padding) && 
+				return this.lattice.contains(x - padding, y - padding) &&
 				       this.lattice.contains(x + padding, y + padding);
 			}
 		},

@@ -15,7 +15,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var AbstractBFieldView = PixiView.extend({
 
@@ -30,7 +30,7 @@ define(function(require) {
             this.needleWidth = options.needleWidth;
             this.bounds = new Rectangle(options.bounds);
             this.intensityScale = Constants.GRID_INTENSITY_SCALE;
-            
+
             // Cached objects
             this._point = new Vector2();
 
@@ -73,7 +73,7 @@ define(function(require) {
 
         setNeedleWidth: function(width) {
             this.needleWidth = width;
-            
+
             this.updateGrid();
         },
 

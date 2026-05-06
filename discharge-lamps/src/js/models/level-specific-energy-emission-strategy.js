@@ -4,7 +4,7 @@ define(function (require) {
 
     var ProbabilisticChooser   = require('common/math/probabilistic-chooser');
     var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
-  
+
     /**
      * An energy emission strategy in which the probability of the atom going from
      *   one state to another is different for the transition from each level to
@@ -29,7 +29,7 @@ define(function (require) {
             var targetMap = this.originStateToTargetStates[originState.hashCode()];
             if (!targetMap)
                 throw 'LevelSpecificEnergyEmissionStrategy.getTargetState returned no target map';
-            
+
             var targetState = targetMap.get();
             return targetState;
         },

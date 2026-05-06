@@ -3,13 +3,13 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
 
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EFieldLinesView = PixiView.extend({
 
@@ -135,7 +135,7 @@ define(function(require) {
             this.displayObject.x = viewPos.x;
             this.displayObject.y = viewPos.y;
         },
- 
+
         updateMVT: function(mvt) {
             this.mvt = mvt;
 

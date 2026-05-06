@@ -5,7 +5,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
 
@@ -102,7 +102,7 @@ define(function(require) {
 
         drag: function(event){
             if (this.grabbed) {
-                this.displayObject.x = event.data.global.x - this.dragOffset.x;                
+                this.displayObject.x = event.data.global.x - this.dragOffset.x;
             }
         }
 

@@ -12,7 +12,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var IntroSimView = CapacitorLabSimView.extend({
 
@@ -36,7 +36,7 @@ define(function (require) {
         initSimulation: function() {
             this.simulation = new DielectricSimulation({
                 // The dielectric needs to be moved outside the bounds of effectiveness
-                startingDielectricOffset: Constants.DIELECTRIC_OFFSET_RANGE.max + 1 
+                startingDielectricOffset: Constants.DIELECTRIC_OFFSET_RANGE.max + 1
             });
         },
 

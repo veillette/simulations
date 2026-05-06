@@ -67,11 +67,11 @@ define(function (require, exports, module) {
             var inBucketPosY = MultiNucleusDecaySimulation.BUCKET_ORIGIN_Y + MultiNucleusDecaySimulation.BUCKET_HEIGHT / 2;
 
             var newNucleus;
-            
+
             for (var i = 0; i < this.get('maxNuclei'); i++) {
                 newNucleus = this.createNucleus();
                 newNucleus.setPosition(inBucketPosX, inBucketPosY);
-                
+
                 this.atomicNuclei.add(newNucleus);
 
                 this._jitterOffsets[i] = new Vector2();
@@ -114,7 +114,7 @@ define(function (require, exports, module) {
 
         removeAllNuclei: function() {
             MultiNucleusDecaySimulation.prototype.removeAllNuclei.apply(this, arguments);
-            
+
             // Remove any existing emitted particles
             this.destroyParticles();
         },

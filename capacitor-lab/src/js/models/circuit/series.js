@@ -12,7 +12,7 @@ define(function (require) {
 
     /**
      ** Model of a circuit with a battery (B) and N capacitors (C1...Cn) in series.
-     * 
+     *
      *    |-----|
      *    |     |
      *    |    C1

@@ -189,16 +189,16 @@ define(function (require) {
 			padding = this.$tape.height() / 2;
 
 			angle = -Utils.angleFromLine(
-				this.start.x, 
-				this.start.y, 
-				this.end.x, 
+				this.start.x,
+				this.start.y,
+				this.end.x,
 				this.end.y
 			);
 
 			lineLength = Utils.lineLength(
-				this.start.x, 
-				this.start.y, 
-				this.end.x, 
+				this.start.x,
+				this.start.y,
+				this.end.x,
 				this.end.y
 			);
 

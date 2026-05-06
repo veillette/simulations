@@ -100,7 +100,7 @@ define(function(require) {
         _drag: function(event) {
             this._point.set(event.data.global.x, event.data.global.y);
             var modelPoint = this.mvt.viewToModel(this._point);
-            
+
             CircuitInteraction.dragBranch(this.model, modelPoint);
 
             this.circuit.clearSelection();
@@ -244,7 +244,7 @@ define(function(require) {
         initPropertyControls: function($popover, modelProperty, min, max, rebuild, noPips) {
             var $slider = $popover.find('.property-slider');
             var $text   = $popover.find('.property-text');
-            
+
             $slider.noUiSlider({
                 start: this.model.get(modelProperty),
                 connect: 'lower',
@@ -259,7 +259,7 @@ define(function(require) {
                     mode: 'count',
                     values: 5,
                     density: 4
-                });    
+                });
             }
 
             $slider.bind('slide', _.bind(function(event){
@@ -307,7 +307,7 @@ define(function(require) {
         showVoltageControls: function(event) {
             if (this.moreVoltsOptionEnabled) {
                 this.maxVoltage = (this.model.getVoltageDrop() <= Constants.MAX_BATTERY_VOLTAGE) ?
-                    Constants.MAX_BATTERY_VOLTAGE : 
+                    Constants.MAX_BATTERY_VOLTAGE :
                     Constants.MAX_HUGE_BATTERY_VOLTAGE;
             }
             else {

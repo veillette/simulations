@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var ModelViewTransform = require('common/math/model-view-transform');
     var Rectangle          = require('common/math/rectangle');
     var Vector2            = require('common/math/vector2');
@@ -239,7 +239,7 @@ define(function(require) {
             var tickX      = this.tickX;
             var tickSpace  = this.tickSpace;
             var timeWidth  = this.timeWidth;
-            
+
             var values = data.values;
             var times  = data.times;
 
@@ -271,7 +271,7 @@ define(function(require) {
                     viewPoint = this.plotMvt.modelToView(modelPoint);
                     graphics.moveTo(viewPoint.x, viewPoint.y);
                 }
-                    
+
                 for (var i = 1; i < values.length; i++) {
                     if (values[i] !== null) {
                         modelPoint.set(times[i] - minTime, values[i]);
@@ -283,7 +283,7 @@ define(function(require) {
                 if (graphics.currentPath && graphics.currentPath.shape)
                     graphics.currentPath.shape.closed = false;
             }
-            
+
         },
 
         drawGraphs: function() {
@@ -347,7 +347,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = event.data.global.x - this.body.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.body.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 
@@ -368,7 +368,7 @@ define(function(require) {
             if (this.draggingProbe1) {
                 var dx = event.data.global.x - this.probe1.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.probe1.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 
@@ -389,7 +389,7 @@ define(function(require) {
             if (this.draggingProbe2) {
                 var dx = event.data.global.x - this.probe2.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.probe2.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
 

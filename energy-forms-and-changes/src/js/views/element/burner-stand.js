@@ -33,7 +33,7 @@ define(function(require) {
                 throw 'BurnerStandView constructor requires a rectangle.';
             if (options.projectedEdgeLength === undefined)
                 throw 'BurnerStandView constructor requires a projectedEdgeLength.';
-            
+
             this.rectangle = options.rectangle;
             this.projectedEdgeLength = options.projectedEdgeLength;
 
@@ -101,18 +101,18 @@ define(function(require) {
             var curve = new PiecewiseCurve()
                 .moveTo(upperLeftCorner)
                 .lineTo(upperLeftCircularOpeningCorner)
-                .curveTo( 
+                .curveTo(
                     upperLeftCircularOpeningCorner.clone().add(circularOpeningPerspectiveVector),
                     upperRightCircularOpeningCorner.clone().add(circularOpeningPerspectiveVector),
-                    upperRightCircularOpeningCorner 
+                    upperRightCircularOpeningCorner
                 )
                 .lineTo(upperRightCorner)
                 .lineTo(lowerRightCorner)
                 .lineTo(lowerRightCircularOpeningCorner)
-                .curveTo( 
+                .curveTo(
                     lowerRightCircularOpeningCorner.clone().sub(circularOpeningPerspectiveVector),
                     lowerLeftCircularOpeningCorner.clone().sub(circularOpeningPerspectiveVector),
-                    lowerLeftCircularOpeningCorner 
+                    lowerLeftCircularOpeningCorner
                 )
                 .lineTo(lowerLeftCorner)
                 .close();
@@ -121,11 +121,11 @@ define(function(require) {
         },
 
         showEnergyChunks: function() {
-            
+
         },
 
         hideEnergyChunks: function() {
-            
+
         }
 
     }, Constants.BurnerStandView);

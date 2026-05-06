@@ -13,10 +13,10 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var RutherfordAtomSimulation = RutherfordScatteringSimulation.extend({
-        
+
         initialize: function(attributes, options) {
             this.boundWidth = Constants.RUTHERFORD_ACTUAL;
             RutherfordScatteringSimulation.prototype.initialize.apply(this, arguments);
@@ -38,7 +38,7 @@ define(function (require, exports, module) {
         },
 
         restartAtomDraw: function() {
-            this.atomNode.set('hold', false);                
+            this.atomNode.set('hold', false);
         }
 
     });

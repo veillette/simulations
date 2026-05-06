@@ -23,7 +23,7 @@ define(function (require) {
             alpha: 1,
             dielectricConstant: Constants.DIELECTRIC_CONSTANT_RANGE.defaultValue
         },
- 
+
         isOpaque: function() {
             return (this.alpha === 1);
         }

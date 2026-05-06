@@ -16,14 +16,14 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var GeometricOpticsSimulation = Simulation.extend({
 
         defaults: _.extend(Simulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             Simulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -35,7 +35,7 @@ define(function (require, exports, module) {
         initComponents: function() {
             this.lens = new Lens();
 
-            this.sourceObject = new SourceObject({ 
+            this.sourceObject = new SourceObject({
                 position:    Constants.DEFAULT_SOURCE_POINT_1,
                 secondPoint: Constants.DEFAULT_SOURCE_POINT_2
             });

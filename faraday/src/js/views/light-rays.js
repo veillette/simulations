@@ -21,7 +21,7 @@ define(function(require) {
     var RAY_SMALL_WIDTH  = Constants.LightRaysView.RAY_SMALL_WIDTH;
 
     /**
-     * 
+     *
      */
     var LightRaysView = PixiView.extend({
 

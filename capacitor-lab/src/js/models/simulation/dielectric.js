@@ -17,19 +17,19 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var DielectricSimulation = CapacitorLabSimulation.extend({
 
         defaults: _.extend(CapacitorLabSimulation.prototype.defaults, {
             startingDielectricOffset: Constants.DIELECTRIC_OFFSET_RANGE.defaultValue
         }),
-        
+
         initialize: function(attributes, options) {
             CapacitorLabSimulation.prototype.initialize.apply(this, [attributes, options]);
 
             this.listenTo(this.circuit, 'circuit-changed', function() {
-                
+
             });
         },
 
@@ -114,7 +114,7 @@ define(function (require, exports, module) {
          * Gets a capacitor with maximum charge.
          */
         getCapacitorWithMaxCharge: function() {
-            var material = new DielectricMaterial.Custom({ 
+            var material = new DielectricMaterial.Custom({
                 dielectricConstant: Constants.DIELECTRIC_CONSTANT_RANGE.max
             });
 
@@ -137,7 +137,7 @@ define(function (require, exports, module) {
          *   this situation, plate separation is irrelevant.
          */
         getMaxEffectiveEField: function() {
-            var material = new DielectricMaterial.Custom({ 
+            var material = new DielectricMaterial.Custom({
                 dielectricConstant: Constants.DIELECTRIC_CONSTANT_RANGE.min
             });
 
@@ -167,7 +167,7 @@ define(function (require, exports, module) {
          *   this situation, plate separation is irrelevant.
          */
         getMaxDielectricEField: function() {
-            var material = new DielectricMaterial.Custom({ 
+            var material = new DielectricMaterial.Custom({
                 dielectricConstant: Constants.DIELECTRIC_CONSTANT_RANGE.max
             });
 
@@ -195,7 +195,7 @@ define(function (require, exports, module) {
          *   with maximum battery voltage.
          */
         getEFieldReferenceMagnitude: function() {
-            var material = new DielectricMaterial.Custom({ 
+            var material = new DielectricMaterial.Custom({
                 dielectricConstant: Constants.DIELECTRIC_CONSTANT_RANGE.defaultValue
             });
 

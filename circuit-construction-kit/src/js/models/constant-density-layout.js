@@ -32,7 +32,7 @@ define(function (require) {
                 this.branchSet.addBranches(this.circuit.getStrongConnections(branches[i].get('startJunction')));
                 this.branchSet.addBranches(this.circuit.getStrongConnections(branches[i].get('endJunction')));
             }
-            
+
             var torelayout = this.branchSet.branches;
             this.layoutElectrons(torelayout);
         },
@@ -44,7 +44,7 @@ define(function (require) {
 
             this.branchSet.addBranches(this.circuit.getStrongConnections(branch.get('startJunction')));
             this.branchSet.addBranches(this.circuit.getStrongConnections(branch.get('endJunction')));
-            
+
             var torelayout = this.branchSet.branches;
             this.layoutElectrons(torelayout);
         },
@@ -53,7 +53,7 @@ define(function (require) {
             if (_.isArray(branches)) {
                 for (var i = 0; i < branches.length; i++) {
                     this._layoutElectrons(branches[i]);
-                }    
+                }
             }
             else
                 this._layoutElectrons(branches);

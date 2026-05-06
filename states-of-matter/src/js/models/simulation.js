@@ -30,7 +30,7 @@ define(function (require, exports, module) {
     var S = Constants.SOMSimulation;
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var SOMSimulation = Simulation.extend({
 
@@ -50,7 +50,7 @@ define(function (require, exports, module) {
          **                  INITIALIZATION / RESET FUNCTIONS                   **
          **                                                                     **
          *************************************************************************/
-        
+
         initialize: function(attributes, options) {
             // Managing frame rate
             this.frameDuration = SOMSimulation.FRAME_DURATION;
@@ -74,7 +74,7 @@ define(function (require, exports, module) {
 
             this.moleculeTypeChanged(this, this.get('moleculeType'));
 
-            Simulation.prototype.initialize.apply(this, [attributes, options]); 
+            Simulation.prototype.initialize.apply(this, [attributes, options]);
         },
 
         /**
@@ -154,10 +154,10 @@ define(function (require, exports, module) {
                     break;
             }
 
-            // This is needed in case we were switching from another 
+            // This is needed in case we were switching from another
             //   molecule that was under pressure.
-            this.trigger('pressure-changed'); 
-           
+            this.trigger('pressure-changed');
+
             this.calculateMinAllowableContainerHeight();
         },
 
@@ -174,7 +174,7 @@ define(function (require, exports, module) {
             )) {
                 throw 'Molecule specified is not monatomic';
             }
-            
+
             var atomConstructor;
             switch (moleculeType) {
                 case MoleculeTypes.NEON:
@@ -202,7 +202,7 @@ define(function (require, exports, module) {
             var numberOfAtoms = Math.floor(
                 Math.pow(
                     Math.round(Constants.CONTAINER_BOUNDS.w / ((particleDiameter * 1.05) * 3)),
-                    2 
+                    2
                 )
             );
 
@@ -260,7 +260,7 @@ define(function (require, exports, module) {
             var numberOfAtoms = Math.floor(
                 Math.pow(
                     Math.round(Constants.CONTAINER_BOUNDS.w / ((Atom.OxygenAtom.RADIUS * 2.1) * 3)),
-                    2 
+                    2
                 )
             );
 
@@ -365,7 +365,7 @@ define(function (require, exports, module) {
                 return;
             }
 
-            // Remove any particles that are outside of the container. 
+            // Remove any particles that are outside of the container.
             //   We work with the normalized particles for this.
             var particlesOutsideOfContainer = this.removeMoleculesOutsideContainer();
 
@@ -401,7 +401,7 @@ define(function (require, exports, module) {
                 for (firstOutsideMoleculeIndex = 0; firstOutsideMoleculeIndex < moleculeDataSet.getNumberOfMolecules(); firstOutsideMoleculeIndex++) {
                     var pos = this.moleculeDataSet.moleculeCenterOfMassPositions[firstOutsideMoleculeIndex];
                     if (
-                        pos.x < 0 || pos.x > this.normalizedContainerWidth || 
+                        pos.x < 0 || pos.x > this.normalizedContainerWidth ||
                         pos.y < 0 || pos.y > Constants.PARTICLE_CONTAINER_INITIAL_HEIGHT / this.particleDiameter
                     ) {
                         // This particle is outside of the container.
@@ -468,9 +468,9 @@ define(function (require, exports, module) {
         mapTemperatureToPhase: function() {
             var phase;
 
-            if (this.temperatureSetPoint < S.SOLID_TEMPERATURE + ((S.LIQUID_TEMPERATURE - S.SOLID_TEMPERATURE) / 2)) 
+            if (this.temperatureSetPoint < S.SOLID_TEMPERATURE + ((S.LIQUID_TEMPERATURE - S.SOLID_TEMPERATURE) / 2))
                 phase = PhaseStateChanger.SOLID;
-            else if (this.temperatureSetPoint < S.LIQUID_TEMPERATURE + ((S.GAS_TEMPERATURE - S.LIQUID_TEMPERATURE) / 2)) 
+            else if (this.temperatureSetPoint < S.LIQUID_TEMPERATURE + ((S.GAS_TEMPERATURE - S.LIQUID_TEMPERATURE) / 2))
                 phase = PhaseStateChanger.LIQUID;
             else
                 phase = PhaseStateChanger.GAS;
@@ -764,7 +764,7 @@ define(function (require, exports, module) {
                 while (this.frameAccumulator >= this.frameDuration) {
                     this.step();
                     this.frameAccumulator -= this.frameDuration;
-                }    
+                }
             }
         },
 

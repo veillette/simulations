@@ -10,7 +10,7 @@ define(function(require) {
     var OneNucleusLegendView = require('nuclear-fission/views/legend/one-nucleus');
 
     /**
-     * 
+     *
      */
     var ChainReactionLegendView = OneNucleusLegendView.extend({
 
@@ -22,7 +22,7 @@ define(function(require) {
 
             // Take the last one off so we can just push the other uraniums on the end
             var daughterNucleiItem = this.items.pop();
-            
+
             var nucleusMVT = this.getNucleusMVT();
             var nucleusLabelScale = this.getNucleusLabelScale();
 

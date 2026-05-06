@@ -18,7 +18,7 @@ define(function (require) {
         formatTime: function(milliseconds) {
             // Convert to years.
             var timeInYears = milliseconds / MILLISECONDS_PER_YEAR;
-            
+
             // Based on input received during reviews of this simulation, some
             //   very specific behavior is desired in terms of the resolution that
             //   is displayed for the various ranges of time.
@@ -29,14 +29,14 @@ define(function (require) {
                 resolution = 1;
             else
                 resolution = 6;
-            
+
             var text;
             var valueToDisplay = this.roundToResolution(timeInYears, resolution);
             if (valueToDisplay < 1 && valueToDisplay !== 0)
                 text = valueToDisplay.toFixed(2);
             else
                 text =  valueToDisplay.toLocaleString();
-            
+
             text += ' yrs';
             return text;
         },
@@ -121,9 +121,9 @@ define(function (require) {
                         exponentString += String.fromCharCode(parseInt('00B9', 16));
                     else
                         exponentString += String.fromCharCode(parseInt('207' + digit, 16));
-                }    
+                }
             }
-            
+
             // Put it all together
             return mantissa.toFixed(mantissaDecimals) + ' x 10' + exponentString;
         },
@@ -133,17 +133,17 @@ define(function (require) {
                 // Can't do much with this.
                 return 0;
             }
-            
+
             // Calculate a value where the decimal point has the number of
             //   desired significant digits to the left of the decimal point.
             var retVal = value / Math.pow(10, resolution);
-            
+
             // Round the value.
             retVal = Math.round(retVal);
-            
+
             // Multiply back to the original number of places.
             retVal = retVal * Math.pow(10, resolution);
-            
+
             // We're done.
             return retVal;
         }

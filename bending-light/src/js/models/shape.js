@@ -7,7 +7,7 @@ define(function (require) {
     var Rectangle = require('common/math/rectangle');
 
     /**
-     * 
+     *
      */
     var Shape = function() {
         this._bounds = new Rectangle();

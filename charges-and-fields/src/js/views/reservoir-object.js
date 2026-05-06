@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -16,7 +16,7 @@ define(function(require) {
      * This is a view for any object that is stored in an object
      *   reservoir.  It is meant to draw circular-shaped objects
      *   by default but could be extended to draw other things.
-     *   This is the base class for the negative and positive 
+     *   This is the base class for the negative and positive
      *   charge views as well as the e-field sensor.
      */
     var ReservoirObjectView = PixiView.extend({
@@ -80,7 +80,7 @@ define(function(require) {
             this.displayObject.addChild(this.background);
 
             this.initIcon();
-            
+
             this.updateMVT(this.mvt);
         },
 
@@ -112,9 +112,9 @@ define(function(require) {
         drag: function(event) {
             if (this.dragging) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                
+
                 this.setPosition(
-                    local.x - this.dragOffset.x, 
+                    local.x - this.dragOffset.x,
                     local.y - this.dragOffset.y
                 );
 
@@ -145,7 +145,7 @@ define(function(require) {
                 // If it's over its home reservoir, destroy it
                 if (this.reservoir.contains(x, y))
                     this.reservoir.destroyObject(this.model);
-                
+
                 this.reservoir.hideDestroyHighlight();
             }
         },

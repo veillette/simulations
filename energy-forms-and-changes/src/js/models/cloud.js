@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2            = require('common/math/vector2');
     var PiecewiseCurve     = require('common/math/piecewise-curve');
     var PositionableObject = require('common/models/positionable-object');
@@ -11,10 +11,10 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Cloud = PositionableObject.extend({
-        
+
         defaults: _.extend({}, PositionableObject.prototype.defaults, {
             existenceStrength: 1,
             relativePosition: null,
@@ -29,7 +29,7 @@ define(function (require) {
                 throw 'Cloud model constructor requires a starting relativePosition as well as the parent position passed as an option.';
 
             this.setPosition(options.parentPosition.clone().add(this.get('relativePosition')));
-            
+
             this.shape         = this.createShape(this.get('position'));
             this.relativeShape = this.createShape(this.get('relativePosition'));
         },
@@ -39,7 +39,7 @@ define(function (require) {
             var y = position.y - this.get('height') / 2;
             var h = this.get('height');
             var w = this.get('width');
-            
+
             // Create an ellipse
             return PiecewiseCurve.createEllipse(x, y, w, h);
         },
@@ -57,7 +57,7 @@ define(function (require) {
                 this.shape.translate(x);
             else
                 this.shape.translate(x, y);
-            
+
             PositionableObject.prototype.translate.apply(this, [x, y]);
         }
 

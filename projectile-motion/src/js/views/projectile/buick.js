@@ -1,7 +1,7 @@
 define(function(require) {
 
     'use strict';
-    
+
     var Buick = require('models/projectile/buick');
 
     var ProjectileView = require('views/projectile');
@@ -16,7 +16,7 @@ define(function(require) {
             sprite.anchor.y = 0.5;
             return sprite;
         },
-        
+
         createRestingProjectileSprite: function() {
             var sprite = Assets.createSprite(Assets.Images.BUICK_IMPACT);
             sprite.anchor.x = 0.5;

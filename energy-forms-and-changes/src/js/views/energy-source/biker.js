@@ -162,7 +162,7 @@ define(function(require) {
             // Move it
             panel.x = panelOffset.x;
             panel.y = panelOffset.y;
-            
+
             // Add it
             this.displayObject.addChild(panel);
 

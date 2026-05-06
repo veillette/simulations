@@ -12,7 +12,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var EnergyChunkWanderController = function(energyChunk, destination, initialWanderConstraint) {
         this.energyChunk = energyChunk;
@@ -76,15 +76,15 @@ define(function (require) {
                 .set(this.velocity)
                 .scale(deltaTime);
 
-            
+
             // if (this.fromBurnerDebug) {
             //     if (!_debugEnergyChunk)
             //         _debugEnergyChunk = this.energyChunk;
             //     if (_debugEnergyChunk === this.energyChunk)
             //         console.log('current: ' + this.energyChunk.get('position').x.toFixed(2) + ',' + this.energyChunk.get('position').y.toFixed(2) + ' target: ' + this.destination.x.toFixed(2) + ',' + this.destination.y.toFixed(2));
             // }
-                
-            
+
+
             this.energyChunk.translate(translation);
             this.countdownTimer -= deltaTime;
             if (this.countdownTimer <= 0) {
@@ -102,8 +102,8 @@ define(function (require) {
                 // Add some randomness to the direction of travel.
                 angle += (Math.random() - 0.5) * 2 * C.MAX_ANGLE_VARIATION;
             }
-            var scalarVelocity = C.MIN_VELOCITY 
-                               + (C.MAX_VELOCITY - C.MIN_VELOCITY) 
+            var scalarVelocity = C.MIN_VELOCITY
+                               + (C.MAX_VELOCITY - C.MIN_VELOCITY)
                                * Math.random();
             this.velocity.set(scalarVelocity * Math.cos(angle), scalarVelocity * Math.sin(angle));
         },

@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
 
@@ -56,7 +56,7 @@ define(function(require) {
             this.positiveCharges.moveTo(viewPoint.x, viewPoint.y - SYMBOL_WIDTH / 2);
             this.positiveCharges.lineTo(viewPoint.x, viewPoint.y + SYMBOL_WIDTH / 2);
         },
- 
+
         updateMVT: function(mvt) {
             this.mvt = mvt;
         },

@@ -9,7 +9,7 @@ define(function (require) {
     var EnergyChunkCollection = require('models/energy-chunk-collection');
 
     /**
-     * The original 
+     * The original
      */
     var EnergyChunkContainerSlice = function(shape, zPosition) {
         this.shape = shape;

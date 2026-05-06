@@ -21,7 +21,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var RectangularThermalMovableElement = MovableElement.extend({
 
@@ -35,7 +35,7 @@ define(function (require) {
 
             energyContainerCategory: null
         }),
-        
+
         initialize: function(attributes, options) {
             // Cached objects
             this._sliceBounds = new Rectangle();
@@ -44,10 +44,10 @@ define(function (require) {
             this._vec2 = new Vector2();
             this._forwardPerspectiveOffset  = Constants.MAP_Z_TO_XY_OFFSET( Constants.Block.SURFACE_WIDTH / 2);
             this._backwardPerspectiveOffset = Constants.MAP_Z_TO_XY_OFFSET(-Constants.Block.SURFACE_WIDTH / 2);
-            
+
             // Calling the parent's initialize function
             MovableElement.prototype.initialize.apply(this, arguments);
-            
+
             // Calculate starting energy
             this.set('energy', this.get('mass') * this.get('specificHeat') * Constants.ROOM_TEMPERATURE);
 
@@ -139,7 +139,7 @@ define(function (require) {
         },
 
         /**
-         * Add an energy chunk to the next available slice.  Override for more 
+         * Add an energy chunk to the next available slice.  Override for more
          *   elaborate behavior.
          */
         addEnergyChunkToNextSlice: function(chunk) {
@@ -208,7 +208,7 @@ define(function (require) {
             return false;
         },
 
-        
+
         extractClosestEnergyChunk: function(shape) {
             if (shape instanceof Vector2)
                 return this.extractClosestEnergyChunkToPoint(shape);
@@ -245,8 +245,8 @@ define(function (require) {
                     compensatedDistance = compensatedChunkPosition.distance(point);
 
                     if (compensatedDistance < closestCompensatedDistance) {
-                        // For some reason in the original, closestCompensatedDistance 
-                        //   was never updated.  I think that was a logical error, so 
+                        // For some reason in the original, closestCompensatedDistance
+                        //   was never updated.  I think that was a logical error, so
                         //   I'm going to go ahead and update it.
                         closestCompensatedDistance = compensatedDistance;
                         closestEnergyChunk = chunk;
@@ -285,7 +285,7 @@ define(function (require) {
                     slice = this.slices[i];
                     for (j = 0; j < slice.energyChunkList.models.length; j++) {
                         chunk = slice.energyChunkList.models[j];
-                
+
                         var distanceToVerticalEdge = Math.min(Math.abs(myBounds.left() - chunk.get('position').x), Math.abs(myBounds.right() - chunk.get('position').x));
                         if (distanceToVerticalEdge < closestDistanceToVerticalEdge) {
                             chunkToExtract = chunk;
@@ -362,7 +362,7 @@ define(function (require) {
             while (numChunks < targetNumChunks) {
                 // Add a chunk at a random location in the block.
                 this.addEnergyChunk(EnergyChunk.create({
-                    energyType: EnergyChunk.THERMAL, 
+                    energyType: EnergyChunk.THERMAL,
                     position:   new Vector2(EnergyChunkDistributor.generateRandomLocation(energyChunkBounds))
                 }));
                 numChunks++;

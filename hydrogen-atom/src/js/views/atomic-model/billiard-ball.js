@@ -5,7 +5,7 @@ define(function(require) {
     var AtomicModelView = require('hydrogen-atom/views/atomic-model');
 
     var Assets = require('assets');
-    
+
     /**
      * Represents the scene for the BilliardBallModel
      */

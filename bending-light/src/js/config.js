@@ -11,7 +11,7 @@
             pixi:       '../../bower_components/pixi/bin/pixi',
             nouislider: '../../bower_components/nouislider/distribute/jquery.nouislider.all.min',
             buzz:       '../../bower_components/buzz/dist/buzz.min',
-            
+
             'sat':                   '../../node_modules/sat/SAT',
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',

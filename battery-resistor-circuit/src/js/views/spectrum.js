@@ -116,7 +116,7 @@ define(function(require) {
         },
 
         update: function() {
-            
+
         },
 
         powerChanged: function(powerPercent) {

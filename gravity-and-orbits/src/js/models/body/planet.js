@@ -9,7 +9,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Planet = Body.extend({
 

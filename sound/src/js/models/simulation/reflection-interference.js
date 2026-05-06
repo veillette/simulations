@@ -12,7 +12,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var ReflectionInterferenceSimulation = SoundSimulation.extend({
 

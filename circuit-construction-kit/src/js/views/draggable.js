@@ -86,7 +86,7 @@ define(function(require) {
         dragStart: function(event) {
             if (someComponentIsDragging)
                 return;
-            
+
             someComponentIsDragging = true;
             this.dragging = true;
             this.dragged = false;
@@ -124,7 +124,7 @@ define(function(require) {
         hover: function() {
             if (this.dragging || !someComponentIsDragging) {
                 this.hovering = true;
-                this.showHoverGraphics();    
+                this.showHoverGraphics();
             }
         },
 
@@ -135,7 +135,7 @@ define(function(require) {
         },
 
         showHoverGraphics: function() {
-            this.hoverLayer.visible = true; 
+            this.hoverLayer.visible = true;
         },
 
         hideHoverGraphics: function() {
@@ -172,9 +172,9 @@ define(function(require) {
                 // Determine which side is appropriate based on where the point is in the scene
                 var height = $('.scene-view').height();
                 if (y > (height / 2))
-                    placement = 'top'; 
+                    placement = 'top';
                 else
-                    placement = 'bottom'; 
+                    placement = 'bottom';
             }
 
             this.$popoverAnchor = $('<div data-toggle="popover"></div>');
@@ -209,8 +209,8 @@ define(function(require) {
 
             var $closestPopover = $(event.target).closest('.popover');
 
-            if (this.$popover && 
-                Math.abs(event.originalEvent.timeStamp - this.originalEvent.timeStamp) > 30 && 
+            if (this.$popover &&
+                Math.abs(event.originalEvent.timeStamp - this.originalEvent.timeStamp) > 30 &&
                 ($closestPopover.length === 0 || $closestPopover[0] !== this.$popover[0])
             ) {
                 this.hidePopover();

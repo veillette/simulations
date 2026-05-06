@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var Colors  = require('common/colors/colors');
     var Vector2 = require('common/math/vector2');
     var Vector3 = require('common/math/vector3');
@@ -16,7 +16,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var DielectricCapacitorView = CapacitorView.extend({
 
@@ -158,7 +158,7 @@ define(function(require) {
             graphicsWrapper.addChild(this.plateAreaHandleGraphic);
             graphicsWrapper.addChild(this.plateAreaHandleHoverGraphic);
             graphicsWrapper.addChild(dots);
-            
+
             this.plateAreaLabelTitle = new PIXI.Text('Plate Area', this.labelTitleStyle);
             this.plateAreaLabelValue = new PIXI.Text('100.0 mm²', this.labelValueStyle);
             this.plateAreaLabelValue.y = 18;
@@ -202,7 +202,7 @@ define(function(require) {
             graphicsWrapper.addChild(this.plateSeparationHandleGraphic);
             graphicsWrapper.addChild(this.plateSeparationHandleHoverGraphic);
             graphicsWrapper.addChild(dots);
-            
+
             this.plateSeparationLabelTitle = new PIXI.Text('Separation', this.labelTitleStyle);
             this.plateSeparationLabelValue = new PIXI.Text('5.0 mm', this.labelValueStyle);
             this.plateSeparationLabelTitle.resolution = this.getResolution();
@@ -245,7 +245,7 @@ define(function(require) {
             graphicsWrapper.addChild(this.dielectricHandleGraphic);
             graphicsWrapper.addChild(this.dielectricHandleHoverGraphic);
             graphicsWrapper.addChild(dots);
-            
+
             this.dielectricLabelTitle = new PIXI.Text('Offset', this.labelTitleStyle);
             this.dielectricLabelValue = new PIXI.Text('5.0 mm', this.labelValueStyle);
             this.dielectricLabelTitle.resolution = this.getResolution();
@@ -328,8 +328,8 @@ define(function(require) {
             var width = this.model.get('plateWidth');
             var depth = this.model.get('plateDepth');
             return this._ur.set(this.mvt.modelToView(
-                x - (width / 2), 
-                y, 
+                x - (width / 2),
+                y,
                 z - (depth / 2))
             );
         },
@@ -341,8 +341,8 @@ define(function(require) {
             var width = this.model.get('plateWidth');
             var depth = this.model.get('plateDepth');
             return this._ll.set(this.mvt.modelToView(
-                x + (width / 2), 
-                y, 
+                x + (width / 2),
+                y,
                 z + (depth / 2))
             );
         },
@@ -360,8 +360,8 @@ define(function(require) {
             this.dielectric.clear();
             this.shapeCreator.outlineDielectricBack(this.dielectric, 1, outlineColor, 1);
             this.shapeCreator.drawDielectric(
-                this.dielectric, 
-                this.model.get('dielectricMaterial').get('color'), 
+                this.dielectric,
+                this.model.get('dielectricMaterial').get('color'),
                 this.model.get('dielectricMaterial').get('alpha')
             );
             this.shapeCreator.outlineDielectric(this.dielectric, 1, outlineColor, 1);
@@ -402,7 +402,7 @@ define(function(require) {
                     newWidth = Constants.PLATE_WIDTH_RANGE.min;
                 if (newWidth > Constants.PLATE_WIDTH_RANGE.max)
                     newWidth = Constants.PLATE_WIDTH_RANGE.max;
-                
+
                 this.model.set('plateWidth', newWidth);
 
                 this.lastDragX = event.data.global.x;
@@ -432,7 +432,7 @@ define(function(require) {
                     newSeparation = Constants.PLATE_SEPARATION_RANGE.min;
                 if (newSeparation > Constants.PLATE_SEPARATION_RANGE.max)
                     newSeparation = Constants.PLATE_SEPARATION_RANGE.max;
-                
+
                 this.model.set('plateSeparation', newSeparation);
 
                 this.lastDragY = event.data.global.y;
@@ -462,7 +462,7 @@ define(function(require) {
                     newOffset = Constants.DIELECTRIC_OFFSET_RANGE.min;
                 if (newOffset > Constants.DIELECTRIC_OFFSET_RANGE.max)
                     newOffset = Constants.DIELECTRIC_OFFSET_RANGE.max;
-                
+
                 this.model.set('dielectricOffset', newOffset);
 
                 this.lastDragX = event.data.global.x;

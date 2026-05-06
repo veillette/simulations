@@ -14,7 +14,7 @@ define(function(require) {
 
     var NucleonView          = require('views/nucleon');
     var ExplodingNucleusView = require('views/nucleus/exploding');
-    
+
     var Assets = require('assets');
     var Constants = require('constants');
 
@@ -300,13 +300,13 @@ define(function(require) {
             var reactorTemperature = this.simulation.get('temperature');
             if (reactorTemperature > NuclearReactorView.MAX_TEMPERATURE)
                 reactorTemperature = NuclearReactorView.MAX_TEMPERATURE;
-            
+
             // Blend the hot and cold colors together based on the current temp.
             var weighting = (NuclearReactorView.MAX_TEMPERATURE - reactorTemperature) / NuclearReactorView.MAX_TEMPERATURE;
-            
+
             var hex = Colors.interpolateHex(
-                NuclearReactorView.COOL_REACTOR_CHAMBER_COLOR, 
-                NuclearReactorView.HOT_REACTOR_CHAMBER_COLOR, 
+                NuclearReactorView.COOL_REACTOR_CHAMBER_COLOR,
+                NuclearReactorView.HOT_REACTOR_CHAMBER_COLOR,
                 weighting
             );
 

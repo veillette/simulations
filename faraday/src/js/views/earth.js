@@ -9,7 +9,7 @@ define(function(require) {
     var Assets = require('assets');
 
     /**
-     * 
+     *
      */
     var EarthView = PixiView.extend({
 

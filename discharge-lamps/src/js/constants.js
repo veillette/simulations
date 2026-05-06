@@ -4,7 +4,7 @@ define(function (require) {
 
     var Vector2 = require('common/math/vector2');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -50,7 +50,7 @@ define(function (require) {
 	Constants.ELECTRODE_BOTTOM = 15;
 	Constants.ELECTRODE_RIGHT  = 30;
 
-    Constants.BEAM_CONTROL_CENTER_PT = new Vector2( 
+    Constants.BEAM_CONTROL_CENTER_PT = new Vector2(
     	(Constants.CATHODE_X_LOCATION + Constants.ANODE_X_LOCATION) / 2,
 		195
 	);
@@ -79,13 +79,13 @@ define(function (require) {
      *************************************************************************/
 
     var DischargeLampsSimulation = {};
-    
+
     DischargeLampsSimulation.MAX_VOLTAGE = 30;
     DischargeLampsSimulation.MAX_STATES = 6;
 
     Constants.DischargeLampsSimulation = DischargeLampsSimulation;
 
-    
+
 
     return Constants;
 });

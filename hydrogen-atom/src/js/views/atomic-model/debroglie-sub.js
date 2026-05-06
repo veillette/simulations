@@ -5,7 +5,7 @@ define(function(require) {
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     var AtomicModelView = require('hydrogen-atom/views/atomic-model');
-    
+
     /**
      * Represents the scene for the DeBroglieModel
      */

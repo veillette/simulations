@@ -9,7 +9,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var Turnstile = function(center, angleVelocityScale) {
         this.center = new Vector2(center);
@@ -22,7 +22,7 @@ define(function (require) {
      * Instance functions/properties
      */
     _.extend(Turnstile.prototype, Law.prototype, {
-        
+
         update: function(deltaTime, system) {
             this.angle = this.angularSpeed * deltaTime + this.angle;
         },

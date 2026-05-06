@@ -57,7 +57,7 @@ define(function (require) {
 
         /**
          * Returns whether the provided photon should be absorbed.
-         *   By design, a given photon should only be requested 
+         *   By design, a given photon should only be requested
          *   once, not multiple times.
          */
         shouldAbsorbPhoton: function(photon) {
@@ -86,7 +86,7 @@ define(function (require) {
     });
 
 
-    
+
     /**
      * Photon absorption strategy that causes a molecule to hold a
      *   photon once is has absorbed it, then after some amount of

@@ -12,11 +12,11 @@ define(function(require) {
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
     var html = require('text!../../templates/medium-controls.html');
-    
+
     require('less!styles/medium-controls');
 
     /**
-     * 
+     *
      */
     var MediumControlsView = Backbone.View.extend({
 
@@ -31,7 +31,7 @@ define(function(require) {
             this.name = options.name;
             this.label = options.label || 'Material';
             this.simulation = options.simulation;
-            
+
             this.listenTo(this.model, 'change:mediumProperties', this.materialChanged);
         },
 
@@ -51,7 +51,7 @@ define(function(require) {
             };
 
             this.setElement($(this.template(data)));
-            
+
             this.$slider = this.$('.slider');
             this.$slider.noUiSlider({
                 start: 0.5,
@@ -119,7 +119,7 @@ define(function(require) {
                 this.$noMystery.show();
                 var indexOfRefraction = mediumProperties.getIndexOfRefractionForRedLight();
                 this.$slider.val(indexOfRefraction);
-                this.$value.text(indexOfRefraction.toFixed(2));    
+                this.$value.text(indexOfRefraction.toFixed(2));
             }
         }
 
@@ -128,7 +128,7 @@ define(function(require) {
 
     // Add input/update locking functionality to the prototype
     defineInputUpdateLocks(MediumControlsView);
-    
+
 
     return MediumControlsView;
 });

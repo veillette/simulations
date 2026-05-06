@@ -256,10 +256,10 @@ define(function(require) {
             var y = this.graphOriginY;
             var x = this.graphOriginX + time * this.msToPixelsFactor;
             var length = DecayProportionChartView.TICK_MARK_LENGTH;
-            
+
             if (time > 0) {
                 this.xAxisTicks.moveTo(x, y);
-                this.xAxisTicks.lineTo(x, y - length);   
+                this.xAxisTicks.lineTo(x, y - length);
             }
 
             var label = new PIXI.Text(labelText, {
@@ -301,7 +301,7 @@ define(function(require) {
                 var y = this.graphOriginY - p * this.graphHeight;
 
                 graphics.moveTo(this.graphOriginX, y);
-                graphics.lineTo(this.graphOriginX + this.graphWidth, y);    
+                graphics.lineTo(this.graphOriginX + this.graphWidth, y);
             }
 
             this.yAxisLabels = new PIXI.Container();
@@ -371,7 +371,7 @@ define(function(require) {
                 label.anchor.x = 0.5;
                 label.anchor.y = 1;
                 label.resolution = this.getResolution();
-                
+
                 this.halfLifeLabels.addChild(label);
 
                 graphics.moveTo(x, y);
@@ -381,7 +381,7 @@ define(function(require) {
 
         drawDataMask: function() {
             var mask = this.dataGraphics.mask;
-            
+
             mask.beginFill();
             mask.drawRect(this.graphOriginX, this.graphOriginY - this.graphHeight, this.graphWidth, this.graphHeight);
             mask.endFill();
@@ -397,7 +397,7 @@ define(function(require) {
                 }
                 else {
                     var radius = this.pointRadius;
-                    
+
                     graphics.beginFill(color, 1);
                     graphics.drawCircle(x, this.graphOriginY - percent * this.graphHeight, radius);
                     graphics.endFill();

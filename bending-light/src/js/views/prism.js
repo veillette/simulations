@@ -23,7 +23,7 @@ define(function(require) {
     var Assets = require('assets');
 
     /**
-     * 
+     *
      */
     var PrismView = PixiView.extend({
 
@@ -96,7 +96,7 @@ define(function(require) {
                 this.rotationHandle = rotationHandleView.displayObject;
                 this.rotationHandle.buttonMode = true;
 
-                this.graphics.addChild(this.rotationHandle);    
+                this.graphics.addChild(this.rotationHandle);
             }
             else {
                 this.rotationHandle = new PIXI.Container();
@@ -163,7 +163,7 @@ define(function(require) {
         dragStart: function(event) {
             if (!this.rotateOnly && !this.rotating) {
                 this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-                this.translating = true;    
+                this.translating = true;
             }
         },
 
@@ -171,10 +171,10 @@ define(function(require) {
             if (this.translating) {
                 var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 var mdx = this.mvt.viewToModelDeltaX(dx);
                 var mdy = this.mvt.viewToModelDeltaY(dy);
-                
+
                 this.model.translate(mdx, mdy);
             }
         },
@@ -195,7 +195,7 @@ define(function(require) {
                 var vector = this._vec.set(x, y).sub(this.displayObject.x, this.displayObject.y);
                 var rotation = -vector.angle() + this.rotationOffset;
                 var dr = rotation - this.model.get('rotation');
-                
+
                 this.model.rotate(dr);
             }
         },

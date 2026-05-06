@@ -17,7 +17,7 @@ define(function (require) {
     var CircuitComponent = require('models/components/circuit-component');
     var Switch           = require('models/components/switch');
     var Wire             = require('models/components/wire');
-    
+
     var Constants = require('constants');
 
     var matchPool = Pool({
@@ -150,7 +150,7 @@ define(function (require) {
                 if (n1[i] !== branch)
                     neighbors.push(n1[i]);
             }
-            
+
             return neighbors;
         },
 
@@ -262,7 +262,7 @@ define(function (require) {
 
         removeBranch: function(branch) {
             this.branches.remove(branch);
-            
+
             this.removeIfOrphaned(branch.get('startJunction'));
             this.removeIfOrphaned(branch.get('endJunction'));
 
@@ -335,7 +335,7 @@ define(function (require) {
             else {
                 var va = a.getVoltageAddon();
                 var vb = -b.getVoltageAddon();//this has to be negative, because on the path VA->A->B->VB, the the VB computation is VB to B.
-                //used for displaying values e.g. in voltmeter and charts, so use average node voltages instead of instantaneous, see #2270 
+                //used for displaying values e.g. in voltmeter and charts, so use average node voltages instead of instantaneous, see #2270
                 var avgVoltageA = this.get('solution').getAverageNodeVoltage(this.junctions.indexOf(a.getJunction()));
                 var avgVoltageB = this.get('solution').getAverageNodeVoltage(this.junctions.indexOf(b.getJunction()));
                 var junctionAnswer = avgVoltageB - avgVoltageA;
@@ -454,7 +454,7 @@ define(function (require) {
         collapseJunctions: function(j1, j2) {
             if (!j1.get('position').equals(j2.get('position'), Constants.EPSILON))
                 throw 'Junctions not at same coordinates.';
-            
+
             this.removeJunction(j1);
             this.removeJunction(j2);
             var replacement = new Junction({ position: new Vector2(j1.get('position').x, j1.get('position').y) });
@@ -651,7 +651,7 @@ define(function (require) {
                         return branches.at(i);
                 }
             }
-            
+
             return null;
         },
 
@@ -672,7 +672,7 @@ define(function (require) {
                         return branches.at(i);
                 }
             }
-            
+
             return null;
         },
 
@@ -683,7 +683,7 @@ define(function (require) {
                 if (junctions.at(i).intersectsPolygon(polygon))
                     return junctions.at(i);
             }
-            
+
             return null;
         },
 

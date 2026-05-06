@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var Colors = require('common/colors/colors');
 
     var HalfLifeInfo  = require('models/half-life-info');
@@ -66,7 +66,7 @@ define(function(require) {
             this.isotope1Container.x = this.isotope2Container.x = this.pieChartGraphics.x;
             this.isotope1Container.y = this.pieChartGraphics.y - radius - 16;
             this.isotope2Container.y = this.pieChartGraphics.y + radius + 16;
-            
+
             var settings = {
                 fill: DecayRatesChartView.DECAY_LABEL_COLOR,
                 font: DecayRatesChartView.DECAY_LABEL_FONT
@@ -110,11 +110,11 @@ define(function(require) {
 
             if (this._lastNucleusCount !== this.simulation.getTotalNumNuclei())
                 this.clearData();
-            
+
             if (this.simulation.getTotalNumNuclei() > 0 && this.simulation.get('active'))
                 this.drawCurrentGraphData();
 
-            this._lastNucleusCount = this.simulation.getTotalNumNuclei();  
+            this._lastNucleusCount = this.simulation.getTotalNumNuclei();
         },
 
         updateTimeSpan: function() {
@@ -130,7 +130,7 @@ define(function(require) {
 
             var isotope1Text = IsotopeSymbolGenerator.generateWithElementColor(nucleusType,        DecayRatesChartView.ISOTOPE_FONT_SIZE, 1);
             var isotope2Text = IsotopeSymbolGenerator.generateWithElementColor(decayedNucleusType, DecayRatesChartView.ISOTOPE_FONT_SIZE, 1);
-            
+
             this.isotope1Container.removeChildren();
             this.isotope2Container.removeChildren();
 
@@ -150,7 +150,7 @@ define(function(require) {
 
             var isotope1Color = this.isotope1Color;
             var isotope2Color = this.isotope2Color;
-            
+
             var radius = this.pieChartRadius;
             var numActive  = this.simulation.getNumActiveNuclei();
             var numDecayed = this.simulation.getNumDecayedNuclei();
@@ -173,12 +173,12 @@ define(function(require) {
 
                 if (numActive > 0) {
                     graphics.moveTo(0, 0);
-                    graphics.lineTo(radius, 0);     
+                    graphics.lineTo(radius, 0);
                 }
 
                 graphics.lineStyle(1, 0x000000, 1);
                 graphics.moveTo(0, 0);
-                graphics.drawCircle(0, 0, radius);   
+                graphics.drawCircle(0, 0, radius);
             }
 
             this.isotope1Counter.text = numActive;

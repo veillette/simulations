@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         BACKGROUND: 'background.png',
         ELECTRON:   'electron-purple.png'
     };

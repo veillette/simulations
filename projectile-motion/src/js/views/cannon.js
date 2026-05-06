@@ -5,7 +5,7 @@ define(function(require) {
     var buzz = require('buzz');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var range    = require('common/math/range');
@@ -101,7 +101,7 @@ define(function(require) {
             carriage.anchor.y = 1;
             carriage.y =  97;
             carriage.x = -26;
-            
+
             this.spritesLayer.addChild(carriage);
         },
 
@@ -123,7 +123,7 @@ define(function(require) {
         },
 
         initParticles: function() {
-            /* 
+            /*
              * The particles will be added to the sprites layer, which is always
              *   scaled with the images.  In this way we shouldn't ever have to
              *   reference the mvt object and do conversions when controlling
@@ -172,8 +172,8 @@ define(function(require) {
                 max:  CannonView.PARTICLE_EMISSION_AREA_WIDTH / 2 - CannonView.FLAME_PARTICLE_RADIUS_RANGE.min
             });
             // End of cannon relative to origin minus the particle radius so it starts inside the bore
-            this.flameParticleStartX = this.cannon.width * (1 - this.cannon.anchor.x) - CannonView.FLAME_PARTICLE_RADIUS_RANGE.min; 
-        },        
+            this.flameParticleStartX = this.cannon.width * (1 - this.cannon.anchor.x) - CannonView.FLAME_PARTICLE_RADIUS_RANGE.min;
+        },
 
 
         drawPedestal: function() {
@@ -224,7 +224,7 @@ define(function(require) {
             var right  = Math.ceil(width - global.x);
             var top    = Math.ceil(0 - global.y);
             var bottom = Math.ceil(height - global.y);
-            
+
             this.axes.clear();
             this.axes.lineStyle(CannonView.AXIS_LINE_WIDTH, CannonView.AXIS_LINE_COLOR, CannonView.AXIS_LINE_ALPHA);
             this.axes.moveTo(left, 0);
@@ -241,7 +241,7 @@ define(function(require) {
             if (this.draggingCannon) {
                 var x = event.data.global.x - this.displayObject.x;
                 var y = event.data.global.y - this.displayObject.y;
-                
+
                 var angle = Math.atan2(y, x);
                 var degrees = -angle * RADIANS_TO_DEGREES;
                 // Catch the case where we go into negatives at the 180deg mark
@@ -365,7 +365,7 @@ define(function(require) {
 
                 // Fade particles out when they reach the end of their lives
                 if (percentLifeLeft < (1 - CannonView.FLAME_PARTICLE_FADE_POINT))
-                    particle.alpha = (percentLifeLeft / (1 - CannonView.FLAME_PARTICLE_FADE_POINT));  
+                    particle.alpha = (percentLifeLeft / (1 - CannonView.FLAME_PARTICLE_FADE_POINT));
             }
         },
 
@@ -408,7 +408,7 @@ define(function(require) {
 
                 // Fade particles out when they reach the end of their lives
                 if (percentLifeLeft < (1 - CannonView.SMOKE_PARTICLE_FADE_POINT))
-                    particle.alpha = (percentLifeLeft / (1 - CannonView.SMOKE_PARTICLE_FADE_POINT)) * CannonView.SMOKE_PARTICLE_ALPHA;  
+                    particle.alpha = (percentLifeLeft / (1 - CannonView.SMOKE_PARTICLE_FADE_POINT)) * CannonView.SMOKE_PARTICLE_ALPHA;
             }
         },
 
@@ -419,7 +419,7 @@ define(function(require) {
             var particle = this.dormantFlameParticles.pop();
             if (particle) {
                 // Get the starting position of the particle if the cannon were not rotated.
-                //   Then rotate that point around the cannon's rotational axis to get the 
+                //   Then rotate that point around the cannon's rotational axis to get the
                 //   actual starting point.
                 var initialPosition = this._initialPosition
                     .set(this.flameParticleStartX, this.flameParticleStartYRange.random())
@@ -438,7 +438,7 @@ define(function(require) {
                 particle.velocity.set(CannonView.FLAME_PARTICLE_VELOCITY_RANGE.random(), 0).rotate(angle);
                 particle.rotation = Math.random() * Math.PI;
 
-                this.activeFlameParticles.push(particle);    
+                this.activeFlameParticles.push(particle);
             }
 
             return particle;
@@ -451,7 +451,7 @@ define(function(require) {
             var particle = this.dormantSmokeParticles.pop();
             if (particle) {
                 // Get the starting position of the particle if the cannon were not rotated.
-                //   Then rotate that point around the cannon's rotational axis to get the 
+                //   Then rotate that point around the cannon's rotational axis to get the
                 //   actual starting point.
                 var initialPosition = this._initialPosition
                     .set(this.flameParticleStartX, this.flameParticleStartYRange.random())

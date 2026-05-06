@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var SliderView = require('common/v3/pixi/view/slider');
     var AppView    = require('common/v3/app/app');
 
@@ -11,7 +11,7 @@ define(function(require) {
     var DielectricCapacitorView = require('views/capacitor/dielectric');
 
     /**
-     * 
+     *
      */
     var DielectricCircuitView = CircuitView.extend({
 
@@ -61,7 +61,7 @@ define(function(require) {
             // Position it
             sliderView.displayObject.x = Math.round(width * 0.20);
             sliderView.displayObject.y = Math.round(height / 2 - sliderView.displayObject.height / 2);
-            
+
 
             // Bind events for it
             this.listenTo(sliderView, 'slide', function(value, prev) {
@@ -74,7 +74,7 @@ define(function(require) {
                     sliderView.val(0);
                     this.model.set('disconnectedPlateCharge', 0);
                 }
-            }); 
+            });
 
             // Save a reference
             this.plateChargeSlider = sliderView;

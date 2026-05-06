@@ -304,7 +304,7 @@ define(function (require) {
                 units : this.simulation.get('units').time,
                 position: {
                     x : 468,
-                    y : AppView.windowIsShort() ? 396 : 630 
+                    y : AppView.windowIsShort() ? 396 : 630
                 }
             });
 
@@ -355,7 +355,7 @@ define(function (require) {
 
 
          updatePlaybackSpeed: function(){
-             
+
             var speed = this.$('input[name=playback-speed]:checked').val();
             this.timeScale = speed;
          },
@@ -432,7 +432,7 @@ define(function (require) {
             };
             this.referenceLineView.updatePosition();
 
-            
+
             this.sceneView.initTools([this.referenceLineView]);
 
             this.stopwatchView.hide();
@@ -580,7 +580,7 @@ define(function (require) {
                 range: range
             });
 
-            if(options.pips){            
+            if(options.pips){
                 $element.noUiSlider_pips(options.pips);
             }
 

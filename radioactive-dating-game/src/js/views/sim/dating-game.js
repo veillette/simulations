@@ -24,7 +24,7 @@ define(function (require) {
     var DatingGameSimView = RadioactiveDatingGameSimView.extend({
 
         events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
-            
+
         }),
 
         /**

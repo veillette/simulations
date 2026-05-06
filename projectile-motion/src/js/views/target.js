@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
@@ -62,7 +62,7 @@ define(function(require) {
         drawTarget: function() {
             this.graphics.clear();
             this.graphics.lineStyle(TargetView.LINE_WIDTH, TargetView.LINE_COLOR, 1);
-            
+
             // Paint the rings from the outside one to the inside
             var totalWidth  =  this.mvt.modelToViewDeltaX(this.model.get('radius')) * 2;
             var totalHeight = -this.mvt.modelToViewDeltaY(this.model.get('radius')) * 2 * TargetView.PERSPECTIVE_MODIFIER;

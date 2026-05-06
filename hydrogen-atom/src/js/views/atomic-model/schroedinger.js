@@ -24,7 +24,7 @@ define(function(require) {
         Constants.SchroedingerModelView.CELL_HEIGHT,
         Constants.SchroedingerModelView.CELL_DEPTH
     );
-    
+
     /**
      * Represents the scene for the SchroedingerModel
      */
@@ -65,7 +65,7 @@ define(function(require) {
             this.displayObject.addChild(this.axisGraphics);
             this.displayObject.addChild(this.axisLabelX);
             this.displayObject.addChild(this.axisLabelZ);
-            
+
             // Create state label
             this.stateLabel = new PIXI.Text('(n,l,m) = (1,0,0)', {
                 font: '12px Helvetica Neue',
@@ -105,7 +105,7 @@ define(function(require) {
             var atomPosition = this.getViewPosition();
             this.protonSprite.x = atomPosition.x;
             this.protonSprite.y = atomPosition.y;
-            
+
             this.displayObject.addChild(this.protonSprite);
 
             // Update axis labels

@@ -42,7 +42,7 @@ define(function (require) {
                         break;
                     }
                 }
-                
+
                 // Update our agitation level.
                 this.updateAgitationFactor();
 
@@ -60,7 +60,7 @@ define(function (require) {
             // Update the numerical nucleus configuration.
             this.set('numNeutrons', this.get('numNeutrons') - 1);
             this.set('numProtons',  this.get('numProtons')  + 1);
-            
+
             // Change one of the neutrons into a proton.  NOTE: We go backwards
             //   through the list because that tends to yield a proton which is
             //   less likely to be obscured by other nucleons, just due to the
@@ -81,7 +81,7 @@ define(function (require) {
             var electron = Electron.create({
                 position: this.get('position'),
                 velocity: new Vector2(
-                    Math.cos(angle) * BetaDecayCompositeNucleus.ELECTRON_EMISSION_SPEED, 
+                    Math.cos(angle) * BetaDecayCompositeNucleus.ELECTRON_EMISSION_SPEED,
                     Math.sin(angle) * BetaDecayCompositeNucleus.ELECTRON_EMISSION_SPEED
                 )
             });
@@ -91,12 +91,12 @@ define(function (require) {
             var antineutrino = Antineutrino.create({
                 position: this.get('position'),
                 velocity: new Vector2(
-                    Math.cos(angle) * BetaDecayCompositeNucleus.ANTINEUTRINO_EMISSION_SPEED, 
+                    Math.cos(angle) * BetaDecayCompositeNucleus.ANTINEUTRINO_EMISSION_SPEED,
                     Math.sin(angle) * BetaDecayCompositeNucleus.ANTINEUTRINO_EMISSION_SPEED
                 )
             });
             byProducts.push(antineutrino);
-            
+
             // Update our agitation factor.
             this.updateAgitationFactor();
 

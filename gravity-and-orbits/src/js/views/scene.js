@@ -36,7 +36,7 @@ define(function(require) {
     var GOSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -55,7 +55,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -68,7 +68,7 @@ define(function(require) {
             }
             else {
                 this.viewOriginX = Math.round(this.width  / 2);
-                this.viewOriginY = Math.round(this.height / 2);    
+                this.viewOriginY = Math.round(this.height / 2);
             }
 
             this.initMVT();
@@ -85,9 +85,9 @@ define(function(require) {
             );
 
             this.simulation.setBounds(
-                this.mvt.viewToModelX(0), 
-                this.mvt.viewToModelY(this.height), 
-                this.mvt.viewToModelX(this.width), 
+                this.mvt.viewToModelX(0),
+                this.mvt.viewToModelY(this.height),
+                this.mvt.viewToModelX(this.width),
                 this.mvt.viewToModelY(0)
             );
         },
@@ -234,7 +234,7 @@ define(function(require) {
             else
                 constructor = BodyView;
 
-            var bodyView = new constructor({ 
+            var bodyView = new constructor({
                 model: body,
                 mvt: this.mvt,
                 simulation: this.simulation
@@ -289,14 +289,14 @@ define(function(require) {
             this.gridView.setGridSize(this.mvt.modelToViewDeltaX(this.getViewSettings().gridSpacing));
 
             var i;
-            
+
             for (i = 0; i < this.bodyViews.length; i++)
                 this.bodyViews[i].updateMVT(this.mvt);
 
             for (i = this.bodyTraceViews.length - 1; i >= 0; i--)
                 this.bodyTraceViews[i].updateMVT(this.mvt);
 
-            for (i = this.collisionViews.length - 1; i >= 0; i--) 
+            for (i = this.collisionViews.length - 1; i >= 0; i--)
                 this.collisionViews[i].updateMVT(this.mvt);
 
             this.trigger('change:mvt', this, this.mvt);

@@ -14,7 +14,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var RutherfordScatteringSimulation = Simulation.extend({
 
@@ -68,7 +68,7 @@ define(function (require, exports, module) {
 
         restartRayGun: function() {
             if(this.rayGun.get('hold')){
-                this.rayGun.set('hold', false);                
+                this.rayGun.set('hold', false);
             }
         }
 

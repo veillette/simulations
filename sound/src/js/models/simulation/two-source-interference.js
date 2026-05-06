@@ -15,7 +15,7 @@ define(function (require, exports, module) {
          */
         initComponents: function() {
             SoundSimulation.prototype.initComponents.apply(this, arguments);
-            
+
             this.personListener.setOrigin( 0, -2.7);
             this.personListener.setOrigin2(0,  2.7);
 

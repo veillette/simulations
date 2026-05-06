@@ -9,7 +9,7 @@ define(function (require) {
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var ElectricForceLaw = function() {
         this.field = new Vector2();

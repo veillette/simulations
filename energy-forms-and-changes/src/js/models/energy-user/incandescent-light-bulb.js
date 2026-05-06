@@ -14,7 +14,7 @@ define(function (require) {
         defaults: _.extend({}, LightBulb.prototype.defaults, {
             hasFilament: true
         }),
-        
+
     });
 
     return IncandescentLightBulb;

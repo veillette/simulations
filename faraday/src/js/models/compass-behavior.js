@@ -18,13 +18,13 @@ define(function (require) {
 
     };
 
-    
+
     /**
      * ImmediateBehavior immediately sets the compass direction to
      *   match the direction of the B-field.
      */
     var Immediate = function(compassModel) {
-        this.compassModel = compassModel;  
+        this.compassModel = compassModel;
     };
 
     _.extend(Immediate.prototype, baseFunctions, {
@@ -41,7 +41,7 @@ define(function (require) {
      *   exceeded, the needle angle changes incrementally over time.
      */
     var Incremental = function(compassModel) {
-        this.compassModel = compassModel;  
+        this.compassModel = compassModel;
     };
 
     var MAX_INCREMENT = Math.PI / 4;
@@ -85,7 +85,7 @@ define(function (require) {
      *   at it starts to move, and to wobble as it comes to rest.
      */
     var Kinematic = function(compassModel) {
-        this.compassModel = compassModel;  
+        this.compassModel = compassModel;
 
         this.theta = 0; // Angle of needle orientation (in radians)
         this.omega = 0; // Angular velocity, the change in angle over time.
@@ -119,7 +119,7 @@ define(function (require) {
                 // Step 1: orientation
                 var thetaOld = this.theta;
                 var alphaTemp = (SENSITIVITY * Math.sin(phi) * magnitude) - (DAMPING * this.omega);
-                
+
                 this.theta = this.theta + (this.omega * deltaTime) + (0.5 * alphaTemp * deltaTime * deltaTime);
                 if (this.theta !== thetaOld) {
                     // Set the compass needle direction.

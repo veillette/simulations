@@ -13,7 +13,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var LightbulbView = PixiView.extend({
 
@@ -61,7 +61,7 @@ define(function(require) {
         /**
          * Sets the scaling factor that determines how much the bulb glows.
          * Larger values will cause the bulb to reach it's maximum glow sooner.
-         * 
+         *
          * @param scale
          */
         setGlassGlowScale: function(scale) {
@@ -70,17 +70,17 @@ define(function(require) {
                 this.forceUpdate();
             }
         },
-        
+
         /**
          * Gets the scaling factor that determines how much the bulb glows.
          * Larger values will cause the bulb to reach it's maximum glow sooner.
-         * 
+         *
          * @return
          */
         getGlassGlowScale: function() {
             return this.glassGlowScale;
         },
-        
+
         //----------------------------------------------------------------------------
         // SimpleObserver implementation
         //----------------------------------------------------------------------------
@@ -117,21 +117,21 @@ define(function(require) {
          */
         update: function() {
             this.displayObject.visible = this.model.get('enabled');
-            
+
             if (this.displayObject.visible) {
                 // Get the light intensity, a value in the range 0...+1.
                 var intensity = this.model.getIntensity();
                 if (intensity != this.previousIntensity) {
-                    
+
                     this.lightRaysView.setIntensity(intensity);
-                    
+
                     // Modulate alpha channel of the glass to make it appear to glow
                     var alpha = (LightbulbView.GLASS_MIN_ALPHA + (this.glassGlowScale * (1 - LightbulbView.GLASS_MIN_ALPHA) * intensity));
                     if (alpha > 1)
                         alpha = 1;
-                    
+
                     this.bulb.alpha = alpha;
-                    
+
                     this.previousIntensity = intensity;
                 }
             }

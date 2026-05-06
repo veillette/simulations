@@ -20,7 +20,7 @@ define(function (require) {
     TargetMaterials.PLATINUM  = new Platinum();
     TargetMaterials.CALCIUM   = new Calcium();
     TargetMaterials.MAGNESIUM = new Magnesium();
-    
+
     TargetMaterials.TARGET_MATERIALS = [
         TargetMaterials.SODIUM,
         TargetMaterials.ZINC,
@@ -44,7 +44,7 @@ define(function (require) {
             return TargetMaterials.TARGET_COLORS[material.cid];
         return '#000';
     };
-    
+
     TargetMaterials.setSimpleElectronModel = function() {
         for (var i = 0; i < TargetMaterials.TARGET_MATERIALS.length; i++) {
             var targetMaterial = TargetMaterials.TARGET_MATERIALS[i];

@@ -7,10 +7,10 @@ define(function (require) {
     var PositionableObject = require('common/models/positionable-object');
 
     /**
-     * 
+     *
      */
     var VelocitySensor = PositionableObject.extend({
-        
+
         defaults: _.extend({}, PositionableObject.prototype.defaults, {
             velocity: null,
             enabled: false

@@ -84,7 +84,7 @@ define(function (require) {
          */
         resetComponents: function() {
             FaradaySimView.prototype.resetComponents.apply(this);
-            
+
             this.resetBarMagnetControls();
         },
 
@@ -97,7 +97,7 @@ define(function (require) {
                 this.simulation.barMagnet.set('direction', this.simulation.barMagnet.get('direction') - Math.PI / 2);
                 this.sceneView.hideEarth();
             }
-            
+
         }
 
     });

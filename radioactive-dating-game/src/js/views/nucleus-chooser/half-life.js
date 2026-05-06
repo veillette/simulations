@@ -19,7 +19,7 @@ define(function(require) {
     var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
 
     /**
-     * 
+     *
      */
     var HalfLifeNucleusChooserView = NucleusChooser.extend({
 
@@ -68,8 +68,8 @@ define(function(require) {
             });
 
             var largeAtomMVT = new ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0), 
-                new Vector2(0, 0), 
+                new Vector2(0, 0),
+                new Vector2(0, 0),
                 this.scale * 0.4
             );
             var largeAtomSymbolSize = 26;

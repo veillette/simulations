@@ -40,7 +40,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -63,17 +63,17 @@ define(function(require) {
             var topMargin = margin;
             var bottomMargin = margin;
             var usableScreenSpace = new Rectangle(
-                leftMargin, 
-                topMargin, 
-                this.width - leftMargin - rightMargin, 
+                leftMargin,
+                topMargin,
+                this.width - leftMargin - rightMargin,
                 this.height - topMargin - bottomMargin
             );
 
             var boundsRatio = bounds.w / bounds.h;
             var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
-            
+
             var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
-            
+
             this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
             this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
 
@@ -131,7 +131,7 @@ define(function(require) {
         },
 
         _update: function(time, deltaTime, paused, timeScale) {
-            
+
         },
 
         moleculeAdded: function(molecule, molecules) {
@@ -162,7 +162,7 @@ define(function(require) {
         },
 
         createAndAddMoleculeView: function(molecule) {
-            var moleculeView = new MoleculeView({ 
+            var moleculeView = new MoleculeView({
                 model: molecule,
                 mvt: this.mvt
             });
@@ -198,7 +198,7 @@ define(function(require) {
         },
 
         createAndAddPhotonView: function(photon) {
-            var photonView = new PhotonView({ 
+            var photonView = new PhotonView({
                 model: photon,
                 mvt: this.mvt,
                 modelDiameter: 100

@@ -5,7 +5,7 @@ define(function(require) {
     var _ = require('underscore');
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var ArrowView = require('common/v3/pixi/view/arrow');
     var Colors    = require('common/colors/colors');
@@ -86,7 +86,7 @@ define(function(require) {
             this.initNumber();
             this.initMomentumArrow();
             this.initLabels();
-            
+
             this.displayObject.addChild(this.ball);
             this.displayObject.addChild(this.velocityMarker);
             this.displayObject.addChild(this.momentumArrowView.displayObject);
@@ -100,7 +100,7 @@ define(function(require) {
         },
 
         initVelocityArrow: function() {
-            this.velocityArrowView = new ArrowView({ 
+            this.velocityArrowView = new ArrowView({
                 model: this.velocityArrowViewModel,
 
                 tailWidth:  BallView.ARROW_TAIL_WIDTH,
@@ -147,7 +147,7 @@ define(function(require) {
         },
 
         initMomentumArrow: function() {
-            this.momentumArrowView = new ArrowView({ 
+            this.momentumArrowView = new ArrowView({
                 model: this.momentumArrowViewModel,
 
                 tailWidth:  BallView.MOMENTUM_ARROW_TAIL_WIDTH,
@@ -238,7 +238,7 @@ define(function(require) {
                 var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
                 this._viewPosition.x = local.x - this.dragOffset.x;
                 this._viewPosition.y = local.y - this.dragOffset.y;
-                
+
                 var modelPosition = this.mvt.viewToModel(this._viewPosition);
                 if (this.simulation.get('oneDimensional'))
                     modelPosition.y = 0;
@@ -286,7 +286,7 @@ define(function(require) {
 
                 if (this.simulation.get('oneDimensional'))
                     y = 0;
-                
+
                 this.velocityMarker.x = x;
                 this.velocityMarker.y = y;
 

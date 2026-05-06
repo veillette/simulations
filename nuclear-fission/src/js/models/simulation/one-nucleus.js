@@ -26,9 +26,9 @@ define(function (require, exports, module) {
     var OneNucleusSimulation = NuclearPhysicsSimulation.extend({
 
         defaults: _.extend({}, NuclearPhysicsSimulation.prototype.defaults, {
-            
+
         }),
-        
+
         initialize: function(attributes, options) {
             NuclearPhysicsSimulation.prototype.initialize.apply(this, [attributes, options]);
         },
@@ -167,7 +167,7 @@ define(function (require, exports, module) {
                         angle = Math.random() * Math.PI / 3;
                         if (Math.random() < 0.5)
                             angle += Math.PI;
-                        
+
                         xVel = Math.sin(angle) * OneNucleusSimulation.MOVING_NUCLEON_VELOCITY;
                         yVel = Math.cos(angle) * OneNucleusSimulation.MOVING_NUCLEON_VELOCITY;
                         byProduct.setVelocity(xVel, yVel);
@@ -188,7 +188,7 @@ define(function (require, exports, module) {
                         angle = (Math.random() * Math.PI / 3) + (Math.PI / 3);
                         if (Math.random() < 0.5)
                             angle += Math.PI;
-                        
+
                         xVel = Math.sin(angle) * OneNucleusSimulation.INITIAL_NUCLEUS_VELOCITY;
                         yVel = Math.cos(angle) * OneNucleusSimulation.INITIAL_NUCLEUS_VELOCITY;
                         var xAcc = Math.sin(angle) * OneNucleusSimulation.INITIAL_NUCLEUS_ACCELERATION;

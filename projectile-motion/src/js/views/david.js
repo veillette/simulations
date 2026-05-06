@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
 

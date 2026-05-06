@@ -273,9 +273,9 @@ define(function(require) {
         drawXAxisTick: function(x, labelText) {
             x = this.graphOriginX + x;
             var y = this.graphOriginY;
-            
+
             this.xAxisTicks.moveTo(x, y);
-            this.xAxisTicks.lineTo(x, y - FissionEnergyChartView.TICK_MARK_LENGTH);   
+            this.xAxisTicks.lineTo(x, y - FissionEnergyChartView.TICK_MARK_LENGTH);
 
             var label = new PIXI.Text(labelText, {
                 font: FissionEnergyChartView.SMALL_LABEL_FONT,
@@ -343,12 +343,12 @@ define(function(require) {
          *   for the nucleus.
          */
         drawPotentialEnergyLine: function() {
-            
+
             // Clear the existing curve.
             var graphics = this.potentialEnergyGraphics;
             graphics.clear();
             graphics.lineStyle(FissionEnergyChartView.LINE_WIDTH, POTENTIAL_LINE_COLOR, FissionEnergyChartView.LINE_ALPHA);
-            
+
             var margin     = this.energyLineMargin;
             var startX     = this.graphOriginX + margin;
             var centerX    = this.graphOriginX + this.graphWidth / 2;
@@ -359,24 +359,24 @@ define(function(require) {
             //   the curve to values that make the visual representation reasonable.
             var energyWellWidth = this.nucleusDiameter;
             var tailMultiplier = energyWellWidth * FissionEnergyChartView.PEAK_OF_ENERGY_WELL / 2;
-            
+
             // Define the crossover zone between the calculation for the tails
             //   and the calculation for the energy well.  This is arbitrarily
             //   chosen to make the curve look good.
             var crossoverDistanceFromCenter = energyWellWidth * 0.6;
             var crossoverZoneWidth = energyWellWidth / 4;
-            
+
             // Move to the starting point for the curve.
             var yGraphPos = (1 / (centerX - xScreenPos)) * tailMultiplier;
-            graphics.moveTo(xScreenPos, this.convertGraphToScreenY(yGraphPos)); 
+            graphics.moveTo(xScreenPos, this.convertGraphToScreenY(yGraphPos));
 
             // Draw the curve.
             while (xScreenPos < endX) {
                 xScreenPos += 1;
-                
+
                 var xGraphPos = xScreenPos - centerX;
                 var wellWeightingFactor;
-                    
+
                 if (xScreenPos < centerX - crossoverDistanceFromCenter - crossoverZoneWidth / 2) {
                     // Left side (tail) of the curve.
                     yGraphPos = (1/-xGraphPos) * tailMultiplier;
@@ -389,7 +389,7 @@ define(function(require) {
                         centerX, xScreenPos, crossoverDistanceFromCenter, crossoverZoneWidth
                     );
                     yGraphPos = (
-                        (((1 / -xGraphPos) * tailMultiplier) * (1 - wellWeightingFactor)) + 
+                        (((1 / -xGraphPos) * tailMultiplier) * (1 - wellWeightingFactor)) +
                         (this.calculateWellValue(xGraphPos) * (wellWeightingFactor))
                     );
                     graphics.lineTo(xScreenPos, this.convertGraphToScreenY(yGraphPos));
@@ -405,7 +405,7 @@ define(function(require) {
                     // Crossing out of the well.
                     wellWeightingFactor = this.computeWellWeightingFactor(centerX, xScreenPos, crossoverDistanceFromCenter, crossoverZoneWidth);
                     yGraphPos = (
-                        (((1 / xGraphPos) * tailMultiplier) * (1 - wellWeightingFactor)) + 
+                        (((1 / xGraphPos) * tailMultiplier) * (1 - wellWeightingFactor)) +
                         (this.calculateWellValue(xGraphPos) * (wellWeightingFactor))
                     );
                     graphics.lineTo(xScreenPos, this.convertGraphToScreenY(yGraphPos));
@@ -440,8 +440,8 @@ define(function(require) {
 
         calculateWellValue: function(xGraphPos) {
             return FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL + (
-                (Math.cos(((xGraphPos * 2 / this.nucleusDiameter) - 1) * Math.PI) + 1) * 
-                (FissionEnergyChartView.PEAK_OF_ENERGY_WELL - FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL) / 
+                (Math.cos(((xGraphPos * 2 / this.nucleusDiameter) - 1) * Math.PI) + 1) *
+                (FissionEnergyChartView.PEAK_OF_ENERGY_WELL - FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL) /
                 2
             );
         },
@@ -455,7 +455,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             if (!paused && (
-                    this.fissionState == FissionEnergyChartView.STATE_FISSIONING || 
+                    this.fissionState == FissionEnergyChartView.STATE_FISSIONING ||
                     this.fissionState == FissionEnergyChartView.STATE_FISSIONED
                 )
             ) {
@@ -466,7 +466,7 @@ define(function(require) {
         updateNucleiPositions: function(time, deltaTime, paused) {
             var xPos;
             var yPos;
-            
+
             switch (this.fissionState) {
                 case FissionEnergyChartView.STATE_IDLE:
                     // Position the unfissioned nucleus image at the bottom of the energy well.
@@ -475,22 +475,22 @@ define(function(require) {
                     yPos = this.convertGraphToScreenY(FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL);
                     this.unfissionedNucleus.x = xPos;
                     this.unfissionedNucleus.y = yPos;
-                    
+
                     // Position the total energy line, also at the bottom of the well.
                     this.totalEnergyGraphics.y = yPos;
 
                     break;
-                
+
                 case FissionEnergyChartView.STATE_FISSIONING:
                     // Move the unfissioned nucleus up toward the top of the energy
                     //   well.  Jitter it to create the impression of instability.
 
                     xPos = this.graphOriginX + this.graphWidth / 2;
-                    
+
                     // Cause the nucleus to move upward.
                     var nucleusBasePosY = this.convertGraphToScreenY(FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL);
                     var nucleusTopPosY  = this.convertGraphToScreenY(FissionEnergyChartView.PEAK_OF_ENERGY_WELL);
-                    
+
                     if (this.unfissionedNucleus.y > nucleusTopPosY) {
                         yPos = this.unfissionedNucleus.y + (
                             (nucleusTopPosY - nucleusBasePosY) / FissionEnergyChartView.NUM_UPWARD_STEPS_FOR_NUCLEUS
@@ -502,37 +502,37 @@ define(function(require) {
                     else {
                         yPos = nucleusTopPosY;
                     }
-                    
+
                     // Create a bit of jitter along the x-axis to create a look of
                     // instability.
                     xPos += xPos * (Math.random() - 0.5) * 0.10;//(Math.random() - 0.5) * this.nucleusDiameter * 0.8;
                     this.unfissionedNucleus.x = xPos;
                     this.unfissionedNucleus.y = yPos;
-                    
+
                     // Move the total energy line up with the nucleus.
                     this.totalEnergyGraphics.y = yPos;
 
                     break;
-                
+
                 case FissionEnergyChartView.STATE_FISSIONED:
                     // Move the daughter nuclei based on their current distance from
                     //   the origin in the model.
-                    
+
                     // Y position is the same for both nuclei - at the top of the energy well.
                     yPos = this.convertGraphToScreenY(FissionEnergyChartView.PEAK_OF_ENERGY_WELL);
-                    
+
                     // Figure out X position of the larger daughter nucleus.
                     xPos = this.graphOriginX + this.graphWidth / 2 + this.mvt.modelToViewDeltaX(this.model.getX());
                     if ((xPos < this.graphOriginX + this.graphWidth) && (xPos > this.graphOriginX)) {
                         // Set the position for this image.
-                        this.daughterNucleus2.x = xPos; 
+                        this.daughterNucleus2.x = xPos;
                         this.daughterNucleus2.y = yPos;
                     }
                     else {
                         // Don't bother showing and updating the nucleus if it is off the chart.
                         this.daughterNucleus2.visible = false;
                     }
-                    
+
                     // Figure out X position of the smaller daughter nucleus.
                     if (this.daughterNucleusModel) {
                         xPos = this.graphOriginX + this.graphWidth / 2 + this.mvt.modelToViewDeltaX(this.daughterNucleusModel.getX());
@@ -546,7 +546,7 @@ define(function(require) {
                             this.daughterNucleus1.visible = false;
                         }
                     }
-                    
+
                     // Position the total energy line at the top of the well.
                     this.totalEnergyGraphics.y = this.convertGraphToScreenY(FissionEnergyChartView.PEAK_OF_ENERGY_WELL);
 
@@ -563,7 +563,7 @@ define(function(require) {
 
                 if (this.daughterNucleusModel === null)
                     throw 'Daughter nucleus not found.';
-                
+
                 this.fissionState = FissionEnergyChartView.STATE_FISSIONED;
                 this.unfissionedNucleus.visible = false;
                 this.daughterNucleus1.visible = true;

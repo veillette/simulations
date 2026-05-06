@@ -32,7 +32,7 @@ define(function(require) {
 
         updateMass: function(body, mass) {
             BodyView.prototype.updateMass.apply(this, arguments);
-            
+
             if (mass > this.highMass || mass < this.lowMass) {
                 this.genericPlanet.visible = true;
                 this.body.visible = false;

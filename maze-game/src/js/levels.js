@@ -3,7 +3,7 @@ define(function (require) {
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Level = require('models/level');
 
     // Character values to make mapping easier

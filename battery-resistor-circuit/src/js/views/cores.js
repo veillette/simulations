@@ -50,7 +50,7 @@ define(function(require) {
                 this.coreViews[i].removeFrom(this.displayObject);
                 this.coreViews.splice(i, 1);
             }
-            
+
             // Create new core views
             for (var i = 0; i < this.cores.length; i++) {
                 var coreView = new CoreView({

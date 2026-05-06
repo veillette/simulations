@@ -8,7 +8,7 @@ define(function (require) {
 
     var Sensor = PositionableObject.extend({
 
-        
+
 
     });
 

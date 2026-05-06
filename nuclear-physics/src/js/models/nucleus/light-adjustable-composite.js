@@ -36,17 +36,17 @@ define(function (require) {
                     // Oxygen
                     this.agitationFactor = LightAdjustableCompositeNucleus.PRE_DECAY_AGITATION_FACTOR;
                     break;
-                    
+
                 case 9:
                     // Flourine
                     this.agitationFactor = LightAdjustableCompositeNucleus.POST_DECAY_AGITATION_FACTOR;
                     break;
-                    
+
                 default:
                     // If we reach this point in the code, there is a problem
                     //   somewhere that should be debugged.
                     console.error('Error: Unexpected atomic weight in beta decay nucleus.');
-                    
+
             }
         }
 

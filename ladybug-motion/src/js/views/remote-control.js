@@ -98,7 +98,7 @@ define(function(require) {
                 panel.controlArea.mouseup         = _.bind(this.dragEnd, this);
                 panel.controlArea.touchendoutside = _.bind(this.dragEnd, this);
                 panel.controlArea.mouseupoutside  = _.bind(this.dragEnd, this);
-                panel.controlArea.interactive = true;  
+                panel.controlArea.interactive = true;
                 panel.addChild(panel.controlArea);
 
                 this.panels.addChild(panel);
@@ -110,7 +110,7 @@ define(function(require) {
 
             // Draw the backgrounds and position everything
             this.drawTabbedPanels();
-            
+
             this.displayObject.addChild(this.tabs);
             this.displayObject.addChild(this.panels);
             this.displayObject.addChild(this.areaMask);
@@ -160,7 +160,7 @@ define(function(require) {
                 tab.label.x = -10;
                 tab.label.y = Math.round(th / 2) + 3;
             }
-            
+
             this.areaMask.clear();
             this.areaMask.x = -RemoteControlView.AREA_WIDTH  - RemoteControlView.PANEL_PADDING;
             this.areaMask.y = -RemoteControlView.AREA_HEIGHT - RemoteControlView.PANEL_PADDING;
@@ -343,7 +343,7 @@ define(function(require) {
 
                 this.simulation.setSamplePoint(x, y);
             });
-            
+
         },
 
         velocityChanged: function(arrowModel) {
@@ -356,7 +356,7 @@ define(function(require) {
                 var xPercent = (arrowModel.get('targetX') - arrowModel.get('originX')) / RemoteControlView.AREA_WIDTH;
                 var yPercent = (arrowModel.get('targetY') - arrowModel.get('originY')) / RemoteControlView.AREA_HEIGHT;
 
-                this.model.setVelocity(xPercent, yPercent);   
+                this.model.setVelocity(xPercent, yPercent);
             });
         },
 

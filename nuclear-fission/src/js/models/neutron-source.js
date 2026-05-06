@@ -34,7 +34,7 @@ define(function (require) {
          */
         generateNeutron: function() {
             var newNeutron = Nucleon.create({
-                type: Nucleon.NEUTRON, 
+                type: Nucleon.NEUTRON,
                 position: this.get('position'),
                 velocity: this._velocity.set(
                     this.get('neutronVelocity') * Math.cos(this.get('firingAngle')),

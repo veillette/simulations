@@ -9,7 +9,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * Turbine is the model of a simple turbine. It rotates at some speed, and its 
+     * Turbine is the model of a simple turbine. It rotates at some speed, and its
      *   rotation is measured in RPMs (rotations per minute).
      */
     var Turbine = BarMagnet.extend({
@@ -53,11 +53,11 @@ define(function (require) {
          */
         update: function(time, deltaTime) {
             if (this.get('speed') !== 0) {
-                
+
                 // Determine the new direction
                 var delta = deltaTime * this.get('speed') * this.get('maxDelta');
                 var newDirection = this.get('direction') + delta;
-                
+
                 // Limit direction to -360...+360 degrees.
                 var sign = (newDirection < 0) ? -1 : +1;
                 newDirection = sign * (Math.abs(newDirection)  % (2 * Math.PI));

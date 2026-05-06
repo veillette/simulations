@@ -44,7 +44,7 @@ define(function (require) {
         }),
 
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             options = _.extend({

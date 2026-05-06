@@ -7,7 +7,7 @@ define(function (require) {
     var WavelengthColors = require('common/colors/wavelength');
 
     var MovingObject = require('hydrogen-atom/models/moving-object');
-    
+
     var Constants = require('constants');
 
     /**
@@ -33,7 +33,7 @@ define(function (require) {
         getWavelength: function() {
             return this.get('wavelength');
         },
-        
+
         /**
          * Gets the Color associated with the photon's wavelength.
          */
@@ -57,14 +57,14 @@ define(function (require) {
 
             return color;
         },
-        
+
         /**
          * Was this photon emitted by the atom?
          */
         isEmitted: function() {
             return this.get('emitted');
         },
-        
+
         /**
          * Did this photon collide with the atom?
          */

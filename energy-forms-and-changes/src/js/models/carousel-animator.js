@@ -34,7 +34,7 @@ define(function (require) {
             activeElementPosition: null,
             transitionDuration: Constants.EnergySystemsSimulation.TRANSITION_DURATION
         },
-        
+
         initialize: function(attributes, options) {
             this.initElementPositions();
 

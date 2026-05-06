@@ -4,14 +4,14 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView   = require('common/v3/pixi/view');
     var ArrowView  = require('common/v3/pixi/view/arrow');
-    
+
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var CurrentIndicatorView = PixiView.extend({
 
@@ -33,7 +33,7 @@ define(function(require) {
             this.initMinus();
 
             this.displayObject.alpha = 0;
-            
+
             this.updateMVT(this.mvt);
         },
 

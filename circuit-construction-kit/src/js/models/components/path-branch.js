@@ -44,10 +44,10 @@ define(function (require) {
             var length = 0;
             for (var i = 0; i < this.segments.length; i++)
                 length += this.segments[i].getLength();
-            
+
             if (isNaN(length))
                 throw 'Length is NaN';
-            
+
             return length;
         },
 

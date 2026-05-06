@@ -12,11 +12,11 @@ define(function(require) {
     var defineInputUpdateLocks = require('common/locks/define-locks');
 
     var html = require('text!../../templates/laser-controls.html');
-    
+
     require('less!styles/laser-controls');
 
     /**
-     * 
+     *
      */
     var LaserControlsView = Backbone.View.extend({
 
@@ -31,7 +31,7 @@ define(function(require) {
         initialize: function(options) {
             this.showWavelengthControls = options.showWavelengthControls;
             this.simulation = options.simulation;
-            
+
             this.wavelengthSliderView = new WavelengthSliderView({
                 defaultWavelength: this.model.get('wavelength') * 1E9, // Convert between SI and nanometers
                 minWavelength: Constants.MIN_WAVELENGTH,
@@ -61,7 +61,7 @@ define(function(require) {
             };
 
             this.setElement($(this.template(data)));
-            
+
             this.wavelengthSliderView.render();
             this.$('.wavelength-slider-wrapper').append(this.wavelengthSliderView.el);
 
@@ -95,7 +95,7 @@ define(function(require) {
 
     // Add input/update locking functionality to the prototype
     defineInputUpdateLocks(LaserControlsView);
-    
+
 
     return LaserControlsView;
 });

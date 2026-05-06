@@ -44,7 +44,7 @@ define(function(require) {
 
             var imageScale = this.getImageScale();
 
-            /* 
+            /*
              * The original simulation uses an instance of FaucetNode
              *   (from phet.common.piccolophet.nodes.faucet.FaucetNode)
              *   in whose constructor they pass a mysterious integer
@@ -61,9 +61,9 @@ define(function(require) {
             faucet.x = offsetX + this.mvt.modelToViewDeltaX(Constants.Faucet.OFFSET_FROM_CENTER_TO_WATER_ORIGIN.x);
             faucet.y = offsetY + this.mvt.modelToViewDeltaY(Constants.Faucet.OFFSET_FROM_CENTER_TO_WATER_ORIGIN.y);
 
-            
+
             faucet.scale.x = faucet.scale.y = imageScale * 0.9;
-            
+
             var handle = new PIXI.Graphics();
             handle.beginFill(Colors.parseHex(Constants.WATER_FILL_COLOR), 1);
             handle.lineStyle(1, 0x333333, 1);
@@ -86,7 +86,7 @@ define(function(require) {
                 backgroundLineColor: '#000',
                 backgroundLineWidth: 1,
                 backgroundLineAlpha: 0.4,
-                
+
                 handle: handle
             });
             this.sliderView.displayObject.x = 5;
@@ -119,7 +119,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             EnergySourceView.prototype.update.apply(this, arguments);
-            
+
             this.waterDropCollectionView.update(time, deltaTime, paused);
         }
 

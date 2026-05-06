@@ -19,14 +19,14 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var RadioWavesSimulation = FixedIntervalSimulation.extend({
 
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
@@ -45,7 +45,7 @@ define(function (require, exports, module) {
         initComponents: function() {
             // Create the transmitting antenna
             this.transmittingAntenna = new Antenna(
-                new Vector2(this.origin.x, this.origin.y - 100), 
+                new Vector2(this.origin.x, this.origin.y - 100),
                 new Vector2(this.origin.x, this.origin.y + 250)
             );
 
@@ -59,7 +59,7 @@ define(function (require, exports, module) {
             // Create the receiving antenna
             var receivingXOffset = 625;
             this.receivingAntenna = new Antenna(
-                new Vector2(this.origin.x + receivingXOffset, this.transmittingElectron.getStartPosition().y - 50), 
+                new Vector2(this.origin.x + receivingXOffset, this.transmittingElectron.getStartPosition().y - 50),
                 new Vector2(this.origin.x + receivingXOffset, this.transmittingElectron.getStartPosition().y + 75)
             );
 

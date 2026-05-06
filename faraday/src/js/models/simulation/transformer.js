@@ -29,7 +29,7 @@ define(function (require, exports, module) {
         defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
 
@@ -69,9 +69,9 @@ define(function (require, exports, module) {
                 currentSource = this.battery;
             else if (this.acPowerSupply.get('enabled'))
                 currentSource = this.acPowerSupply;
-            
+
             this.electromagnet = new Electromagnet({
-                sourceCoilModel: this.sourceCoil, 
+                sourceCoilModel: this.sourceCoil,
                 currentSource: currentSource,
                 maxStrength: Constants.ELECTROMAGNET_STRENGTH_MAX,
                 position: TransformerSimulation.ELECTROMAGNET_LOCATION,
@@ -86,7 +86,7 @@ define(function (require, exports, module) {
                 position: TransformerSimulation.COMPASS_LOCATION,
                 behavior: Compass.INCREMENTAL_BEHAVIOR
             }, {
-                magnetModel: this.electromagnet 
+                magnetModel: this.electromagnet
             });
 
             // Field Meter
@@ -145,7 +145,7 @@ define(function (require, exports, module) {
 
         _update: function(time, deltaTime) {
             FaradaySimulation.prototype._update.apply(this, arguments);
-            
+
             this.acPowerSupply.update(time, deltaTime);
             this.compass.update(time, deltaTime);
             this.fieldMeter.update(time, deltaTime);

@@ -67,7 +67,7 @@ define(function(require) {
 
         update: function(time, deltaTime, paused) {
             if (!paused) {
-                
+
             }
         },
 

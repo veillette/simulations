@@ -25,7 +25,7 @@ define(function (require) {
     var photonVel_3D = new Vector3();
     var t1           = new Vector3();
     var vec3         = new Vector3();
-    
+
     var filter             = new PhotonPassFilter();
     var visibleLightFilter = new BandPassFilter(300E-9, 700E-9);
     var irFilter           = new InfraredFiler();
@@ -43,7 +43,7 @@ define(function (require) {
                 // For photons coming from the sun
                 if (visibleLightFilter.passes(photon.get('wavelength')))
                     this.doCollision(photon, cloud, photon.get('position'));
-                
+
                 // For infrared photons
                 if (irFilter.absorbs(photon.get('wavelength')))
                     this.doScatter(photon);
@@ -64,7 +64,7 @@ define(function (require) {
 
         doCollision: function(photon, cloud, collisionPoint) {
             normal.set(this.getNormalAtPoint(photon.get('position'), cloud));
-            // Check to see that the bodies are moving toward each other. 
+            // Check to see that the bodies are moving toward each other.
             //   Otherwise, there is no collision
             vRel
                 .set(photon.get('velocity'))
@@ -84,7 +84,7 @@ define(function (require) {
                 photonVel_3D.set(photon.get('velocity').x, photon.get('velocity').y, 0);
                 normal_3D.set(normal.x, normal.y, 0);
                 omega.set(0, 0, photon.get('omega'));
-                
+
                 // Get the magnitude along the line of action of the bodies'
                 //  relative velocities at the point of contact.
                 var vr = omega
@@ -97,7 +97,7 @@ define(function (require) {
 
                 // Compute the impulse (j)
                 var numerator = -vr * (1 + e);
-                var denominator = (1 / photon.get('mass')) + 
+                var denominator = (1 / photon.get('mass')) +
                     vec3
                         .set(normal_3D)
                         .dot(
@@ -143,7 +143,7 @@ define(function (require) {
 
             // If we are hitting the cloud from bellow, we need to
             //   flip the vector.
-            if (y < b) 
+            if (y < b)
                 xt *= -1;
 
             // The vector normal to (xt, yt) is (yt, -xt).
@@ -151,7 +151,7 @@ define(function (require) {
         }
 
     };
-    
+
 
     return PhotonCloudCollisionModel;
 });

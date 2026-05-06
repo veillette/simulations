@@ -26,7 +26,7 @@
             common:    '../../../common',
 
             'nuclear-physics': '../../../nuclear-physics/src/js/',
-            
+
             'radioactive-dating-game':           '.',
             'radioactive-dating-game/templates': '../templates',
             'radioactive-dating-game/styles':    '../styles'

@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         CANNON:             'cannon.png',
         CANNON_CARRIAGE:    'cannon-carriage.png',
         CANNON_BALL:        'cannon-ball.png',

@@ -30,15 +30,15 @@ define(function (require) {
         getCurve: function() {
             return this.curve;
         },
-        
+
         getParent: function() {
             return this.parent;
         },
-        
+
         getLayer: function() {
             return this.layer;
         },
-        
+
         getPathScale: function() {
             return this.pathScale;
         }

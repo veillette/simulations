@@ -177,7 +177,7 @@ define(function (require) {
 
         /**
          * Field due to the plate, at a specific location.
-         * Between the plates, the field is either E_plate_dielectric or E_plate_air, 
+         * Between the plates, the field is either E_plate_dielectric or E_plate_air,
          *   depending on whether the probe intersects the dielectric.
          * Outside the plates, the field is zero.
          */

@@ -89,7 +89,7 @@ define(function (require) {
 
         valueAtTime: function(frequency, maxAmplitude, time) {
             var amplitude;
-            
+
             if (frequency !== 0)
                 amplitude = Math.sin(frequency * time * Math.PI * 2) * maxAmplitude;
             else

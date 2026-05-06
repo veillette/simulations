@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         BAR_MAGNET:            'bar-magnet-alternate.png',
         ELECTRON_BG:           'electron_background.png',
         ELECTRON_FG:           'electron_foreground.png',
@@ -14,7 +14,7 @@ define(function (require) {
 
         BATTERY:               'battery.png',
         AC_POWER_SUPPLY:       'ac-power-supply.png',
-        
+
         LIGHTBULB_BULB:        'lightbulb-glass.png',
         LIGHTBULB_CAP:         'lightbulb-cap.png',
         LIGHTBULB_BASE:        'lightbulb-base.png',

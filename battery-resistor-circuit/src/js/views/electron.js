@@ -58,7 +58,7 @@ define(function(require) {
             var modelPosition = this.model.wirePatch.getPosition(this.model.position);
             var viewPosition = this.mvt.modelToView(modelPosition);
             this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y; 
+            this.displayObject.y = viewPosition.y;
         },
 
         updateGlow: function(paused) {

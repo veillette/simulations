@@ -11,7 +11,7 @@ define(function (require) {
     var Polygon = require('models/shape/polygon');
 
     /**
-     * 
+     *
      */
     var Prism = PositionableObject.extend({
 
@@ -29,7 +29,7 @@ define(function (require) {
                 this.shape = options.shape;
             else if (options.points)
                 this.shape = new Polygon(options.points, options.referencePointIndex);
-            
+
             this._point = new Vector2();
         },
 
@@ -51,9 +51,9 @@ define(function (require) {
          * Clones this prism instance and returns it
          */
         clone: function() {
-            return new Prism({ 
-                position: this.get('position') 
-            }, { 
+            return new Prism({
+                position: this.get('position')
+            }, {
                 shape: this.shape.clone()
             });
         },

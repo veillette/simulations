@@ -19,11 +19,11 @@ define(function(require) {
     });
 
     var html = require('text!templates/graph.html');
-    
+
     require('less!styles/graph');
 
     /**
-     * 
+     *
      */
     var GraphView = Backbone.View.extend({
 
@@ -192,7 +192,7 @@ define(function(require) {
 
             // Draw Grid
             ctx.beginPath();
-            
+
             // Draw longitudinal grid lines
             for (c = 0; c <= cols; c++) {
                 ctx.moveTo(originX + gridCellWidth * c, originY);
@@ -224,7 +224,7 @@ define(function(require) {
 
             // Draw ticks
             var halfTick = this.tickLength / 2;
-            
+
             if (this.x.showNumbers) {
                 for (c = 0; c <= cols; c++) {
                     ctx.moveTo(originX + gridCellWidth * c, originY + halfTick);
@@ -248,7 +248,7 @@ define(function(require) {
             // Draw numbers
             ctx.font = this.numberFont;
             ctx.fillStyle = this.axisColor;
-            
+
             if (this.x.showNumbers) {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
@@ -362,7 +362,7 @@ define(function(require) {
                 ctx.strokeStyle = this.lineColor;
                 ctx.stroke();
             }
-            
+
             ctx.globalAlpha = 1;
 
             // Draw a circle on the current data point

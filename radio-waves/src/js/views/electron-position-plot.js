@@ -5,7 +5,7 @@ define(function(require) {
     var _    = require('underscore');
     var PIXI = require('pixi');
     require('common/v3/pixi/extensions');
-    
+
     var PixiView       = require('common/v3/pixi/view');
     var Colors         = require('common/colors/colors');
     var PiecewiseCurve = require('common/math/piecewise-curve');
@@ -271,7 +271,7 @@ define(function(require) {
             if (this.dragging) {
                 var dx = data.global.x - this.displayObject.x - this.dragOffset.x;
                 var dy = data.global.y - this.displayObject.y - this.dragOffset.y;
-                
+
                 this.displayObject.x += dx;
                 this.displayObject.y += dy;
             }

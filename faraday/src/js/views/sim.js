@@ -33,7 +33,7 @@ define(function (require) {
     var playbackControlsHtml      = require('text!templates/playback-controls.html');
 
     /**
-     * 
+     *
      */
     var FaradaySimView = SimView.extend({
 
@@ -60,7 +60,7 @@ define(function (require) {
             'click .pause-btn'  : 'pause',
             'click .step-btn'   : 'step',
             'click .reset-btn'  : 'reset',
-            
+
             'click .show-field-check'       : 'toggleField',
             'click .show-field-meter-check' : 'toggleFieldMeter',
             'click .inside-magnet-check'    : 'toggleInsideBarMagnet',
@@ -280,7 +280,7 @@ define(function (require) {
          */
         resetComponents: function() {
             SimView.prototype.resetComponents.apply(this);
-            
+
             this.sceneView.reset();
         },
 

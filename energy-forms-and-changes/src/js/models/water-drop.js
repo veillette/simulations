@@ -16,7 +16,7 @@ define(function (require) {
             width: 1,
             height: 1
         },
-        
+
         init: function() {
             VanillaPositionableObject.prototype.init.apply(this, arguments);
 

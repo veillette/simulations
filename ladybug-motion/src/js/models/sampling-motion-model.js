@@ -125,7 +125,7 @@ define(function (require) {
                 yNow = xNow.y;
                 xNow = xNow.x;
             }
-            
+
             this.x.addPointAndUpdate(xNow);
             this.y.addPointAndUpdate(yNow);
         },

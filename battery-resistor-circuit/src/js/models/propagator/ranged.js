@@ -42,14 +42,14 @@ define(function (require) {
 
         addInverse: function(out, prop) {
             this.inverseRangedProps.push({
-                wireRegion: out, 
+                wireRegion: out,
                 propagator: prop
             });
         },
 
         addPropagator: function(range, prop) {
             this.rangedProps.push({
-                wireRegion: range, 
+                wireRegion: range,
                 propagator: prop
             });
         }

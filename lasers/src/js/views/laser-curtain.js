@@ -99,6 +99,6 @@ define(function(require) {
         }
 
     });
-    
+
     return LaserCurtainView;
 });

@@ -7,16 +7,16 @@ define(function(require) {
     var Vector2 = require('common/math/vector2');
 
     var EnergyDiagramView = require('hydrogen-atom/views/energy-diagram');
-    
+
     // Electron's distance from the atom's center when it drops off bottom of diagram.
     // If you want the last position of the electron to be close to the bottom of the chart:
     // Determine the electron's distance r from the proton for each clock step, for each clock speed.
     // Choose a value of r that all clock speeds have in common.
-    // Then choose a value for MIN_RADIUS that is slightly less r. 
+    // Then choose a value for MIN_RADIUS that is slightly less r.
     var MIN_RADIUS = 5.85;
 
     /**
-     * 
+     *
      */
     var SolarSystemEnergyDiagramView = EnergyDiagramView.extend({
 

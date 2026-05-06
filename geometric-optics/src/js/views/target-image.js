@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var ObjectView = require('views/object');
 
     var Constants = require('constants');

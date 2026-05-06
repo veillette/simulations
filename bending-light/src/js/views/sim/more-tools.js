@@ -22,7 +22,7 @@ define(function(require) {
         template: _.template(simHtml),
 
         events: _.extend(IntroSimView.prototype.events, {
-            
+
         }),
 
         initialize: function(options) {
@@ -30,7 +30,7 @@ define(function(require) {
                 title: 'MoreTools',
                 name:  'more-tools'
             }, options);
-            
+
             IntroSimView.prototype.initialize.apply(this, [ options ]);
 
             this.listenTo(this.simulation.waveSensor, 'change:enabled', this.showHidePlaybackControls);

@@ -86,6 +86,6 @@ define(function(require) {
         }
 
     });
-    
+
     return WaveView;
 });

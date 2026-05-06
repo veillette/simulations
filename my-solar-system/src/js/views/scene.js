@@ -30,7 +30,7 @@ define(function(require) {
     var MSSSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -44,7 +44,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -57,7 +57,7 @@ define(function(require) {
             }
             else {
                 this.viewOriginX = Math.round(this.width  / 2);
-                this.viewOriginY = Math.round(this.height / 2);    
+                this.viewOriginY = Math.round(this.height / 2);
             }
 
             this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
@@ -166,7 +166,7 @@ define(function(require) {
 
             this.gridView.setGridSize(this.mvt.modelToViewDeltaX(Constants.SceneView.GRID_SIZE));
 
-            for (var i = this.collisionViews.length - 1; i >= 0; i--) 
+            for (var i = this.collisionViews.length - 1; i >= 0; i--)
                 this.collisionViews[i].updateMVT(mvt);
 
             for (var j = this.bodyTraceViews.length - 1; j >= 0; j--)
@@ -207,11 +207,11 @@ define(function(require) {
         startedChanged: function(simulation, started) {
             if (started) {
                 for (var i = 0; i < this.bodyViews.length; i++)
-                    this.bodyViews[i].disableInteraction();    
+                    this.bodyViews[i].disableInteraction();
             }
             else {
                 for (var j = 0; j < this.bodyViews.length; j++)
-                    this.bodyViews[j].enableInteraction(); 
+                    this.bodyViews[j].enableInteraction();
             }
         },
 

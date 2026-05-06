@@ -8,24 +8,24 @@ define(function (require) {
     /**
      * A specialized wire, found in all of our circuits, that connects the bottom plate
      *   of one capacitor (C1) to the top plates of N other capacitors (C2,C3,...,Cn).
-     * 
+     *
      *   C1
      *   |
      *   |-----|--...--|
      *   |     |       |
      *   C2   C3      Cn
-     * 
+     *
      */
     var CapacitorToCapacitorsWire = Wire.extend({
 
         /**
-         * Initializes a new BatteryToCapacitorsWires object.  
+         * Initializes a new BatteryToCapacitorsWires object.
          *
          *   Required options: {
          *      topCapacitor:     capacitor object,
          *      bottomCapacitors: array of capacitor objects
          *   }
-         *   
+         *
          */
         initialize: function(attributes, options) {
             Wire.prototype.initialize.apply(this, [attributes, options]);
@@ -44,7 +44,7 @@ define(function (require) {
                 var xStart = topCapacitor.getX();
                 var xEnd = bottomCapacitors[bottomCapacitors.length - 1].getX();
                 var y = topCapacitor.getY() + (bottomCapacitors[0].getY() - topCapacitor.getY()) / 2;
-                
+
                 this.addSegment(new WireSegment({
                     startX: xStart,
                     startY: y,

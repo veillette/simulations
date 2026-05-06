@@ -26,7 +26,7 @@ define(function (require) {
     var NuclearReactorSimView = NuclearFissionSimView.extend({
 
         events: _.extend({}, NuclearFissionSimView.prototype.events, {
-            
+
         }),
 
         /**

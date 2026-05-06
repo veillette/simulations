@@ -24,9 +24,9 @@ define(function (require) {
     /**
      * The moving man model represents the man on the screen who
      *   moves.  He keeps track of his position, velocity, and
-     *   acceleration and updates them according to past states 
-     *   and new user input.  This version of the moving-man model 
-     *   takes over some of the functionality that the simulation 
+     *   acceleration and updates them according to past states
+     *   and new user input.  This version of the moving-man model
+     *   takes over some of the functionality that the simulation
      *   model had in the original simulation.  In the original
      *   PhET simulation, this class was only used to keep track
      *   of the man's state.
@@ -38,7 +38,7 @@ define(function (require) {
             acceleration: 0,
             motionStrategy: MOTION_STRATEGY_POSITION
         },
-        
+
         /**
          * Initialization code for creating new moving man model objects
          */
@@ -100,7 +100,7 @@ define(function (require) {
          */
         clearHistoryAfter: function(time) {
             this.times.length = 0;
-            
+
             this.mouseDataSeries.clearPointsAfter(time);
             this.positionModelSeries.clearPointsAfter(time);
             this.velocityModelSeries.clearPointsAfter(time);
@@ -165,7 +165,7 @@ define(function (require) {
 
                 // Average of latest position samples from user input
                 var positions = this.mouseDataSeries.getPointsInRange(this.mouseDataSeries.size() - NUMBER_MOUSE_POINTS_TO_AVERAGE, this.mouseDataSeries.size());
-                
+
                 var sum = 0;
                 for (var i = 0; i < positions.length; i++)
                     sum += positions[i].value;
@@ -203,7 +203,7 @@ define(function (require) {
             this.set('position', position);
 
             var instantVelocity = this.velocityGraphSeries.getLastPoint().value;
-            if (Math.abs(instantVelocity) < 1E-6) 
+            if (Math.abs(instantVelocity) < 1E-6)
                 instantVelocity = 0; // PhET: "added a prevent high frequency wiggling around +/- 1E-12"
 
             // PhET: "TODO: subtract off derivative radius so that the last value showed on chart is the same as the value on the man"
@@ -261,7 +261,7 @@ define(function (require) {
 
         /**
          * Calculates the new state based on previous state data.
-         *   This method is used if a user-specified acceleration 
+         *   This method is used if a user-specified acceleration
          *   is what's currently driving the simulation.
          */
         _updateFromAcceleration: function(time, delta) {
@@ -313,7 +313,7 @@ define(function (require) {
          *   Note that it's called "mouse data" because that
          *   is what it was called in the original sim, but it
          *   isn't necessarily limited to mouse-based pointer
-         *   input. 
+         *   input.
          */
         addMouseData: function(value, time) {
             this.mouseDataSeries.add(value, time);
@@ -437,11 +437,11 @@ define(function (require) {
          */
         getTimeNTimeStepsAgo: function(n) {
             var index = this.times.length - 1 - n;
-            if (index < 0) 
+            if (index < 0)
                 index = this.times.length - 1;
 
             var t = this.times[index];
-            if (t > this.time) 
+            if (t > this.time)
                 throw 'Found a time n steps ago that was later than t=time';
             else
                 return t;

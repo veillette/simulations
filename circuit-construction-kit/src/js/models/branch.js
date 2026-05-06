@@ -24,7 +24,7 @@ define(function (require) {
             showReadout: false,
             // Average current (averaged over timestep subdivisions for one subdivided
             //   stepInTime) for display in an ammeter or chart
-            current: 0, 
+            current: 0,
             // Instantaneous current for the MNA model (i.e. may differ from aggregate
             //   current which is displayed on screen)
             mnaCurrent: 0,
@@ -36,7 +36,7 @@ define(function (require) {
         },
 
         initialize: function(attributes, options) {
-            
+
             // Cached objects
             this._directionVec = new Vector2();
             this._angleVec     = new Vector2();
@@ -172,7 +172,7 @@ define(function (require) {
         getPosition: function(x) {
             if (this.getLength() === 0)
                 return this._position.set(this.get('startJunction').get('position'));
-    
+
             var vec = this._position
                 .set(this.get('endJunction').get('position'))
                 .sub(this.get('startJunction').get('position'))

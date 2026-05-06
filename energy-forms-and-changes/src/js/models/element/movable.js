@@ -7,18 +7,18 @@ define(function (require) {
     var IntroElement = require('models/intro-element');
 
     /**
-     * 
+     *
      */
     var MovableElement = IntroElement.extend({
 
         defaults: {
             // Physical properties
             verticalVelocity: 0,
-            
+
             // State properties
             userControlled: false,
         },
-        
+
         initialize: function(attributes, options) {
             IntroElement.prototype.initialize.apply(this, [attributes, options]);
 
@@ -46,7 +46,7 @@ define(function (require) {
             if (supportingSurface) {
                 this.listenTo(supportingSurface, 'change', function() {
                     this.setPosition(supportingSurface.getCenterX(), supportingSurface.yPos);
-                });    
+                });
             }
         }
 

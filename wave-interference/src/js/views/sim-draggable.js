@@ -73,7 +73,7 @@ define(function (require) {
 			}
 			else {
 				return (x > this.dragBounds.width  || x < 0 ||
-					    y > this.dragBounds.height || y < 0);	
+					    y > this.dragBounds.height || y < 0);
 			}
 		},
 

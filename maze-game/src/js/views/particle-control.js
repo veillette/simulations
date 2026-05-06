@@ -96,7 +96,7 @@ define(function(require) {
 
             // Draw the backgrounds and position everything
             this.drawTabbedPanels();
-            
+
             this.displayObject.addChild(this.tabs);
             this.displayObject.addChild(this.panels);
         },

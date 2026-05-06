@@ -26,7 +26,7 @@ define(function (require) {
         },
 
         dimensionsChanged: function() {
-            this.modelShape.x = -this.get('width') / 2; 
+            this.modelShape.x = -this.get('width') / 2;
             this.modelShape.y = -this.get('height') / 2;
             this.modelShape.w = this.get('width');
             this.modelShape.h = this.get('height');
@@ -64,7 +64,7 @@ define(function (require) {
          */
         getBFieldInside: function(point) {
             return this._bField.set(
-                Math.cos(0) * this.get('strength'), 
+                Math.cos(0) * this.get('strength'),
                 Math.sin(0) * this.get('strength')
             );
         },
@@ -73,7 +73,7 @@ define(function (require) {
         * Gets the B-field vector for points outside the coil.
         *
         * Algorithm courtesy of Mike Dubson (dubson@spot.colorado.edu).
-        * 
+        *
         * Terminology:
         *   axes oriented with +X right, +Y up
         *   origin is the center of the coil, at (0,0)
@@ -86,7 +86,7 @@ define(function (require) {
         *   Bx = X component of the B field
         *   By = Y component of the B field
         *   e is the exponent that specifies how the field decreases with distance (3 in reality)
-        * 
+        *
         * Outside the coil (r > R) :
         *   Bx = ( m / r^e ) * ( ( 3 * cos(theta) * cos(theta) ) - 1 )
         *   By = ( m / r^e ) * ( 3 * cos(theta) * sin(theta) )

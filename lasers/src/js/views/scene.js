@@ -31,7 +31,7 @@ define(function(require) {
     var LasersSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -41,7 +41,7 @@ define(function(require) {
         },
 
         reset: function() {
-            
+
         },
 
         initGraphics: function() {

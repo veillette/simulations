@@ -10,7 +10,7 @@ define(function(require) {
     var Colors    = require('common/colors/colors');
 
     var IntroElementView = require('views/intro-element');
-    
+
     var Assets = require('assets');
 
     var Constants = require('constants');
@@ -29,7 +29,7 @@ define(function(require) {
             }, options);
 
             this.measurableElementViews = options.measurableElementViews;
-            
+
             IntroElementView.prototype.initialize.apply(this, [options]);
 
             this.listenTo(this.model, 'change:sensedElement', this.updateSensedElement);
@@ -44,7 +44,7 @@ define(function(require) {
 
             this.back = back;
             this.front = front;
-            
+
             var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(ThermometerView.HEIGHT_IN_METERS)); // in pixels
             var scale = targetSpriteHeight / back.texture.height;
 

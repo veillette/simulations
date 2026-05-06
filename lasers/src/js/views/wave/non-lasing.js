@@ -45,11 +45,11 @@ define(function(require) {
             var alpha = Math.min(this.amplitude / 20, 1);
             if (this.simulation.get('mirrorsEnabled'))
                 alpha *= 1 - this.simulation.rightMirror.getReflectivity();
-            
+
             graphics.alpha = alpha;
         }
 
     });
-    
+
     return NonLasingWaveView;
 });

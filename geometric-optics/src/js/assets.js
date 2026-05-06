@@ -6,7 +6,7 @@ define(function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         PICTURE_A:          'picture-a-3d.png',
         PICTURE_B:          'picture-b-3d.png',
         PICTURE_C:          'picture-c-3d.png',

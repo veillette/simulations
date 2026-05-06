@@ -35,7 +35,7 @@ define(function (require) {
          * Updates the element's attributes with values from a given solution.
          */
         updateWithSolution: function(solution) {
-            this.voltage = solution.getNodeVoltage(this.node1) - solution.getNodeVoltage(this.node0); 
+            this.voltage = solution.getNodeVoltage(this.node1) - solution.getNodeVoltage(this.node0);
             this.current = solution.getCurrent(this);
         },
 

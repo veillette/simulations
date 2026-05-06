@@ -43,7 +43,7 @@ define(function (require) {
 
         /**
          * Gets the descriptor for the curve that the electron is currently on.
-         * 
+         *
          * @return an ElectronPathDescriptor
          */
         getPathDescriptor: function() {
@@ -59,17 +59,17 @@ define(function (require) {
         },
 
         /**
-         * Moves the electron along the path.  
-         * 
+         * Moves the electron along the path.
+         *
          * The electron's path is described by the ElectronPathDescriptor array.
          *
          * The electron's speed & direction determine its position along a curve.
-         *   Speed is scaled to account for possible differences in the lengths 
+         *   Speed is scaled to account for possible differences in the lengths
          *   of the curves. Shorter curves will have a larger scaling factor.
-         * 
+         *
          * When an electron gets to the end of the current curve, it jumps
          *   to the next curve, to a point that represent the "overshoot".
-         *   The order of curves is determined by the order of elements in the 
+         *   The order of curves is determined by the order of elements in the
          *   ElectronPathDescriptor array.
          */
         update: function(time, deltaTime) {
@@ -78,7 +78,7 @@ define(function (require) {
                 var pathScale = this.path[this.pathIndex].getPathScale();
                 var delta = deltaTime * Electron.MAX_PATH_POSITION_DELTA * this.get('speed') * this.get('speedScale') * pathScale;
                 this.pathPosition -= delta;
-                
+
                 // Do we need to switch curves?
                 if (this.pathPosition <= 0 || this.pathPosition >= 1) {
                     this.switchCurves();  // sets this.pathIndex and this.pathPosition !
@@ -90,10 +90,10 @@ define(function (require) {
 
         /**
          * Moves the electron to an appropriate point on the next/previous curve.
-         *   Rescales any "overshoot" of position so the distance moved looks 
-         *   approximately the same when moving between curves that have different 
-         *   lengths.  
-         * 
+         *   Rescales any "overshoot" of position so the distance moved looks
+         *   approximately the same when moving between curves that have different
+         *   lengths.
+         *
          * If curves have different lengths, it is possible that we may totally
          *   skip a curve.  This is handled via recursive calls to switchCurves.
          */
@@ -101,18 +101,18 @@ define(function (require) {
             var oldSpeedScale = this.path[this.pathIndex].getPathScale();
             var newSpeedScale;
             var overshoot;
-            
+
             if (this.pathPosition <= 0) {
                 // We've passed the end point, so move to the next curve.
                 this.pathIndex++;
                 if (this.pathIndex > this.path.length - 1)
                     this.pathIndex = 0;
-                
+
                 // Set the position on the curve.
                 newSpeedScale = this.path[this.pathIndex].getPathScale();
                 overshoot = Math.abs(this.pathPosition * newSpeedScale / oldSpeedScale);
                 this.pathPosition = 1 - overshoot;
-                
+
                 // Did we overshoot the curve?
                 if (this.pathPosition < 0)
                     this.switchCurves();
@@ -122,12 +122,12 @@ define(function (require) {
                 this.pathIndex--;
                 if (this.pathIndex < 0)
                     this.pathIndex = this.path.length - 1;
-                
+
                 // Set the position on the curve.
                 newSpeedScale = this.path[this.pathIndex].getPathScale();
                 overshoot = Math.abs((1 - this.pathPosition) * newSpeedScale / oldSpeedScale);
                 this.pathPosition = 0 + overshoot;
-                
+
                 // Did we overshoot the curve?
                 if (this.pathPosition > 1)
                     this.switchCurves();

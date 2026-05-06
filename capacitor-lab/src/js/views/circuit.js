@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView   = require('common/v3/pixi/view');
 
     var CapacitanceControlledCapacitorView = require('views/capacitor/capacitance-controlled');
@@ -14,7 +14,7 @@ define(function(require) {
     var CurrentIndicatorView               = require('views/current-indicator');
 
     /**
-     * 
+     *
      */
     var CircuitView = PixiView.extend({
 
@@ -52,13 +52,13 @@ define(function(require) {
         },
 
         initCurrentIndicators: function() {
-            this.topCurrentIndicatorView = new CurrentIndicatorView({ 
-                model: this.model, 
-                mvt: this.mvt 
+            this.topCurrentIndicatorView = new CurrentIndicatorView({
+                model: this.model,
+                mvt: this.mvt
             });
 
-            this.bottomCurrentIndicatorView = new CurrentIndicatorView({ 
-                model: this.model, 
+            this.bottomCurrentIndicatorView = new CurrentIndicatorView({
+                model: this.model,
                 mvt: this.mvt,
                 positivePointsRight: true
             });
@@ -209,12 +209,12 @@ define(function(require) {
                 if (views[i].intersectsPolygon(polygon))
                     return views[i];
             }
-            
+
             return null;
         },
 
         /**
-         * 
+         *
          */
         getIntersectingCapacitorView: function(point) {
             var views = this.sortedViews;
@@ -223,7 +223,7 @@ define(function(require) {
                 if (views[i] instanceof CapacitorView && views[i].pointIntersects(point))
                     return views[i];
             }
-            
+
             return null;
         },
 

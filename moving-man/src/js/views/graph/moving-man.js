@@ -31,7 +31,7 @@ define(function(require) {
         /**
          * Internal fields
          */
-        pixelRatioX: 1, 
+        pixelRatioX: 1,
         pixelRatioY: 1,
 
         /**
@@ -102,7 +102,7 @@ define(function(require) {
                 if (this.hideXAxisLabelsByDefault)
                     this.$xAxisLabels.hide();
             }
-            
+
             if (this.graphInfo.y)
                 this.$('.graph-view-graph-wrapper').append(yAxisButtonsHtml);
         },
@@ -156,7 +156,7 @@ define(function(require) {
             var pixelRatioY = this.pixelRatioY;
             var graphSeries = this.graphSeries;
             var length      = graphSeries.size();
-            
+
             for (var i = 0; i < length; i++) {
                 if (i >= points.length)
                     this._addPoint();
@@ -174,9 +174,9 @@ define(function(require) {
          * Adds a blank point object to the end of the points array.
          */
         _addPoint: function() {
-            this.points.push({ 
-                x: 0, 
-                y: 0 
+            this.points.push({
+                x: 0,
+                y: 0
             });
         },
 
@@ -269,7 +269,7 @@ define(function(require) {
             this.timeSpan -= 2;
             if (this.timeSpan < 2)
                 this.timeSpan = 2;
-            
+
             this.trigger('zoom-x', this.timeSpan);
         },
 
@@ -280,7 +280,7 @@ define(function(require) {
             this.timeSpan += 2;
             if (this.timeSpan > this.maxTimeSpan)
                 this.timeSpan = this.maxTimeSpan;
-            
+
             this.trigger('zoom-x', this.timeSpan);
         },
 
@@ -302,7 +302,7 @@ define(function(require) {
             this.valueSpan += this.maxValueSpan / 8;
             if (this.valueSpan > this.maxValueSpan)
                 this.valueSpan = this.maxValueSpan;
-            
+
             this.trigger('zoom-y', this.valueSpan);
         },
 

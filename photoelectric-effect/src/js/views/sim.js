@@ -290,7 +290,7 @@ define(function (require) {
             // Create a little flash effect
             var $panel = this.$('.graphs-panel');
             var $snapshotOverlay = $('<div>');
-            
+
             $snapshotOverlay
                 .css({
                     width:  $panel.outerWidth(),

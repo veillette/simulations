@@ -12,34 +12,34 @@ define(function (require) {
     var DeBroglieModel     = require('hydrogen-atom/models/atomic-model/debroglie');
     var DeBroglieViewModes = require('hydrogen-atom/models/debroglie-view-modes');
     var MetastableHandler  = require('hydrogen-atom/models/metastable-handler');
-    
+
     var Constants = require('constants');
 
     /**
      * SchrodingerModel is the Schrodinger model of the hydrogen atom.
-     * 
+     *
      * Physical representation:
      *   Electron is a probability density field.
-     *   Proton is at the center, visible only when the probability density 
+     *   Proton is at the center, visible only when the probability density
      *   field strength is below a threshold value.
      *   The atom's state has 3 components (n,l,m). See transition rules below.
-     * 
+     *
      * Wavefunction:
      *   This implementation solves the 3D Schrodinger wavefunction,
      *   used to compute probability density values in 3D space.
-     * 
+     *
      * Collision behavior:
      *   Identical to the "brightness" views of deBroglie, which is why this
      *   class is an extension of DeBroglieModel.
-     * 
+     *
      * Absorption behavior:
      *   Identical to Borh and deBroglie.
-     * 
+     *
      * Emission behavior:
-     *   Both spontaneous and stimulated emission are similar to Bohr and 
-     *   deBroglie, but the rules for transitions (see below) are more 
+     *   Both spontaneous and stimulated emission are similar to Bohr and
+     *   deBroglie, but the rules for transitions (see below) are more
      *   complicated.
-     * 
+     *
      * Transition rules:
      *   All of the following rules must be obeyed when choosing a transition.
      *     n = [1...6] as in Bohr and deBroglie
@@ -49,7 +49,7 @@ define(function (require) {
      *     abs(m-m') < 1
      *     n transitions have varying transition strengths
      *     valid l and m transitions have equal probability
-     * 
+     *
      * Note that transitions from state nlm=(2,0,0) are a special case.
      * The lower state (1,0,0) is not possible since it violates the abs(l-l')=1 rule.
      * The only way to get out of this state (2,0,0) is by going to a higher state.
@@ -67,11 +67,11 @@ define(function (require) {
             this.l = 0;
             // Tertiary state component, m = -l,...+l
             this.m = 0;
-            
+
             this.spontaneousEmissionPoint = new Vector2();
             this.metastableHandler = new MetastableHandler({
-                gun: options.gun, 
-                atom: this, 
+                gun: options.gun,
+                atom: this,
                 SchroedingerModel: SchroedingerModel
             });
 
@@ -87,7 +87,7 @@ define(function (require) {
 
             this.metastableHandler.update(time, deltaTime);
         },
-        
+
         /**
          * Gets the electron's secondary state (l).
          * @return int
@@ -95,7 +95,7 @@ define(function (require) {
         getSecondaryElectronState: function() {
             return this.l;
         },
-        
+
         /**
          * Gets the electron's tertiary state (m).
          * @return int
@@ -114,17 +114,17 @@ define(function (require) {
         /**
          * Probabilistically determines whether to absorb a photon.
          *   Typically we defer to the superclass implementation.
-         *   But if we're in state (2,0,0), the probability is 100%. 
+         *   But if we're in state (2,0,0), the probability is 100%.
          *   This is not physically correct, but we want to make it easier
          *   to get out of state (2,0,0).
          */
         absorptionIsCertain: function() {
             if (this.getElectronState() === 2 && this.l === 0)
                 return true;
-            
+
             return DeBroglieModel.prototype.absorptionIsCertain.apply(this, arguments);
         },
-        
+
         /**
          * Determines if a proposed state transition caused by stimulated emission is allowed.
          */
@@ -141,13 +141,13 @@ define(function (require) {
                 // the only way to get to (1,0,0) is from (n,1,?)
                 legal = false;
             }
-            
+
             if (SchroedingerModel.DEBUG_REJECTED_TRANSITIONS && !legal)
                 console.log('Schrodinger.stimulatedEmissionIsAllowed: rejecting ' + SchroedingerModel.stateToString(nOld, this.l, this.m) + ' -> (' + nNew + ',?,?)');
-            
+
             return legal;
         },
-        
+
         /**
          * Chooses a new primary state (n) for the electron.
          */
@@ -155,7 +155,7 @@ define(function (require) {
             var nOld = this.getElectronState();
             return this.getLowerPrimaryState(nOld);
         },
-        
+
         /**
          * Sets the electron's primary state.
          * Randomly chooses the values for the secondary and tertiary states,
@@ -164,15 +164,15 @@ define(function (require) {
         setElectronState: function(nNew) {
             var lNew = this.getNewSecondaryState(nNew, this.l);
             var mNew = this.getNewTertiaryState(lNew, this.m);
-            
+
             if (SchroedingerModel.DEBUG_STATE_TRANSITIONS) {
-                console.log('SchroedingerModel.setElectronState ' + 
-                    SchroedingerModel.stateToString( this.getElectronState(), this.l, this.m ) + 
-                    ' -> ' + 
+                console.log('SchroedingerModel.setElectronState ' +
+                    SchroedingerModel.stateToString( this.getElectronState(), this.l, this.m ) +
+                    ' -> ' +
                     SchroedingerModel.stateToString( nNew, lNew, mNew )
                 );
             }
-            
+
             // Verify that no transition rules have been broken.
             var valid = SchroedingerModel.isAValidTransition(this.getElectronState(), this.l, this.m, nNew, lNew, mNew);
             if (valid) {
@@ -189,7 +189,7 @@ define(function (require) {
                 DeBroglieModel.prototype.setElectronState.apply(this, [1]);
             }
         },
-        
+
         /**
          * Our Schrodinger model emits photons from a random point on the first Bohr orbit.
          * This returns a reference to a Point2D -- be careful not to modify the value returned!
@@ -204,7 +204,7 @@ define(function (require) {
             this.spontaneousEmissionPoint.set(x, y);
             return this.spontaneousEmissionPoint;
         },
-        
+
         /**
          * Chooses a new lower value for the primary state (n).
          * The possible values of n are limited by the current value of l, since abs(l-l') must be 1.
@@ -228,7 +228,7 @@ define(function (require) {
                 }
             }
             else if (nOld > 2) {
-                
+
                 // determine the possible range of n
                 var nMax = nOld - 1;
                 var nMin = Math.max(this.l, 1);
@@ -236,7 +236,7 @@ define(function (require) {
                     // transition from (n,0,0) to (1,?,?) cannot satisfy the abs(l-l')=1 rule
                     nMin = 2;
                 }
-                
+
                 // get the strengths for each possible transition
                 this.probabilisticChooser.clear();
                 var numEntries = nMax - nMin + 1;
@@ -251,25 +251,25 @@ define(function (require) {
                     // all transitions had zero strength, none are possible
                     return -1;
                 }
-                
+
                 // choose a transition
                 var value = this.probabilisticChooser.get();
                 if (value === null)
                     return -1;
-                
+
                 nNew = value;
             }
-            
+
             return nNew;
         },
-        
+
         /*
          * Chooses a value for the secondary state (l) based on the primary state (n).
          * The new value l' must be in [0,...n-1], and l-l' must be in [-1,1].
          */
         getNewSecondaryState: function(nNew, lOld) {
             var lNew = 0;
-            
+
             if (lOld === 0) {
                 lNew = 1;
             }
@@ -285,10 +285,10 @@ define(function (require) {
                 else
                     lNew = lOld - 1;
             }
-            
+
             return lNew;
         },
-        
+
         /*
          * Chooses a value for the tertiary state (m) based on the primary state (l).
          * The new value m' must be in [-l,...,+l], and m-m' must be in [-1,0,1].
@@ -296,7 +296,7 @@ define(function (require) {
         getNewTertiaryState: function(lNew, mOld) {
             var mNew = 0;
             var a;
-            
+
             if (lNew === 0) {
                 mNew = 0;
             }
@@ -329,7 +329,7 @@ define(function (require) {
                 else
                     mNew = mOld;
             }
-            
+
             return mNew;
         },
 
@@ -348,7 +348,7 @@ define(function (require) {
     }, _.extend({}, Constants.SchroedingerModel, {
 
         /**
-         * Checks state transition rules to see if a proposed transition is valid. 
+         * Checks state transition rules to see if a proposed transition is valid.
          */
         isAValidTransition: function(nOld, lOld, mOld, nNew, lNew, mNew) {
             var valid = true;
@@ -365,10 +365,10 @@ define(function (require) {
                 valid = false;
             else if (!(Math.abs(mOld - mNew) <= 1))
                 valid = false;
-            
+
             return valid;
         },
-        
+
         /**
          * Probability Density.
          * This algorithm is undefined for (x,y,z) = (0,0,0).
@@ -400,7 +400,7 @@ define(function (require) {
             var t2 = AssociatedLegendrePolynomials.solve(l, Math.abs(m), cosTheta);
             return (t1 * t2);
         },
-        
+
         /*
          * Generalized Laguerre Polynomial.
          * Codified from design document.
@@ -420,13 +420,13 @@ define(function (require) {
         },
 
         warnBadTransition: function(nOld, lOld, mOld, nNew, lNew, mNew) {
-            console.warn('WARNING! SchrodingerModel: bad transition ' + 
-                SchroedingerModel.stateToString(nOld, lOld, mOld) + 
-                ' -> ' + 
+            console.warn('WARNING! SchrodingerModel: bad transition ' +
+                SchroedingerModel.stateToString(nOld, lOld, mOld) +
+                ' -> ' +
                 SchroedingerModel.stateToString(nNew, lNew, mNew)
             );
         },
-        
+
         stateToString: function(n, l, m) {
             return '(' + n + ',' + l + ',' + m + ')';
         }

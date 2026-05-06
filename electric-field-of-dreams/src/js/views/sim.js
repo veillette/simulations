@@ -193,7 +193,7 @@ define(function (require) {
         addParticle: function() {
             var charge = parseFloat(this.$('#charge').val());
             var mass   = parseFloat(this.$('#mass').val());
-            
+
             this.simulation.addParticle(charge, mass);
         },
 

@@ -5,7 +5,7 @@ define(function (require) {
     var _ = require('underscore');
 
     var PooledObject = require('common/pooled-object/pooled-object');
-    
+
     var elementId = 0;
 
     /**
@@ -120,8 +120,8 @@ define(function (require) {
          */
         fromCircuitComponent: function(circuit, branch) {
             var element = this.create(
-                branch, 
-                circuit.junctions.indexOf(branch.get('startJunction')), 
+                branch,
+                circuit.junctions.indexOf(branch.get('startJunction')),
                 circuit.junctions.indexOf(branch.get('endJunction'))
             );
             return element;

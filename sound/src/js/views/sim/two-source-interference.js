@@ -10,7 +10,7 @@ define(function (require) {
     var TwoSourceInterferenceSceneView = require('views/scene/two-source-interference');
 
     /**
-     * 
+     *
      */
     var TwoSourceInterferenceSimView = SoundSimView.extend({
 

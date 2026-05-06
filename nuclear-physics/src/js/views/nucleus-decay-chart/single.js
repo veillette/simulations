@@ -33,7 +33,7 @@ define(function(require) {
          */
         initialize: function(options) {
             options = _.extend({
-                
+
             }, options);
 
             this.buttonWidth = 126;
@@ -160,7 +160,7 @@ define(function(require) {
 
         nucleusTypeChanged: function(simulation, nucleusType) {
             this.clearNuclei();
-            
+
             NucleusDecayChart.prototype.nucleusTypeChanged.apply(this, arguments);
         },
 

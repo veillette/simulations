@@ -10,7 +10,7 @@ define(function (require) {
 
     var NUM_SUB_LEVELS     = Constants.MetalEnergyAbsorptionStrategy.NUM_SUB_LEVELS;
     var TOTAL_ENERGY_DEPTH = Constants.MetalEnergyAbsorptionStrategy.TOTAL_ENERGY_DEPTH;
-  
+
     /**
      * Models the way that electrons are knocked off a metal when it is hit by a photon.
      *   The highest energy level has a number of sub-levels that are evenly spaced. When

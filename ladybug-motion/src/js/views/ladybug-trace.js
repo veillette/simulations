@@ -55,7 +55,7 @@ define(function(require) {
             var start = 0;
             var end = history.length - 1;
             var point;
-            
+
             if (history.length > 0) {
                 if (this.dotsMode) {
                     var dots = this.dots;

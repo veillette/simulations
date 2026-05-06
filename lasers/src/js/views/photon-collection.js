@@ -19,7 +19,7 @@ define(function(require) {
             // A map of wavelengths to colors for caching
             this.colors = {};
             this.cometTexture = Assets.Texture(Assets.Images.PHOTON_COMET);
-            
+
             SpriteCollectionView.prototype.initialize.apply(this, arguments);
 
             this.simulation = options.simulation;
@@ -63,7 +63,7 @@ define(function(require) {
 
         updateSprite: function(sprite, model) {
             SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-            
+
             sprite.tint = this.getColorFromWavelength(model.get('wavelength'));
             sprite.visible = model.get('visible');
             sprite.texture = this.getSpriteTexture();

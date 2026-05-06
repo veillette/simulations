@@ -98,7 +98,7 @@ define(function (require) {
             var particlesRedistributed = false;
             var numForceCalcSteps = Math.floor(deltaTime / EnergyChunkDistributor.MAX_TIME_STEP);
             var extraTime = deltaTime - numForceCalcSteps * EnergyChunkDistributor.MAX_TIME_STEP;
-            
+
             for (var forceCalcStep = 0; forceCalcStep <= numForceCalcSteps; forceCalcStep++) {
                 var timeStep = forceCalcStep < numForceCalcSteps ? EnergyChunkDistributor.MAX_TIME_STEP : extraTime;
 
@@ -112,9 +112,9 @@ define(function (require) {
                     containerShape = slice.getShape();
 
                     // Determine the max possible distance to an edge.
-                    var maxDistance = Math.sqrt( 
+                    var maxDistance = Math.sqrt(
                         Math.pow(containerShape.getBounds().w, 2) +
-                        Math.pow(containerShape.getBounds().h, 2) 
+                        Math.pow(containerShape.getBounds().h, 2)
                     );
 
                     for (j = 0; j < slice.energyChunkList.length; j++) {
@@ -129,7 +129,7 @@ define(function (require) {
                     }
                 }
 
-                
+
                 // Update energy chunk velocities, drag force, and position.
                 for (i = 0; i < slices.length; i++) {
                     slice = slices[i];
@@ -220,12 +220,12 @@ define(function (require) {
                         .set(forceVector)
                         .scale(timeStep / EnergyChunkDistributor.ENERGY_CHUNK_MASS)
                 );
-            
+
             // Calculate drag force.  Uses standard drag equation.
-            var dragMagnitude = 0.5 
-                * EnergyChunkDistributor.FLUID_DENSITY 
-                * EnergyChunkDistributor.DRAG_COEFFICIENT 
-                * EnergyChunkDistributor.ENERGY_CHUNK_CROSS_SECTIONAL_AREA 
+            var dragMagnitude = 0.5
+                * EnergyChunkDistributor.FLUID_DENSITY
+                * EnergyChunkDistributor.DRAG_COEFFICIENT
+                * EnergyChunkDistributor.ENERGY_CHUNK_CROSS_SECTIONAL_AREA
                 * newVelocity.lengthSq();
 
             if (dragMagnitude > 0) {
@@ -254,7 +254,7 @@ define(function (require) {
             var chunk;
             for (var j = 0; j < chunks.length; j++) {
                 chunk = chunks[j];
-                
+
                 velocity
                     .set(chunk.get('velocity'))
                     .scale(timeStep);
@@ -369,7 +369,7 @@ define(function (require) {
                         // Create a random vector of min distance
                         var randomAngle = Math.random() * Math.PI * 2;
                         vectorToOther.set(
-                            minDistance * Math.cos(randomAngle), 
+                            minDistance * Math.cos(randomAngle),
                             minDistance * Math.sin(randomAngle)
                         );
                     }

@@ -4,7 +4,7 @@ define(function (require) {
 
     var _    = require('underscore');
     var Pool = require('object-pool');
-    
+
     var pool = Pool({
         init: function() {
             return new IntermediateDynamicSolution();
@@ -12,7 +12,7 @@ define(function (require) {
     });
 
     /**
-     * 
+     *
      */
     var IntermediateDynamicSolution = function() {};
 
@@ -33,7 +33,7 @@ define(function (require) {
         getCurrent: function(element) {
             if (this.currentCompanions[element.id] !== undefined)
                 return this.mnaSolution.getCurrent(this.currentCompanions[element.id]);
-            else 
+            else
                 return this.mnaSolution.getCurrent(element);
         },
 

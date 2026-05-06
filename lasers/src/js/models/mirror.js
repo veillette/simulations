@@ -10,7 +10,7 @@ define(function (require) {
      *   by ReflectionStrategies that are added to it that determine whether the
      *   mirror will reflect a particular photon. A Mirror treats ReflectionStrategies
      *   conjunctively. I.e., all have to be true for the mirror to reflect a photon.
-     * 
+     *
      * Examples of ReflectionStrategies are
      *   - LeftReflecting
      *   - RightReflecting
@@ -24,7 +24,7 @@ define(function (require) {
         initialize: function(attributes, options) {
             if (options && options.start && options.end) {
                 this.set('bounds', new Rectangle(
-                    options.start.x, 
+                    options.start.x,
                     options.start.y,
                     options.end.x - options.start.x,
                     options.end.y - options.start.y

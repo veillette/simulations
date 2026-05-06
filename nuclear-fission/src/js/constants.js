@@ -6,7 +6,7 @@ define(function (require) {
     var Vector2   = require('common/math/vector2');
     var Rectangle = require('common/math/rectangle');
 
-    var Constants = require('nuclear-physics/constants'); 
+    var Constants = require('nuclear-physics/constants');
 
     Constants.FRAME_RATE = 25;
     Constants.DELTA_TIME_PER_FRAME = 40;
@@ -53,9 +53,9 @@ define(function (require) {
     //   nuclei cannot initially be located.  This is just tweaked until
     //   things look right.
     ChainReactionSimulation.NEUTRON_SOURCE_OFF_LIMITS_RECT = new Rectangle(
-        ChainReactionSimulation.NEUTRON_SOURCE_POSITION.x - 70, 
-        ChainReactionSimulation.NEUTRON_SOURCE_POSITION.y - 20, 
-        80, 
+        ChainReactionSimulation.NEUTRON_SOURCE_POSITION.x - 70,
+        ChainReactionSimulation.NEUTRON_SOURCE_POSITION.y - 20,
+        80,
         50
     );
 
@@ -91,7 +91,7 @@ define(function (require) {
     NuclearReactorSimulation.OVERALL_REACTOR_WIDTH = 650;
     NuclearReactorSimulation.OVERALL_REACTOR_HEIGHT = NuclearReactorSimulation.OVERALL_REACTOR_WIDTH * 0.42;
     NuclearReactorSimulation.REACTOR_WALL_WIDTH = 20;
-    
+
     // Constant that controls where in model space the reactor resides.  This
     // assumes that the 'center of the world' is at (0,0).  It is shifted
     // slightly to the left to account for the control rod handle on the right
@@ -100,30 +100,30 @@ define(function (require) {
         -(NuclearReactorSimulation.OVERALL_REACTOR_WIDTH / 1.9),
         -(NuclearReactorSimulation.OVERALL_REACTOR_HEIGHT / 2)
     );
-    
+
     // Constant that controls the number of chambers, between which are the
     // control rods.  There will always be one less control rod than there are
     // chambers.  It is assumed that the chambers are of equal size.
     NuclearReactorSimulation.NUMBER_OF_REACTION_CHAMBERS = 6;
-    
+
     // Constant that controls the size relationship between the chambers and
     // the control rods.  This is a ratio, and can be though of as
     // (chamber width)/(control rod width).
     NuclearReactorSimulation.CHAMBER_TO_CONTROL_ROD_WIDTH_RATIO = 5;
-    
+
     // Constants that control the initial placement of nuclei within the
     // reaction chambers.
     NuclearReactorSimulation.MIN_DISTANCE_FROM_NUCLEI_TO_WALLS  = 18;
     NuclearReactorSimulation.MIN_INTER_NUCLEI_DISTANCE          = 15;
-    
+
     // Constants that control the behavior of neutrons fired into reaction chambers.
     NuclearReactorSimulation.NUMBER_OF_NEUTRONS_TO_FIRE = 2;
     NuclearReactorSimulation.NEUTRON_VELOCITY = 2;
-    
+
     // Constants that control the behavior of fission products.
     NuclearReactorSimulation.FREED_NEUTRON_VELOCITY = 3;
     NuclearReactorSimulation.DAUGHTER_NUCLEI_SPLIT_DISTANCE = 10;
-    
+
     // Constants that control the monitoring of fission events, which
     // allow us to determine the average energy released.
     NuclearReactorSimulation.MAX_TEMP_CHANGE_PER_TICK = 1.0;
@@ -150,7 +150,7 @@ define(function (require) {
     ContainmentVessel.APERTURE_HEIGHT = 18;    // In femtometers.
     ContainmentVessel.APERTURE_WIDTH = ContainmentVessel.CONTAINMENT_RANGE * 2.0;  // In femtometers.
     ContainmentVessel.MINIMUM_RADIUS = 15;
-    
+
     // The following value controls how many impacts must occur to cause the
     //   containment vessel to explode.  The goal, as prescribed by the educators,
     //   is that explosion won't occur unless the containment vessel is enlarged
@@ -204,11 +204,11 @@ define(function (require) {
     NuclearReactorView.CONTROL_ROD_ADJUSTOR_HANDLE_COLOR = '#ccc';
     NuclearReactorView.CONTROL_ROD_ADJUSTOR_LABEL_FONT = 'bold 12px Helvetica Neue';
     NuclearReactorView.CONTROL_ROD_ADJUSTOR_LABEL_COLOR = '#fff';
-    
+
     // Max temperature, with used when setting up the thermometer and in
     // in controlling the internal color of the reactor.
     NuclearReactorView.MAX_TEMPERATURE = 75;  // Unitless value.
-    
+
     // Constants that control the position and size of the thermometer.
     NuclearReactorView.THERMOMETER_PROPORTION_FROM_LEFT_SIDE = 0.88;
     NuclearReactorView.THERMOMETER_PROPORTION_ABOVE = 0.18;
@@ -266,10 +266,10 @@ define(function (require) {
     FissionEnergyChartView.Y_AXIS_TOTAL_POSITVE_SPAN = 100;
     FissionEnergyChartView.BOTTOM_OF_ENERGY_WELL = 65;
     FissionEnergyChartView.PEAK_OF_ENERGY_WELL = 80;
-    
+
     // Constants the control dynamic chart behavior.
     FissionEnergyChartView.NUM_UPWARD_STEPS_FOR_NUCLEUS = 5;
-    
+
     // Possible state values for tracking the relevant state of the model.
     FissionEnergyChartView.STATE_IDLE = 0;
     FissionEnergyChartView.STATE_FISSIONING = 1;

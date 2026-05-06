@@ -67,7 +67,7 @@
     }
 })();
 
-define("config", function(){});
+define('config', function(){});
 
 /*!
  * jQuery JavaScript Library v3.7.1
@@ -81,9 +81,9 @@ define("config", function(){});
  */
 ( function( global, factory ) {
 
-	"use strict";
+	'use strict';
 
-	if ( typeof module === "object" && typeof module.exports === "object" ) {
+	if ( typeof module === 'object' && typeof module.exports === 'object' ) {
 
 		// For CommonJS and CommonJS-like environments where a proper `window`
 		// is present, execute the factory and get jQuery.
@@ -96,7 +96,7 @@ define("config", function(){});
 			factory( global, true ) :
 			function( w ) {
 				if ( !w.document ) {
-					throw new Error( "jQuery requires a window with a document" );
+					throw new Error( 'jQuery requires a window with a document' );
 				}
 				return factory( w );
 			};
@@ -105,13 +105,13 @@ define("config", function(){});
 	}
 
 // Pass this if window is not defined yet
-} )( typeof window !== "undefined" ? window : this, function( window, noGlobal ) {
+} )( typeof window !== 'undefined' ? window : this, function( window, noGlobal ) {
 
 // Edge <= 12 - 13+, Firefox <=18 - 45+, IE 10 - 11, Safari 5.1 - 9+, iOS 6 - 9.1
 // throw exceptions when non-strict code (e.g., ASP.NET 4.5) accesses strict mode
 // arguments.callee.caller (trac-13335). But as of jQuery 3.0 (2016), strict mode should be common
 // enough that all such attempts are guarded in a try block.
-"use strict";
+'use strict';
 
 var arr = [];
 
@@ -151,8 +151,8 @@ var isFunction = function isFunction( obj ) {
 		// Support: QtWeb <=3.8.5, WebKit <=534.34, wkhtmltopdf tool <=0.12.5
 		// Plus for old WebKit, typeof returns "function" for HTML collections
 		// (e.g., `typeof document.getElementsByTagName("div") === "function"`). (gh-4756)
-		return typeof obj === "function" && typeof obj.nodeType !== "number" &&
-			typeof obj.item !== "function";
+		return typeof obj === 'function' && typeof obj.nodeType !== 'number' &&
+			typeof obj.item !== 'function';
 	};
 
 
@@ -176,7 +176,7 @@ var document = window.document;
 		doc = doc || document;
 
 		var i, val,
-			script = doc.createElement( "script" );
+			script = doc.createElement( 'script' );
 
 		script.text = code;
 		if ( node ) {
@@ -204,12 +204,12 @@ var document = window.document;
 
 function toType( obj ) {
 	if ( obj == null ) {
-		return obj + "";
+		return obj + '';
 	}
 
 	// Support: Android <=2.3 only (functionish RegExp)
-	return typeof obj === "object" || typeof obj === "function" ?
-		class2type[ toString.call( obj ) ] || "object" :
+	return typeof obj === 'object' || typeof obj === 'function' ?
+		class2type[ toString.call( obj ) ] || 'object' :
 		typeof obj;
 }
 /* global Symbol */
@@ -218,7 +218,7 @@ function toType( obj ) {
 
 
 
-var version = "3.7.1",
+var version = '3.7.1',
 
 	rhtmlSuffix = /HTML$/i,
 
@@ -331,7 +331,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 		deep = false;
 
 	// Handle a deep copy situation
-	if ( typeof target === "boolean" ) {
+	if ( typeof target === 'boolean' ) {
 		deep = target;
 
 		// Skip the boolean and the target
@@ -340,7 +340,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 	}
 
 	// Handle case when target is a string or something (possible in deep copy)
-	if ( typeof target !== "object" && !isFunction( target ) ) {
+	if ( typeof target !== 'object' && !isFunction( target ) ) {
 		target = {};
 	}
 
@@ -361,7 +361,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 
 				// Prevent Object.prototype pollution
 				// Prevent never-ending loop
-				if ( name === "__proto__" || target === copy ) {
+				if ( name === '__proto__' || target === copy ) {
 					continue;
 				}
 
@@ -398,7 +398,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 jQuery.extend( {
 
 	// Unique for each copy of jQuery on the page
-	expando: "jQuery" + ( version + Math.random() ).replace( /\D/g, "" ),
+	expando: 'jQuery' + ( version + Math.random() ).replace( /\D/g, '' ),
 
 	// Assume jQuery is ready without the ready module
 	isReady: true,
@@ -414,7 +414,7 @@ jQuery.extend( {
 
 		// Detect obvious negatives
 		// Use toString instead of jQuery.type to catch host objects
-		if ( !obj || toString.call( obj ) !== "[object Object]" ) {
+		if ( !obj || toString.call( obj ) !== '[object Object]' ) {
 			return false;
 		}
 
@@ -426,8 +426,8 @@ jQuery.extend( {
 		}
 
 		// Objects with prototype are plain iff they were constructed by a global Object function
-		Ctor = hasOwn.call( proto, "constructor" ) && proto.constructor;
-		return typeof Ctor === "function" && fnToString.call( Ctor ) === ObjectFunctionString;
+		Ctor = hasOwn.call( proto, 'constructor' ) && proto.constructor;
+		return typeof Ctor === 'function' && fnToString.call( Ctor ) === ObjectFunctionString;
 	},
 
 	isEmptyObject: function( obj ) {
@@ -470,7 +470,7 @@ jQuery.extend( {
 	// Retrieve the text value of an array of DOM nodes
 	text: function( elem ) {
 		var node,
-			ret = "",
+			ret = '',
 			i = 0,
 			nodeType = elem.nodeType;
 
@@ -505,7 +505,7 @@ jQuery.extend( {
 		if ( arr != null ) {
 			if ( isArrayLike( Object( arr ) ) ) {
 				jQuery.merge( ret,
-					typeof arr === "string" ?
+					typeof arr === 'string' ?
 						[ arr ] : arr
 				);
 			} else {
@@ -526,7 +526,7 @@ jQuery.extend( {
 
 		// Assume HTML when documentElement doesn't yet exist, such as inside
 		// document fragments.
-		return !rhtmlSuffix.test( namespace || docElem && docElem.nodeName || "HTML" );
+		return !rhtmlSuffix.test( namespace || docElem && docElem.nodeName || 'HTML' );
 	},
 
 	// Support: Android <=4.0 only, PhantomJS 1 only
@@ -604,14 +604,14 @@ jQuery.extend( {
 	support: support
 } );
 
-if ( typeof Symbol === "function" ) {
+if ( typeof Symbol === 'function' ) {
 	jQuery.fn[ Symbol.iterator ] = arr[ Symbol.iterator ];
 }
 
 // Populate the class2type map
-jQuery.each( "Boolean Number String Function Array Date RegExp Object Error Symbol".split( " " ),
+jQuery.each( 'Boolean Number String Function Array Date RegExp Object Error Symbol'.split( ' ' ),
 	function( _i, name ) {
-		class2type[ "[object " + name + "]" ] = name.toLowerCase();
+		class2type[ '[object ' + name + ']' ] = name.toLowerCase();
 	} );
 
 function isArrayLike( obj ) {
@@ -620,15 +620,15 @@ function isArrayLike( obj ) {
 	// `in` check used to prevent JIT error (gh-2145)
 	// hasOwn isn't used here due to false negatives
 	// regarding Nodelist length in IE
-	var length = !!obj && "length" in obj && obj.length,
+	var length = !!obj && 'length' in obj && obj.length,
 		type = toType( obj );
 
 	if ( isFunction( obj ) || isWindow( obj ) ) {
 		return false;
 	}
 
-	return type === "array" || length === 0 ||
-		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
+	return type === 'array' || length === 0 ||
+		typeof length === 'number' && length > 0 && ( length - 1 ) in obj;
 }
 
 
@@ -646,12 +646,12 @@ var sort = arr.sort;
 var splice = arr.splice;
 
 
-var whitespace = "[\\x20\\t\\r\\n\\f]";
+var whitespace = '[\\x20\\t\\r\\n\\f]';
 
 
 var rtrimCSS = new RegExp(
-	"^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$",
-	"g"
+	'^' + whitespace + '+|((?:^|[^\\\\])(?:\\\\.)*)' + whitespace + '+$',
+	'g'
 );
 
 
@@ -682,20 +682,20 @@ function fcssescape( ch, asCodePoint ) {
 	if ( asCodePoint ) {
 
 		// U+0000 NULL becomes U+FFFD REPLACEMENT CHARACTER
-		if ( ch === "\0" ) {
-			return "\uFFFD";
+		if ( ch === '\0' ) {
+			return '\uFFFD';
 		}
 
 		// Control characters and (dependent upon position) numbers get escaped as code points
-		return ch.slice( 0, -1 ) + "\\" + ch.charCodeAt( ch.length - 1 ).toString( 16 ) + " ";
+		return ch.slice( 0, -1 ) + '\\' + ch.charCodeAt( ch.length - 1 ).toString( 16 ) + ' ';
 	}
 
 	// Other potentially-special ASCII characters get backslash-escaped
-	return "\\" + ch;
+	return '\\' + ch;
 }
 
 jQuery.escapeSelector = function( sel ) {
-	return ( sel + "" ).replace( rcssescape, fcssescape );
+	return ( sel + '' ).replace( rcssescape, fcssescape );
 };
 
 
@@ -735,66 +735,66 @@ var i,
 		return 0;
 	},
 
-	booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|" +
-		"loop|multiple|open|readonly|required|scoped",
+	booleans = 'checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|' +
+		'loop|multiple|open|readonly|required|scoped',
 
 	// Regular expressions
 
 	// https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
-	identifier = "(?:\\\\[\\da-fA-F]{1,6}" + whitespace +
-		"?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+",
+	identifier = '(?:\\\\[\\da-fA-F]{1,6}' + whitespace +
+		'?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+',
 
 	// Attribute selectors: https://www.w3.org/TR/selectors/#attribute-selectors
-	attributes = "\\[" + whitespace + "*(" + identifier + ")(?:" + whitespace +
+	attributes = '\\[' + whitespace + '*(' + identifier + ')(?:' + whitespace +
 
 		// Operator (capture 2)
-		"*([*^$|!~]?=)" + whitespace +
+		'*([*^$|!~]?=)' + whitespace +
 
 		// "Attribute values must be CSS identifiers [capture 5] or strings [capture 3 or capture 4]"
-		"*(?:'((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\"|(" + identifier + "))|)" +
-		whitespace + "*\\]",
+		"*(?:'((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\"|(" + identifier + '))|)' +
+		whitespace + '*\\]',
 
-	pseudos = ":(" + identifier + ")(?:\\((" +
+	pseudos = ':(' + identifier + ')(?:\\((' +
 
 		// To reduce the number of selectors needing tokenize in the preFilter, prefer arguments:
 		// 1. quoted (capture 3; capture 4 or capture 5)
 		"('((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\")|" +
 
 		// 2. simple (capture 6)
-		"((?:\\\\.|[^\\\\()[\\]]|" + attributes + ")*)|" +
+		'((?:\\\\.|[^\\\\()[\\]]|' + attributes + ')*)|' +
 
 		// 3. anything else (capture 2)
-		".*" +
-		")\\)|)",
+		'.*' +
+		')\\)|)',
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
-	rwhitespace = new RegExp( whitespace + "+", "g" ),
+	rwhitespace = new RegExp( whitespace + '+', 'g' ),
 
-	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
-	rleadingCombinator = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" +
-		whitespace + "*" ),
-	rdescend = new RegExp( whitespace + "|>" ),
+	rcomma = new RegExp( '^' + whitespace + '*,' + whitespace + '*' ),
+	rleadingCombinator = new RegExp( '^' + whitespace + '*([>+~]|' + whitespace + ')' +
+		whitespace + '*' ),
+	rdescend = new RegExp( whitespace + '|>' ),
 
 	rpseudo = new RegExp( pseudos ),
-	ridentifier = new RegExp( "^" + identifier + "$" ),
+	ridentifier = new RegExp( '^' + identifier + '$' ),
 
 	matchExpr = {
-		ID: new RegExp( "^#(" + identifier + ")" ),
-		CLASS: new RegExp( "^\\.(" + identifier + ")" ),
-		TAG: new RegExp( "^(" + identifier + "|[*])" ),
-		ATTR: new RegExp( "^" + attributes ),
-		PSEUDO: new RegExp( "^" + pseudos ),
+		ID: new RegExp( '^#(' + identifier + ')' ),
+		CLASS: new RegExp( '^\\.(' + identifier + ')' ),
+		TAG: new RegExp( '^(' + identifier + '|[*])' ),
+		ATTR: new RegExp( '^' + attributes ),
+		PSEUDO: new RegExp( '^' + pseudos ),
 		CHILD: new RegExp(
-			"^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" +
-				whitespace + "*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" +
-				whitespace + "*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
-		bool: new RegExp( "^(?:" + booleans + ")$", "i" ),
+			'^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(' +
+				whitespace + '*(even|odd|(([+-]|)(\\d*)n|)' + whitespace + '*(?:([+-]|)' +
+				whitespace + '*(\\d+)|))' + whitespace + '*\\)|)', 'i' ),
+		bool: new RegExp( '^(?:' + booleans + ')$', 'i' ),
 
 		// For use in libraries implementing .is()
 		// We use this for POS matching in `select`
-		needsContext: new RegExp( "^" + whitespace +
-			"*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" + whitespace +
-			"*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
+		needsContext: new RegExp( '^' + whitespace +
+			'*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(' + whitespace +
+			'*((?:-\\d)?\\d*)' + whitespace + '*\\)|)(?=[^-]|$)', 'i' )
 	},
 
 	rinputs = /^(?:input|select|textarea|button)$/i,
@@ -807,10 +807,10 @@ var i,
 
 	// CSS escapes
 	// https://www.w3.org/TR/CSS21/syndata.html#escaped-characters
-	runescape = new RegExp( "\\\\[\\da-fA-F]{1,6}" + whitespace +
-		"?|\\\\([^\\r\\n\\f])", "g" ),
+	runescape = new RegExp( '\\\\[\\da-fA-F]{1,6}' + whitespace +
+		'?|\\\\([^\\r\\n\\f])', 'g' ),
 	funescape = function( escape, nonHex ) {
-		var high = "0x" + escape.slice( 1 ) - 0x10000;
+		var high = '0x' + escape.slice( 1 ) - 0x10000;
 
 		if ( nonHex ) {
 
@@ -837,9 +837,9 @@ var i,
 
 	inDisabledFieldset = addCombinator(
 		function( elem ) {
-			return elem.disabled === true && nodeName( elem, "fieldset" );
+			return elem.disabled === true && nodeName( elem, 'fieldset' );
 		},
-		{ dir: "parentNode", next: "legend" }
+		{ dir: 'parentNode', next: 'legend' }
 	);
 
 // Support: IE <=9 only
@@ -860,7 +860,7 @@ try {
 
 	// Support: Android <=4.0
 	// Detect silently failing push.apply
-	// eslint-disable-next-line no-unused-expressions
+
 	arr[ preferredDoc.childNodes.length ].nodeType;
 } catch ( e ) {
 	push = {
@@ -883,7 +883,7 @@ function find( selector, context, results, seed ) {
 	results = results || [];
 
 	// Return early from calls with invalid selector or context
-	if ( typeof selector !== "string" || !selector ||
+	if ( typeof selector !== 'string' || !selector ||
 		nodeType !== 1 && nodeType !== 9 && nodeType !== 11 ) {
 
 		return results;
@@ -944,7 +944,7 @@ function find( selector, context, results, seed ) {
 			}
 
 			// Take advantage of querySelectorAll
-			if ( !nonnativeSelectorCache[ selector + " " ] &&
+			if ( !nonnativeSelectorCache[ selector + ' ' ] &&
 				( !rbuggyQSA || !rbuggyQSA.test( selector ) ) ) {
 
 				newSelector = selector;
@@ -969,14 +969,14 @@ function find( selector, context, results, seed ) {
 					// Support: IE 11+, Edge 17 - 18+
 					// IE/Edge sometimes throw a "Permission denied" error when
 					// strict-comparing two documents; shallow comparisons work.
-					// eslint-disable-next-line eqeqeq
+
 					if ( newContext != context || !support.scope ) {
 
 						// Capture the context ID, setting it first if necessary
-						if ( ( nid = context.getAttribute( "id" ) ) ) {
+						if ( ( nid = context.getAttribute( 'id' ) ) ) {
 							nid = jQuery.escapeSelector( nid );
 						} else {
-							context.setAttribute( "id", ( nid = expando ) );
+							context.setAttribute( 'id', ( nid = expando ) );
 						}
 					}
 
@@ -984,10 +984,10 @@ function find( selector, context, results, seed ) {
 					groups = tokenize( selector );
 					i = groups.length;
 					while ( i-- ) {
-						groups[ i ] = ( nid ? "#" + nid : ":scope" ) + " " +
+						groups[ i ] = ( nid ? '#' + nid : ':scope' ) + ' ' +
 							toSelector( groups[ i ] );
 					}
-					newSelector = groups.join( "," );
+					newSelector = groups.join( ',' );
 				}
 
 				try {
@@ -999,7 +999,7 @@ function find( selector, context, results, seed ) {
 					nonnativeSelectorCache( selector, true );
 				} finally {
 					if ( nid === expando ) {
-						context.removeAttribute( "id" );
+						context.removeAttribute( 'id' );
 					}
 				}
 			}
@@ -1007,7 +1007,7 @@ function find( selector, context, results, seed ) {
 	}
 
 	// All others
-	return select( selector.replace( rtrimCSS, "$1" ), context, results, seed );
+	return select( selector.replace( rtrimCSS, '$1' ), context, results, seed );
 }
 
 /**
@@ -1023,12 +1023,12 @@ function createCache() {
 
 		// Use (key + " ") to avoid collision with native prototype properties
 		// (see https://github.com/jquery/sizzle/issues/157)
-		if ( keys.push( key + " " ) > Expr.cacheLength ) {
+		if ( keys.push( key + ' ' ) > Expr.cacheLength ) {
 
 			// Only keep the most recent entries
 			delete cache[ keys.shift() ];
 		}
-		return ( cache[ key + " " ] = value );
+		return ( cache[ key + ' ' ] = value );
 	}
 	return cache;
 }
@@ -1047,7 +1047,7 @@ function markFunction( fn ) {
  * @param {Function} fn Passed the created element and returns a boolean result
  */
 function assert( fn ) {
-	var el = document.createElement( "fieldset" );
+	var el = document.createElement( 'fieldset' );
 
 	try {
 		return !!fn( el );
@@ -1071,7 +1071,7 @@ function assert( fn ) {
  */
 function createInputPseudo( type ) {
 	return function( elem ) {
-		return nodeName( elem, "input" ) && elem.type === type;
+		return nodeName( elem, 'input' ) && elem.type === type;
 	};
 }
 
@@ -1081,7 +1081,7 @@ function createInputPseudo( type ) {
  */
 function createButtonPseudo( type ) {
 	return function( elem ) {
-		return ( nodeName( elem, "input" ) || nodeName( elem, "button" ) ) &&
+		return ( nodeName( elem, 'input' ) || nodeName( elem, 'button' ) ) &&
 			elem.type === type;
 	};
 }
@@ -1098,7 +1098,7 @@ function createDisabledPseudo( disabled ) {
 		// Only certain elements can match :enabled or :disabled
 		// https://html.spec.whatwg.org/multipage/scripting.html#selector-enabled
 		// https://html.spec.whatwg.org/multipage/scripting.html#selector-disabled
-		if ( "form" in elem ) {
+		if ( 'form' in elem ) {
 
 			// Check for inherited disabledness on relevant non-disabled elements:
 			// * listed form-associated elements in a disabled fieldset
@@ -1110,8 +1110,8 @@ function createDisabledPseudo( disabled ) {
 			if ( elem.parentNode && elem.disabled === false ) {
 
 				// Option elements defer to a parent optgroup if present
-				if ( "label" in elem ) {
-					if ( "label" in elem.parentNode ) {
+				if ( 'label' in elem ) {
+					if ( 'label' in elem.parentNode ) {
 						return elem.parentNode.disabled === disabled;
 					} else {
 						return elem.disabled === disabled;
@@ -1132,7 +1132,7 @@ function createDisabledPseudo( disabled ) {
 		// Try to winnow out elements that can't be disabled before trusting the disabled property.
 		// Some victims get caught in our net (label, legend, menu, track), but it shouldn't
 		// even exist on them, let alone have a boolean value.
-		} else if ( "label" in elem ) {
+		} else if ( 'label' in elem ) {
 			return elem.disabled === disabled;
 		}
 
@@ -1169,7 +1169,7 @@ function createPositionalPseudo( fn ) {
  * @returns {Element|Object|Boolean} The input node if acceptable, otherwise a falsy value
  */
 function testContext( context ) {
-	return context && typeof context.getElementsByTagName !== "undefined" && context;
+	return context && typeof context.getElementsByTagName !== 'undefined' && context;
 }
 
 /**
@@ -1185,7 +1185,7 @@ function setDocument( node ) {
 	// Support: IE 11+, Edge 17 - 18+
 	// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 	// two documents; shallow comparisons work.
-	// eslint-disable-next-line eqeqeq
+
 	if ( doc == document || doc.nodeType !== 9 || !doc.documentElement ) {
 		return document;
 	}
@@ -1211,12 +1211,12 @@ function setDocument( node ) {
 		// Support: IE 11+, Edge 17 - 18+
 		// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 		// two documents; shallow comparisons work.
-		// eslint-disable-next-line eqeqeq
+
 		preferredDoc != document &&
 		( subWindow = document.defaultView ) && subWindow.top !== subWindow ) {
 
 		// Support: IE 9 - 11+, Edge 12 - 18+
-		subWindow.addEventListener( "unload", unloadHandler );
+		subWindow.addEventListener( 'unload', unloadHandler );
 	}
 
 	// Support: IE <10
@@ -1233,13 +1233,13 @@ function setDocument( node ) {
 	// Check to see if it's possible to do matchesSelector
 	// on a disconnected node.
 	support.disconnectedMatch = assert( function( el ) {
-		return matches.call( el, "*" );
+		return matches.call( el, '*' );
 	} );
 
 	// Support: IE 9 - 11+, Edge 12 - 18+
 	// IE/Edge don't support the :scope pseudo-class.
 	support.scope = assert( function() {
-		return document.querySelectorAll( ":scope" );
+		return document.querySelectorAll( ':scope' );
 	} );
 
 	// Support: Chrome 105 - 111 only, Safari 15.4 - 16.3 only
@@ -1253,7 +1253,7 @@ function setDocument( node ) {
 	// anyway.
 	support.cssHas = assert( function() {
 		try {
-			document.querySelector( ":has(*,:jqfake)" );
+			document.querySelector( ':has(*,:jqfake)' );
 			return false;
 		} catch ( e ) {
 			return true;
@@ -1265,11 +1265,11 @@ function setDocument( node ) {
 		Expr.filter.ID = function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
-				return elem.getAttribute( "id" ) === attrId;
+				return elem.getAttribute( 'id' ) === attrId;
 			};
 		};
 		Expr.find.ID = function( id, context ) {
-			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
+			if ( typeof context.getElementById !== 'undefined' && documentIsHTML ) {
 				var elem = context.getElementById( id );
 				return elem ? [ elem ] : [];
 			}
@@ -1278,8 +1278,8 @@ function setDocument( node ) {
 		Expr.filter.ID =  function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
-				var node = typeof elem.getAttributeNode !== "undefined" &&
-					elem.getAttributeNode( "id" );
+				var node = typeof elem.getAttributeNode !== 'undefined' &&
+					elem.getAttributeNode( 'id' );
 				return node && node.value === attrId;
 			};
 		};
@@ -1287,14 +1287,14 @@ function setDocument( node ) {
 		// Support: IE 6 - 7 only
 		// getElementById is not reliable as a find shortcut
 		Expr.find.ID = function( id, context ) {
-			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
+			if ( typeof context.getElementById !== 'undefined' && documentIsHTML ) {
 				var node, i, elems,
 					elem = context.getElementById( id );
 
 				if ( elem ) {
 
 					// Verify the id attribute
-					node = elem.getAttributeNode( "id" );
+					node = elem.getAttributeNode( 'id' );
 					if ( node && node.value === id ) {
 						return [ elem ];
 					}
@@ -1303,7 +1303,7 @@ function setDocument( node ) {
 					elems = context.getElementsByName( id );
 					i = 0;
 					while ( ( elem = elems[ i++ ] ) ) {
-						node = elem.getAttributeNode( "id" );
+						node = elem.getAttributeNode( 'id' );
 						if ( node && node.value === id ) {
 							return [ elem ];
 						}
@@ -1317,7 +1317,7 @@ function setDocument( node ) {
 
 	// Tag
 	Expr.find.TAG = function( tag, context ) {
-		if ( typeof context.getElementsByTagName !== "undefined" ) {
+		if ( typeof context.getElementsByTagName !== 'undefined' ) {
 			return context.getElementsByTagName( tag );
 
 		// DocumentFragment nodes don't have gEBTN
@@ -1328,7 +1328,7 @@ function setDocument( node ) {
 
 	// Class
 	Expr.find.CLASS = function( className, context ) {
-		if ( typeof context.getElementsByClassName !== "undefined" && documentIsHTML ) {
+		if ( typeof context.getElementsByClassName !== 'undefined' && documentIsHTML ) {
 			return context.getElementsByClassName( className );
 		}
 	};
@@ -1353,35 +1353,35 @@ function setDocument( node ) {
 
 		// Support: iOS <=7 - 8 only
 		// Boolean attributes and "value" are not treated correctly in some XML documents
-		if ( !el.querySelectorAll( "[selected]" ).length ) {
-			rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
+		if ( !el.querySelectorAll( '[selected]' ).length ) {
+			rbuggyQSA.push( '\\[' + whitespace + '*(?:value|' + booleans + ')' );
 		}
 
 		// Support: iOS <=7 - 8 only
-		if ( !el.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
-			rbuggyQSA.push( "~=" );
+		if ( !el.querySelectorAll( '[id~=' + expando + '-]' ).length ) {
+			rbuggyQSA.push( '~=' );
 		}
 
 		// Support: iOS 8 only
 		// https://bugs.webkit.org/show_bug.cgi?id=136851
 		// In-page `selector#id sibling-combinator selector` fails
-		if ( !el.querySelectorAll( "a#" + expando + "+*" ).length ) {
-			rbuggyQSA.push( ".#.+[+~]" );
+		if ( !el.querySelectorAll( 'a#' + expando + '+*' ).length ) {
+			rbuggyQSA.push( '.#.+[+~]' );
 		}
 
 		// Support: Chrome <=105+, Firefox <=104+, Safari <=15.4+
 		// In some of the document kinds, these selectors wouldn't work natively.
 		// This is probably OK but for backwards compatibility we want to maintain
 		// handling them through jQuery traversal in jQuery 3.x.
-		if ( !el.querySelectorAll( ":checked" ).length ) {
-			rbuggyQSA.push( ":checked" );
+		if ( !el.querySelectorAll( ':checked' ).length ) {
+			rbuggyQSA.push( ':checked' );
 		}
 
 		// Support: Windows 8 Native Apps
 		// The type and name attributes are restricted during .innerHTML assignment
-		input = document.createElement( "input" );
-		input.setAttribute( "type", "hidden" );
-		el.appendChild( input ).setAttribute( "name", "D" );
+		input = document.createElement( 'input' );
+		input.setAttribute( 'type', 'hidden' );
+		el.appendChild( input ).setAttribute( 'name', 'D' );
 
 		// Support: IE 9 - 11+
 		// IE's :disabled selector does not pick up the children of disabled fieldsets
@@ -1390,8 +1390,8 @@ function setDocument( node ) {
 		// This is probably OK but for backwards compatibility we want to maintain
 		// handling them through jQuery traversal in jQuery 3.x.
 		documentElement.appendChild( el ).disabled = true;
-		if ( el.querySelectorAll( ":disabled" ).length !== 2 ) {
-			rbuggyQSA.push( ":enabled", ":disabled" );
+		if ( el.querySelectorAll( ':disabled' ).length !== 2 ) {
+			rbuggyQSA.push( ':enabled', ':disabled' );
 		}
 
 		// Support: IE 11+, Edge 15 - 18+
@@ -1399,11 +1399,11 @@ function setDocument( node ) {
 		// Adding a temporary attribute to the document before the selection works
 		// around the issue.
 		// Interestingly, IE 10 & older don't seem to have the issue.
-		input = document.createElement( "input" );
-		input.setAttribute( "name", "" );
+		input = document.createElement( 'input' );
+		input.setAttribute( 'name', '' );
 		el.appendChild( input );
 		if ( !el.querySelectorAll( "[name='']" ).length ) {
-			rbuggyQSA.push( "\\[" + whitespace + "*name" + whitespace + "*=" +
+			rbuggyQSA.push( '\\[' + whitespace + '*name' + whitespace + '*=' +
 				whitespace + "*(?:''|\"\")" );
 		}
 	} );
@@ -1416,10 +1416,10 @@ function setDocument( node ) {
 		// in browsers that parse the `:has()` argument as a forgiving selector list.
 		// https://drafts.csswg.org/selectors/#relational now requires the argument
 		// to be parsed unforgivingly, but browsers have not yet fully adjusted.
-		rbuggyQSA.push( ":has" );
+		rbuggyQSA.push( ':has' );
 	}
 
-	rbuggyQSA = rbuggyQSA.length && new RegExp( rbuggyQSA.join( "|" ) );
+	rbuggyQSA = rbuggyQSA.length && new RegExp( rbuggyQSA.join( '|' ) );
 
 	/* Sorting
 	---------------------------------------------------------------------- */
@@ -1443,7 +1443,7 @@ function setDocument( node ) {
 		// Support: IE 11+, Edge 17 - 18+
 		// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 		// two documents; shallow comparisons work.
-		// eslint-disable-next-line eqeqeq
+
 		compare = ( a.ownerDocument || a ) == ( b.ownerDocument || b ) ?
 			a.compareDocumentPosition( b ) :
 
@@ -1458,7 +1458,7 @@ function setDocument( node ) {
 			// Support: IE 11+, Edge 17 - 18+
 			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 			// two documents; shallow comparisons work.
-			// eslint-disable-next-line eqeqeq
+
 			if ( a === document || a.ownerDocument == preferredDoc &&
 				find.contains( preferredDoc, a ) ) {
 				return -1;
@@ -1467,7 +1467,7 @@ function setDocument( node ) {
 			// Support: IE 11+, Edge 17 - 18+
 			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 			// two documents; shallow comparisons work.
-			// eslint-disable-next-line eqeqeq
+
 			if ( b === document || b.ownerDocument == preferredDoc &&
 				find.contains( preferredDoc, b ) ) {
 				return 1;
@@ -1493,7 +1493,7 @@ find.matchesSelector = function( elem, expr ) {
 	setDocument( elem );
 
 	if ( documentIsHTML &&
-		!nonnativeSelectorCache[ expr + " " ] &&
+		!nonnativeSelectorCache[ expr + ' ' ] &&
 		( !rbuggyQSA || !rbuggyQSA.test( expr ) ) ) {
 
 		try {
@@ -1521,7 +1521,7 @@ find.contains = function( context, elem ) {
 	// Support: IE 11+, Edge 17 - 18+
 	// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 	// two documents; shallow comparisons work.
-	// eslint-disable-next-line eqeqeq
+
 	if ( ( context.ownerDocument || context ) != document ) {
 		setDocument( context );
 	}
@@ -1535,7 +1535,7 @@ find.attr = function( elem, name ) {
 	// Support: IE 11+, Edge 17 - 18+
 	// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 	// two documents; shallow comparisons work.
-	// eslint-disable-next-line eqeqeq
+
 	if ( ( elem.ownerDocument || elem ) != document ) {
 		setDocument( elem );
 	}
@@ -1555,7 +1555,7 @@ find.attr = function( elem, name ) {
 };
 
 find.error = function( msg ) {
-	throw new Error( "Syntax error, unrecognized expression: " + msg );
+	throw new Error( 'Syntax error, unrecognized expression: ' + msg );
 };
 
 /**
@@ -1613,10 +1613,10 @@ Expr = jQuery.expr = {
 	find: {},
 
 	relative: {
-		">": { dir: "parentNode", first: true },
-		" ": { dir: "parentNode" },
-		"+": { dir: "previousSibling", first: true },
-		"~": { dir: "previousSibling" }
+		'>': { dir: 'parentNode', first: true },
+		' ': { dir: 'parentNode' },
+		'+': { dir: 'previousSibling', first: true },
+		'~': { dir: 'previousSibling' }
 	},
 
 	preFilter: {
@@ -1624,11 +1624,11 @@ Expr = jQuery.expr = {
 			match[ 1 ] = match[ 1 ].replace( runescape, funescape );
 
 			// Move the given value to match[3] whether quoted or unquoted
-			match[ 3 ] = ( match[ 3 ] || match[ 4 ] || match[ 5 ] || "" )
+			match[ 3 ] = ( match[ 3 ] || match[ 4 ] || match[ 5 ] || '' )
 				.replace( runescape, funescape );
 
-			if ( match[ 2 ] === "~=" ) {
-				match[ 3 ] = " " + match[ 3 ] + " ";
+			if ( match[ 2 ] === '~=' ) {
+				match[ 3 ] = ' ' + match[ 3 ] + ' ';
 			}
 
 			return match.slice( 0, 4 );
@@ -1648,7 +1648,7 @@ Expr = jQuery.expr = {
 			*/
 			match[ 1 ] = match[ 1 ].toLowerCase();
 
-			if ( match[ 1 ].slice( 0, 3 ) === "nth" ) {
+			if ( match[ 1 ].slice( 0, 3 ) === 'nth' ) {
 
 				// nth-* requires argument
 				if ( !match[ 3 ] ) {
@@ -1659,9 +1659,9 @@ Expr = jQuery.expr = {
 				// remember that false/true cast respectively to 0/1
 				match[ 4 ] = +( match[ 4 ] ?
 					match[ 5 ] + ( match[ 6 ] || 1 ) :
-					2 * ( match[ 3 ] === "even" || match[ 3 ] === "odd" )
+					2 * ( match[ 3 ] === 'even' || match[ 3 ] === 'odd' )
 				);
-				match[ 5 ] = +( ( match[ 7 ] + match[ 8 ] ) || match[ 3 ] === "odd" );
+				match[ 5 ] = +( ( match[ 7 ] + match[ 8 ] ) || match[ 3 ] === 'odd' );
 
 			// other types prohibit arguments
 			} else if ( match[ 3 ] ) {
@@ -1681,7 +1681,7 @@ Expr = jQuery.expr = {
 
 			// Accept quoted arguments as-is
 			if ( match[ 3 ] ) {
-				match[ 2 ] = match[ 4 ] || match[ 5 ] || "";
+				match[ 2 ] = match[ 4 ] || match[ 5 ] || '';
 
 			// Strip excess characters from unquoted arguments
 			} else if ( unquoted && rpseudo.test( unquoted ) &&
@@ -1690,7 +1690,7 @@ Expr = jQuery.expr = {
 				( excess = tokenize( unquoted, true ) ) &&
 
 				// advance to the next closing parenthesis
-				( excess = unquoted.indexOf( ")", unquoted.length - excess ) - unquoted.length ) ) {
+				( excess = unquoted.indexOf( ')', unquoted.length - excess ) - unquoted.length ) ) {
 
 				// excess is a negative index
 				match[ 0 ] = match[ 0 ].slice( 0, excess );
@@ -1706,7 +1706,7 @@ Expr = jQuery.expr = {
 
 		TAG: function( nodeNameSelector ) {
 			var expectedNodeName = nodeNameSelector.replace( runescape, funescape ).toLowerCase();
-			return nodeNameSelector === "*" ?
+			return nodeNameSelector === '*' ?
 				function() {
 					return true;
 				} :
@@ -1716,17 +1716,17 @@ Expr = jQuery.expr = {
 		},
 
 		CLASS: function( className ) {
-			var pattern = classCache[ className + " " ];
+			var pattern = classCache[ className + ' ' ];
 
 			return pattern ||
-				( pattern = new RegExp( "(^|" + whitespace + ")" + className +
-					"(" + whitespace + "|$)" ) ) &&
+				( pattern = new RegExp( '(^|' + whitespace + ')' + className +
+					'(' + whitespace + '|$)' ) ) &&
 				classCache( className, function( elem ) {
 					return pattern.test(
-						typeof elem.className === "string" && elem.className ||
-							typeof elem.getAttribute !== "undefined" &&
-								elem.getAttribute( "class" ) ||
-							""
+						typeof elem.className === 'string' && elem.className ||
+							typeof elem.getAttribute !== 'undefined' &&
+								elem.getAttribute( 'class' ) ||
+							''
 					);
 				} );
 		},
@@ -1736,35 +1736,35 @@ Expr = jQuery.expr = {
 				var result = find.attr( elem, name );
 
 				if ( result == null ) {
-					return operator === "!=";
+					return operator === '!=';
 				}
 				if ( !operator ) {
 					return true;
 				}
 
-				result += "";
+				result += '';
 
-				if ( operator === "=" ) {
+				if ( operator === '=' ) {
 					return result === check;
 				}
-				if ( operator === "!=" ) {
+				if ( operator === '!=' ) {
 					return result !== check;
 				}
-				if ( operator === "^=" ) {
+				if ( operator === '^=' ) {
 					return check && result.indexOf( check ) === 0;
 				}
-				if ( operator === "*=" ) {
+				if ( operator === '*=' ) {
 					return check && result.indexOf( check ) > -1;
 				}
-				if ( operator === "$=" ) {
+				if ( operator === '$=' ) {
 					return check && result.slice( -check.length ) === check;
 				}
-				if ( operator === "~=" ) {
-					return ( " " + result.replace( rwhitespace, " " ) + " " )
+				if ( operator === '~=' ) {
+					return ( ' ' + result.replace( rwhitespace, ' ' ) + ' ' )
 						.indexOf( check ) > -1;
 				}
-				if ( operator === "|=" ) {
-					return result === check || result.slice( 0, check.length + 1 ) === check + "-";
+				if ( operator === '|=' ) {
+					return result === check || result.slice( 0, check.length + 1 ) === check + '-';
 				}
 
 				return false;
@@ -1772,9 +1772,9 @@ Expr = jQuery.expr = {
 		},
 
 		CHILD: function( type, what, _argument, first, last ) {
-			var simple = type.slice( 0, 3 ) !== "nth",
-				forward = type.slice( -4 ) !== "last",
-				ofType = what === "of-type";
+			var simple = type.slice( 0, 3 ) !== 'nth',
+				forward = type.slice( -4 ) !== 'last',
+				ofType = what === 'of-type';
 
 			return first === 1 && last === 0 ?
 
@@ -1785,7 +1785,7 @@ Expr = jQuery.expr = {
 
 				function( elem, _context, xml ) {
 					var cache, outerCache, node, nodeIndex, start,
-						dir = simple !== forward ? "nextSibling" : "previousSibling",
+						dir = simple !== forward ? 'nextSibling' : 'previousSibling',
 						parent = elem.parentNode,
 						name = ofType && elem.nodeName.toLowerCase(),
 						useCache = !xml && !ofType,
@@ -1807,7 +1807,7 @@ Expr = jQuery.expr = {
 								}
 
 								// Reverse direction for :only-* (if we haven't yet done so)
-								start = dir = type === "only" && !start && "nextSibling";
+								start = dir = type === 'only' && !start && 'nextSibling';
 							}
 							return true;
 						}
@@ -1889,7 +1889,7 @@ Expr = jQuery.expr = {
 			// Remember that setFilters inherits from pseudos
 			var args,
 				fn = Expr.pseudos[ pseudo ] || Expr.setFilters[ pseudo.toLowerCase() ] ||
-					find.error( "unsupported pseudo: " + pseudo );
+					find.error( 'unsupported pseudo: ' + pseudo );
 
 			// The user may use createPseudo to indicate that
 			// arguments are needed to create the filter function
@@ -1900,7 +1900,7 @@ Expr = jQuery.expr = {
 
 			// But maintain support for old signatures
 			if ( fn.length > 1 ) {
-				args = [ pseudo, pseudo, "", argument ];
+				args = [ pseudo, pseudo, '', argument ];
 				return Expr.setFilters.hasOwnProperty( pseudo.toLowerCase() ) ?
 					markFunction( function( seed, matches ) {
 						var idx,
@@ -1930,7 +1930,7 @@ Expr = jQuery.expr = {
 			// spaces as combinators
 			var input = [],
 				results = [],
-				matcher = compile( selector.replace( rtrimCSS, "$1" ) );
+				matcher = compile( selector.replace( rtrimCSS, '$1' ) );
 
 			return matcher[ expando ] ?
 				markFunction( function( seed, matches, _context, xml ) {
@@ -1979,8 +1979,8 @@ Expr = jQuery.expr = {
 		lang: markFunction( function( lang ) {
 
 			// lang value must be a valid identifier
-			if ( !ridentifier.test( lang || "" ) ) {
-				find.error( "unsupported lang: " + lang );
+			if ( !ridentifier.test( lang || '' ) ) {
+				find.error( 'unsupported lang: ' + lang );
 			}
 			lang = lang.replace( runescape, funescape ).toLowerCase();
 			return function( elem ) {
@@ -1988,10 +1988,10 @@ Expr = jQuery.expr = {
 				do {
 					if ( ( elemLang = documentIsHTML ?
 						elem.lang :
-						elem.getAttribute( "xml:lang" ) || elem.getAttribute( "lang" ) ) ) {
+						elem.getAttribute( 'xml:lang' ) || elem.getAttribute( 'lang' ) ) ) {
 
 						elemLang = elemLang.toLowerCase();
-						return elemLang === lang || elemLang.indexOf( lang + "-" ) === 0;
+						return elemLang === lang || elemLang.indexOf( lang + '-' ) === 0;
 					}
 				} while ( ( elem = elem.parentNode ) && elem.nodeType === 1 );
 				return false;
@@ -2022,8 +2022,8 @@ Expr = jQuery.expr = {
 
 			// In CSS3, :checked should return both checked and selected elements
 			// https://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
-			return ( nodeName( elem, "input" ) && !!elem.checked ) ||
-				( nodeName( elem, "option" ) && !!elem.selected );
+			return ( nodeName( elem, 'input' ) && !!elem.checked ) ||
+				( nodeName( elem, 'option' ) && !!elem.selected );
 		},
 
 		selected: function( elem ) {
@@ -2033,7 +2033,7 @@ Expr = jQuery.expr = {
 			// forces the browser to treat the default option as
 			// selected when in an optgroup.
 			if ( elem.parentNode ) {
-				// eslint-disable-next-line no-unused-expressions
+
 				elem.parentNode.selectedIndex;
 			}
 
@@ -2069,19 +2069,19 @@ Expr = jQuery.expr = {
 		},
 
 		button: function( elem ) {
-			return nodeName( elem, "input" ) && elem.type === "button" ||
-				nodeName( elem, "button" );
+			return nodeName( elem, 'input' ) && elem.type === 'button' ||
+				nodeName( elem, 'button' );
 		},
 
 		text: function( elem ) {
 			var attr;
-			return nodeName( elem, "input" ) && elem.type === "text" &&
+			return nodeName( elem, 'input' ) && elem.type === 'text' &&
 
 				// Support: IE <10 only
 				// New HTML5 attribute values (e.g., "search") appear
 				// with elem.type === "text"
-				( ( attr = elem.getAttribute( "type" ) ) == null ||
-					attr.toLowerCase() === "text" );
+				( ( attr = elem.getAttribute( 'type' ) ) == null ||
+					attr.toLowerCase() === 'text' );
 		},
 
 		// Position-in-collection
@@ -2158,7 +2158,7 @@ Expr.setFilters = new setFilters();
 function tokenize( selector, parseOnly ) {
 	var matched, match, tokens, type,
 		soFar, groups, preFilters,
-		cached = tokenCache[ selector + " " ];
+		cached = tokenCache[ selector + ' ' ];
 
 	if ( cached ) {
 		return parseOnly ? 0 : cached.slice( 0 );
@@ -2189,7 +2189,7 @@ function tokenize( selector, parseOnly ) {
 				value: matched,
 
 				// Cast descendant combinators to space
-				type: match[ 0 ].replace( rtrimCSS, " " )
+				type: match[ 0 ].replace( rtrimCSS, ' ' )
 			} );
 			soFar = soFar.slice( matched.length );
 		}
@@ -2230,7 +2230,7 @@ function tokenize( selector, parseOnly ) {
 function toSelector( tokens ) {
 	var i = 0,
 		len = tokens.length,
-		selector = "";
+		selector = '';
 	for ( ; i < len; i++ ) {
 		selector += tokens[ i ].value;
 	}
@@ -2241,7 +2241,7 @@ function addCombinator( matcher, combinator, base ) {
 	var dir = combinator.dir,
 		skip = combinator.next,
 		key = skip || dir,
-		checkNonElements = base && key === "parentNode",
+		checkNonElements = base && key === 'parentNode',
 		doneName = done++;
 
 	return combinator.first ?
@@ -2358,7 +2358,7 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 
 			// Get initial elements from seed or context
 			elems = seed ||
-				multipleContexts( selector || "*",
+				multipleContexts( selector || '*',
 					context.nodeType ? [ context ] : context, [] ),
 
 			// Prefilter to get matcher input, preserving a map for seed-results synchronization
@@ -2446,7 +2446,7 @@ function matcherFromTokens( tokens ) {
 	var checkContext, matcher, j,
 		len = tokens.length,
 		leadingRelative = Expr.relative[ tokens[ 0 ].type ],
-		implicitRelative = leadingRelative || Expr.relative[ " " ],
+		implicitRelative = leadingRelative || Expr.relative[ ' ' ],
 		i = leadingRelative ? 1 : 0,
 
 		// The foundational matcher ensures that elements are reachable from top-level context(s)
@@ -2461,7 +2461,7 @@ function matcherFromTokens( tokens ) {
 			// Support: IE 11+, Edge 17 - 18+
 			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 			// two documents; shallow comparisons work.
-			// eslint-disable-next-line eqeqeq
+
 			var ret = ( !leadingRelative && ( xml || context != outermostContext ) ) || (
 				( checkContext = context ).nodeType ?
 					matchContext( elem, context, xml ) :
@@ -2495,8 +2495,8 @@ function matcherFromTokens( tokens ) {
 
 						// If the preceding token was a descendant combinator, insert an implicit any-element `*`
 						tokens.slice( 0, i - 1 )
-							.concat( { value: tokens[ i - 2 ].type === " " ? "*" : "" } )
-					).replace( rtrimCSS, "$1" ),
+							.concat( { value: tokens[ i - 2 ].type === ' ' ? '*' : '' } )
+					).replace( rtrimCSS, '$1' ),
 					matcher,
 					i < j && matcherFromTokens( tokens.slice( i, j ) ),
 					j < len && matcherFromTokens( ( tokens = tokens.slice( j ) ) ),
@@ -2516,13 +2516,13 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 		superMatcher = function( seed, context, xml, results, outermost ) {
 			var elem, j, matcher,
 				matchedCount = 0,
-				i = "0",
+				i = '0',
 				unmatched = seed && [],
 				setMatched = [],
 				contextBackup = outermostContext,
 
 				// We must always have either seed elements or outermost context
-				elems = seed || byElement && Expr.find.TAG( "*", outermost ),
+				elems = seed || byElement && Expr.find.TAG( '*', outermost ),
 
 				// Use integer dirruns iff this is the outermost matcher
 				dirrunsUnique = ( dirruns += contextBackup == null ? 1 : Math.random() || 0.1 ),
@@ -2533,7 +2533,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				// Support: IE 11+, Edge 17 - 18+
 				// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 				// two documents; shallow comparisons work.
-				// eslint-disable-next-line eqeqeq
+
 				outermostContext = context == document || context || outermost;
 			}
 
@@ -2548,7 +2548,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 					// Support: IE 11+, Edge 17 - 18+
 					// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 					// two documents; shallow comparisons work.
-					// eslint-disable-next-line eqeqeq
+
 					if ( !context && elem.ownerDocument != document ) {
 						setDocument( elem );
 						xml = !documentIsHTML;
@@ -2640,7 +2640,7 @@ function compile( selector, match /* Internal Use Only */ ) {
 	var i,
 		setMatchers = [],
 		elementMatchers = [],
-		cached = compilerCache[ selector + " " ];
+		cached = compilerCache[ selector + ' ' ];
 
 	if ( !cached ) {
 
@@ -2679,7 +2679,7 @@ function compile( selector, match /* Internal Use Only */ ) {
  */
 function select( selector, context, results, seed ) {
 	var i, tokens, token, type, find,
-		compiled = typeof selector === "function" && selector,
+		compiled = typeof selector === 'function' && selector,
 		match = !seed && tokenize( ( selector = compiled.selector || selector ) );
 
 	results = results || [];
@@ -2690,7 +2690,7 @@ function select( selector, context, results, seed ) {
 
 		// Reduce context if the leading compound selector is an ID
 		tokens = match[ 0 ] = match[ 0 ].slice( 0 );
-		if ( tokens.length > 2 && ( token = tokens[ 0 ] ).type === "ID" &&
+		if ( tokens.length > 2 && ( token = tokens[ 0 ] ).type === 'ID' &&
 				context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[ 1 ].type ] ) {
 
 			context = ( Expr.find.ID(
@@ -2756,7 +2756,7 @@ function select( selector, context, results, seed ) {
 
 // Support: Android <=4.0 - 4.1+
 // Sort stability
-support.sortStable = expando.split( "" ).sort( sortOrder ).join( "" ) === expando;
+support.sortStable = expando.split( '' ).sort( sortOrder ).join( '' ) === expando;
 
 // Initialize against the default document
 setDocument();
@@ -2766,13 +2766,13 @@ setDocument();
 support.sortDetached = assert( function( el ) {
 
 	// Should return 1, but returns 4 (following)
-	return el.compareDocumentPosition( document.createElement( "fieldset" ) ) & 1;
+	return el.compareDocumentPosition( document.createElement( 'fieldset' ) ) & 1;
 } );
 
 jQuery.find = find;
 
 // Deprecated
-jQuery.expr[ ":" ] = jQuery.expr.pseudos;
+jQuery.expr[ ':' ] = jQuery.expr.pseudos;
 jQuery.unique = jQuery.uniqueSort;
 
 // These have always been private, but they used to be documented as part of
@@ -2789,7 +2789,7 @@ find.selectors = jQuery.expr;
 find.support = jQuery.support;
 find.uniqueSort = jQuery.uniqueSort;
 
-	/* eslint-enable */
+
 
 } )();
 
@@ -2845,7 +2845,7 @@ function winnow( elements, qualifier, not ) {
 	}
 
 	// Arraylike of elements (jQuery, arguments, Array)
-	if ( typeof qualifier !== "string" ) {
+	if ( typeof qualifier !== 'string' ) {
 		return jQuery.grep( elements, function( elem ) {
 			return ( indexOf.call( qualifier, elem ) > -1 ) !== not;
 		} );
@@ -2859,7 +2859,7 @@ jQuery.filter = function( expr, elems, not ) {
 	var elem = elems[ 0 ];
 
 	if ( not ) {
-		expr = ":not(" + expr + ")";
+		expr = ':not(' + expr + ')';
 	}
 
 	if ( elems.length === 1 && elem.nodeType === 1 ) {
@@ -2877,7 +2877,7 @@ jQuery.fn.extend( {
 			len = this.length,
 			self = this;
 
-		if ( typeof selector !== "string" ) {
+		if ( typeof selector !== 'string' ) {
 			return this.pushStack( jQuery( selector ).filter( function() {
 				for ( i = 0; i < len; i++ ) {
 					if ( jQuery.contains( self[ i ], this ) ) {
@@ -2907,7 +2907,7 @@ jQuery.fn.extend( {
 
 			// If this is a positional/relative selector, check membership in the returned set
 			// so $("p:first").is("p:last") won't return true for a doc with two "p".
-			typeof selector === "string" && rneedsContext.test( selector ) ?
+			typeof selector === 'string' && rneedsContext.test( selector ) ?
 				jQuery( selector ) :
 				selector || [],
 			false
@@ -2941,9 +2941,9 @@ var rootjQuery,
 		root = root || rootjQuery;
 
 		// Handle HTML strings
-		if ( typeof selector === "string" ) {
-			if ( selector[ 0 ] === "<" &&
-				selector[ selector.length - 1 ] === ">" &&
+		if ( typeof selector === 'string' ) {
+			if ( selector[ 0 ] === '<' &&
+				selector[ selector.length - 1 ] === '>' &&
 				selector.length >= 3 ) {
 
 				// Assume that strings that start and end with <> are HTML and skip the regex check
@@ -3064,7 +3064,7 @@ jQuery.fn.extend( {
 			i = 0,
 			l = this.length,
 			matched = [],
-			targets = typeof selectors !== "string" && jQuery( selectors );
+			targets = typeof selectors !== 'string' && jQuery( selectors );
 
 		// Positional selectors never match, since there's no _selection_ context
 		if ( !rneedsContext.test( selectors ) ) {
@@ -3098,7 +3098,7 @@ jQuery.fn.extend( {
 		}
 
 		// Index in selector
-		if ( typeof elem === "string" ) {
+		if ( typeof elem === 'string' ) {
 			return indexOf.call( jQuery( elem ), this[ 0 ] );
 		}
 
@@ -3136,28 +3136,28 @@ jQuery.each( {
 		return parent && parent.nodeType !== 11 ? parent : null;
 	},
 	parents: function( elem ) {
-		return dir( elem, "parentNode" );
+		return dir( elem, 'parentNode' );
 	},
 	parentsUntil: function( elem, _i, until ) {
-		return dir( elem, "parentNode", until );
+		return dir( elem, 'parentNode', until );
 	},
 	next: function( elem ) {
-		return sibling( elem, "nextSibling" );
+		return sibling( elem, 'nextSibling' );
 	},
 	prev: function( elem ) {
-		return sibling( elem, "previousSibling" );
+		return sibling( elem, 'previousSibling' );
 	},
 	nextAll: function( elem ) {
-		return dir( elem, "nextSibling" );
+		return dir( elem, 'nextSibling' );
 	},
 	prevAll: function( elem ) {
-		return dir( elem, "previousSibling" );
+		return dir( elem, 'previousSibling' );
 	},
 	nextUntil: function( elem, _i, until ) {
-		return dir( elem, "nextSibling", until );
+		return dir( elem, 'nextSibling', until );
 	},
 	prevUntil: function( elem, _i, until ) {
-		return dir( elem, "previousSibling", until );
+		return dir( elem, 'previousSibling', until );
 	},
 	siblings: function( elem ) {
 		return siblings( ( elem.parentNode || {} ).firstChild, elem );
@@ -3179,7 +3179,7 @@ jQuery.each( {
 		// Support: IE 9 - 11 only, iOS 7 only, Android Browser <=4.3 only
 		// Treat the template element as a regular one in browsers that
 		// don't support it.
-		if ( nodeName( elem, "template" ) ) {
+		if ( nodeName( elem, 'template' ) ) {
 			elem = elem.content || elem;
 		}
 
@@ -3189,11 +3189,11 @@ jQuery.each( {
 	jQuery.fn[ name ] = function( until, selector ) {
 		var matched = jQuery.map( this, fn, until );
 
-		if ( name.slice( -5 ) !== "Until" ) {
+		if ( name.slice( -5 ) !== 'Until' ) {
 			selector = until;
 		}
 
-		if ( selector && typeof selector === "string" ) {
+		if ( selector && typeof selector === 'string' ) {
 			matched = jQuery.filter( selector, matched );
 		}
 
@@ -3252,7 +3252,7 @@ jQuery.Callbacks = function( options ) {
 
 	// Convert options from String-formatted to Object-formatted if needed
 	// (we check in cache first)
-	options = typeof options === "string" ?
+	options = typeof options === 'string' ?
 		createOptions( options ) :
 		jQuery.extend( {}, options );
 
@@ -3317,7 +3317,7 @@ jQuery.Callbacks = function( options ) {
 
 				// Otherwise, this object is spent
 				} else {
-					list = "";
+					list = '';
 				}
 			}
 		},
@@ -3341,7 +3341,7 @@ jQuery.Callbacks = function( options ) {
 								if ( !options.unique || !self.has( arg ) ) {
 									list.push( arg );
 								}
-							} else if ( arg && arg.length && toType( arg ) !== "string" ) {
+							} else if ( arg && arg.length && toType( arg ) !== 'string' ) {
 
 								// Inspect recursively
 								add( arg );
@@ -3393,7 +3393,7 @@ jQuery.Callbacks = function( options ) {
 			// Clear all callbacks and values
 			disable: function() {
 				locked = queue = [];
-				list = memory = "";
+				list = memory = '';
 				return this;
 			},
 			disabled: function() {
@@ -3406,7 +3406,7 @@ jQuery.Callbacks = function( options ) {
 			lock: function() {
 				locked = queue = [];
 				if ( !memory && !firing ) {
-					list = memory = "";
+					list = memory = '';
 				}
 				return this;
 			},
@@ -3490,14 +3490,14 @@ jQuery.extend( {
 
 				// action, add listener, callbacks,
 				// ... .then handlers, argument index, [final state]
-				[ "notify", "progress", jQuery.Callbacks( "memory" ),
-					jQuery.Callbacks( "memory" ), 2 ],
-				[ "resolve", "done", jQuery.Callbacks( "once memory" ),
-					jQuery.Callbacks( "once memory" ), 0, "resolved" ],
-				[ "reject", "fail", jQuery.Callbacks( "once memory" ),
-					jQuery.Callbacks( "once memory" ), 1, "rejected" ]
+				[ 'notify', 'progress', jQuery.Callbacks( 'memory' ),
+					jQuery.Callbacks( 'memory' ), 2 ],
+				[ 'resolve', 'done', jQuery.Callbacks( 'once memory' ),
+					jQuery.Callbacks( 'once memory' ), 0, 'resolved' ],
+				[ 'reject', 'fail', jQuery.Callbacks( 'once memory' ),
+					jQuery.Callbacks( 'once memory' ), 1, 'rejected' ]
 			],
-			state = "pending",
+			state = 'pending',
 			promise = {
 				state: function() {
 					return state;
@@ -3506,7 +3506,7 @@ jQuery.extend( {
 					deferred.done( arguments ).fail( arguments );
 					return this;
 				},
-				"catch": function( fn ) {
+				'catch': function( fn ) {
 					return promise.then( null, fn );
 				},
 
@@ -3531,7 +3531,7 @@ jQuery.extend( {
 										.done( newDefer.resolve )
 										.fail( newDefer.reject );
 								} else {
-									newDefer[ tuple[ 0 ] + "With" ](
+									newDefer[ tuple[ 0 ] + 'With' ](
 										this,
 										fn ? [ returned ] : arguments
 									);
@@ -3562,7 +3562,7 @@ jQuery.extend( {
 									// Support: Promises/A+ section 2.3.1
 									// https://promisesaplus.com/#point-48
 									if ( returned === deferred.promise() ) {
-										throw new TypeError( "Thenable self-resolution" );
+										throw new TypeError( 'Thenable self-resolution' );
 									}
 
 									// Support: Promises/A+ sections 2.3.3.1, 3.5
@@ -3574,8 +3574,8 @@ jQuery.extend( {
 										// Support: Promises/A+ section 2.3.4
 										// https://promisesaplus.com/#point-64
 										// Only check objects and functions for thenability
-										( typeof returned === "object" ||
-											typeof returned === "function" ) &&
+										( typeof returned === 'object' ||
+											typeof returned === 'function' ) &&
 										returned.then;
 
 									// Handle a returned thenable
@@ -3766,14 +3766,14 @@ jQuery.extend( {
 			// deferred.resolve = function() { deferred.resolveWith(...) }
 			// deferred.reject = function() { deferred.rejectWith(...) }
 			deferred[ tuple[ 0 ] ] = function() {
-				deferred[ tuple[ 0 ] + "With" ]( this === deferred ? undefined : this, arguments );
+				deferred[ tuple[ 0 ] + 'With' ]( this === deferred ? undefined : this, arguments );
 				return this;
 			};
 
 			// deferred.notifyWith = list.fireWith
 			// deferred.resolveWith = list.fireWith
 			// deferred.rejectWith = list.fireWith
-			deferred[ tuple[ 0 ] + "With" ] = list.fireWith;
+			deferred[ tuple[ 0 ] + 'With' ] = list.fireWith;
 		} );
 
 		// Make the deferred a promise
@@ -3822,7 +3822,7 @@ jQuery.extend( {
 				!remaining );
 
 			// Use .then() to unwrap secondary thenables (cf. gh-3000)
-			if ( primary.state() === "pending" ||
+			if ( primary.state() === 'pending' ||
 				isFunction( resolveValues[ i ] && resolveValues[ i ].then ) ) {
 
 				return primary.then();
@@ -3851,7 +3851,7 @@ jQuery.Deferred.exceptionHook = function( error, asyncError ) {
 	// Support: IE 8 - 9 only
 	// Console exists when dev tools are open, which can happen at any time
 	if ( window.console && window.console.warn && error && rerrorNames.test( error.name ) ) {
-		window.console.warn( "jQuery.Deferred exception: " + error.message,
+		window.console.warn( 'jQuery.Deferred exception: ' + error.message,
 			error.stack, asyncError );
 	}
 };
@@ -3920,8 +3920,8 @@ jQuery.ready.then = readyList.then;
 
 // The ready event handler and self cleanup method
 function completed() {
-	document.removeEventListener( "DOMContentLoaded", completed );
-	window.removeEventListener( "load", completed );
+	document.removeEventListener( 'DOMContentLoaded', completed );
+	window.removeEventListener( 'load', completed );
 	jQuery.ready();
 }
 
@@ -3929,8 +3929,8 @@ function completed() {
 // after the browser event has already occurred.
 // Support: IE <=9 - 10 only
 // Older IE sometimes signals "interactive" too soon
-if ( document.readyState === "complete" ||
-	( document.readyState !== "loading" && !document.documentElement.doScroll ) ) {
+if ( document.readyState === 'complete' ||
+	( document.readyState !== 'loading' && !document.documentElement.doScroll ) ) {
 
 	// Handle it asynchronously to allow scripts the opportunity to delay ready
 	window.setTimeout( jQuery.ready );
@@ -3938,10 +3938,10 @@ if ( document.readyState === "complete" ||
 } else {
 
 	// Use the handy event callback
-	document.addEventListener( "DOMContentLoaded", completed );
+	document.addEventListener( 'DOMContentLoaded', completed );
 
 	// A fallback to window.onload, that will always work
-	window.addEventListener( "load", completed );
+	window.addEventListener( 'load', completed );
 }
 
 
@@ -3955,7 +3955,7 @@ var access = function( elems, fn, key, value, chainable, emptyGet, raw ) {
 		bulk = key == null;
 
 	// Sets many values
-	if ( toType( key ) === "object" ) {
+	if ( toType( key ) === 'object' ) {
 		chainable = true;
 		for ( i in key ) {
 			access( elems, fn, i, key[ i ], true, emptyGet, raw );
@@ -4022,7 +4022,7 @@ function fcamelCase( _all, letter ) {
 // Support: IE <=9 - 11, Edge 12 - 15
 // Microsoft forgot to hump their vendor prefix (trac-9572)
 function camelCase( string ) {
-	return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
+	return string.replace( rmsPrefix, 'ms-' ).replace( rdashAlpha, fcamelCase );
 }
 var acceptData = function( owner ) {
 
@@ -4085,7 +4085,7 @@ Data.prototype = {
 
 		// Handle: [ owner, key, value ] args
 		// Always use camelCase key (gh-2257)
-		if ( typeof data === "string" ) {
+		if ( typeof data === 'string' ) {
 			cache[ camelCase( data ) ] = value;
 
 		// Handle: [ owner, { properties } ] args
@@ -4119,7 +4119,7 @@ Data.prototype = {
 		//   2. The data stored at the key
 		//
 		if ( key === undefined ||
-				( ( key && typeof key === "string" ) && value === undefined ) ) {
+				( ( key && typeof key === 'string' ) && value === undefined ) ) {
 
 			return this.get( owner, key );
 		}
@@ -4208,20 +4208,20 @@ var rbrace = /^(?:\{[\w\W]*\}|\[[\w\W]*\])$/,
 	rmultiDash = /[A-Z]/g;
 
 function getData( data ) {
-	if ( data === "true" ) {
+	if ( data === 'true' ) {
 		return true;
 	}
 
-	if ( data === "false" ) {
+	if ( data === 'false' ) {
 		return false;
 	}
 
-	if ( data === "null" ) {
+	if ( data === 'null' ) {
 		return null;
 	}
 
 	// Only convert to a number if it doesn't change the string
-	if ( data === +data + "" ) {
+	if ( data === +data + '' ) {
 		return +data;
 	}
 
@@ -4238,10 +4238,10 @@ function dataAttr( elem, key, data ) {
 	// If nothing was found internally, try to fetch any
 	// data from the HTML5 data-* attribute
 	if ( data === undefined && elem.nodeType === 1 ) {
-		name = "data-" + key.replace( rmultiDash, "-$&" ).toLowerCase();
+		name = 'data-' + key.replace( rmultiDash, '-$&' ).toLowerCase();
 		data = elem.getAttribute( name );
 
-		if ( typeof data === "string" ) {
+		if ( typeof data === 'string' ) {
 			try {
 				data = getData( data );
 			} catch ( e ) {}
@@ -4290,7 +4290,7 @@ jQuery.fn.extend( {
 			if ( this.length ) {
 				data = dataUser.get( elem );
 
-				if ( elem.nodeType === 1 && !dataPriv.get( elem, "hasDataAttrs" ) ) {
+				if ( elem.nodeType === 1 && !dataPriv.get( elem, 'hasDataAttrs' ) ) {
 					i = attrs.length;
 					while ( i-- ) {
 
@@ -4298,13 +4298,13 @@ jQuery.fn.extend( {
 						// The attrs elements can be null (trac-14894)
 						if ( attrs[ i ] ) {
 							name = attrs[ i ].name;
-							if ( name.indexOf( "data-" ) === 0 ) {
+							if ( name.indexOf( 'data-' ) === 0 ) {
 								name = camelCase( name.slice( 5 ) );
 								dataAttr( elem, name, data[ name ] );
 							}
 						}
 					}
-					dataPriv.set( elem, "hasDataAttrs", true );
+					dataPriv.set( elem, 'hasDataAttrs', true );
 				}
 			}
 
@@ -4312,7 +4312,7 @@ jQuery.fn.extend( {
 		}
 
 		// Sets multiple values
-		if ( typeof key === "object" ) {
+		if ( typeof key === 'object' ) {
 			return this.each( function() {
 				dataUser.set( this, key );
 			} );
@@ -4368,7 +4368,7 @@ jQuery.extend( {
 		var queue;
 
 		if ( elem ) {
-			type = ( type || "fx" ) + "queue";
+			type = ( type || 'fx' ) + 'queue';
 			queue = dataPriv.get( elem, type );
 
 			// Speed up dequeue by getting out quickly if this is just a lookup
@@ -4384,7 +4384,7 @@ jQuery.extend( {
 	},
 
 	dequeue: function( elem, type ) {
-		type = type || "fx";
+		type = type || 'fx';
 
 		var queue = jQuery.queue( elem, type ),
 			startLength = queue.length,
@@ -4395,7 +4395,7 @@ jQuery.extend( {
 			};
 
 		// If the fx queue is dequeued, always remove the progress sentinel
-		if ( fn === "inprogress" ) {
+		if ( fn === 'inprogress' ) {
 			fn = queue.shift();
 			startLength--;
 		}
@@ -4404,8 +4404,8 @@ jQuery.extend( {
 
 			// Add a progress sentinel to prevent the fx queue from being
 			// automatically dequeued
-			if ( type === "fx" ) {
-				queue.unshift( "inprogress" );
+			if ( type === 'fx' ) {
+				queue.unshift( 'inprogress' );
 			}
 
 			// Clear up the last queue stop function
@@ -4420,10 +4420,10 @@ jQuery.extend( {
 
 	// Not public - generate a queueHooks object, or return the current one
 	_queueHooks: function( elem, type ) {
-		var key = type + "queueHooks";
+		var key = type + 'queueHooks';
 		return dataPriv.get( elem, key ) || dataPriv.access( elem, key, {
-			empty: jQuery.Callbacks( "once memory" ).add( function() {
-				dataPriv.remove( elem, [ type + "queue", key ] );
+			empty: jQuery.Callbacks( 'once memory' ).add( function() {
+				dataPriv.remove( elem, [ type + 'queue', key ] );
 			} )
 		} );
 	}
@@ -4433,9 +4433,9 @@ jQuery.fn.extend( {
 	queue: function( type, data ) {
 		var setter = 2;
 
-		if ( typeof type !== "string" ) {
+		if ( typeof type !== 'string' ) {
 			data = type;
-			type = "fx";
+			type = 'fx';
 			setter--;
 		}
 
@@ -4451,7 +4451,7 @@ jQuery.fn.extend( {
 				// Ensure a hooks for this queue
 				jQuery._queueHooks( this, type );
 
-				if ( type === "fx" && queue[ 0 ] !== "inprogress" ) {
+				if ( type === 'fx' && queue[ 0 ] !== 'inprogress' ) {
 					jQuery.dequeue( this, type );
 				}
 			} );
@@ -4462,7 +4462,7 @@ jQuery.fn.extend( {
 		} );
 	},
 	clearQueue: function( type ) {
-		return this.queue( type || "fx", [] );
+		return this.queue( type || 'fx', [] );
 	},
 
 	// Get a promise resolved when queues of a certain type
@@ -4479,14 +4479,14 @@ jQuery.fn.extend( {
 				}
 			};
 
-		if ( typeof type !== "string" ) {
+		if ( typeof type !== 'string' ) {
 			obj = type;
 			type = undefined;
 		}
-		type = type || "fx";
+		type = type || 'fx';
 
 		while ( i-- ) {
-			tmp = dataPriv.get( elements[ i ], type + "queueHooks" );
+			tmp = dataPriv.get( elements[ i ], type + 'queueHooks' );
 			if ( tmp && tmp.empty ) {
 				count++;
 				tmp.empty.add( resolve );
@@ -4498,10 +4498,10 @@ jQuery.fn.extend( {
 } );
 var pnum = ( /[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/ ).source;
 
-var rcssNum = new RegExp( "^(?:([+-])=|)(" + pnum + ")([a-z%]*)$", "i" );
+var rcssNum = new RegExp( '^(?:([+-])=|)(' + pnum + ')([a-z%]*)$', 'i' );
 
 
-var cssExpand = [ "Top", "Right", "Bottom", "Left" ];
+var cssExpand = [ 'Top', 'Right', 'Bottom', 'Left' ];
 
 var documentElement = document.documentElement;
 
@@ -4530,8 +4530,8 @@ var isHiddenWithinTree = function( elem, el ) {
 		elem = el || elem;
 
 		// Inline style trumps all
-		return elem.style.display === "none" ||
-			elem.style.display === "" &&
+		return elem.style.display === 'none' ||
+			elem.style.display === '' &&
 
 			// Otherwise, check computed style
 			// Support: Firefox <=43 - 45
@@ -4539,7 +4539,7 @@ var isHiddenWithinTree = function( elem, el ) {
 			// in the document.
 			isAttached( elem ) &&
 
-			jQuery.css( elem, "display" ) === "none";
+			jQuery.css( elem, 'display' ) === 'none';
 	};
 
 
@@ -4552,14 +4552,14 @@ function adjustCSS( elem, prop, valueParts, tween ) {
 				return tween.cur();
 			} :
 			function() {
-				return jQuery.css( elem, prop, "" );
+				return jQuery.css( elem, prop, '' );
 			},
 		initial = currentValue(),
-		unit = valueParts && valueParts[ 3 ] || ( jQuery.cssNumber[ prop ] ? "" : "px" ),
+		unit = valueParts && valueParts[ 3 ] || ( jQuery.cssNumber[ prop ] ? '' : 'px' ),
 
 		// Starting value computation is required for potential unit mismatches
 		initialInUnit = elem.nodeType &&
-			( jQuery.cssNumber[ prop ] || unit !== "px" && +initial ) &&
+			( jQuery.cssNumber[ prop ] || unit !== 'px' && +initial ) &&
 			rcssNum.exec( jQuery.css( elem, prop ) );
 
 	if ( initialInUnit && initialInUnit[ 3 ] !== unit ) {
@@ -4623,12 +4623,12 @@ function getDefaultDisplay( elem ) {
 	}
 
 	temp = doc.body.appendChild( doc.createElement( nodeName ) );
-	display = jQuery.css( temp, "display" );
+	display = jQuery.css( temp, 'display' );
 
 	temp.parentNode.removeChild( temp );
 
-	if ( display === "none" ) {
-		display = "block";
+	if ( display === 'none' ) {
+		display = 'block';
 	}
 	defaultDisplayMap[ nodeName ] = display;
 
@@ -4654,21 +4654,21 @@ function showHide( elements, show ) {
 			// Since we force visibility upon cascade-hidden elements, an immediate (and slow)
 			// check is required in this first loop unless we have a nonempty display value (either
 			// inline or about-to-be-restored)
-			if ( display === "none" ) {
-				values[ index ] = dataPriv.get( elem, "display" ) || null;
+			if ( display === 'none' ) {
+				values[ index ] = dataPriv.get( elem, 'display' ) || null;
 				if ( !values[ index ] ) {
-					elem.style.display = "";
+					elem.style.display = '';
 				}
 			}
-			if ( elem.style.display === "" && isHiddenWithinTree( elem ) ) {
+			if ( elem.style.display === '' && isHiddenWithinTree( elem ) ) {
 				values[ index ] = getDefaultDisplay( elem );
 			}
 		} else {
-			if ( display !== "none" ) {
-				values[ index ] = "none";
+			if ( display !== 'none' ) {
+				values[ index ] = 'none';
 
 				// Remember what we're overwriting
-				dataPriv.set( elem, "display", display );
+				dataPriv.set( elem, 'display', display );
 			}
 		}
 	}
@@ -4691,7 +4691,7 @@ jQuery.fn.extend( {
 		return showHide( this );
 	},
 	toggle: function( state ) {
-		if ( typeof state === "boolean" ) {
+		if ( typeof state === 'boolean' ) {
 			return state ? this.show() : this.hide();
 		}
 
@@ -4714,16 +4714,16 @@ var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
 
 ( function() {
 	var fragment = document.createDocumentFragment(),
-		div = fragment.appendChild( document.createElement( "div" ) ),
-		input = document.createElement( "input" );
+		div = fragment.appendChild( document.createElement( 'div' ) ),
+		input = document.createElement( 'input' );
 
 	// Support: Android 4.0 - 4.3 only
 	// Check state lost if the name is set (trac-11217)
 	// Support: Windows Web Apps (WWA)
 	// `name` and `type` must use .setAttribute for WWA (trac-14901)
-	input.setAttribute( "type", "radio" );
-	input.setAttribute( "checked", "checked" );
-	input.setAttribute( "name", "t" );
+	input.setAttribute( 'type', 'radio' );
+	input.setAttribute( 'checked', 'checked' );
+	input.setAttribute( 'name', 't' );
 
 	div.appendChild( input );
 
@@ -4733,13 +4733,13 @@ var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
 
 	// Support: IE <=11 only
 	// Make sure textarea (and checkbox) defaultValue is properly cloned
-	div.innerHTML = "<textarea>x</textarea>";
+	div.innerHTML = '<textarea>x</textarea>';
 	support.noCloneChecked = !!div.cloneNode( true ).lastChild.defaultValue;
 
 	// Support: IE <=9 only
 	// IE <=9 replaces <option> tags with their contents when inserted outside of
 	// the select element.
-	div.innerHTML = "<option></option>";
+	div.innerHTML = '<option></option>';
 	support.option = !!div.lastChild;
 } )();
 
@@ -4750,12 +4750,12 @@ var wrapMap = {
 	// XHTML parsers do not magically insert elements in the
 	// same way that tag soup parsers do. So we cannot shorten
 	// this by omitting <tbody> or other required elements.
-	thead: [ 1, "<table>", "</table>" ],
-	col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
-	tr: [ 2, "<table><tbody>", "</tbody></table>" ],
-	td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+	thead: [ 1, '<table>', '</table>' ],
+	col: [ 2, '<table><colgroup>', '</colgroup></table>' ],
+	tr: [ 2, '<table><tbody>', '</tbody></table>' ],
+	td: [ 3, '<table><tbody><tr>', '</tr></tbody></table>' ],
 
-	_default: [ 0, "", "" ]
+	_default: [ 0, '', '' ]
 };
 
 wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
@@ -4763,7 +4763,7 @@ wrapMap.th = wrapMap.td;
 
 // Support: IE <=9 only
 if ( !support.option ) {
-	wrapMap.optgroup = wrapMap.option = [ 1, "<select multiple='multiple'>", "</select>" ];
+	wrapMap.optgroup = wrapMap.option = [ 1, "<select multiple='multiple'>", '</select>' ];
 }
 
 
@@ -4773,11 +4773,11 @@ function getAll( context, tag ) {
 	// Use typeof to avoid zero-argument method invocation on host objects (trac-15151)
 	var ret;
 
-	if ( typeof context.getElementsByTagName !== "undefined" ) {
-		ret = context.getElementsByTagName( tag || "*" );
+	if ( typeof context.getElementsByTagName !== 'undefined' ) {
+		ret = context.getElementsByTagName( tag || '*' );
 
-	} else if ( typeof context.querySelectorAll !== "undefined" ) {
-		ret = context.querySelectorAll( tag || "*" );
+	} else if ( typeof context.querySelectorAll !== 'undefined' ) {
+		ret = context.querySelectorAll( tag || '*' );
 
 	} else {
 		ret = [];
@@ -4799,8 +4799,8 @@ function setGlobalEval( elems, refElements ) {
 	for ( ; i < l; i++ ) {
 		dataPriv.set(
 			elems[ i ],
-			"globalEval",
-			!refElements || dataPriv.get( refElements[ i ], "globalEval" )
+			'globalEval',
+			!refElements || dataPriv.get( refElements[ i ], 'globalEval' )
 		);
 	}
 }
@@ -4821,7 +4821,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 		if ( elem || elem === 0 ) {
 
 			// Add nodes directly
-			if ( toType( elem ) === "object" ) {
+			if ( toType( elem ) === 'object' ) {
 
 				// Support: Android <=4.0 only, PhantomJS 1 only
 				// push.apply(_, arraylike) throws on ancient WebKit
@@ -4833,10 +4833,10 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 
 			// Convert html into DOM nodes
 			} else {
-				tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
+				tmp = tmp || fragment.appendChild( context.createElement( 'div' ) );
 
 				// Deserialize a standard representation
-				tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+				tag = ( rtagName.exec( elem ) || [ '', '' ] )[ 1 ].toLowerCase();
 				wrap = wrapMap[ tag ] || wrapMap._default;
 				tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
 
@@ -4854,13 +4854,13 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 				tmp = fragment.firstChild;
 
 				// Ensure the created nodes are orphaned (trac-12392)
-				tmp.textContent = "";
+				tmp.textContent = '';
 			}
 		}
 	}
 
 	// Remove wrapper from fragment
-	fragment.textContent = "";
+	fragment.textContent = '';
 
 	i = 0;
 	while ( ( elem = nodes[ i++ ] ) ) {
@@ -4876,7 +4876,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 		attached = isAttached( elem );
 
 		// Append to fragment
-		tmp = getAll( fragment.appendChild( elem ), "script" );
+		tmp = getAll( fragment.appendChild( elem ), 'script' );
 
 		// Preserve script evaluation history
 		if ( attached ) {
@@ -4887,7 +4887,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 		if ( scripts ) {
 			j = 0;
 			while ( ( elem = tmp[ j++ ] ) ) {
-				if ( rscriptType.test( elem.type || "" ) ) {
+				if ( rscriptType.test( elem.type || '' ) ) {
 					scripts.push( elem );
 				}
 			}
@@ -4912,10 +4912,10 @@ function on( elem, types, selector, data, fn, one ) {
 	var origFn, type;
 
 	// Types can be a map of types/handlers
-	if ( typeof types === "object" ) {
+	if ( typeof types === 'object' ) {
 
 		// ( types-Object, selector, data )
-		if ( typeof selector !== "string" ) {
+		if ( typeof selector !== 'string' ) {
 
 			// ( types-Object, data )
 			data = data || selector;
@@ -4933,7 +4933,7 @@ function on( elem, types, selector, data, fn, one ) {
 		fn = selector;
 		data = selector = undefined;
 	} else if ( fn == null ) {
-		if ( typeof selector === "string" ) {
+		if ( typeof selector === 'string' ) {
 
 			// ( types, selector, fn )
 			fn = data;
@@ -5016,18 +5016,18 @@ jQuery.event = {
 
 				// Discard the second event of a jQuery.event.trigger() and
 				// when an event is called after a page has unloaded
-				return typeof jQuery !== "undefined" && jQuery.event.triggered !== e.type ?
+				return typeof jQuery !== 'undefined' && jQuery.event.triggered !== e.type ?
 					jQuery.event.dispatch.apply( elem, arguments ) : undefined;
 			};
 		}
 
 		// Handle multiple events separated by a space
-		types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
+		types = ( types || '' ).match( rnothtmlwhite ) || [ '' ];
 		t = types.length;
 		while ( t-- ) {
 			tmp = rtypenamespace.exec( types[ t ] ) || [];
 			type = origType = tmp[ 1 ];
-			namespaces = ( tmp[ 2 ] || "" ).split( "." ).sort();
+			namespaces = ( tmp[ 2 ] || '' ).split( '.' ).sort();
 
 			// There *must* be a type, no attaching namespace-only handlers
 			if ( !type ) {
@@ -5052,7 +5052,7 @@ jQuery.event = {
 				guid: handler.guid,
 				selector: selector,
 				needsContext: selector && jQuery.expr.match.needsContext.test( selector ),
-				namespace: namespaces.join( "." )
+				namespace: namespaces.join( '.' )
 			}, handleObjIn );
 
 			// Init the event handler queue if we're the first
@@ -5104,12 +5104,12 @@ jQuery.event = {
 		}
 
 		// Once for each type.namespace in types; type may be omitted
-		types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
+		types = ( types || '' ).match( rnothtmlwhite ) || [ '' ];
 		t = types.length;
 		while ( t-- ) {
 			tmp = rtypenamespace.exec( types[ t ] ) || [];
 			type = origType = tmp[ 1 ];
-			namespaces = ( tmp[ 2 ] || "" ).split( "." ).sort();
+			namespaces = ( tmp[ 2 ] || '' ).split( '.' ).sort();
 
 			// Unbind all events (on this namespace, if provided) for the element
 			if ( !type ) {
@@ -5123,7 +5123,7 @@ jQuery.event = {
 			type = ( selector ? special.delegateType : special.bindType ) || type;
 			handlers = events[ type ] || [];
 			tmp = tmp[ 2 ] &&
-				new RegExp( "(^|\\.)" + namespaces.join( "\\.(?:.*\\.|)" ) + "(\\.|$)" );
+				new RegExp( '(^|\\.)' + namespaces.join( '\\.(?:.*\\.|)' ) + '(\\.|$)' );
 
 			// Remove matching events
 			origCount = j = handlers.length;
@@ -5134,7 +5134,7 @@ jQuery.event = {
 					( !handler || handler.guid === handleObj.guid ) &&
 					( !tmp || tmp.test( handleObj.namespace ) ) &&
 					( !selector || selector === handleObj.selector ||
-						selector === "**" && handleObj.selector ) ) {
+						selector === '**' && handleObj.selector ) ) {
 					handlers.splice( j, 1 );
 
 					if ( handleObj.selector ) {
@@ -5161,7 +5161,7 @@ jQuery.event = {
 
 		// Remove data and the expando if it's no longer used
 		if ( jQuery.isEmptyObject( events ) ) {
-			dataPriv.remove( elem, "handle events" );
+			dataPriv.remove( elem, 'handle events' );
 		}
 	},
 
@@ -5174,7 +5174,7 @@ jQuery.event = {
 			event = jQuery.event.fix( nativeEvent ),
 
 			handlers = (
-				dataPriv.get( this, "events" ) || Object.create( null )
+				dataPriv.get( this, 'events' ) || Object.create( null )
 			)[ event.type ] || [],
 			special = jQuery.event.special[ event.type ] || {};
 
@@ -5251,20 +5251,20 @@ jQuery.event = {
 			// https://www.w3.org/TR/DOM-Level-3-Events/#event-type-click
 			// Support: IE 11 only
 			// ...but not arrow key "clicks" of radio inputs, which can have `button` -1 (gh-2343)
-			!( event.type === "click" && event.button >= 1 ) ) {
+			!( event.type === 'click' && event.button >= 1 ) ) {
 
 			for ( ; cur !== this; cur = cur.parentNode || this ) {
 
 				// Don't check non-elements (trac-13208)
 				// Don't process clicks on disabled elements (trac-6911, trac-8165, trac-11382, trac-11764)
-				if ( cur.nodeType === 1 && !( event.type === "click" && cur.disabled === true ) ) {
+				if ( cur.nodeType === 1 && !( event.type === 'click' && cur.disabled === true ) ) {
 					matchedHandlers = [];
 					matchedSelectors = {};
 					for ( i = 0; i < delegateCount; i++ ) {
 						handleObj = handlers[ i ];
 
 						// Don't conflict with Object.prototype properties (trac-13203)
-						sel = handleObj.selector + " ";
+						sel = handleObj.selector + ' ';
 
 						if ( matchedSelectors[ sel ] === undefined ) {
 							matchedSelectors[ sel ] = handleObj.needsContext ?
@@ -5342,10 +5342,10 @@ jQuery.event = {
 
 				// Claim the first handler
 				if ( rcheckableType.test( el.type ) &&
-					el.click && nodeName( el, "input" ) ) {
+					el.click && nodeName( el, 'input' ) ) {
 
 					// dataPriv.set( el, "click", ... )
-					leverageNative( el, "click", true );
+					leverageNative( el, 'click', true );
 				}
 
 				// Return false to allow normal processing in the caller
@@ -5359,9 +5359,9 @@ jQuery.event = {
 
 				// Force setup before triggering a click
 				if ( rcheckableType.test( el.type ) &&
-					el.click && nodeName( el, "input" ) ) {
+					el.click && nodeName( el, 'input' ) ) {
 
-					leverageNative( el, "click" );
+					leverageNative( el, 'click' );
 				}
 
 				// Return non-false to allow normal event-path propagation
@@ -5373,9 +5373,9 @@ jQuery.event = {
 			_default: function( event ) {
 				var target = event.target;
 				return rcheckableType.test( target.type ) &&
-					target.click && nodeName( target, "input" ) &&
-					dataPriv.get( target, "click" ) ||
-					nodeName( target, "a" );
+					target.click && nodeName( target, 'input' ) &&
+					dataPriv.get( target, 'click' ) ||
+					nodeName( target, 'a' );
 			}
 		},
 
@@ -5586,7 +5586,7 @@ jQuery.each( {
 	pageY: true,
 	shiftKey: true,
 	view: true,
-	"char": true,
+	'char': true,
 	code: true,
 	charCode: true,
 	key: true,
@@ -5607,7 +5607,7 @@ jQuery.each( {
 	which: true
 }, jQuery.event.addProp );
 
-jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateType ) {
+jQuery.each( { focus: 'focusin', blur: 'focusout' }, function( type, delegateType ) {
 
 	function focusMappedHandler( nativeEvent ) {
 		if ( document.documentMode ) {
@@ -5619,9 +5619,9 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 
 			// `handle` from private data would already wrap the event, but we need
 			// to change the `type` here.
-			var handle = dataPriv.get( this, "handle" ),
+			var handle = dataPriv.get( this, 'handle' ),
 				event = jQuery.event.fix( nativeEvent );
-			event.type = nativeEvent.type === "focusin" ? "focus" : "blur";
+			event.type = nativeEvent.type === 'focusin' ? 'focus' : 'blur';
 			event.isSimulated = true;
 
 			// First, handle focusin/focusout
@@ -5774,10 +5774,10 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 // https://bugs.chromium.org/p/chromium/issues/detail?id=470258
 // for the description of the bug (it existed in older Chrome versions as well).
 jQuery.each( {
-	mouseenter: "mouseover",
-	mouseleave: "mouseout",
-	pointerenter: "pointerover",
-	pointerleave: "pointerout"
+	mouseenter: 'mouseover',
+	mouseleave: 'mouseout',
+	pointerenter: 'pointerover',
+	pointerleave: 'pointerout'
 }, function( orig, fix ) {
 	jQuery.event.special[ orig ] = {
 		delegateType: fix,
@@ -5817,14 +5817,14 @@ jQuery.fn.extend( {
 			handleObj = types.handleObj;
 			jQuery( types.delegateTarget ).off(
 				handleObj.namespace ?
-					handleObj.origType + "." + handleObj.namespace :
+					handleObj.origType + '.' + handleObj.namespace :
 					handleObj.origType,
 				handleObj.selector,
 				handleObj.handler
 			);
 			return this;
 		}
-		if ( typeof types === "object" ) {
+		if ( typeof types === 'object' ) {
 
 			// ( types-object [, selector] )
 			for ( type in types ) {
@@ -5832,7 +5832,7 @@ jQuery.fn.extend( {
 			}
 			return this;
 		}
-		if ( selector === false || typeof selector === "function" ) {
+		if ( selector === false || typeof selector === 'function' ) {
 
 			// ( types [, fn] )
 			fn = selector;
@@ -5862,10 +5862,10 @@ var
 
 // Prefer a tbody over its parent table for containing new rows
 function manipulationTarget( elem, content ) {
-	if ( nodeName( elem, "table" ) &&
-		nodeName( content.nodeType !== 11 ? content : content.firstChild, "tr" ) ) {
+	if ( nodeName( elem, 'table' ) &&
+		nodeName( content.nodeType !== 11 ? content : content.firstChild, 'tr' ) ) {
 
-		return jQuery( elem ).children( "tbody" )[ 0 ] || elem;
+		return jQuery( elem ).children( 'tbody' )[ 0 ] || elem;
 	}
 
 	return elem;
@@ -5873,14 +5873,14 @@ function manipulationTarget( elem, content ) {
 
 // Replace/restore the type attribute of script elements for safe DOM manipulation
 function disableScript( elem ) {
-	elem.type = ( elem.getAttribute( "type" ) !== null ) + "/" + elem.type;
+	elem.type = ( elem.getAttribute( 'type' ) !== null ) + '/' + elem.type;
 	return elem;
 }
 function restoreScript( elem ) {
-	if ( ( elem.type || "" ).slice( 0, 5 ) === "true/" ) {
+	if ( ( elem.type || '' ).slice( 0, 5 ) === 'true/' ) {
 		elem.type = elem.type.slice( 5 );
 	} else {
-		elem.removeAttribute( "type" );
+		elem.removeAttribute( 'type' );
 	}
 
 	return elem;
@@ -5899,7 +5899,7 @@ function cloneCopyEvent( src, dest ) {
 		events = pdataOld.events;
 
 		if ( events ) {
-			dataPriv.remove( dest, "handle events" );
+			dataPriv.remove( dest, 'handle events' );
 
 			for ( type in events ) {
 				for ( i = 0, l = events[ type ].length; i < l; i++ ) {
@@ -5923,11 +5923,11 @@ function fixInput( src, dest ) {
 	var nodeName = dest.nodeName.toLowerCase();
 
 	// Fails to persist the checked state of a cloned checkbox or radio button.
-	if ( nodeName === "input" && rcheckableType.test( src.type ) ) {
+	if ( nodeName === 'input' && rcheckableType.test( src.type ) ) {
 		dest.checked = src.checked;
 
 	// Fails to return the selected option to the default selected state when cloning options
-	} else if ( nodeName === "input" || nodeName === "textarea" ) {
+	} else if ( nodeName === 'input' || nodeName === 'textarea' ) {
 		dest.defaultValue = src.defaultValue;
 	}
 }
@@ -5946,7 +5946,7 @@ function domManip( collection, args, callback, ignored ) {
 
 	// We can't cloneNode fragments that contain checked, in WebKit
 	if ( valueIsFunction ||
-			( l > 1 && typeof value === "string" &&
+			( l > 1 && typeof value === 'string' &&
 				!support.checkClone && rchecked.test( value ) ) ) {
 		return collection.each( function( index ) {
 			var self = collection.eq( index );
@@ -5967,7 +5967,7 @@ function domManip( collection, args, callback, ignored ) {
 
 		// Require either new content or an interest in ignored elements to invoke the callback
 		if ( first || ignored ) {
-			scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+			scripts = jQuery.map( getAll( fragment, 'script' ), disableScript );
 			hasScripts = scripts.length;
 
 			// Use the original fragment for the last item
@@ -5984,7 +5984,7 @@ function domManip( collection, args, callback, ignored ) {
 
 						// Support: Android <=4.0 only, PhantomJS 1 only
 						// push.apply(_, arraylike) throws on ancient WebKit
-						jQuery.merge( scripts, getAll( node, "script" ) );
+						jQuery.merge( scripts, getAll( node, 'script' ) );
 					}
 				}
 
@@ -6000,16 +6000,16 @@ function domManip( collection, args, callback, ignored ) {
 				// Evaluate executable scripts on first document insertion
 				for ( i = 0; i < hasScripts; i++ ) {
 					node = scripts[ i ];
-					if ( rscriptType.test( node.type || "" ) &&
-						!dataPriv.access( node, "globalEval" ) &&
+					if ( rscriptType.test( node.type || '' ) &&
+						!dataPriv.access( node, 'globalEval' ) &&
 						jQuery.contains( doc, node ) ) {
 
-						if ( node.src && ( node.type || "" ).toLowerCase()  !== "module" ) {
+						if ( node.src && ( node.type || '' ).toLowerCase()  !== 'module' ) {
 
 							// Optional AJAX dependency, but won't run scripts if not present
 							if ( jQuery._evalUrl && !node.noModule ) {
 								jQuery._evalUrl( node.src, {
-									nonce: node.nonce || node.getAttribute( "nonce" )
+									nonce: node.nonce || node.getAttribute( 'nonce' )
 								}, doc );
 							}
 						} else {
@@ -6019,7 +6019,7 @@ function domManip( collection, args, callback, ignored ) {
 							// inspecting element contents and in HTML documents they have no
 							// meaning but we're preserving that logic for backwards compatibility.
 							// This will be removed completely in 4.0. See gh-4904.
-							DOMEval( node.textContent.replace( rcleanScript, "" ), node, doc );
+							DOMEval( node.textContent.replace( rcleanScript, '' ), node, doc );
 						}
 					}
 				}
@@ -6042,7 +6042,7 @@ function remove( elem, selector, keepData ) {
 
 		if ( node.parentNode ) {
 			if ( keepData && isAttached( node ) ) {
-				setGlobalEval( getAll( node, "script" ) );
+				setGlobalEval( getAll( node, 'script' ) );
 			}
 			node.parentNode.removeChild( node );
 		}
@@ -6090,9 +6090,9 @@ jQuery.extend( {
 		}
 
 		// Preserve script evaluation history
-		destElements = getAll( clone, "script" );
+		destElements = getAll( clone, 'script' );
 		if ( destElements.length > 0 ) {
-			setGlobalEval( destElements, !inPage && getAll( elem, "script" ) );
+			setGlobalEval( destElements, !inPage && getAll( elem, 'script' ) );
 		}
 
 		// Return the cloned set
@@ -6200,7 +6200,7 @@ jQuery.fn.extend( {
 				jQuery.cleanData( getAll( elem, false ) );
 
 				// Remove any remaining nodes
-				elem.textContent = "";
+				elem.textContent = '';
 			}
 		}
 
@@ -6227,8 +6227,8 @@ jQuery.fn.extend( {
 			}
 
 			// See if we can take a shortcut and just use innerHTML
-			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
-				!wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
+			if ( typeof value === 'string' && !rnoInnerhtml.test( value ) &&
+				!wrapMap[ ( rtagName.exec( value ) || [ '', '' ] )[ 1 ].toLowerCase() ] ) {
 
 				value = jQuery.htmlPrefilter( value );
 
@@ -6275,11 +6275,11 @@ jQuery.fn.extend( {
 } );
 
 jQuery.each( {
-	appendTo: "append",
-	prependTo: "prepend",
-	insertBefore: "before",
-	insertAfter: "after",
-	replaceAll: "replaceWith"
+	appendTo: 'append',
+	prependTo: 'prepend',
+	insertBefore: 'before',
+	insertAfter: 'after',
+	replaceAll: 'replaceWith'
 }, function( name, original ) {
 	jQuery.fn[ name ] = function( selector ) {
 		var elems,
@@ -6300,7 +6300,7 @@ jQuery.each( {
 		return this.pushStack( ret );
 	};
 } );
-var rnumnonpx = new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
+var rnumnonpx = new RegExp( '^(' + pnum + ')(?!px)[a-z%]+$', 'i' );
 
 var rcustomProp = /^--/;
 
@@ -6340,7 +6340,7 @@ var swap = function( elem, options, callback ) {
 };
 
 
-var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
+var rboxStyle = new RegExp( cssExpand.join( '|' ), 'i' );
 
 
 
@@ -6355,23 +6355,23 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 			return;
 		}
 
-		container.style.cssText = "position:absolute;left:-11111px;width:60px;" +
-			"margin-top:1px;padding:0;border:0";
+		container.style.cssText = 'position:absolute;left:-11111px;width:60px;' +
+			'margin-top:1px;padding:0;border:0';
 		div.style.cssText =
-			"position:relative;display:block;box-sizing:border-box;overflow:scroll;" +
-			"margin:auto;border:1px;padding:1px;" +
-			"width:60%;top:1%";
+			'position:relative;display:block;box-sizing:border-box;overflow:scroll;' +
+			'margin:auto;border:1px;padding:1px;' +
+			'width:60%;top:1%';
 		documentElement.appendChild( container ).appendChild( div );
 
 		var divStyle = window.getComputedStyle( div );
-		pixelPositionVal = divStyle.top !== "1%";
+		pixelPositionVal = divStyle.top !== '1%';
 
 		// Support: Android 4.0 - 4.3 only, Firefox <=3 - 44
 		reliableMarginLeftVal = roundPixelMeasures( divStyle.marginLeft ) === 12;
 
 		// Support: Android 4.0 - 4.3 only, Safari <=9.1 - 10.1, iOS <=7.0 - 9.3
 		// Some styles come back with percentage values, even though they shouldn't
-		div.style.right = "60%";
+		div.style.right = '60%';
 		pixelBoxStylesVal = roundPixelMeasures( divStyle.right ) === 36;
 
 		// Support: IE 9 - 11 only
@@ -6382,7 +6382,7 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 		// Detect overflow:scroll screwiness (gh-3699)
 		// Support: Chrome <=64
 		// Don't get tricked when zoom affects offsetWidth (gh-4029)
-		div.style.position = "absolute";
+		div.style.position = 'absolute';
 		scrollboxSizeVal = roundPixelMeasures( div.offsetWidth / 3 ) === 12;
 
 		documentElement.removeChild( container );
@@ -6398,8 +6398,8 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 
 	var pixelPositionVal, boxSizingReliableVal, scrollboxSizeVal, pixelBoxStylesVal,
 		reliableTrDimensionsVal, reliableMarginLeftVal,
-		container = document.createElement( "div" ),
-		div = document.createElement( "div" );
+		container = document.createElement( 'div' ),
+		div = document.createElement( 'div' );
 
 	// Finish early in limited (non-browser) environments
 	if ( !div.style ) {
@@ -6408,9 +6408,9 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 
 	// Support: IE <=9 - 11 only
 	// Style of cloned element affects source element cloned (trac-8908)
-	div.style.backgroundClip = "content-box";
-	div.cloneNode( true ).style.backgroundClip = "";
-	support.clearCloneStyle = div.style.backgroundClip === "content-box";
+	div.style.backgroundClip = 'content-box';
+	div.cloneNode( true ).style.backgroundClip = '';
+	support.clearCloneStyle = div.style.backgroundClip === 'content-box';
 
 	jQuery.extend( support, {
 		boxSizingReliable: function() {
@@ -6446,18 +6446,18 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 		reliableTrDimensions: function() {
 			var table, tr, trChild, trStyle;
 			if ( reliableTrDimensionsVal == null ) {
-				table = document.createElement( "table" );
-				tr = document.createElement( "tr" );
-				trChild = document.createElement( "div" );
+				table = document.createElement( 'table' );
+				tr = document.createElement( 'tr' );
+				trChild = document.createElement( 'div' );
 
-				table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate";
-				tr.style.cssText = "box-sizing:content-box;border:1px solid";
+				table.style.cssText = 'position:absolute;left:-11111px;border-collapse:separate';
+				tr.style.cssText = 'box-sizing:content-box;border:1px solid';
 
 				// Support: Chrome 86+
 				// Height set through cssText does not get applied.
 				// Computed height then comes back as 0.
-				tr.style.height = "1px";
-				trChild.style.height = "9px";
+				tr.style.height = '1px';
+				trChild.style.height = '9px';
 
 				// Support: Android 8 Chrome 86+
 				// In our bodyBackground.html iframe,
@@ -6465,7 +6465,7 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 				// which causes a problem only in Android 8 Chrome 86.
 				// Ensuring the div is `display: block`
 				// gets around this issue.
-				trChild.style.display = "block";
+				trChild.style.display = 'block';
 
 				documentElement
 					.appendChild( table )
@@ -6531,10 +6531,10 @@ function curCSS( elem, name, computed ) {
 			// because CSS preprocessing replaces them with U+000A LINE FEED
 			// (which *is* CSS whitespace)
 			// https://www.w3.org/TR/css-syntax-3/#input-preprocessing
-			ret = ret.replace( rtrimCSS, "$1" ) || undefined;
+			ret = ret.replace( rtrimCSS, '$1' ) || undefined;
 		}
 
-		if ( ret === "" && !isAttached( elem ) ) {
+		if ( ret === '' && !isAttached( elem ) ) {
 			ret = jQuery.style( elem, name );
 		}
 
@@ -6565,7 +6565,7 @@ function curCSS( elem, name, computed ) {
 
 		// Support: IE <=9 - 11 only
 		// IE returns zIndex value as an integer.
-		ret + "" :
+		ret + '' :
 		ret;
 }
 
@@ -6590,8 +6590,8 @@ function addGetHookIf( conditionFn, hookFn ) {
 }
 
 
-var cssPrefixes = [ "Webkit", "Moz", "ms" ],
-	emptyStyle = document.createElement( "div" ).style,
+var cssPrefixes = [ 'Webkit', 'Moz', 'ms' ],
+	emptyStyle = document.createElement( 'div' ).style,
 	vendorProps = {};
 
 // Return a vendor-prefixed property or undefined
@@ -6629,10 +6629,10 @@ var
 	// except "table", "table-cell", or "table-caption"
 	// See here for display values: https://developer.mozilla.org/en-US/docs/CSS/display
 	rdisplayswap = /^(none|table(?!-c[ea]).+)/,
-	cssShow = { position: "absolute", visibility: "hidden", display: "block" },
+	cssShow = { position: 'absolute', visibility: 'hidden', display: 'block' },
 	cssNormalTransform = {
-		letterSpacing: "0",
-		fontWeight: "400"
+		letterSpacing: '0',
+		fontWeight: '400'
 	};
 
 function setPositiveNumber( _elem, value, subtract ) {
@@ -6643,18 +6643,18 @@ function setPositiveNumber( _elem, value, subtract ) {
 	return matches ?
 
 		// Guard against undefined "subtract", e.g., when used as in cssHooks
-		Math.max( 0, matches[ 2 ] - ( subtract || 0 ) ) + ( matches[ 3 ] || "px" ) :
+		Math.max( 0, matches[ 2 ] - ( subtract || 0 ) ) + ( matches[ 3 ] || 'px' ) :
 		value;
 }
 
 function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computedVal ) {
-	var i = dimension === "width" ? 1 : 0,
+	var i = dimension === 'width' ? 1 : 0,
 		extra = 0,
 		delta = 0,
 		marginDelta = 0;
 
 	// Adjustment may not be necessary
-	if ( box === ( isBorderBox ? "border" : "content" ) ) {
+	if ( box === ( isBorderBox ? 'border' : 'content' ) ) {
 		return 0;
 	}
 
@@ -6663,7 +6663,7 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 		// Both box models exclude margin
 		// Count margin delta separately to only add it after scroll gutter adjustment.
 		// This is needed to make negative margins work with `outerHeight( true )` (gh-3982).
-		if ( box === "margin" ) {
+		if ( box === 'margin' ) {
 			marginDelta += jQuery.css( elem, box + cssExpand[ i ], true, styles );
 		}
 
@@ -6671,15 +6671,15 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 		if ( !isBorderBox ) {
 
 			// Add padding
-			delta += jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
+			delta += jQuery.css( elem, 'padding' + cssExpand[ i ], true, styles );
 
 			// For "border" or "margin", add border
-			if ( box !== "padding" ) {
-				delta += jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
+			if ( box !== 'padding' ) {
+				delta += jQuery.css( elem, 'border' + cssExpand[ i ] + 'Width', true, styles );
 
 			// But still keep track of it otherwise
 			} else {
-				extra += jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
+				extra += jQuery.css( elem, 'border' + cssExpand[ i ] + 'Width', true, styles );
 			}
 
 		// If we get here with a border-box (content + padding + border), we're seeking "content" or
@@ -6687,13 +6687,13 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 		} else {
 
 			// For "content", subtract padding
-			if ( box === "content" ) {
-				delta -= jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
+			if ( box === 'content' ) {
+				delta -= jQuery.css( elem, 'padding' + cssExpand[ i ], true, styles );
 			}
 
 			// For "content" or "padding", subtract border
-			if ( box !== "margin" ) {
-				delta -= jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
+			if ( box !== 'margin' ) {
+				delta -= jQuery.css( elem, 'border' + cssExpand[ i ] + 'Width', true, styles );
 			}
 		}
 	}
@@ -6704,7 +6704,7 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 		// offsetWidth/offsetHeight is a rounded sum of content, padding, scroll gutter, and border
 		// Assuming integer scroll gutter, subtract the rest and round down
 		delta += Math.max( 0, Math.ceil(
-			elem[ "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
+			elem[ 'offset' + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
 			computedVal -
 			delta -
 			extra -
@@ -6727,11 +6727,11 @@ function getWidthOrHeight( elem, dimension, extra ) {
 		// Fake content-box until we know it's needed to know the true value.
 		boxSizingNeeded = !support.boxSizingReliable() || extra,
 		isBorderBox = boxSizingNeeded &&
-			jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
+			jQuery.css( elem, 'boxSizing', false, styles ) === 'border-box',
 		valueIsBorderBox = isBorderBox,
 
 		val = curCSS( elem, dimension, styles ),
-		offsetProp = "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 );
+		offsetProp = 'offset' + dimension[ 0 ].toUpperCase() + dimension.slice( 1 );
 
 	// Support: Firefox <=54
 	// Return a confounding non-pixel value or feign ignorance, as appropriate.
@@ -6739,7 +6739,7 @@ function getWidthOrHeight( elem, dimension, extra ) {
 		if ( !extra ) {
 			return val;
 		}
-		val = "auto";
+		val = 'auto';
 	}
 
 
@@ -6752,20 +6752,20 @@ function getWidthOrHeight( elem, dimension, extra ) {
 		// IE/Edge misreport `getComputedStyle` of table rows with width/height
 		// set in CSS while `offset*` properties report correct values.
 		// Interestingly, in some cases IE 9 doesn't suffer from this issue.
-		!support.reliableTrDimensions() && nodeName( elem, "tr" ) ||
+		!support.reliableTrDimensions() && nodeName( elem, 'tr' ) ||
 
 		// Fall back to offsetWidth/offsetHeight when value is "auto"
 		// This happens for inline elements with no explicit setting (gh-3571)
-		val === "auto" ||
+		val === 'auto' ||
 
 		// Support: Android <=4.1 - 4.3 only
 		// Also use offsetWidth/offsetHeight for misreported inline dimensions (gh-3602)
-		!parseFloat( val ) && jQuery.css( elem, "display", false, styles ) === "inline" ) &&
+		!parseFloat( val ) && jQuery.css( elem, 'display', false, styles ) === 'inline' ) &&
 
 		// Make sure the element is visible & connected
 		elem.getClientRects().length ) {
 
-		isBorderBox = jQuery.css( elem, "boxSizing", false, styles ) === "border-box";
+		isBorderBox = jQuery.css( elem, 'boxSizing', false, styles ) === 'border-box';
 
 		// Where available, offsetWidth/offsetHeight approximate border box dimensions.
 		// Where not available (e.g., SVG), assume unreliable box-sizing and interpret the
@@ -6784,14 +6784,14 @@ function getWidthOrHeight( elem, dimension, extra ) {
 		boxModelAdjustment(
 			elem,
 			dimension,
-			extra || ( isBorderBox ? "border" : "content" ),
+			extra || ( isBorderBox ? 'border' : 'content' ),
 			valueIsBorderBox,
 			styles,
 
 			// Provide the current computed size to request scroll gutter calculation (gh-3589)
 			val
 		)
-	) + "px";
+	) + 'px';
 }
 
 jQuery.extend( {
@@ -6804,8 +6804,8 @@ jQuery.extend( {
 				if ( computed ) {
 
 					// We should always get a number back from opacity
-					var ret = curCSS( elem, "opacity" );
-					return ret === "" ? "1" : ret;
+					var ret = curCSS( elem, 'opacity' );
+					return ret === '' ? '1' : ret;
 				}
 			}
 		}
@@ -6877,11 +6877,11 @@ jQuery.extend( {
 			type = typeof value;
 
 			// Convert "+=" or "-=" to relative numbers (trac-7345)
-			if ( type === "string" && ( ret = rcssNum.exec( value ) ) && ret[ 1 ] ) {
+			if ( type === 'string' && ( ret = rcssNum.exec( value ) ) && ret[ 1 ] ) {
 				value = adjustCSS( elem, name, ret );
 
 				// Fixes bug trac-9237
-				type = "number";
+				type = 'number';
 			}
 
 			// Make sure that null and NaN values aren't set (trac-7116)
@@ -6892,17 +6892,17 @@ jQuery.extend( {
 			// If a number was passed in, add the unit (except for certain CSS properties)
 			// The isCustomProp check can be removed in jQuery 4.0 when we only auto-append
 			// "px" to a few hardcoded values.
-			if ( type === "number" && !isCustomProp ) {
-				value += ret && ret[ 3 ] || ( jQuery.cssNumber[ origName ] ? "" : "px" );
+			if ( type === 'number' && !isCustomProp ) {
+				value += ret && ret[ 3 ] || ( jQuery.cssNumber[ origName ] ? '' : 'px' );
 			}
 
 			// background-* props affect original clone's values
-			if ( !support.clearCloneStyle && value === "" && name.indexOf( "background" ) === 0 ) {
-				style[ name ] = "inherit";
+			if ( !support.clearCloneStyle && value === '' && name.indexOf( 'background' ) === 0 ) {
+				style[ name ] = 'inherit';
 			}
 
 			// If a hook was provided, use that value, otherwise just set the specified value
-			if ( !hooks || !( "set" in hooks ) ||
+			if ( !hooks || !( 'set' in hooks ) ||
 				( value = hooks.set( elem, value, extra ) ) !== undefined ) {
 
 				if ( isCustomProp ) {
@@ -6915,7 +6915,7 @@ jQuery.extend( {
 		} else {
 
 			// If a hook was provided get the non-computed value from there
-			if ( hooks && "get" in hooks &&
+			if ( hooks && 'get' in hooks &&
 				( ret = hooks.get( elem, false, extra ) ) !== undefined ) {
 
 				return ret;
@@ -6942,7 +6942,7 @@ jQuery.extend( {
 		hooks = jQuery.cssHooks[ name ] || jQuery.cssHooks[ origName ];
 
 		// If a hook was provided get the computed value from there
-		if ( hooks && "get" in hooks ) {
+		if ( hooks && 'get' in hooks ) {
 			val = hooks.get( elem, true, extra );
 		}
 
@@ -6952,12 +6952,12 @@ jQuery.extend( {
 		}
 
 		// Convert "normal" to computed value
-		if ( val === "normal" && name in cssNormalTransform ) {
+		if ( val === 'normal' && name in cssNormalTransform ) {
 			val = cssNormalTransform[ name ];
 		}
 
 		// Make numeric if forced or a qualifier was provided and val looks numeric
-		if ( extra === "" || extra ) {
+		if ( extra === '' || extra ) {
 			num = parseFloat( val );
 			return extra === true || isFinite( num ) ? num || 0 : val;
 		}
@@ -6966,14 +6966,14 @@ jQuery.extend( {
 	}
 } );
 
-jQuery.each( [ "height", "width" ], function( _i, dimension ) {
+jQuery.each( [ 'height', 'width' ], function( _i, dimension ) {
 	jQuery.cssHooks[ dimension ] = {
 		get: function( elem, computed, extra ) {
 			if ( computed ) {
 
 				// Certain elements can have dimension info if we invisibly show them
 				// but it must have a current display style that would benefit
-				return rdisplayswap.test( jQuery.css( elem, "display" ) ) &&
+				return rdisplayswap.test( jQuery.css( elem, 'display' ) ) &&
 
 					// Support: Safari 8+
 					// Table columns in Safari have non-zero offsetWidth & zero
@@ -6996,12 +6996,12 @@ jQuery.each( [ "height", "width" ], function( _i, dimension ) {
 				// Only read styles.position if the test has a chance to fail
 				// to avoid forcing a reflow.
 				scrollboxSizeBuggy = !support.scrollboxSize() &&
-					styles.position === "absolute",
+					styles.position === 'absolute',
 
 				// To avoid forcing a reflow, only fetch boxSizing if we need it (gh-3991)
 				boxSizingNeeded = scrollboxSizeBuggy || extra,
 				isBorderBox = boxSizingNeeded &&
-					jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
+					jQuery.css( elem, 'boxSizing', false, styles ) === 'border-box',
 				subtract = extra ?
 					boxModelAdjustment(
 						elem,
@@ -7016,16 +7016,16 @@ jQuery.each( [ "height", "width" ], function( _i, dimension ) {
 			// faking a content-box to get border and padding (gh-3699)
 			if ( isBorderBox && scrollboxSizeBuggy ) {
 				subtract -= Math.ceil(
-					elem[ "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
+					elem[ 'offset' + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
 					parseFloat( styles[ dimension ] ) -
-					boxModelAdjustment( elem, dimension, "border", false, styles ) -
+					boxModelAdjustment( elem, dimension, 'border', false, styles ) -
 					0.5
 				);
 			}
 
 			// Convert to pixels if value adjustment is needed
 			if ( subtract && ( matches = rcssNum.exec( value ) ) &&
-				( matches[ 3 ] || "px" ) !== "px" ) {
+				( matches[ 3 ] || 'px' ) !== 'px' ) {
 
 				elem.style[ dimension ] = value;
 				value = jQuery.css( elem, dimension );
@@ -7039,21 +7039,21 @@ jQuery.each( [ "height", "width" ], function( _i, dimension ) {
 jQuery.cssHooks.marginLeft = addGetHookIf( support.reliableMarginLeft,
 	function( elem, computed ) {
 		if ( computed ) {
-			return ( parseFloat( curCSS( elem, "marginLeft" ) ) ||
+			return ( parseFloat( curCSS( elem, 'marginLeft' ) ) ||
 				elem.getBoundingClientRect().left -
 					swap( elem, { marginLeft: 0 }, function() {
 						return elem.getBoundingClientRect().left;
 					} )
-			) + "px";
+			) + 'px';
 		}
 	}
 );
 
 // These hooks are used by animate to expand properties
 jQuery.each( {
-	margin: "",
-	padding: "",
-	border: "Width"
+	margin: '',
+	padding: '',
+	border: 'Width'
 }, function( prefix, suffix ) {
 	jQuery.cssHooks[ prefix + suffix ] = {
 		expand: function( value ) {
@@ -7061,7 +7061,7 @@ jQuery.each( {
 				expanded = {},
 
 				// Assumes a single number if not a string
-				parts = typeof value === "string" ? value.split( " " ) : [ value ];
+				parts = typeof value === 'string' ? value.split( ' ' ) : [ value ];
 
 			for ( ; i < 4; i++ ) {
 				expanded[ prefix + cssExpand[ i ] + suffix ] =
@@ -7072,7 +7072,7 @@ jQuery.each( {
 		}
 	};
 
-	if ( prefix !== "margin" ) {
+	if ( prefix !== 'margin' ) {
 		jQuery.cssHooks[ prefix + suffix ].set = setPositiveNumber;
 	}
 } );
@@ -7117,7 +7117,7 @@ Tween.prototype = {
 		this.options = options;
 		this.start = this.now = this.cur();
 		this.end = end;
-		this.unit = unit || ( jQuery.cssNumber[ prop ] ? "" : "px" );
+		this.unit = unit || ( jQuery.cssNumber[ prop ] ? '' : 'px' );
 	},
 	cur: function() {
 		var hooks = Tween.propHooks[ this.prop ];
@@ -7170,10 +7170,10 @@ Tween.propHooks = {
 			// attempt a parseFloat and fallback to a string if the parse fails.
 			// Simple values such as "10px" are parsed to Float;
 			// complex values such as "rotate(1rad)" are returned as-is.
-			result = jQuery.css( tween.elem, tween.prop, "" );
+			result = jQuery.css( tween.elem, tween.prop, '' );
 
 			// Empty strings, null, undefined and "auto" are converted to 0.
-			return !result || result === "auto" ? 0 : result;
+			return !result || result === 'auto' ? 0 : result;
 		},
 		set: function( tween ) {
 
@@ -7210,7 +7210,7 @@ jQuery.easing = {
 	swing: function( p ) {
 		return 0.5 - Math.cos( p * Math.PI ) / 2;
 	},
-	_default: "swing"
+	_default: 'swing'
 };
 
 jQuery.fx = Tween.prototype.init;
@@ -7257,7 +7257,7 @@ function genFx( type, includeWidth ) {
 	includeWidth = includeWidth ? 1 : 0;
 	for ( ; i < 4; i += 2 - includeWidth ) {
 		which = cssExpand[ i ];
-		attrs[ "margin" + which ] = attrs[ "padding" + which ] = type;
+		attrs[ 'margin' + which ] = attrs[ 'padding' + which ] = type;
 	}
 
 	if ( includeWidth ) {
@@ -7269,7 +7269,7 @@ function genFx( type, includeWidth ) {
 
 function createTween( value, prop, animation ) {
 	var tween,
-		collection = ( Animation.tweeners[ prop ] || [] ).concat( Animation.tweeners[ "*" ] ),
+		collection = ( Animation.tweeners[ prop ] || [] ).concat( Animation.tweeners[ '*' ] ),
 		index = 0,
 		length = collection.length;
 	for ( ; index < length; index++ ) {
@@ -7283,16 +7283,16 @@ function createTween( value, prop, animation ) {
 
 function defaultPrefilter( elem, props, opts ) {
 	var prop, value, toggle, hooks, oldfire, propTween, restoreDisplay, display,
-		isBox = "width" in props || "height" in props,
+		isBox = 'width' in props || 'height' in props,
 		anim = this,
 		orig = {},
 		style = elem.style,
 		hidden = elem.nodeType && isHiddenWithinTree( elem ),
-		dataShow = dataPriv.get( elem, "fxshow" );
+		dataShow = dataPriv.get( elem, 'fxshow' );
 
 	// Queue-skipping animations hijack the fx hooks
 	if ( !opts.queue ) {
-		hooks = jQuery._queueHooks( elem, "fx" );
+		hooks = jQuery._queueHooks( elem, 'fx' );
 		if ( hooks.unqueued == null ) {
 			hooks.unqueued = 0;
 			oldfire = hooks.empty.fire;
@@ -7309,7 +7309,7 @@ function defaultPrefilter( elem, props, opts ) {
 			// Ensure the complete handler is called before this completes
 			anim.always( function() {
 				hooks.unqueued--;
-				if ( !jQuery.queue( elem, "fx" ).length ) {
+				if ( !jQuery.queue( elem, 'fx' ).length ) {
 					hooks.empty.fire();
 				}
 			} );
@@ -7321,12 +7321,12 @@ function defaultPrefilter( elem, props, opts ) {
 		value = props[ prop ];
 		if ( rfxtypes.test( value ) ) {
 			delete props[ prop ];
-			toggle = toggle || value === "toggle";
-			if ( value === ( hidden ? "hide" : "show" ) ) {
+			toggle = toggle || value === 'toggle';
+			if ( value === ( hidden ? 'hide' : 'show' ) ) {
 
 				// Pretend to be hidden if this is a "show" and
 				// there is still data from a stopped show/hide
-				if ( value === "show" && dataShow && dataShow[ prop ] !== undefined ) {
+				if ( value === 'show' && dataShow && dataShow[ prop ] !== undefined ) {
 					hidden = true;
 
 				// Ignore all other no-op show/hide data
@@ -7356,10 +7356,10 @@ function defaultPrefilter( elem, props, opts ) {
 		// Identify a display type, preferring old show/hide data over the CSS cascade
 		restoreDisplay = dataShow && dataShow.display;
 		if ( restoreDisplay == null ) {
-			restoreDisplay = dataPriv.get( elem, "display" );
+			restoreDisplay = dataPriv.get( elem, 'display' );
 		}
-		display = jQuery.css( elem, "display" );
-		if ( display === "none" ) {
+		display = jQuery.css( elem, 'display' );
+		if ( display === 'none' ) {
 			if ( restoreDisplay ) {
 				display = restoreDisplay;
 			} else {
@@ -7367,14 +7367,14 @@ function defaultPrefilter( elem, props, opts ) {
 				// Get nonempty value(s) by temporarily forcing visibility
 				showHide( [ elem ], true );
 				restoreDisplay = elem.style.display || restoreDisplay;
-				display = jQuery.css( elem, "display" );
+				display = jQuery.css( elem, 'display' );
 				showHide( [ elem ] );
 			}
 		}
 
 		// Animate inline elements as inline-block
-		if ( display === "inline" || display === "inline-block" && restoreDisplay != null ) {
-			if ( jQuery.css( elem, "float" ) === "none" ) {
+		if ( display === 'inline' || display === 'inline-block' && restoreDisplay != null ) {
+			if ( jQuery.css( elem, 'float' ) === 'none' ) {
 
 				// Restore the original display value at the end of pure show/hide animations
 				if ( !propTween ) {
@@ -7383,16 +7383,16 @@ function defaultPrefilter( elem, props, opts ) {
 					} );
 					if ( restoreDisplay == null ) {
 						display = style.display;
-						restoreDisplay = display === "none" ? "" : display;
+						restoreDisplay = display === 'none' ? '' : display;
 					}
 				}
-				style.display = "inline-block";
+				style.display = 'inline-block';
 			}
 		}
 	}
 
 	if ( opts.overflow ) {
-		style.overflow = "hidden";
+		style.overflow = 'hidden';
 		anim.always( function() {
 			style.overflow = opts.overflow[ 0 ];
 			style.overflowX = opts.overflow[ 1 ];
@@ -7407,11 +7407,11 @@ function defaultPrefilter( elem, props, opts ) {
 		// General show/hide setup for this element animation
 		if ( !propTween ) {
 			if ( dataShow ) {
-				if ( "hidden" in dataShow ) {
+				if ( 'hidden' in dataShow ) {
 					hidden = dataShow.hidden;
 				}
 			} else {
-				dataShow = dataPriv.access( elem, "fxshow", { display: restoreDisplay } );
+				dataShow = dataPriv.access( elem, 'fxshow', { display: restoreDisplay } );
 			}
 
 			// Store hidden/visible for toggle so `.stop().toggle()` "reverses"
@@ -7424,17 +7424,17 @@ function defaultPrefilter( elem, props, opts ) {
 				showHide( [ elem ], true );
 			}
 
-			/* eslint-disable no-loop-func */
+
 
 			anim.done( function() {
 
-				/* eslint-enable no-loop-func */
+
 
 				// The final step of a "hide" animation is actually hiding the element
 				if ( !hidden ) {
 					showHide( [ elem ] );
 				}
-				dataPriv.remove( elem, "fxshow" );
+				dataPriv.remove( elem, 'fxshow' );
 				for ( prop in orig ) {
 					jQuery.style( elem, prop, orig[ prop ] );
 				}
@@ -7472,7 +7472,7 @@ function propFilter( props, specialEasing ) {
 		}
 
 		hooks = jQuery.cssHooks[ name ];
-		if ( hooks && "expand" in hooks ) {
+		if ( hooks && 'expand' in hooks ) {
 			value = hooks.expand( value );
 			delete props[ name ];
 
@@ -7618,7 +7618,7 @@ function Animation( elem, properties, options ) {
 jQuery.Animation = jQuery.extend( Animation, {
 
 	tweeners: {
-		"*": [ function( prop, value ) {
+		'*': [ function( prop, value ) {
 			var tween = this.createTween( prop, value );
 			adjustCSS( tween.elem, prop, rcssNum.exec( value ), tween );
 			return tween;
@@ -7628,7 +7628,7 @@ jQuery.Animation = jQuery.extend( Animation, {
 	tweener: function( props, callback ) {
 		if ( isFunction( props ) ) {
 			callback = props;
-			props = [ "*" ];
+			props = [ '*' ];
 		} else {
 			props = props.match( rnothtmlwhite );
 		}
@@ -7656,7 +7656,7 @@ jQuery.Animation = jQuery.extend( Animation, {
 } );
 
 jQuery.speed = function( speed, easing, fn ) {
-	var opt = speed && typeof speed === "object" ? jQuery.extend( {}, speed ) : {
+	var opt = speed && typeof speed === 'object' ? jQuery.extend( {}, speed ) : {
 		complete: fn || !fn && easing ||
 			isFunction( speed ) && speed,
 		duration: speed,
@@ -7668,7 +7668,7 @@ jQuery.speed = function( speed, easing, fn ) {
 		opt.duration = 0;
 
 	} else {
-		if ( typeof opt.duration !== "number" ) {
+		if ( typeof opt.duration !== 'number' ) {
 			if ( opt.duration in jQuery.fx.speeds ) {
 				opt.duration = jQuery.fx.speeds[ opt.duration ];
 
@@ -7680,7 +7680,7 @@ jQuery.speed = function( speed, easing, fn ) {
 
 	// Normalize opt.queue - true/undefined/null -> "fx"
 	if ( opt.queue == null || opt.queue === true ) {
-		opt.queue = "fx";
+		opt.queue = 'fx';
 	}
 
 	// Queueing
@@ -7703,7 +7703,7 @@ jQuery.fn.extend( {
 	fadeTo: function( speed, to, easing, callback ) {
 
 		// Show any hidden elements after setting opacity to 0
-		return this.filter( isHiddenWithinTree ).css( "opacity", 0 ).show()
+		return this.filter( isHiddenWithinTree ).css( 'opacity', 0 ).show()
 
 			// Animate to the value specified
 			.end().animate( { opacity: to }, speed, easing, callback );
@@ -7717,7 +7717,7 @@ jQuery.fn.extend( {
 				var anim = Animation( this, jQuery.extend( {}, prop ), optall );
 
 				// Empty animations, or finishing resolves immediately
-				if ( empty || dataPriv.get( this, "finish" ) ) {
+				if ( empty || dataPriv.get( this, 'finish' ) ) {
 					anim.stop( true );
 				}
 			};
@@ -7735,18 +7735,18 @@ jQuery.fn.extend( {
 			stop( gotoEnd );
 		};
 
-		if ( typeof type !== "string" ) {
+		if ( typeof type !== 'string' ) {
 			gotoEnd = clearQueue;
 			clearQueue = type;
 			type = undefined;
 		}
 		if ( clearQueue ) {
-			this.queue( type || "fx", [] );
+			this.queue( type || 'fx', [] );
 		}
 
 		return this.each( function() {
 			var dequeue = true,
-				index = type != null && type + "queueHooks",
+				index = type != null && type + 'queueHooks',
 				timers = jQuery.timers,
 				data = dataPriv.get( this );
 
@@ -7782,13 +7782,13 @@ jQuery.fn.extend( {
 	},
 	finish: function( type ) {
 		if ( type !== false ) {
-			type = type || "fx";
+			type = type || 'fx';
 		}
 		return this.each( function() {
 			var index,
 				data = dataPriv.get( this ),
-				queue = data[ type + "queue" ],
-				hooks = data[ type + "queueHooks" ],
+				queue = data[ type + 'queue' ],
+				hooks = data[ type + 'queueHooks' ],
 				timers = jQuery.timers,
 				length = queue ? queue.length : 0;
 
@@ -7823,10 +7823,10 @@ jQuery.fn.extend( {
 	}
 } );
 
-jQuery.each( [ "toggle", "show", "hide" ], function( _i, name ) {
+jQuery.each( [ 'toggle', 'show', 'hide' ], function( _i, name ) {
 	var cssFn = jQuery.fn[ name ];
 	jQuery.fn[ name ] = function( speed, easing, callback ) {
-		return speed == null || typeof speed === "boolean" ?
+		return speed == null || typeof speed === 'boolean' ?
 			cssFn.apply( this, arguments ) :
 			this.animate( genFx( name, true ), speed, easing, callback );
 	};
@@ -7834,12 +7834,12 @@ jQuery.each( [ "toggle", "show", "hide" ], function( _i, name ) {
 
 // Generate shortcuts for custom animations
 jQuery.each( {
-	slideDown: genFx( "show" ),
-	slideUp: genFx( "hide" ),
-	slideToggle: genFx( "toggle" ),
-	fadeIn: { opacity: "show" },
-	fadeOut: { opacity: "hide" },
-	fadeToggle: { opacity: "toggle" }
+	slideDown: genFx( 'show' ),
+	slideUp: genFx( 'hide' ),
+	slideToggle: genFx( 'toggle' ),
+	fadeIn: { opacity: 'show' },
+	fadeOut: { opacity: 'hide' },
+	fadeToggle: { opacity: 'toggle' }
 }, function( name, props ) {
 	jQuery.fn[ name ] = function( speed, easing, callback ) {
 		return this.animate( props, speed, easing, callback );
@@ -7900,7 +7900,7 @@ jQuery.fx.speeds = {
 // Based off of the plugin by Clint Helfers, with permission.
 jQuery.fn.delay = function( time, type ) {
 	time = jQuery.fx ? jQuery.fx.speeds[ time ] || time : time;
-	type = type || "fx";
+	type = type || 'fx';
 
 	return this.queue( type, function( next, hooks ) {
 		var timeout = window.setTimeout( next, time );
@@ -7912,15 +7912,15 @@ jQuery.fn.delay = function( time, type ) {
 
 
 ( function() {
-	var input = document.createElement( "input" ),
-		select = document.createElement( "select" ),
-		opt = select.appendChild( document.createElement( "option" ) );
+	var input = document.createElement( 'input' ),
+		select = document.createElement( 'select' ),
+		opt = select.appendChild( document.createElement( 'option' ) );
 
-	input.type = "checkbox";
+	input.type = 'checkbox';
 
 	// Support: Android <=4.3 only
 	// Default value for a checkbox should be "on"
-	support.checkOn = input.value !== "";
+	support.checkOn = input.value !== '';
 
 	// Support: IE <=11 only
 	// Must access selectedIndex to make default options select
@@ -7928,10 +7928,10 @@ jQuery.fn.delay = function( time, type ) {
 
 	// Support: IE <=11 only
 	// An input loses its value after becoming a radio
-	input = document.createElement( "input" );
-	input.value = "t";
-	input.type = "radio";
-	support.radioValue = input.value === "t";
+	input = document.createElement( 'input' );
+	input.value = 't';
+	input.type = 'radio';
+	support.radioValue = input.value === 't';
 } )();
 
 
@@ -7961,7 +7961,7 @@ jQuery.extend( {
 		}
 
 		// Fallback to prop when attributes are not supported
-		if ( typeof elem.getAttribute === "undefined" ) {
+		if ( typeof elem.getAttribute === 'undefined' ) {
 			return jQuery.prop( elem, name, value );
 		}
 
@@ -7978,16 +7978,16 @@ jQuery.extend( {
 				return;
 			}
 
-			if ( hooks && "set" in hooks &&
+			if ( hooks && 'set' in hooks &&
 				( ret = hooks.set( elem, value, name ) ) !== undefined ) {
 				return ret;
 			}
 
-			elem.setAttribute( name, value + "" );
+			elem.setAttribute( name, value + '' );
 			return value;
 		}
 
-		if ( hooks && "get" in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
+		if ( hooks && 'get' in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
 			return ret;
 		}
 
@@ -8000,10 +8000,10 @@ jQuery.extend( {
 	attrHooks: {
 		type: {
 			set: function( elem, value ) {
-				if ( !support.radioValue && value === "radio" &&
-					nodeName( elem, "input" ) ) {
+				if ( !support.radioValue && value === 'radio' &&
+					nodeName( elem, 'input' ) ) {
 					var val = elem.value;
-					elem.setAttribute( "type", value );
+					elem.setAttribute( 'type', value );
 					if ( val ) {
 						elem.value = val;
 					}
@@ -8100,7 +8100,7 @@ jQuery.extend( {
 		}
 
 		if ( value !== undefined ) {
-			if ( hooks && "set" in hooks &&
+			if ( hooks && 'set' in hooks &&
 				( ret = hooks.set( elem, value, name ) ) !== undefined ) {
 				return ret;
 			}
@@ -8108,7 +8108,7 @@ jQuery.extend( {
 			return ( elem[ name ] = value );
 		}
 
-		if ( hooks && "get" in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
+		if ( hooks && 'get' in hooks && ( ret = hooks.get( elem, name ) ) !== null ) {
 			return ret;
 		}
 
@@ -8123,7 +8123,7 @@ jQuery.extend( {
 				// elem.tabIndex doesn't always return the
 				// correct value when it hasn't been explicitly set
 				// Use proper attribute retrieval (trac-12072)
-				var tabindex = jQuery.find.attr( elem, "tabindex" );
+				var tabindex = jQuery.find.attr( elem, 'tabindex' );
 
 				if ( tabindex ) {
 					return parseInt( tabindex, 10 );
@@ -8143,8 +8143,8 @@ jQuery.extend( {
 	},
 
 	propFix: {
-		"for": "htmlFor",
-		"class": "className"
+		'for': 'htmlFor',
+		'class': 'className'
 	}
 } );
 
@@ -8185,16 +8185,16 @@ if ( !support.optSelected ) {
 }
 
 jQuery.each( [
-	"tabIndex",
-	"readOnly",
-	"maxLength",
-	"cellSpacing",
-	"cellPadding",
-	"rowSpan",
-	"colSpan",
-	"useMap",
-	"frameBorder",
-	"contentEditable"
+	'tabIndex',
+	'readOnly',
+	'maxLength',
+	'cellSpacing',
+	'cellPadding',
+	'rowSpan',
+	'colSpan',
+	'useMap',
+	'frameBorder',
+	'contentEditable'
 ], function() {
 	jQuery.propFix[ this.toLowerCase() ] = this;
 } );
@@ -8206,19 +8206,19 @@ jQuery.each( [
 	// https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
 	function stripAndCollapse( value ) {
 		var tokens = value.match( rnothtmlwhite ) || [];
-		return tokens.join( " " );
+		return tokens.join( ' ' );
 	}
 
 
 function getClass( elem ) {
-	return elem.getAttribute && elem.getAttribute( "class" ) || "";
+	return elem.getAttribute && elem.getAttribute( 'class' ) || '';
 }
 
 function classesToArray( value ) {
 	if ( Array.isArray( value ) ) {
 		return value;
 	}
-	if ( typeof value === "string" ) {
+	if ( typeof value === 'string' ) {
 		return value.match( rnothtmlwhite ) || [];
 	}
 	return [];
@@ -8239,20 +8239,20 @@ jQuery.fn.extend( {
 		if ( classNames.length ) {
 			return this.each( function() {
 				curValue = getClass( this );
-				cur = this.nodeType === 1 && ( " " + stripAndCollapse( curValue ) + " " );
+				cur = this.nodeType === 1 && ( ' ' + stripAndCollapse( curValue ) + ' ' );
 
 				if ( cur ) {
 					for ( i = 0; i < classNames.length; i++ ) {
 						className = classNames[ i ];
-						if ( cur.indexOf( " " + className + " " ) < 0 ) {
-							cur += className + " ";
+						if ( cur.indexOf( ' ' + className + ' ' ) < 0 ) {
+							cur += className + ' ';
 						}
 					}
 
 					// Only assign if different to avoid unneeded rendering.
 					finalValue = stripAndCollapse( cur );
 					if ( curValue !== finalValue ) {
-						this.setAttribute( "class", finalValue );
+						this.setAttribute( 'class', finalValue );
 					}
 				}
 			} );
@@ -8271,7 +8271,7 @@ jQuery.fn.extend( {
 		}
 
 		if ( !arguments.length ) {
-			return this.attr( "class", "" );
+			return this.attr( 'class', '' );
 		}
 
 		classNames = classesToArray( value );
@@ -8281,22 +8281,22 @@ jQuery.fn.extend( {
 				curValue = getClass( this );
 
 				// This expression is here for better compressibility (see addClass)
-				cur = this.nodeType === 1 && ( " " + stripAndCollapse( curValue ) + " " );
+				cur = this.nodeType === 1 && ( ' ' + stripAndCollapse( curValue ) + ' ' );
 
 				if ( cur ) {
 					for ( i = 0; i < classNames.length; i++ ) {
 						className = classNames[ i ];
 
 						// Remove *all* instances
-						while ( cur.indexOf( " " + className + " " ) > -1 ) {
-							cur = cur.replace( " " + className + " ", " " );
+						while ( cur.indexOf( ' ' + className + ' ' ) > -1 ) {
+							cur = cur.replace( ' ' + className + ' ', ' ' );
 						}
 					}
 
 					// Only assign if different to avoid unneeded rendering.
 					finalValue = stripAndCollapse( cur );
 					if ( curValue !== finalValue ) {
-						this.setAttribute( "class", finalValue );
+						this.setAttribute( 'class', finalValue );
 					}
 				}
 			} );
@@ -8308,7 +8308,7 @@ jQuery.fn.extend( {
 	toggleClass: function( value, stateVal ) {
 		var classNames, className, i, self,
 			type = typeof value,
-			isValidValue = type === "string" || Array.isArray( value );
+			isValidValue = type === 'string' || Array.isArray( value );
 
 		if ( isFunction( value ) ) {
 			return this.each( function( i ) {
@@ -8319,7 +8319,7 @@ jQuery.fn.extend( {
 			} );
 		}
 
-		if ( typeof stateVal === "boolean" && isValidValue ) {
+		if ( typeof stateVal === 'boolean' && isValidValue ) {
 			return stateVal ? this.addClass( value ) : this.removeClass( value );
 		}
 
@@ -8343,12 +8343,12 @@ jQuery.fn.extend( {
 				}
 
 			// Toggle whole class name
-			} else if ( value === undefined || type === "boolean" ) {
+			} else if ( value === undefined || type === 'boolean' ) {
 				className = getClass( this );
 				if ( className ) {
 
 					// Store className if set
-					dataPriv.set( this, "__className__", className );
+					dataPriv.set( this, '__className__', className );
 				}
 
 				// If the element has a class name or if we're passed `false`,
@@ -8356,10 +8356,10 @@ jQuery.fn.extend( {
 				// Otherwise bring back whatever was previously saved (if anything),
 				// falling back to the empty string if nothing was stored.
 				if ( this.setAttribute ) {
-					this.setAttribute( "class",
+					this.setAttribute( 'class',
 						className || value === false ?
-							"" :
-							dataPriv.get( this, "__className__" ) || ""
+							'' :
+							dataPriv.get( this, '__className__' ) || ''
 					);
 				}
 			}
@@ -8370,10 +8370,10 @@ jQuery.fn.extend( {
 		var className, elem,
 			i = 0;
 
-		className = " " + selector + " ";
+		className = ' ' + selector + ' ';
 		while ( ( elem = this[ i++ ] ) ) {
 			if ( elem.nodeType === 1 &&
-				( " " + stripAndCollapse( getClass( elem ) ) + " " ).indexOf( className ) > -1 ) {
+				( ' ' + stripAndCollapse( getClass( elem ) ) + ' ' ).indexOf( className ) > -1 ) {
 				return true;
 			}
 		}
@@ -8398,8 +8398,8 @@ jQuery.fn.extend( {
 					jQuery.valHooks[ elem.nodeName.toLowerCase() ];
 
 				if ( hooks &&
-					"get" in hooks &&
-					( ret = hooks.get( elem, "value" ) ) !== undefined
+					'get' in hooks &&
+					( ret = hooks.get( elem, 'value' ) ) !== undefined
 				) {
 					return ret;
 				}
@@ -8407,12 +8407,12 @@ jQuery.fn.extend( {
 				ret = elem.value;
 
 				// Handle most common string cases
-				if ( typeof ret === "string" ) {
-					return ret.replace( rreturn, "" );
+				if ( typeof ret === 'string' ) {
+					return ret.replace( rreturn, '' );
 				}
 
 				// Handle cases where value is null/undef or number
-				return ret == null ? "" : ret;
+				return ret == null ? '' : ret;
 			}
 
 			return;
@@ -8435,21 +8435,21 @@ jQuery.fn.extend( {
 
 			// Treat null/undefined as ""; convert numbers to string
 			if ( val == null ) {
-				val = "";
+				val = '';
 
-			} else if ( typeof val === "number" ) {
-				val += "";
+			} else if ( typeof val === 'number' ) {
+				val += '';
 
 			} else if ( Array.isArray( val ) ) {
 				val = jQuery.map( val, function( value ) {
-					return value == null ? "" : value + "";
+					return value == null ? '' : value + '';
 				} );
 			}
 
 			hooks = jQuery.valHooks[ this.type ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
 
 			// If set returns undefined, fall back to normal setting
-			if ( !hooks || !( "set" in hooks ) || hooks.set( this, val, "value" ) === undefined ) {
+			if ( !hooks || !( 'set' in hooks ) || hooks.set( this, val, 'value' ) === undefined ) {
 				this.value = val;
 			}
 		} );
@@ -8461,7 +8461,7 @@ jQuery.extend( {
 		option: {
 			get: function( elem ) {
 
-				var val = jQuery.find.attr( elem, "value" );
+				var val = jQuery.find.attr( elem, 'value' );
 				return val != null ?
 					val :
 
@@ -8477,7 +8477,7 @@ jQuery.extend( {
 				var value, option, i,
 					options = elem.options,
 					index = elem.selectedIndex,
-					one = elem.type === "select-one",
+					one = elem.type === 'select-one',
 					values = one ? null : [],
 					max = one ? index + 1 : options.length;
 
@@ -8499,7 +8499,7 @@ jQuery.extend( {
 							// Don't return options that are disabled or in a disabled optgroup
 							!option.disabled &&
 							( !option.parentNode.disabled ||
-								!nodeName( option.parentNode, "optgroup" ) ) ) {
+								!nodeName( option.parentNode, 'optgroup' ) ) ) {
 
 						// Get the specific value for the option
 						value = jQuery( option ).val();
@@ -8526,7 +8526,7 @@ jQuery.extend( {
 				while ( i-- ) {
 					option = options[ i ];
 
-					/* eslint-disable no-cond-assign */
+
 
 					if ( option.selected =
 						jQuery.inArray( jQuery.valHooks.option.get( option ), values ) > -1
@@ -8534,7 +8534,7 @@ jQuery.extend( {
 						optionSet = true;
 					}
 
-					/* eslint-enable no-cond-assign */
+
 				}
 
 				// Force browsers to behave consistently when non-matching value is set
@@ -8548,7 +8548,7 @@ jQuery.extend( {
 } );
 
 // Radios and checkboxes getter/setter
-jQuery.each( [ "radio", "checkbox" ], function() {
+jQuery.each( [ 'radio', 'checkbox' ], function() {
 	jQuery.valHooks[ this ] = {
 		set: function( elem, value ) {
 			if ( Array.isArray( value ) ) {
@@ -8558,7 +8558,7 @@ jQuery.each( [ "radio", "checkbox" ], function() {
 	};
 	if ( !support.checkOn ) {
 		jQuery.valHooks[ this ].get = function( elem ) {
-			return elem.getAttribute( "value" ) === null ? "on" : elem.value;
+			return elem.getAttribute( 'value' ) === null ? 'on' : elem.value;
 		};
 	}
 } );
@@ -8578,23 +8578,23 @@ var rquery = ( /\?/ );
 // Cross-browser xml parsing
 jQuery.parseXML = function( data ) {
 	var xml, parserErrorElem;
-	if ( !data || typeof data !== "string" ) {
+	if ( !data || typeof data !== 'string' ) {
 		return null;
 	}
 
 	// Support: IE 9 - 11 only
 	// IE throws on parseFromString with invalid input.
 	try {
-		xml = ( new window.DOMParser() ).parseFromString( data, "text/xml" );
+		xml = ( new window.DOMParser() ).parseFromString( data, 'text/xml' );
 	} catch ( e ) {}
 
-	parserErrorElem = xml && xml.getElementsByTagName( "parsererror" )[ 0 ];
+	parserErrorElem = xml && xml.getElementsByTagName( 'parsererror' )[ 0 ];
 	if ( !xml || parserErrorElem ) {
-		jQuery.error( "Invalid XML: " + (
+		jQuery.error( 'Invalid XML: ' + (
 			parserErrorElem ?
 				jQuery.map( parserErrorElem.childNodes, function( el ) {
 					return el.textContent;
-				} ).join( "\n" ) :
+				} ).join( '\n' ) :
 				data
 		) );
 	}
@@ -8613,8 +8613,8 @@ jQuery.extend( jQuery.event, {
 
 		var i, cur, tmp, bubbleType, ontype, handle, special, lastElement,
 			eventPath = [ elem || document ],
-			type = hasOwn.call( event, "type" ) ? event.type : event,
-			namespaces = hasOwn.call( event, "namespace" ) ? event.namespace.split( "." ) : [];
+			type = hasOwn.call( event, 'type' ) ? event.type : event,
+			namespaces = hasOwn.call( event, 'namespace' ) ? event.namespace.split( '.' ) : [];
 
 		cur = lastElement = tmp = elem = elem || document;
 
@@ -8628,25 +8628,25 @@ jQuery.extend( jQuery.event, {
 			return;
 		}
 
-		if ( type.indexOf( "." ) > -1 ) {
+		if ( type.indexOf( '.' ) > -1 ) {
 
 			// Namespaced trigger; create a regexp to match event type in handle()
-			namespaces = type.split( "." );
+			namespaces = type.split( '.' );
 			type = namespaces.shift();
 			namespaces.sort();
 		}
-		ontype = type.indexOf( ":" ) < 0 && "on" + type;
+		ontype = type.indexOf( ':' ) < 0 && 'on' + type;
 
 		// Caller can pass in a jQuery.Event object, Object, or just an event type string
 		event = event[ jQuery.expando ] ?
 			event :
-			new jQuery.Event( type, typeof event === "object" && event );
+			new jQuery.Event( type, typeof event === 'object' && event );
 
 		// Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
 		event.isTrigger = onlyHandlers ? 2 : 3;
-		event.namespace = namespaces.join( "." );
+		event.namespace = namespaces.join( '.' );
 		event.rnamespace = event.namespace ?
-			new RegExp( "(^|\\.)" + namespaces.join( "\\.(?:.*\\.|)" ) + "(\\.|$)" ) :
+			new RegExp( '(^|\\.)' + namespaces.join( '\\.(?:.*\\.|)' ) + '(\\.|$)' ) :
 			null;
 
 		// Clean up the event in case it is being reused
@@ -8694,8 +8694,8 @@ jQuery.extend( jQuery.event, {
 				special.bindType || type;
 
 			// jQuery handler
-			handle = ( dataPriv.get( cur, "events" ) || Object.create( null ) )[ event.type ] &&
-				dataPriv.get( cur, "handle" );
+			handle = ( dataPriv.get( cur, 'events' ) || Object.create( null ) )[ event.type ] &&
+				dataPriv.get( cur, 'handle' );
 			if ( handle ) {
 				handle.apply( cur, data );
 			}
@@ -8809,7 +8809,7 @@ function buildParams( prefix, obj, traditional, add ) {
 
 				// Item is non-scalar (array or object), encode its numeric index.
 				buildParams(
-					prefix + "[" + ( typeof v === "object" && v != null ? i : "" ) + "]",
+					prefix + '[' + ( typeof v === 'object' && v != null ? i : '' ) + ']',
 					v,
 					traditional,
 					add
@@ -8817,11 +8817,11 @@ function buildParams( prefix, obj, traditional, add ) {
 			}
 		} );
 
-	} else if ( !traditional && toType( obj ) === "object" ) {
+	} else if ( !traditional && toType( obj ) === 'object' ) {
 
 		// Serialize object item.
 		for ( name in obj ) {
-			buildParams( prefix + "[" + name + "]", obj[ name ], traditional, add );
+			buildParams( prefix + '[' + name + ']', obj[ name ], traditional, add );
 		}
 
 	} else {
@@ -8843,12 +8843,12 @@ jQuery.param = function( a, traditional ) {
 				valueOrFunction() :
 				valueOrFunction;
 
-			s[ s.length ] = encodeURIComponent( key ) + "=" +
-				encodeURIComponent( value == null ? "" : value );
+			s[ s.length ] = encodeURIComponent( key ) + '=' +
+				encodeURIComponent( value == null ? '' : value );
 		};
 
 	if ( a == null ) {
-		return "";
+		return '';
 	}
 
 	// If an array was passed in, assume that it is an array of form elements.
@@ -8869,7 +8869,7 @@ jQuery.param = function( a, traditional ) {
 	}
 
 	// Return the resulting serialization
-	return s.join( "&" );
+	return s.join( '&' );
 };
 
 jQuery.fn.extend( {
@@ -8880,13 +8880,13 @@ jQuery.fn.extend( {
 		return this.map( function() {
 
 			// Can add propHook for "elements" to filter or add form elements
-			var elements = jQuery.prop( this, "elements" );
+			var elements = jQuery.prop( this, 'elements' );
 			return elements ? jQuery.makeArray( elements ) : this;
 		} ).filter( function() {
 			var type = this.type;
 
 			// Use .is( ":disabled" ) so that fieldset[disabled] works
-			return this.name && !jQuery( this ).is( ":disabled" ) &&
+			return this.name && !jQuery( this ).is( ':disabled' ) &&
 				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
 				( this.checked || !rcheckableType.test( type ) );
 		} ).map( function( _i, elem ) {
@@ -8898,11 +8898,11 @@ jQuery.fn.extend( {
 
 			if ( Array.isArray( val ) ) {
 				return jQuery.map( val, function( val ) {
-					return { name: elem.name, value: val.replace( rCRLF, "\r\n" ) };
+					return { name: elem.name, value: val.replace( rCRLF, '\r\n' ) };
 				} );
 			}
 
-			return { name: elem.name, value: val.replace( rCRLF, "\r\n" ) };
+			return { name: elem.name, value: val.replace( rCRLF, '\r\n' ) };
 		} ).get();
 	}
 } );
@@ -8938,10 +8938,10 @@ var
 	transports = {},
 
 	// Avoid comment-prolog char sequence (trac-10098); must appease lint and evade compression
-	allTypes = "*/".concat( "*" ),
+	allTypes = '*/'.concat( '*' ),
 
 	// Anchor tag for parsing the document origin
-	originAnchor = document.createElement( "a" );
+	originAnchor = document.createElement( 'a' );
 
 originAnchor.href = location.href;
 
@@ -8951,9 +8951,9 @@ function addToPrefiltersOrTransports( structure ) {
 	// dataTypeExpression is optional and defaults to "*"
 	return function( dataTypeExpression, func ) {
 
-		if ( typeof dataTypeExpression !== "string" ) {
+		if ( typeof dataTypeExpression !== 'string' ) {
 			func = dataTypeExpression;
-			dataTypeExpression = "*";
+			dataTypeExpression = '*';
 		}
 
 		var dataType,
@@ -8966,8 +8966,8 @@ function addToPrefiltersOrTransports( structure ) {
 			while ( ( dataType = dataTypes[ i++ ] ) ) {
 
 				// Prepend if requested
-				if ( dataType[ 0 ] === "+" ) {
-					dataType = dataType.slice( 1 ) || "*";
+				if ( dataType[ 0 ] === '+' ) {
+					dataType = dataType.slice( 1 ) || '*';
 					( structure[ dataType ] = structure[ dataType ] || [] ).unshift( func );
 
 				// Otherwise append
@@ -8990,7 +8990,7 @@ function inspectPrefiltersOrTransports( structure, options, originalOptions, jqX
 		inspected[ dataType ] = true;
 		jQuery.each( structure[ dataType ] || [], function( _, prefilterOrFactory ) {
 			var dataTypeOrTransport = prefilterOrFactory( options, originalOptions, jqXHR );
-			if ( typeof dataTypeOrTransport === "string" &&
+			if ( typeof dataTypeOrTransport === 'string' &&
 				!seekingTransport && !inspected[ dataTypeOrTransport ] ) {
 
 				options.dataTypes.unshift( dataTypeOrTransport );
@@ -9003,7 +9003,7 @@ function inspectPrefiltersOrTransports( structure, options, originalOptions, jqX
 		return selected;
 	}
 
-	return inspect( options.dataTypes[ 0 ] ) || !inspected[ "*" ] && inspect( "*" );
+	return inspect( options.dataTypes[ 0 ] ) || !inspected[ '*' ] && inspect( '*' );
 }
 
 // A special extend for ajax options
@@ -9036,10 +9036,10 @@ function ajaxHandleResponses( s, jqXHR, responses ) {
 		dataTypes = s.dataTypes;
 
 	// Remove auto dataType and get content-type in the process
-	while ( dataTypes[ 0 ] === "*" ) {
+	while ( dataTypes[ 0 ] === '*' ) {
 		dataTypes.shift();
 		if ( ct === undefined ) {
-			ct = s.mimeType || jqXHR.getResponseHeader( "Content-Type" );
+			ct = s.mimeType || jqXHR.getResponseHeader( 'Content-Type' );
 		}
 	}
 
@@ -9060,7 +9060,7 @@ function ajaxHandleResponses( s, jqXHR, responses ) {
 
 		// Try convertible dataTypes
 		for ( type in responses ) {
-			if ( !dataTypes[ 0 ] || s.converters[ type + " " + dataTypes[ 0 ] ] ) {
+			if ( !dataTypes[ 0 ] || s.converters[ type + ' ' + dataTypes[ 0 ] ] ) {
 				finalDataType = type;
 				break;
 			}
@@ -9121,27 +9121,27 @@ function ajaxConvert( s, response, jqXHR, isSuccess ) {
 		if ( current ) {
 
 			// There's only work to do if current dataType is non-auto
-			if ( current === "*" ) {
+			if ( current === '*' ) {
 
 				current = prev;
 
 			// Convert response if prev dataType is non-auto and differs from current
-			} else if ( prev !== "*" && prev !== current ) {
+			} else if ( prev !== '*' && prev !== current ) {
 
 				// Seek a direct converter
-				conv = converters[ prev + " " + current ] || converters[ "* " + current ];
+				conv = converters[ prev + ' ' + current ] || converters[ '* ' + current ];
 
 				// If none found, seek a pair
 				if ( !conv ) {
 					for ( conv2 in converters ) {
 
 						// If conv2 outputs current
-						tmp = conv2.split( " " );
+						tmp = conv2.split( ' ' );
 						if ( tmp[ 1 ] === current ) {
 
 							// If prev can be converted to accepted input
-							conv = converters[ prev + " " + tmp[ 0 ] ] ||
-								converters[ "* " + tmp[ 0 ] ];
+							conv = converters[ prev + ' ' + tmp[ 0 ] ] ||
+								converters[ '* ' + tmp[ 0 ] ];
 							if ( conv ) {
 
 								// Condense equivalence converters
@@ -9170,8 +9170,8 @@ function ajaxConvert( s, response, jqXHR, isSuccess ) {
 							response = conv( response );
 						} catch ( e ) {
 							return {
-								state: "parsererror",
-								error: conv ? e : "No conversion from " + prev + " to " + current
+								state: 'parsererror',
+								error: conv ? e : 'No conversion from ' + prev + ' to ' + current
 							};
 						}
 					}
@@ -9180,7 +9180,7 @@ function ajaxConvert( s, response, jqXHR, isSuccess ) {
 		}
 	}
 
-	return { state: "success", data: response };
+	return { state: 'success', data: response };
 }
 
 jQuery.extend( {
@@ -9194,12 +9194,12 @@ jQuery.extend( {
 
 	ajaxSettings: {
 		url: location.href,
-		type: "GET",
+		type: 'GET',
 		isLocal: rlocalProtocol.test( location.protocol ),
 		global: true,
 		processData: true,
 		async: true,
-		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
 
 		/*
 		timeout: 0,
@@ -9214,11 +9214,11 @@ jQuery.extend( {
 		*/
 
 		accepts: {
-			"*": allTypes,
-			text: "text/plain",
-			html: "text/html",
-			xml: "application/xml, text/xml",
-			json: "application/json, text/javascript"
+			'*': allTypes,
+			text: 'text/plain',
+			html: 'text/html',
+			xml: 'application/xml, text/xml',
+			json: 'application/json, text/javascript'
 		},
 
 		contents: {
@@ -9228,9 +9228,9 @@ jQuery.extend( {
 		},
 
 		responseFields: {
-			xml: "responseXML",
-			text: "responseText",
-			json: "responseJSON"
+			xml: 'responseXML',
+			text: 'responseText',
+			json: 'responseJSON'
 		},
 
 		// Data converters
@@ -9238,16 +9238,16 @@ jQuery.extend( {
 		converters: {
 
 			// Convert anything to text
-			"* text": String,
+			'* text': String,
 
 			// Text to html (true = no transformation)
-			"text html": true,
+			'text html': true,
 
 			// Evaluate text as a json expression
-			"text json": JSON.parse,
+			'text json': JSON.parse,
 
 			// Parse text as xml
-			"text xml": jQuery.parseXML
+			'text xml': jQuery.parseXML
 		},
 
 		// For options that shouldn't be deep extended:
@@ -9280,7 +9280,7 @@ jQuery.extend( {
 	ajax: function( url, options ) {
 
 		// If url is an object, simulate pre-1.5 signature
-		if ( typeof url === "object" ) {
+		if ( typeof url === 'object' ) {
 			options = url;
 			url = undefined;
 		}
@@ -9329,7 +9329,7 @@ jQuery.extend( {
 
 			// Deferreds
 			deferred = jQuery.Deferred(),
-			completeDeferred = jQuery.Callbacks( "once memory" ),
+			completeDeferred = jQuery.Callbacks( 'once memory' ),
 
 			// Status-dependent callbacks
 			statusCode = s.statusCode || {},
@@ -9339,7 +9339,7 @@ jQuery.extend( {
 			requestHeadersNames = {},
 
 			// Default abort message
-			strAbort = "canceled",
+			strAbort = 'canceled',
 
 			// Fake xhr
 			jqXHR = {
@@ -9352,14 +9352,14 @@ jQuery.extend( {
 						if ( !responseHeaders ) {
 							responseHeaders = {};
 							while ( ( match = rheaders.exec( responseHeadersString ) ) ) {
-								responseHeaders[ match[ 1 ].toLowerCase() + " " ] =
-									( responseHeaders[ match[ 1 ].toLowerCase() + " " ] || [] )
+								responseHeaders[ match[ 1 ].toLowerCase() + ' ' ] =
+									( responseHeaders[ match[ 1 ].toLowerCase() + ' ' ] || [] )
 										.concat( match[ 2 ] );
 							}
 						}
-						match = responseHeaders[ key.toLowerCase() + " " ];
+						match = responseHeaders[ key.toLowerCase() + ' ' ];
 					}
-					return match == null ? null : match.join( ", " );
+					return match == null ? null : match.join( ', ' );
 				},
 
 				// Raw string
@@ -9421,18 +9421,18 @@ jQuery.extend( {
 		// Add protocol if not provided (prefilters might expect it)
 		// Handle falsy url in the settings object (trac-10093: consistency with old signature)
 		// We also use the url parameter if available
-		s.url = ( ( url || s.url || location.href ) + "" )
-			.replace( rprotocol, location.protocol + "//" );
+		s.url = ( ( url || s.url || location.href ) + '' )
+			.replace( rprotocol, location.protocol + '//' );
 
 		// Alias method option to type as per ticket trac-12004
 		s.type = options.method || options.type || s.method || s.type;
 
 		// Extract dataTypes list
-		s.dataTypes = ( s.dataType || "*" ).toLowerCase().match( rnothtmlwhite ) || [ "" ];
+		s.dataTypes = ( s.dataType || '*' ).toLowerCase().match( rnothtmlwhite ) || [ '' ];
 
 		// A cross-domain request is in order when the origin doesn't match the current origin.
 		if ( s.crossDomain == null ) {
-			urlAnchor = document.createElement( "a" );
+			urlAnchor = document.createElement( 'a' );
 
 			// Support: IE <=8 - 11, Edge 12 - 15
 			// IE throws exception on accessing the href property if url is malformed,
@@ -9443,8 +9443,8 @@ jQuery.extend( {
 				// Support: IE <=8 - 11 only
 				// Anchor's host property isn't correctly set when s.url is relative
 				urlAnchor.href = urlAnchor.href;
-				s.crossDomain = originAnchor.protocol + "//" + originAnchor.host !==
-					urlAnchor.protocol + "//" + urlAnchor.host;
+				s.crossDomain = originAnchor.protocol + '//' + originAnchor.host !==
+					urlAnchor.protocol + '//' + urlAnchor.host;
 			} catch ( e ) {
 
 				// If there is an error parsing the URL, assume it is crossDomain,
@@ -9454,7 +9454,7 @@ jQuery.extend( {
 		}
 
 		// Convert data if not already a string
-		if ( s.data && s.processData && typeof s.data !== "string" ) {
+		if ( s.data && s.processData && typeof s.data !== 'string' ) {
 			s.data = jQuery.param( s.data, s.traditional );
 		}
 
@@ -9472,7 +9472,7 @@ jQuery.extend( {
 
 		// Watch for a new set of requests
 		if ( fireGlobals && jQuery.active++ === 0 ) {
-			jQuery.event.trigger( "ajaxStart" );
+			jQuery.event.trigger( 'ajaxStart' );
 		}
 
 		// Uppercase the type
@@ -9484,7 +9484,7 @@ jQuery.extend( {
 		// Save the URL in case we're toying with the If-Modified-Since
 		// and/or If-None-Match header later on
 		// Remove hash to simplify url manipulation
-		cacheURL = s.url.replace( rhash, "" );
+		cacheURL = s.url.replace( rhash, '' );
 
 		// More options handling for requests with no content
 		if ( !s.hasContent ) {
@@ -9493,8 +9493,8 @@ jQuery.extend( {
 			uncached = s.url.slice( cacheURL.length );
 
 			// If data is available and should be processed, append data to url
-			if ( s.data && ( s.processData || typeof s.data === "string" ) ) {
-				cacheURL += ( rquery.test( cacheURL ) ? "&" : "?" ) + s.data;
+			if ( s.data && ( s.processData || typeof s.data === 'string' ) ) {
+				cacheURL += ( rquery.test( cacheURL ) ? '&' : '?' ) + s.data;
 
 				// trac-9682: remove data so that it's not used in an eventual retry
 				delete s.data;
@@ -9502,8 +9502,8 @@ jQuery.extend( {
 
 			// Add or update anti-cache param if needed
 			if ( s.cache === false ) {
-				cacheURL = cacheURL.replace( rantiCache, "$1" );
-				uncached = ( rquery.test( cacheURL ) ? "&" : "?" ) + "_=" + ( nonce.guid++ ) +
+				cacheURL = cacheURL.replace( rantiCache, '$1' );
+				uncached = ( rquery.test( cacheURL ) ? '&' : '?' ) + '_=' + ( nonce.guid++ ) +
 					uncached;
 			}
 
@@ -9512,32 +9512,32 @@ jQuery.extend( {
 
 		// Change '%20' to '+' if this is encoded form body content (gh-2658)
 		} else if ( s.data && s.processData &&
-			( s.contentType || "" ).indexOf( "application/x-www-form-urlencoded" ) === 0 ) {
-			s.data = s.data.replace( r20, "+" );
+			( s.contentType || '' ).indexOf( 'application/x-www-form-urlencoded' ) === 0 ) {
+			s.data = s.data.replace( r20, '+' );
 		}
 
 		// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
 		if ( s.ifModified ) {
 			if ( jQuery.lastModified[ cacheURL ] ) {
-				jqXHR.setRequestHeader( "If-Modified-Since", jQuery.lastModified[ cacheURL ] );
+				jqXHR.setRequestHeader( 'If-Modified-Since', jQuery.lastModified[ cacheURL ] );
 			}
 			if ( jQuery.etag[ cacheURL ] ) {
-				jqXHR.setRequestHeader( "If-None-Match", jQuery.etag[ cacheURL ] );
+				jqXHR.setRequestHeader( 'If-None-Match', jQuery.etag[ cacheURL ] );
 			}
 		}
 
 		// Set the correct header, if data is being sent
 		if ( s.data && s.hasContent && s.contentType !== false || options.contentType ) {
-			jqXHR.setRequestHeader( "Content-Type", s.contentType );
+			jqXHR.setRequestHeader( 'Content-Type', s.contentType );
 		}
 
 		// Set the Accepts header for the server, depending on the dataType
 		jqXHR.setRequestHeader(
-			"Accept",
+			'Accept',
 			s.dataTypes[ 0 ] && s.accepts[ s.dataTypes[ 0 ] ] ?
 				s.accepts[ s.dataTypes[ 0 ] ] +
-					( s.dataTypes[ 0 ] !== "*" ? ", " + allTypes + "; q=0.01" : "" ) :
-				s.accepts[ "*" ]
+					( s.dataTypes[ 0 ] !== '*' ? ', ' + allTypes + '; q=0.01' : '' ) :
+				s.accepts[ '*' ]
 		);
 
 		// Check for headers option
@@ -9554,7 +9554,7 @@ jQuery.extend( {
 		}
 
 		// Aborting is no longer a cancellation
-		strAbort = "abort";
+		strAbort = 'abort';
 
 		// Install callbacks on deferreds
 		completeDeferred.add( s.complete );
@@ -9566,13 +9566,13 @@ jQuery.extend( {
 
 		// If no transport, we auto-abort
 		if ( !transport ) {
-			done( -1, "No Transport" );
+			done( -1, 'No Transport' );
 		} else {
 			jqXHR.readyState = 1;
 
 			// Send global event
 			if ( fireGlobals ) {
-				globalEventContext.trigger( "ajaxSend", [ jqXHR, s ] );
+				globalEventContext.trigger( 'ajaxSend', [ jqXHR, s ] );
 			}
 
 			// If request was aborted inside ajaxSend, stop there
@@ -9583,7 +9583,7 @@ jQuery.extend( {
 			// Timeout
 			if ( s.async && s.timeout > 0 ) {
 				timeoutTimer = window.setTimeout( function() {
-					jqXHR.abort( "timeout" );
+					jqXHR.abort( 'timeout' );
 				}, s.timeout );
 			}
 
@@ -9624,7 +9624,7 @@ jQuery.extend( {
 			transport = undefined;
 
 			// Cache response headers
-			responseHeadersString = headers || "";
+			responseHeadersString = headers || '';
 
 			// Set readyState
 			jqXHR.readyState = status > 0 ? 4 : 0;
@@ -9639,9 +9639,9 @@ jQuery.extend( {
 
 			// Use a noop converter for missing script but not if jsonp
 			if ( !isSuccess &&
-				jQuery.inArray( "script", s.dataTypes ) > -1 &&
-				jQuery.inArray( "json", s.dataTypes ) < 0 ) {
-				s.converters[ "text script" ] = function() {};
+				jQuery.inArray( 'script', s.dataTypes ) > -1 &&
+				jQuery.inArray( 'json', s.dataTypes ) < 0 ) {
+				s.converters[ 'text script' ] = function() {};
 			}
 
 			// Convert no matter what (that way responseXXX fields are always set)
@@ -9652,23 +9652,23 @@ jQuery.extend( {
 
 				// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
 				if ( s.ifModified ) {
-					modified = jqXHR.getResponseHeader( "Last-Modified" );
+					modified = jqXHR.getResponseHeader( 'Last-Modified' );
 					if ( modified ) {
 						jQuery.lastModified[ cacheURL ] = modified;
 					}
-					modified = jqXHR.getResponseHeader( "etag" );
+					modified = jqXHR.getResponseHeader( 'etag' );
 					if ( modified ) {
 						jQuery.etag[ cacheURL ] = modified;
 					}
 				}
 
 				// if no content
-				if ( status === 204 || s.type === "HEAD" ) {
-					statusText = "nocontent";
+				if ( status === 204 || s.type === 'HEAD' ) {
+					statusText = 'nocontent';
 
 				// if not modified
 				} else if ( status === 304 ) {
-					statusText = "notmodified";
+					statusText = 'notmodified';
 
 				// If we have data, let's convert it
 				} else {
@@ -9682,7 +9682,7 @@ jQuery.extend( {
 				// Extract error from statusText and normalize for non-aborts
 				error = statusText;
 				if ( status || !statusText ) {
-					statusText = "error";
+					statusText = 'error';
 					if ( status < 0 ) {
 						status = 0;
 					}
@@ -9691,7 +9691,7 @@ jQuery.extend( {
 
 			// Set data for the fake xhr object
 			jqXHR.status = status;
-			jqXHR.statusText = ( nativeStatusText || statusText ) + "";
+			jqXHR.statusText = ( nativeStatusText || statusText ) + '';
 
 			// Success/Error
 			if ( isSuccess ) {
@@ -9705,7 +9705,7 @@ jQuery.extend( {
 			statusCode = undefined;
 
 			if ( fireGlobals ) {
-				globalEventContext.trigger( isSuccess ? "ajaxSuccess" : "ajaxError",
+				globalEventContext.trigger( isSuccess ? 'ajaxSuccess' : 'ajaxError',
 					[ jqXHR, s, isSuccess ? success : error ] );
 			}
 
@@ -9713,11 +9713,11 @@ jQuery.extend( {
 			completeDeferred.fireWith( callbackContext, [ jqXHR, statusText ] );
 
 			if ( fireGlobals ) {
-				globalEventContext.trigger( "ajaxComplete", [ jqXHR, s ] );
+				globalEventContext.trigger( 'ajaxComplete', [ jqXHR, s ] );
 
 				// Handle the global AJAX counter
 				if ( !( --jQuery.active ) ) {
-					jQuery.event.trigger( "ajaxStop" );
+					jQuery.event.trigger( 'ajaxStop' );
 				}
 			}
 		}
@@ -9726,15 +9726,15 @@ jQuery.extend( {
 	},
 
 	getJSON: function( url, data, callback ) {
-		return jQuery.get( url, data, callback, "json" );
+		return jQuery.get( url, data, callback, 'json' );
 	},
 
 	getScript: function( url, callback ) {
-		return jQuery.get( url, undefined, callback, "script" );
+		return jQuery.get( url, undefined, callback, 'script' );
 	}
 } );
 
-jQuery.each( [ "get", "post" ], function( _i, method ) {
+jQuery.each( [ 'get', 'post' ], function( _i, method ) {
 	jQuery[ method ] = function( url, data, callback, type ) {
 
 		// Shift arguments if data argument was omitted
@@ -9758,8 +9758,8 @@ jQuery.each( [ "get", "post" ], function( _i, method ) {
 jQuery.ajaxPrefilter( function( s ) {
 	var i;
 	for ( i in s.headers ) {
-		if ( i.toLowerCase() === "content-type" ) {
-			s.contentType = s.headers[ i ] || "";
+		if ( i.toLowerCase() === 'content-type' ) {
+			s.contentType = s.headers[ i ] || '';
 		}
 	}
 } );
@@ -9770,8 +9770,8 @@ jQuery._evalUrl = function( url, options, doc ) {
 		url: url,
 
 		// Make this explicit, since user can override this through ajaxSetup (trac-11264)
-		type: "GET",
-		dataType: "script",
+		type: 'GET',
+		dataType: 'script',
 		cache: true,
 		async: false,
 		global: false,
@@ -9780,7 +9780,7 @@ jQuery._evalUrl = function( url, options, doc ) {
 		// dataFilter is not invoked for failure responses, so using it instead
 		// of the default converter is kludgy but it works.
 		converters: {
-			"text script": function() {}
+			'text script': function() {}
 		},
 		dataFilter: function( response ) {
 			jQuery.globalEval( response, options, doc );
@@ -9848,7 +9848,7 @@ jQuery.fn.extend( {
 	},
 
 	unwrap: function( selector ) {
-		this.parent( selector ).not( "body" ).each( function() {
+		this.parent( selector ).not( 'body' ).each( function() {
 			jQuery( this ).replaceWith( this.childNodes );
 		} );
 		return this;
@@ -9883,7 +9883,7 @@ var xhrSuccessStatus = {
 	},
 	xhrSupported = jQuery.ajaxSettings.xhr();
 
-support.cors = !!xhrSupported && ( "withCredentials" in xhrSupported );
+support.cors = !!xhrSupported && ( 'withCredentials' in xhrSupported );
 support.ajax = xhrSupported = !!xhrSupported;
 
 jQuery.ajaxTransport( function( options ) {
@@ -9921,8 +9921,8 @@ jQuery.ajaxTransport( function( options ) {
 				// akin to a jigsaw puzzle, we simply never set it to be sure.
 				// (it can always be set on a per-request basis or even using ajaxSetup)
 				// For same-domain requests, won't change header if already provided.
-				if ( !options.crossDomain && !headers[ "X-Requested-With" ] ) {
-					headers[ "X-Requested-With" ] = "XMLHttpRequest";
+				if ( !options.crossDomain && !headers[ 'X-Requested-With' ] ) {
+					headers[ 'X-Requested-With' ] = 'XMLHttpRequest';
 				}
 
 				// Set headers
@@ -9938,15 +9938,15 @@ jQuery.ajaxTransport( function( options ) {
 								xhr.onerror = xhr.onabort = xhr.ontimeout =
 									xhr.onreadystatechange = null;
 
-							if ( type === "abort" ) {
+							if ( type === 'abort' ) {
 								xhr.abort();
-							} else if ( type === "error" ) {
+							} else if ( type === 'error' ) {
 
 								// Support: IE <=9 only
 								// On a manual native abort, IE9 throws
 								// errors on any property access that is not readyState
-								if ( typeof xhr.status !== "number" ) {
-									complete( 0, "error" );
+								if ( typeof xhr.status !== 'number' ) {
+									complete( 0, 'error' );
 								} else {
 									complete(
 
@@ -9963,8 +9963,8 @@ jQuery.ajaxTransport( function( options ) {
 									// Support: IE <=9 only
 									// IE9 has no XHR2 but throws on binary (trac-11426)
 									// For XHR2 non-text, let the caller handle it (gh-2498)
-									( xhr.responseType || "text" ) !== "text"  ||
-									typeof xhr.responseText !== "string" ?
+									( xhr.responseType || 'text' ) !== 'text'  ||
+									typeof xhr.responseText !== 'string' ?
 										{ binary: xhr.response } :
 										{ text: xhr.responseText },
 									xhr.getAllResponseHeaders()
@@ -9976,7 +9976,7 @@ jQuery.ajaxTransport( function( options ) {
 
 				// Listen to events
 				xhr.onload = callback();
-				errorCallback = xhr.onerror = xhr.ontimeout = callback( "error" );
+				errorCallback = xhr.onerror = xhr.ontimeout = callback( 'error' );
 
 				// Support: IE 9 only
 				// Use onreadystatechange to replace onabort
@@ -10003,7 +10003,7 @@ jQuery.ajaxTransport( function( options ) {
 				}
 
 				// Create the abort callback
-				callback = callback( "abort" );
+				callback = callback( 'abort' );
 
 				try {
 
@@ -10040,14 +10040,14 @@ jQuery.ajaxPrefilter( function( s ) {
 // Install script dataType
 jQuery.ajaxSetup( {
 	accepts: {
-		script: "text/javascript, application/javascript, " +
-			"application/ecmascript, application/x-ecmascript"
+		script: 'text/javascript, application/javascript, ' +
+			'application/ecmascript, application/x-ecmascript'
 	},
 	contents: {
 		script: /\b(?:java|ecma)script\b/
 	},
 	converters: {
-		"text script": function( text ) {
+		'text script': function( text ) {
 			jQuery.globalEval( text );
 			return text;
 		}
@@ -10055,31 +10055,31 @@ jQuery.ajaxSetup( {
 } );
 
 // Handle cache's special case and crossDomain
-jQuery.ajaxPrefilter( "script", function( s ) {
+jQuery.ajaxPrefilter( 'script', function( s ) {
 	if ( s.cache === undefined ) {
 		s.cache = false;
 	}
 	if ( s.crossDomain ) {
-		s.type = "GET";
+		s.type = 'GET';
 	}
 } );
 
 // Bind script tag hack transport
-jQuery.ajaxTransport( "script", function( s ) {
+jQuery.ajaxTransport( 'script', function( s ) {
 
 	// This transport only deals with cross domain or forced-by-attrs requests
 	if ( s.crossDomain || s.scriptAttrs ) {
 		var script, callback;
 		return {
 			send: function( _, complete ) {
-				script = jQuery( "<script>" )
+				script = jQuery( '<script>' )
 					.attr( s.scriptAttrs || {} )
 					.prop( { charset: s.scriptCharset, src: s.url } )
-					.on( "load error", callback = function( evt ) {
+					.on( 'load error', callback = function( evt ) {
 						script.remove();
 						callback = null;
 						if ( evt ) {
-							complete( evt.type === "error" ? 404 : 200, evt.type );
+							complete( evt.type === 'error' ? 404 : 200, evt.type );
 						}
 					} );
 
@@ -10103,28 +10103,28 @@ var oldCallbacks = [],
 
 // Default jsonp settings
 jQuery.ajaxSetup( {
-	jsonp: "callback",
+	jsonp: 'callback',
 	jsonpCallback: function() {
-		var callback = oldCallbacks.pop() || ( jQuery.expando + "_" + ( nonce.guid++ ) );
+		var callback = oldCallbacks.pop() || ( jQuery.expando + '_' + ( nonce.guid++ ) );
 		this[ callback ] = true;
 		return callback;
 	}
 } );
 
 // Detect, normalize options and install callbacks for jsonp requests
-jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
+jQuery.ajaxPrefilter( 'json jsonp', function( s, originalSettings, jqXHR ) {
 
 	var callbackName, overwritten, responseContainer,
 		jsonProp = s.jsonp !== false && ( rjsonp.test( s.url ) ?
-			"url" :
-			typeof s.data === "string" &&
-				( s.contentType || "" )
-					.indexOf( "application/x-www-form-urlencoded" ) === 0 &&
-				rjsonp.test( s.data ) && "data"
+			'url' :
+			typeof s.data === 'string' &&
+				( s.contentType || '' )
+					.indexOf( 'application/x-www-form-urlencoded' ) === 0 &&
+				rjsonp.test( s.data ) && 'data'
 		);
 
 	// Handle iff the expected data type is "jsonp" or we have a parameter to set
-	if ( jsonProp || s.dataTypes[ 0 ] === "jsonp" ) {
+	if ( jsonProp || s.dataTypes[ 0 ] === 'jsonp' ) {
 
 		// Get callback name, remembering preexisting value associated with it
 		callbackName = s.jsonpCallback = isFunction( s.jsonpCallback ) ?
@@ -10133,21 +10133,21 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 
 		// Insert callback into url or form data
 		if ( jsonProp ) {
-			s[ jsonProp ] = s[ jsonProp ].replace( rjsonp, "$1" + callbackName );
+			s[ jsonProp ] = s[ jsonProp ].replace( rjsonp, '$1' + callbackName );
 		} else if ( s.jsonp !== false ) {
-			s.url += ( rquery.test( s.url ) ? "&" : "?" ) + s.jsonp + "=" + callbackName;
+			s.url += ( rquery.test( s.url ) ? '&' : '?' ) + s.jsonp + '=' + callbackName;
 		}
 
 		// Use data converter to retrieve json after script execution
-		s.converters[ "script json" ] = function() {
+		s.converters[ 'script json' ] = function() {
 			if ( !responseContainer ) {
-				jQuery.error( callbackName + " was not called" );
+				jQuery.error( callbackName + ' was not called' );
 			}
 			return responseContainer[ 0 ];
 		};
 
 		// Force json dataType
-		s.dataTypes[ 0 ] = "json";
+		s.dataTypes[ 0 ] = 'json';
 
 		// Install callback
 		overwritten = window[ callbackName ];
@@ -10186,7 +10186,7 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 		} );
 
 		// Delegate to script
-		return "script";
+		return 'script';
 	}
 } );
 
@@ -10199,8 +10199,8 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 // Because of that, this security measure has to be disabled in Safari 8.
 // https://bugs.webkit.org/show_bug.cgi?id=137337
 support.createHTMLDocument = ( function() {
-	var body = document.implementation.createHTMLDocument( "" ).body;
-	body.innerHTML = "<form></form><form></form>";
+	var body = document.implementation.createHTMLDocument( '' ).body;
+	body.innerHTML = '<form></form><form></form>';
 	return body.childNodes.length === 2;
 } )();
 
@@ -10210,10 +10210,10 @@ support.createHTMLDocument = ( function() {
 // defaults to document
 // keepScripts (optional): If true, will include scripts passed in the html string
 jQuery.parseHTML = function( data, context, keepScripts ) {
-	if ( typeof data !== "string" ) {
+	if ( typeof data !== 'string' ) {
 		return [];
 	}
-	if ( typeof context === "boolean" ) {
+	if ( typeof context === 'boolean' ) {
 		keepScripts = context;
 		context = false;
 	}
@@ -10225,12 +10225,12 @@ jQuery.parseHTML = function( data, context, keepScripts ) {
 		// Stop scripts or inline event handlers from being executed immediately
 		// by using document.implementation
 		if ( support.createHTMLDocument ) {
-			context = document.implementation.createHTMLDocument( "" );
+			context = document.implementation.createHTMLDocument( '' );
 
 			// Set the base href for the created document
 			// so any parsed elements with URLs
 			// are based on the document's URL (gh-2965)
-			base = context.createElement( "base" );
+			base = context.createElement( 'base' );
 			base.href = document.location.href;
 			context.head.appendChild( base );
 		} else {
@@ -10262,7 +10262,7 @@ jQuery.parseHTML = function( data, context, keepScripts ) {
 jQuery.fn.load = function( url, params, callback ) {
 	var selector, type, response,
 		self = this,
-		off = url.indexOf( " " );
+		off = url.indexOf( ' ' );
 
 	if ( off > -1 ) {
 		selector = stripAndCollapse( url.slice( off ) );
@@ -10277,8 +10277,8 @@ jQuery.fn.load = function( url, params, callback ) {
 		params = undefined;
 
 	// Otherwise, build a param string
-	} else if ( params && typeof params === "object" ) {
-		type = "POST";
+	} else if ( params && typeof params === 'object' ) {
+		type = 'POST';
 	}
 
 	// If we have elements to modify, make the request
@@ -10289,8 +10289,8 @@ jQuery.fn.load = function( url, params, callback ) {
 			// If "type" variable is undefined, then "GET" method will be used.
 			// Make value of this field explicit since
 			// user can override it through ajaxSetup method
-			type: type || "GET",
-			dataType: "html",
+			type: type || 'GET',
+			dataType: 'html',
 			data: params
 		} ).done( function( responseText ) {
 
@@ -10301,7 +10301,7 @@ jQuery.fn.load = function( url, params, callback ) {
 
 				// If a selector was specified, locate the right elements in a dummy div
 				// Exclude scripts to avoid IE 'Permission Denied' errors
-				jQuery( "<div>" ).append( jQuery.parseHTML( responseText ) ).find( selector ) :
+				jQuery( '<div>' ).append( jQuery.parseHTML( responseText ) ).find( selector ) :
 
 				// Otherwise use the full result
 				responseText );
@@ -10334,20 +10334,20 @@ jQuery.expr.pseudos.animated = function( elem ) {
 jQuery.offset = {
 	setOffset: function( elem, options, i ) {
 		var curPosition, curLeft, curCSSTop, curTop, curOffset, curCSSLeft, calculatePosition,
-			position = jQuery.css( elem, "position" ),
+			position = jQuery.css( elem, 'position' ),
 			curElem = jQuery( elem ),
 			props = {};
 
 		// Set position first, in-case top/left are set even on static elem
-		if ( position === "static" ) {
-			elem.style.position = "relative";
+		if ( position === 'static' ) {
+			elem.style.position = 'relative';
 		}
 
 		curOffset = curElem.offset();
-		curCSSTop = jQuery.css( elem, "top" );
-		curCSSLeft = jQuery.css( elem, "left" );
-		calculatePosition = ( position === "absolute" || position === "fixed" ) &&
-			( curCSSTop + curCSSLeft ).indexOf( "auto" ) > -1;
+		curCSSTop = jQuery.css( elem, 'top' );
+		curCSSLeft = jQuery.css( elem, 'left' );
+		calculatePosition = ( position === 'absolute' || position === 'fixed' ) &&
+			( curCSSTop + curCSSLeft ).indexOf( 'auto' ) > -1;
 
 		// Need to be able to calculate position if either
 		// top or left is auto and position is either absolute or fixed
@@ -10374,7 +10374,7 @@ jQuery.offset = {
 			props.left = ( options.left - curOffset.left ) + curLeft;
 		}
 
-		if ( "using" in options ) {
+		if ( 'using' in options ) {
 			options.using.call( elem, props );
 
 		} else {
@@ -10433,7 +10433,7 @@ jQuery.fn.extend( {
 			parentOffset = { top: 0, left: 0 };
 
 		// position:fixed elements are offset from the viewport, which itself always has zero offset
-		if ( jQuery.css( elem, "position" ) === "fixed" ) {
+		if ( jQuery.css( elem, 'position' ) === 'fixed' ) {
 
 			// Assume position:fixed implies availability of getBoundingClientRect
 			offset = elem.getBoundingClientRect();
@@ -10447,7 +10447,7 @@ jQuery.fn.extend( {
 			offsetParent = elem.offsetParent || doc.documentElement;
 			while ( offsetParent &&
 				( offsetParent === doc.body || offsetParent === doc.documentElement ) &&
-				jQuery.css( offsetParent, "position" ) === "static" ) {
+				jQuery.css( offsetParent, 'position' ) === 'static' ) {
 
 				offsetParent = offsetParent.parentNode;
 			}
@@ -10455,15 +10455,15 @@ jQuery.fn.extend( {
 
 				// Incorporate borders into its offset, since they are outside its content origin
 				parentOffset = jQuery( offsetParent ).offset();
-				parentOffset.top += jQuery.css( offsetParent, "borderTopWidth", true );
-				parentOffset.left += jQuery.css( offsetParent, "borderLeftWidth", true );
+				parentOffset.top += jQuery.css( offsetParent, 'borderTopWidth', true );
+				parentOffset.left += jQuery.css( offsetParent, 'borderLeftWidth', true );
 			}
 		}
 
 		// Subtract parent offsets and element margins
 		return {
-			top: offset.top - parentOffset.top - jQuery.css( elem, "marginTop", true ),
-			left: offset.left - parentOffset.left - jQuery.css( elem, "marginLeft", true )
+			top: offset.top - parentOffset.top - jQuery.css( elem, 'marginTop', true ),
+			left: offset.left - parentOffset.left - jQuery.css( elem, 'marginLeft', true )
 		};
 	},
 
@@ -10481,7 +10481,7 @@ jQuery.fn.extend( {
 		return this.map( function() {
 			var offsetParent = this.offsetParent;
 
-			while ( offsetParent && jQuery.css( offsetParent, "position" ) === "static" ) {
+			while ( offsetParent && jQuery.css( offsetParent, 'position' ) === 'static' ) {
 				offsetParent = offsetParent.offsetParent;
 			}
 
@@ -10491,8 +10491,8 @@ jQuery.fn.extend( {
 } );
 
 // Create scrollLeft and scrollTop methods
-jQuery.each( { scrollLeft: "pageXOffset", scrollTop: "pageYOffset" }, function( method, prop ) {
-	var top = "pageYOffset" === prop;
+jQuery.each( { scrollLeft: 'pageXOffset', scrollTop: 'pageYOffset' }, function( method, prop ) {
+	var top = 'pageYOffset' === prop;
 
 	jQuery.fn[ method ] = function( val ) {
 		return access( this, function( elem, method, val ) {
@@ -10528,7 +10528,7 @@ jQuery.each( { scrollLeft: "pageXOffset", scrollTop: "pageYOffset" }, function( 
 // Blink bug: https://bugs.chromium.org/p/chromium/issues/detail?id=589347
 // getComputedStyle returns percent when specified for top/left/bottom/right;
 // rather than make the css module depend on the offset module, just check for it here
-jQuery.each( [ "top", "left" ], function( _i, prop ) {
+jQuery.each( [ 'top', 'left' ], function( _i, prop ) {
 	jQuery.cssHooks[ prop ] = addGetHookIf( support.pixelPosition,
 		function( elem, computed ) {
 			if ( computed ) {
@@ -10536,7 +10536,7 @@ jQuery.each( [ "top", "left" ], function( _i, prop ) {
 
 				// If curCSS returns percentage, fallback to offset
 				return rnumnonpx.test( computed ) ?
-					jQuery( elem ).position()[ prop ] + "px" :
+					jQuery( elem ).position()[ prop ] + 'px' :
 					computed;
 			}
 		}
@@ -10545,17 +10545,17 @@ jQuery.each( [ "top", "left" ], function( _i, prop ) {
 
 
 // Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
-jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
+jQuery.each( { Height: 'height', Width: 'width' }, function( name, type ) {
 	jQuery.each( {
-		padding: "inner" + name,
+		padding: 'inner' + name,
 		content: type,
-		"": "outer" + name
+		'': 'outer' + name
 	}, function( defaultExtra, funcName ) {
 
 		// Margin is only for outerHeight, outerWidth
 		jQuery.fn[ funcName ] = function( margin, value ) {
-			var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
-				extra = defaultExtra || ( margin === true || value === true ? "margin" : "border" );
+			var chainable = arguments.length && ( defaultExtra || typeof margin !== 'boolean' ),
+				extra = defaultExtra || ( margin === true || value === true ? 'margin' : 'border' );
 
 			return access( this, function( elem, type, value ) {
 				var doc;
@@ -10563,9 +10563,9 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 				if ( isWindow( elem ) ) {
 
 					// $( window ).outerWidth/Height return w/h including scrollbars (gh-1729)
-					return funcName.indexOf( "outer" ) === 0 ?
-						elem[ "inner" + name ] :
-						elem.document.documentElement[ "client" + name ];
+					return funcName.indexOf( 'outer' ) === 0 ?
+						elem[ 'inner' + name ] :
+						elem.document.documentElement[ 'client' + name ];
 				}
 
 				// Get document width or height
@@ -10575,9 +10575,9 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 					// Either scroll[Width/Height] or offset[Width/Height] or client[Width/Height],
 					// whichever is greatest
 					return Math.max(
-						elem.body[ "scroll" + name ], doc[ "scroll" + name ],
-						elem.body[ "offset" + name ], doc[ "offset" + name ],
-						doc[ "client" + name ]
+						elem.body[ 'scroll' + name ], doc[ 'scroll' + name ],
+						elem.body[ 'offset' + name ], doc[ 'offset' + name ],
+						doc[ 'client' + name ]
 					);
 				}
 
@@ -10595,12 +10595,12 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 
 
 jQuery.each( [
-	"ajaxStart",
-	"ajaxStop",
-	"ajaxComplete",
-	"ajaxError",
-	"ajaxSuccess",
-	"ajaxSend"
+	'ajaxStart',
+	'ajaxStop',
+	'ajaxComplete',
+	'ajaxError',
+	'ajaxSuccess',
+	'ajaxSend'
 ], function( _i, type ) {
 	jQuery.fn[ type ] = function( fn ) {
 		return this.on( type, fn );
@@ -10626,21 +10626,21 @@ jQuery.fn.extend( {
 
 		// ( namespace ) or ( selector, types [, fn] )
 		return arguments.length === 1 ?
-			this.off( selector, "**" ) :
-			this.off( types, selector || "**", fn );
+			this.off( selector, '**' ) :
+			this.off( types, selector || '**', fn );
 	},
 
 	hover: function( fnOver, fnOut ) {
 		return this
-			.on( "mouseenter", fnOver )
-			.on( "mouseleave", fnOut || fnOver );
+			.on( 'mouseenter', fnOver )
+			.on( 'mouseleave', fnOut || fnOver );
 	}
 } );
 
 jQuery.each(
-	( "blur focus focusin focusout resize scroll click dblclick " +
-	"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
-	"change select submit keydown keypress keyup contextmenu" ).split( " " ),
+	( 'blur focus focusin focusout resize scroll click dblclick ' +
+	'mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave ' +
+	'change select submit keydown keypress keyup contextmenu' ).split( ' ' ),
 	function( _i, name ) {
 
 		// Handle event binding
@@ -10668,7 +10668,7 @@ var rtrim = /^[\s\uFEFF\xA0]+|([^\s\uFEFF\xA0])[\s\uFEFF\xA0]+$/g;
 jQuery.proxy = function( fn, context ) {
 	var tmp, args, proxy;
 
-	if ( typeof context === "string" ) {
+	if ( typeof context === 'string' ) {
 		tmp = fn[ context ];
 		context = fn;
 		fn = tmp;
@@ -10715,7 +10715,7 @@ jQuery.isNumeric = function( obj ) {
 	// strings and numbers (primitives or objects)
 	// that can be coerced to finite numbers (gh-2662)
 	var type = jQuery.type( obj );
-	return ( type === "number" || type === "string" ) &&
+	return ( type === 'number' || type === 'string' ) &&
 
 		// parseFloat NaNs numeric-cast false positives ("")
 		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")
@@ -10725,8 +10725,8 @@ jQuery.isNumeric = function( obj ) {
 
 jQuery.trim = function( text ) {
 	return text == null ?
-		"" :
-		( text + "" ).replace( rtrim, "$1" );
+		'' :
+		( text + '' ).replace( rtrim, '$1' );
 };
 
 
@@ -10744,8 +10744,8 @@ jQuery.trim = function( text ) {
 // AMD loader is present. jQuery is a special case. For more information, see
 // https://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
 
-if ( typeof define === "function" && define.amd ) {
-	define( "jquery", [], function() {
+if ( typeof define === 'function' && define.amd ) {
+	define( 'jquery', [], function() {
 		return jQuery;
 	} );
 }
@@ -10776,7 +10776,7 @@ jQuery.noConflict = function( deep ) {
 // Expose jQuery and $ identifiers, even in AMD
 // (trac-7102#comment:10, https://github.com/jquery/jquery/pull/557)
 // and CommonJS for browser emulators (trac-13566)
-if ( typeof noGlobal === "undefined" ) {
+if ( typeof noGlobal === 'undefined' ) {
 	window.jQuery = window.$ = jQuery;
 }
 
@@ -12861,19 +12861,19 @@ return jQuery;
  *
  *
  * The MIT License
- * 
+ *
  * Copyright (c) 2013-2015 Mathew Groves
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -12881,10 +12881,10 @@ return jQuery;
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- * 
- * 
+ *
+ *
  */
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define('pixi',[],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.PIXI = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==='object'&&typeof module!=='undefined'){module.exports=f()}else if(typeof define==='function'&&define.amd){define('pixi',[],f)}else{var g;if(typeof window!=='undefined'){g=window}else if(typeof global!=='undefined'){g=global}else if(typeof self!=='undefined'){g=self}else{g=this}g.PIXI = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=='function'&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code='MODULE_NOT_FOUND',f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=='function'&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (process,global){
 /*!
  * async
@@ -12928,7 +12928,7 @@ return jQuery;
 
     function only_once(fn) {
         return function() {
-            if (fn === null) throw new Error("Callback was already called.");
+            if (fn === null) throw new Error('Callback was already called.');
             fn.apply(this, arguments);
             fn = null;
         };
@@ -12959,7 +12959,7 @@ return jQuery;
     function _isArrayLike(arr) {
         return _isArray(arr) || (
             // has a positive integer length property
-            typeof arr.length === "number" &&
+            typeof arr.length === 'number' &&
             arr.length >= 0 &&
             arr.length % 1 === 0
         );
@@ -13746,8 +13746,8 @@ return jQuery;
             throw new Error('Concurrency must not be zero');
         }
         function _insert(q, data, pos, callback) {
-            if (callback != null && typeof callback !== "function") {
-                throw new Error("task callback must be a function");
+            if (callback != null && typeof callback !== 'function') {
+                throw new Error('task callback must be a function');
             }
             q.started = true;
             if (!_isArray(data)) {
@@ -13899,8 +13899,8 @@ return jQuery;
         }
 
         function _insert(q, data, priority, callback) {
-            if (callback != null && typeof callback !== "function") {
-                throw new Error("task callback must be a function");
+            if (callback != null && typeof callback !== 'function') {
+                throw new Error('task callback must be a function');
             }
             q.started = true;
             if (!_isArray(data)) {
@@ -13978,7 +13978,7 @@ return jQuery;
         var memoized = _restParam(function memoized(args) {
             var callback = args.pop();
             var key = hasher.apply(null, args);
-            if (has.call(memo, key)) {   
+            if (has.call(memo, key)) {
                 async.setImmediate(function () {
                     callback.apply(null, memo[key]);
                 });
@@ -14123,10 +14123,10 @@ return jQuery;
                 return callback(e);
             }
             // if result is Promise object
-            if (_isObject(result) && typeof result.then === "function") {
+            if (_isObject(result) && typeof result.then === 'function') {
                 result.then(function(value) {
                     callback(null, value);
-                })["catch"](function(err) {
+                })['catch'](function(err) {
                     callback(err.message ? err : new Error(err));
                 });
             } else {
@@ -14152,8 +14152,8 @@ return jQuery;
 
 }());
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":3}],2:[function(require,module,exports){
+}).call(this,require('_process'),typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
+},{'_process':3}],2:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14381,7 +14381,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":3}],3:[function(require,module,exports){
+},{'_process':3}],3:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -15010,7 +15010,7 @@ process.umask = function() { return 0; };
 
 }(this));
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this,typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 },{}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -15190,7 +15190,7 @@ var objectKeys = Object.keys || function (obj) {
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":5,"./encode":6}],8:[function(require,module,exports){
+},{'./decode':5,'./encode':6}],8:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15885,7 +15885,7 @@ Url.prototype.parseHost = function() {
 };
 
 function isString(arg) {
-  return typeof arg === "string";
+  return typeof arg === 'string';
 }
 
 function isObject(arg) {
@@ -15899,7 +15899,7 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":4,"querystring":7}],9:[function(require,module,exports){
+},{'punycode':4,'querystring':7}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = earcut;
@@ -16821,7 +16821,7 @@ module.exports = Object.assign || function (target, source) {
     function only_once(fn) {
         var called = false;
         return function() {
-            if (called) throw new Error("Callback was already called.");
+            if (called) throw new Error('Callback was already called.');
             called = true;
             fn.apply(root, arguments);
         }
@@ -17917,7 +17917,7 @@ module.exports = Object.assign || function (target, source) {
 }());
 
 }).call(this,require('_process'))
-},{"_process":3}],13:[function(require,module,exports){
+},{'_process':3}],13:[function(require,module,exports){
 var async       = require('async'),
     urlParser   = require('url'),
     Resource    = require('./Resource'),
@@ -18343,7 +18343,7 @@ Loader.prototype._onLoad = function (resource) {
             this.progress = 100;
             this._onComplete();
         }
-        
+
         if (resource.error) {
             this.emit('error', resource.error, this, resource);
         }
@@ -18351,7 +18351,7 @@ Loader.prototype._onLoad = function (resource) {
             this.emit('load', this, resource);
         }
     });
-    
+
 
 
     // remove this resource from the async queue
@@ -18375,7 +18375,7 @@ Loader.LOAD_TYPE = Resource.LOAD_TYPE;
 Loader.XHR_READY_STATE = Resource.XHR_READY_STATE;
 Loader.XHR_RESPONSE_TYPE = Resource.XHR_RESPONSE_TYPE;
 
-},{"./Resource":14,"async":12,"eventemitter3":10,"url":8}],14:[function(require,module,exports){
+},{'./Resource':14,'async':12,'eventemitter3':10,'url':8}],14:[function(require,module,exports){
 var EventEmitter = require('eventemitter3'),
     _url = require('url'),
     // tests is CORS is supported in XHR, if not we need to use XDR
@@ -19177,14 +19177,14 @@ function setExtMap(map, extname, val) {
     map[extname] = val;
 }
 
-},{"eventemitter3":10,"url":8}],15:[function(require,module,exports){
+},{'eventemitter3':10,'url':8}],15:[function(require,module,exports){
 module.exports = {
 
     // private property
-    _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    _keyStr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
     encodeBinary: function (input) {
-        var output = "";
+        var output = '';
         var bytebuffer;
         var encodedCharIndexes = new Array(4);
         var inx = 0;
@@ -19257,7 +19257,7 @@ module.exports.middleware = {
     }
 };
 
-},{"./Loader":13,"./Resource":14,"./middlewares/caching/memory":17,"./middlewares/parsing/blob":18}],17:[function(require,module,exports){
+},{'./Loader':13,'./Resource':14,'./middlewares/caching/memory':17,'./middlewares/parsing/blob':18}],17:[function(require,module,exports){
 // a simple in-memory cache for resources
 var cache = {};
 
@@ -19274,7 +19274,7 @@ module.exports = function () {
                cache[this.url] = this.data;
             });
         }
-        
+
         next();
     };
 };
@@ -19339,7 +19339,7 @@ module.exports = function () {
     };
 };
 
-},{"../../Resource":14,"../../b64":15}],19:[function(require,module,exports){
+},{'../../Resource':14,'../../b64':15}],19:[function(require,module,exports){
 var core = require('../core');
 
 // add some extra variables to the container..
@@ -19361,7 +19361,7 @@ function AccessibilityManager(renderer)
 {
 	// first we create a div that will sit over the pixi element. This is where the div overlays will go.
     var div = document.createElement('div');
-    
+
     div.style.width = 100 + 'px';
     div.style.height = 100 + 'px';
     div.style.position = 'absolute';
@@ -19369,10 +19369,10 @@ function AccessibilityManager(renderer)
     div.style.left = 0;
    //
     div.style.zIndex = 2;
-   	
+
    	/**
    	 * This is the dom element that will sit over the pixi element. This is where the div overlays will go.
-   	 * 
+   	 *
    	 * @type {HTMLElement}
    	 * @private
    	 */
@@ -19380,7 +19380,7 @@ function AccessibilityManager(renderer)
 
    	/**
    	 * A simple pool for storing divs.
-   	 * 
+   	 *
    	 * @type {Array}
    	 * @private
    	 */
@@ -19388,7 +19388,7 @@ function AccessibilityManager(renderer)
 
  	/**
  	 * This is a tick used to check if an object is no longer being rendered.
- 	 * 
+ 	 *
  	 * @type {Number}
  	 * @private
  	 */
@@ -19396,7 +19396,7 @@ function AccessibilityManager(renderer)
 
    	/**
    	 * Setting this to true will visually show the divs
-   	 * 
+   	 *
    	 * @type {Boolean}
    	 */
    	this.debug = false;
@@ -19415,13 +19415,13 @@ function AccessibilityManager(renderer)
      * @private
      */
    	this.children = [];
-   	
+
    	/**
      * pre bind the functions..
      */
    	this._onKeyDown = this._onKeyDown.bind(this);
    	this._onMouseMove = this._onMouseMove.bind(this);
-   	
+
    	/**
      * stores the state of the manager. If there are no accessible objects or the mouse is moving the will be false.
      *
@@ -19457,7 +19457,7 @@ AccessibilityManager.prototype.activate = function()
 
 	this.renderer.on('postrender', this.update, this);
 
-	this.renderer.view.parentNode.appendChild(this.div);	
+	this.renderer.view.parentNode.appendChild(this.div);
 };
 
 /**
@@ -19500,7 +19500,7 @@ AccessibilityManager.prototype.updateAccessibleObjects = function(displayObject)
 		{
 			this.addChild(displayObject);
 		}
-	   	
+
 	   	displayObject.renderId = this.renderId;
 	}
 
@@ -19511,7 +19511,7 @@ AccessibilityManager.prototype.updateAccessibleObjects = function(displayObject)
 		var children = displayObject.children;
 
 		for (var i = children.length - 1; i >= 0; i--) {
-		
+
 			this.updateAccessibleObjects(children[i]);
 		}
 	}
@@ -19574,7 +19574,7 @@ AccessibilityManager.prototype.update = function()
 
 				div.style.width = (hitArea.width * wt.a * sx) + 'px';
 				div.style.height = (hitArea.height * wt.d * sy) + 'px';
-			
+
 			}
 			else
 			{
@@ -19587,7 +19587,7 @@ AccessibilityManager.prototype.update = function()
 
 				div.style.width = (hitArea.width * sx) + 'px';
 				div.style.height = (hitArea.height * sy) + 'px';
-			}		
+			}
 		}
 	}
 
@@ -19628,12 +19628,12 @@ AccessibilityManager.prototype.capHitArea = function (hitArea)
 AccessibilityManager.prototype.addChild = function(displayObject)
 {
 //	this.activate();
-	
+
 	var div = this.pool.pop();
 
 	if(!div)
 	{
-		div = document.createElement('button'); 
+		div = document.createElement('button');
 
 	    div.style.width = 100 + 'px';
 	    div.style.height = 100 + 'px';
@@ -19642,19 +19642,19 @@ AccessibilityManager.prototype.addChild = function(displayObject)
 	    div.style.zIndex = 2;
 	    div.style.borderStyle = 'none';
 
-	    
+
 	    div.addEventListener('click', this._onClick.bind(this));
 	    div.addEventListener('focus', this._onFocus.bind(this));
 	    div.addEventListener('focusout', this._onFocusOut.bind(this));
 	}
-	   	
+
 
 
 
 	div.title = displayObject.accessibleTitle || 'displayObject ' + this.tabIndex;
 
 	//
-	
+
 	displayObject._accessibleActive = true;
 	displayObject._accessibleDiv = div;
 	div.displayObject = displayObject;
@@ -19726,7 +19726,7 @@ AccessibilityManager.prototype._onMouseMove = function()
  * Destroys the accessibility manager
  *
  */
-AccessibilityManager.prototype.destroy = function () 
+AccessibilityManager.prototype.destroy = function ()
 {
 	this.div = null;
 
@@ -19735,10 +19735,10 @@ AccessibilityManager.prototype.destroy = function ()
 		this.children[i].div = null;
 	}
 
-	
+
 	window.document.removeEventListener('mousemove', this._onMouseMove);
 	window.removeEventListener('keydown', this._onKeyDown);
-		
+
 	this.pool = null;
 	this.children = null;
 	this.renderer = null;
@@ -19749,7 +19749,7 @@ core.WebGLRenderer.registerPlugin('accessibility', AccessibilityManager);
 core.CanvasRenderer.registerPlugin('accessibility', AccessibilityManager);
 
 
-},{"../core":29,"./accessibleTarget":20}],20:[function(require,module,exports){
+},{'../core':29,'./accessibleTarget':20}],20:[function(require,module,exports){
 /**
  * Default property values of accessible objects
  * used by {@link PIXI.accessibility.AccessibilityManager}.
@@ -19765,7 +19765,7 @@ core.CanvasRenderer.registerPlugin('accessibility', AccessibilityManager);
  *      );
  */
 var accessibleTarget = {
-    
+
     /**
      * @todo Needs docs.
      */
@@ -19811,7 +19811,7 @@ module.exports = {
     AccessibilityManager: require('./AccessibilityManager')
 };
 
-},{"./AccessibilityManager":19,"./accessibleTarget":20}],22:[function(require,module,exports){
+},{'./AccessibilityManager':19,'./accessibleTarget':20}],22:[function(require,module,exports){
 /**
  * Constant values used in pixi
  *
@@ -20141,13 +20141,13 @@ Container.prototype.onChildrenChange = function () {};
 
 /**
  * Adds a child to the container.
- * 
+ *
  * You can also add multple items like so: myContainer.addChild(thinkOne, thingTwo, thingThree)
  * @param child {PIXI.DisplayObject} The DisplayObject to add to the container
  * @return {PIXI.DisplayObject} The child that was added.
  */
 Container.prototype.addChild = function (child)
-{ 
+{
     var argumentsLength = arguments.length;
 
     // if there is only one argument we can bypass looping through the them
@@ -20159,7 +20159,7 @@ Container.prototype.addChild = function (child)
         {
             this.addChild( arguments[i] );
         }
-    }     
+    }
     else
     {
         // if the child has a parent then lets remove it as Pixi objects can only exist in one place
@@ -20169,7 +20169,7 @@ Container.prototype.addChild = function (child)
         }
 
         child.parent = this;
-        
+
         this.children.push(child);
 
         // TODO - lets either do all callbacks or all events.. not both!
@@ -20311,9 +20311,9 @@ Container.prototype.removeChild = function (child)
         {
             this.removeChild( arguments[i] );
         }
-    }     
+    }
     else
-    {   
+    {
         var index = this.children.indexOf(child);
 
         if (index === -1)
@@ -20678,7 +20678,7 @@ Container.prototype.destroy = function (destroyChildren)
     this.children = null;
 };
 
-},{"../math":33,"../textures/RenderTexture":71,"../utils":77,"./DisplayObject":24}],24:[function(require,module,exports){
+},{'../math':33,'../textures/RenderTexture':71,'../utils':77,'./DisplayObject':24}],24:[function(require,module,exports){
 var math = require('../math'),
     RenderTexture = require('../textures/RenderTexture'),
     EventEmitter = require('eventemitter3'),
@@ -21244,7 +21244,7 @@ DisplayObject.prototype.destroy = function ()
     this.filterArea = null;
 };
 
-},{"../const":22,"../math":33,"../textures/RenderTexture":71,"eventemitter3":10}],25:[function(require,module,exports){
+},{'../const':22,'../math':33,'../textures/RenderTexture':71,'eventemitter3':10}],25:[function(require,module,exports){
 var Container = require('../display/Container'),
     Texture = require('../textures/Texture'),
     CanvasBuffer = require('../renderers/canvas/utils/CanvasBuffer'),
@@ -22429,7 +22429,7 @@ Graphics.prototype.destroy = function () {
     this._localBounds = null;
 };
 
-},{"../const":22,"../display/Container":23,"../math":33,"../renderers/canvas/utils/CanvasBuffer":45,"../renderers/canvas/utils/CanvasGraphics":46,"../textures/Texture":72,"./GraphicsData":26}],26:[function(require,module,exports){
+},{'../const':22,'../display/Container':23,'../math':33,'../renderers/canvas/utils/CanvasBuffer':45,'../renderers/canvas/utils/CanvasGraphics':46,'../textures/Texture':72,'./GraphicsData':26}],26:[function(require,module,exports){
 /**
  * A GraphicsData object.
  *
@@ -23427,7 +23427,7 @@ GraphicsRenderer.prototype.buildPoly = function (graphicsData, webGLData)
     return true;
 };
 
-},{"../../const":22,"../../math":33,"../../renderers/webgl/WebGLRenderer":49,"../../renderers/webgl/utils/ObjectRenderer":63,"../../utils":77,"./WebGLGraphicsData":28,"earcut":9}],28:[function(require,module,exports){
+},{'../../const':22,'../../math':33,'../../renderers/webgl/WebGLRenderer':49,'../../renderers/webgl/utils/ObjectRenderer':63,'../../utils':77,'./WebGLGraphicsData':28,'earcut':9}],28:[function(require,module,exports){
 /**
  * An object containing WebGL specific properties to be used by the WebGL renderer
  *
@@ -23535,7 +23535,7 @@ WebGLGraphicsData.prototype.destroy = function () {
 
     this.gl.deleteBuffer(this.buffer);
     this.gl.deleteBuffer(this.indexBuffer);
-    
+
     this.gl = null;
 
     this.buffer = null;
@@ -23641,7 +23641,7 @@ var core = module.exports = Object.assign(require('./const'), require('./math'),
     }
 });
 
-},{"./const":22,"./display/Container":23,"./display/DisplayObject":24,"./graphics/Graphics":25,"./graphics/GraphicsData":26,"./graphics/webgl/GraphicsRenderer":27,"./math":33,"./particles/ParticleContainer":39,"./particles/webgl/ParticleRenderer":41,"./renderers/canvas/CanvasRenderer":44,"./renderers/canvas/utils/CanvasBuffer":45,"./renderers/canvas/utils/CanvasGraphics":46,"./renderers/webgl/WebGLRenderer":49,"./renderers/webgl/filters/AbstractFilter":50,"./renderers/webgl/filters/FXAAFilter":51,"./renderers/webgl/filters/SpriteMaskFilter":52,"./renderers/webgl/managers/ShaderManager":56,"./renderers/webgl/managers/WebGLManager":58,"./renderers/webgl/shaders/ComplexPrimitiveShader":59,"./renderers/webgl/shaders/PrimitiveShader":60,"./renderers/webgl/shaders/Shader":61,"./renderers/webgl/shaders/TextureShader":62,"./renderers/webgl/utils/ObjectRenderer":63,"./renderers/webgl/utils/RenderTarget":65,"./sprites/Sprite":67,"./sprites/webgl/SpriteRenderer":68,"./text/Text":69,"./textures/BaseTexture":70,"./textures/RenderTexture":71,"./textures/Texture":72,"./textures/TextureUvs":73,"./textures/VideoBaseTexture":74,"./ticker":76,"./utils":77}],30:[function(require,module,exports){
+},{'./const':22,'./display/Container':23,'./display/DisplayObject':24,'./graphics/Graphics':25,'./graphics/GraphicsData':26,'./graphics/webgl/GraphicsRenderer':27,'./math':33,'./particles/ParticleContainer':39,'./particles/webgl/ParticleRenderer':41,'./renderers/canvas/CanvasRenderer':44,'./renderers/canvas/utils/CanvasBuffer':45,'./renderers/canvas/utils/CanvasGraphics':46,'./renderers/webgl/WebGLRenderer':49,'./renderers/webgl/filters/AbstractFilter':50,'./renderers/webgl/filters/FXAAFilter':51,'./renderers/webgl/filters/SpriteMaskFilter':52,'./renderers/webgl/managers/ShaderManager':56,'./renderers/webgl/managers/WebGLManager':58,'./renderers/webgl/shaders/ComplexPrimitiveShader':59,'./renderers/webgl/shaders/PrimitiveShader':60,'./renderers/webgl/shaders/Shader':61,'./renderers/webgl/shaders/TextureShader':62,'./renderers/webgl/utils/ObjectRenderer':63,'./renderers/webgl/utils/RenderTarget':65,'./sprites/Sprite':67,'./sprites/webgl/SpriteRenderer':68,'./text/Text':69,'./textures/BaseTexture':70,'./textures/RenderTexture':71,'./textures/Texture':72,'./textures/TextureUvs':73,'./textures/VideoBaseTexture':74,'./ticker':76,'./utils':77}],30:[function(require,module,exports){
 // Your friendly neighbour https://en.wikipedia.org/wiki/Dihedral_group of order 16
 
 var ux = [1, 1, 0, -1, -1, -1, 0, 1, 1, 1, 0, -1, -1, -1, 0, 1];
@@ -23805,7 +23805,7 @@ var GroupD8 = {
 
 module.exports = GroupD8;
 
-},{"./Matrix":31}],31:[function(require,module,exports){
+},{'./Matrix':31}],31:[function(require,module,exports){
 // @todo - ignore the too many parameters warning for now
 // should either fix it or change the jshint config
 // jshint -W072
@@ -24245,7 +24245,7 @@ Matrix.IDENTITY = new Matrix();
  */
 Matrix.TEMP_MATRIX = new Matrix();
 
-},{"./Point":32}],32:[function(require,module,exports){
+},{'./Point':32}],32:[function(require,module,exports){
 /**
  * The Point object represents a location in a two-dimensional coordinate system, where x represents
  * the horizontal axis and y represents the vertical axis.
@@ -24338,7 +24338,7 @@ module.exports = {
     RoundedRectangle: require('./shapes/RoundedRectangle')
 };
 
-},{"./GroupD8":30,"./Matrix":31,"./Point":32,"./shapes/Circle":34,"./shapes/Ellipse":35,"./shapes/Polygon":36,"./shapes/Rectangle":37,"./shapes/RoundedRectangle":38}],34:[function(require,module,exports){
+},{'./GroupD8':30,'./Matrix':31,'./Point':32,'./shapes/Circle':34,'./shapes/Ellipse':35,'./shapes/Polygon':36,'./shapes/Rectangle':37,'./shapes/RoundedRectangle':38}],34:[function(require,module,exports){
 var Rectangle = require('./Rectangle'),
     CONST = require('../../const');
 
@@ -24426,7 +24426,7 @@ Circle.prototype.getBounds = function ()
     return new Rectangle(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
 };
 
-},{"../../const":22,"./Rectangle":37}],35:[function(require,module,exports){
+},{'../../const':22,'./Rectangle':37}],35:[function(require,module,exports){
 var Rectangle = require('./Rectangle'),
     CONST = require('../../const');
 
@@ -24521,7 +24521,7 @@ Ellipse.prototype.getBounds = function ()
     return new Rectangle(this.x - this.width, this.y - this.height, this.width, this.height);
 };
 
-},{"../../const":22,"./Rectangle":37}],36:[function(require,module,exports){
+},{'../../const':22,'./Rectangle':37}],36:[function(require,module,exports){
 var Point = require('../Point'),
     CONST = require('../../const');
 
@@ -24624,7 +24624,7 @@ Polygon.prototype.contains = function (x, y)
     return inside;
 };
 
-},{"../../const":22,"../Point":32}],37:[function(require,module,exports){
+},{'../../const':22,'../Point':32}],37:[function(require,module,exports){
 var CONST = require('../../const');
 
 /**
@@ -24718,7 +24718,7 @@ Rectangle.prototype.contains = function (x, y)
     return false;
 };
 
-},{"../../const":22}],38:[function(require,module,exports){
+},{'../../const':22}],38:[function(require,module,exports){
 var CONST = require('../../const');
 
 /**
@@ -24810,7 +24810,7 @@ RoundedRectangle.prototype.contains = function (x, y)
     return false;
 };
 
-},{"../../const":22}],39:[function(require,module,exports){
+},{'../../const':22}],39:[function(require,module,exports){
 var Container = require('../display/Container'),
     CONST = require('../const');
 
@@ -25129,7 +25129,7 @@ ParticleContainer.prototype.destroy = function () {
     this._buffers = null;
 };
 
-},{"../const":22,"../display/Container":23}],40:[function(require,module,exports){
+},{'../const':22,'../display/Container':23}],40:[function(require,module,exports){
 
 /**
  * @author Mat Groves
@@ -25825,7 +25825,7 @@ ParticleRenderer.prototype.destroy = function ()
     this.tempMatrix = null;
 };
 
-},{"../../math":33,"../../renderers/webgl/WebGLRenderer":49,"../../renderers/webgl/utils/ObjectRenderer":63,"./ParticleBuffer":40,"./ParticleShader":42}],42:[function(require,module,exports){
+},{'../../math':33,'../../renderers/webgl/WebGLRenderer':49,'../../renderers/webgl/utils/ObjectRenderer':63,'./ParticleBuffer':40,'./ParticleShader':42}],42:[function(require,module,exports){
 var TextureShader = require('../../renderers/webgl/shaders/TextureShader');
 
 /**
@@ -25903,7 +25903,7 @@ ParticleShader.prototype.constructor = ParticleShader;
 
 module.exports = ParticleShader;
 
-},{"../../renderers/webgl/shaders/TextureShader":62}],43:[function(require,module,exports){
+},{'../../renderers/webgl/shaders/TextureShader':62}],43:[function(require,module,exports){
 var utils = require('../utils'),
     math = require('../math'),
     CONST = require('../const'),
@@ -26164,7 +26164,7 @@ SystemRenderer.prototype.destroy = function (removeView) {
     this._backgroundColorString = null;
 };
 
-},{"../const":22,"../math":33,"../utils":77,"eventemitter3":10}],44:[function(require,module,exports){
+},{'../const':22,'../math':33,'../utils':77,'eventemitter3':10}],44:[function(require,module,exports){
 var SystemRenderer = require('../SystemRenderer'),
     CanvasMaskManager = require('./utils/CanvasMaskManager'),
     utils = require('../../utils'),
@@ -26432,7 +26432,7 @@ CanvasRenderer.prototype._mapBlendModes = function ()
     }
 };
 
-},{"../../const":22,"../../math":33,"../../utils":77,"../SystemRenderer":43,"./utils/CanvasMaskManager":47}],45:[function(require,module,exports){
+},{'../../const':22,'../../math':33,'../../utils':77,'../SystemRenderer':43,'./utils/CanvasMaskManager':47}],45:[function(require,module,exports){
 /**
  * Creates a Canvas element of the given size.
  *
@@ -26886,7 +26886,7 @@ CanvasGraphics.updateGraphicsTint = function (graphics)
 };
 
 
-},{"../../../const":22}],47:[function(require,module,exports){
+},{'../../../const':22}],47:[function(require,module,exports){
 var CanvasGraphics = require('./CanvasGraphics');
 
 /**
@@ -26948,7 +26948,7 @@ CanvasMaskManager.prototype.popMask = function (renderer)
 
 CanvasMaskManager.prototype.destroy = function () {};
 
-},{"./CanvasGraphics":46}],48:[function(require,module,exports){
+},{'./CanvasGraphics':46}],48:[function(require,module,exports){
 var utils = require('../../../utils');
 
 /**
@@ -27200,7 +27200,7 @@ CanvasTinter.canUseMultiply = utils.canUseNewCanvasBlendModes();
  */
 CanvasTinter.tintMethod = CanvasTinter.canUseMultiply ? CanvasTinter.tintWithMultiply :  CanvasTinter.tintWithPerPixel;
 
-},{"../../../utils":77}],49:[function(require,module,exports){
+},{'../../../utils':77}],49:[function(require,module,exports){
 var SystemRenderer = require('../SystemRenderer'),
     ShaderManager = require('./managers/ShaderManager'),
     MaskManager = require('./managers/MaskManager'),
@@ -27790,7 +27790,7 @@ WebGLRenderer.prototype._mapGlModes = function ()
     }
 };
 
-},{"../../const":22,"../../utils":77,"../SystemRenderer":43,"./filters/FXAAFilter":51,"./managers/BlendModeManager":53,"./managers/FilterManager":54,"./managers/MaskManager":55,"./managers/ShaderManager":56,"./managers/StencilManager":57,"./utils/ObjectRenderer":63,"./utils/RenderTarget":65}],50:[function(require,module,exports){
+},{'../../const':22,'../../utils':77,'../SystemRenderer':43,'./filters/FXAAFilter':51,'./managers/BlendModeManager':53,'./managers/FilterManager':54,'./managers/MaskManager':55,'./managers/ShaderManager':56,'./managers/StencilManager':57,'./utils/ObjectRenderer':63,'./utils/RenderTarget':65}],50:[function(require,module,exports){
 var DefaultShader = require('../shaders/TextureShader');
 
 /**
@@ -27902,7 +27902,7 @@ AbstractFilter.prototype.syncUniform = function (uniform)
     }
 };
 
-},{"../shaders/TextureShader":62}],51:[function(require,module,exports){
+},{'../shaders/TextureShader':62}],51:[function(require,module,exports){
 var AbstractFilter = require('./AbstractFilter');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -27926,7 +27926,7 @@ function FXAAFilter()
 {
     AbstractFilter.call(this,
         // vertex shader
-        "\nprecision mediump float;\n\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform vec2 resolution;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvarying vec2 vResolution;\n\n//texcoords computed in vertex step\n//to avoid dependent texture reads\nvarying vec2 v_rgbNW;\nvarying vec2 v_rgbNE;\nvarying vec2 v_rgbSW;\nvarying vec2 v_rgbSE;\nvarying vec2 v_rgbM;\n\n\nvoid texcoords(vec2 fragCoord, vec2 resolution,\n            out vec2 v_rgbNW, out vec2 v_rgbNE,\n            out vec2 v_rgbSW, out vec2 v_rgbSE,\n            out vec2 v_rgbM) {\n    vec2 inverseVP = 1.0 / resolution.xy;\n    v_rgbNW = (fragCoord + vec2(-1.0, -1.0)) * inverseVP;\n    v_rgbNE = (fragCoord + vec2(1.0, -1.0)) * inverseVP;\n    v_rgbSW = (fragCoord + vec2(-1.0, 1.0)) * inverseVP;\n    v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * inverseVP;\n    v_rgbM = vec2(fragCoord * inverseVP);\n}\n\nvoid main(void){\n   gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n   vTextureCoord = aTextureCoord;\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n   vResolution = resolution;\n\n   //compute the texture coords and send them to varyings\n   texcoords(aTextureCoord * resolution, resolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);\n}\n",
+        '\nprecision mediump float;\n\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform vec2 resolution;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvarying vec2 vResolution;\n\n//texcoords computed in vertex step\n//to avoid dependent texture reads\nvarying vec2 v_rgbNW;\nvarying vec2 v_rgbNE;\nvarying vec2 v_rgbSW;\nvarying vec2 v_rgbSE;\nvarying vec2 v_rgbM;\n\n\nvoid texcoords(vec2 fragCoord, vec2 resolution,\n            out vec2 v_rgbNW, out vec2 v_rgbNE,\n            out vec2 v_rgbSW, out vec2 v_rgbSE,\n            out vec2 v_rgbM) {\n    vec2 inverseVP = 1.0 / resolution.xy;\n    v_rgbNW = (fragCoord + vec2(-1.0, -1.0)) * inverseVP;\n    v_rgbNE = (fragCoord + vec2(1.0, -1.0)) * inverseVP;\n    v_rgbSW = (fragCoord + vec2(-1.0, 1.0)) * inverseVP;\n    v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * inverseVP;\n    v_rgbM = vec2(fragCoord * inverseVP);\n}\n\nvoid main(void){\n   gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n   vTextureCoord = aTextureCoord;\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n   vResolution = resolution;\n\n   //compute the texture coords and send them to varyings\n   texcoords(aTextureCoord * resolution, resolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);\n}\n',
         // fragment shader
         "precision lowp float;\n\n\n/**\nBasic FXAA implementation based on the code on geeks3d.com with the\nmodification that the texture2DLod stuff was removed since it's\nunsupported by WebGL.\n\n--\n\nFrom:\nhttps://github.com/mitsuhiko/webgl-meincraft\n\nCopyright (c) 2011 by Armin Ronacher.\n\nSome rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n    * Redistributions of source code must retain the above copyright\n      notice, this list of conditions and the following disclaimer.\n\n    * Redistributions in binary form must reproduce the above\n      copyright notice, this list of conditions and the following\n      disclaimer in the documentation and/or other materials provided\n      with the distribution.\n\n    * The names of the contributors may not be used to endorse or\n      promote products derived from this software without specific\n      prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n*/\n\n#ifndef FXAA_REDUCE_MIN\n    #define FXAA_REDUCE_MIN   (1.0/ 128.0)\n#endif\n#ifndef FXAA_REDUCE_MUL\n    #define FXAA_REDUCE_MUL   (1.0 / 8.0)\n#endif\n#ifndef FXAA_SPAN_MAX\n    #define FXAA_SPAN_MAX     8.0\n#endif\n\n//optimized version for mobile, where dependent\n//texture reads can be a bottleneck\nvec4 fxaa(sampler2D tex, vec2 fragCoord, vec2 resolution,\n            vec2 v_rgbNW, vec2 v_rgbNE,\n            vec2 v_rgbSW, vec2 v_rgbSE,\n            vec2 v_rgbM) {\n    vec4 color;\n    mediump vec2 inverseVP = vec2(1.0 / resolution.x, 1.0 / resolution.y);\n    vec3 rgbNW = texture2D(tex, v_rgbNW).xyz;\n    vec3 rgbNE = texture2D(tex, v_rgbNE).xyz;\n    vec3 rgbSW = texture2D(tex, v_rgbSW).xyz;\n    vec3 rgbSE = texture2D(tex, v_rgbSE).xyz;\n    vec4 texColor = texture2D(tex, v_rgbM);\n    vec3 rgbM  = texColor.xyz;\n    vec3 luma = vec3(0.299, 0.587, 0.114);\n    float lumaNW = dot(rgbNW, luma);\n    float lumaNE = dot(rgbNE, luma);\n    float lumaSW = dot(rgbSW, luma);\n    float lumaSE = dot(rgbSE, luma);\n    float lumaM  = dot(rgbM,  luma);\n    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));\n\n    mediump vec2 dir;\n    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n    dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n\n    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *\n                          (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\n    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n    dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),\n              max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),\n              dir * rcpDirMin)) * inverseVP;\n\n    vec3 rgbA = 0.5 * (\n        texture2D(tex, fragCoord * inverseVP + dir * (1.0 / 3.0 - 0.5)).xyz +\n        texture2D(tex, fragCoord * inverseVP + dir * (2.0 / 3.0 - 0.5)).xyz);\n    vec3 rgbB = rgbA * 0.5 + 0.25 * (\n        texture2D(tex, fragCoord * inverseVP + dir * -0.5).xyz +\n        texture2D(tex, fragCoord * inverseVP + dir * 0.5).xyz);\n\n    float lumaB = dot(rgbB, luma);\n    if ((lumaB < lumaMin) || (lumaB > lumaMax))\n        color = vec4(rgbA, texColor.a);\n    else\n        color = vec4(rgbB, texColor.a);\n    return color;\n}\n\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vResolution;\n\n//texcoords computed in vertex step\n//to avoid dependent texture reads\nvarying vec2 v_rgbNW;\nvarying vec2 v_rgbNE;\nvarying vec2 v_rgbSW;\nvarying vec2 v_rgbSE;\nvarying vec2 v_rgbM;\n\nuniform sampler2D uSampler;\n\n\nvoid main(void){\n\n    gl_FragColor = fxaa(uSampler, vTextureCoord * vResolution, vResolution, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM);\n\n}\n",
         // uniforms
@@ -27957,7 +27957,7 @@ FXAAFilter.prototype.applyFilter = function (renderer, input, output)
     filterManager.applyFilter(shader, input, output);
 };
 
-},{"./AbstractFilter":50}],52:[function(require,module,exports){
+},{'./AbstractFilter':50}],52:[function(require,module,exports){
 var AbstractFilter = require('./AbstractFilter'),
     math =  require('../../../math');
 
@@ -27977,8 +27977,8 @@ function SpriteMaskFilter(sprite)
     var maskMatrix = new math.Matrix();
 
     AbstractFilter.call(this,
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform mat3 otherMatrix;\n\nvarying vec2 vMaskCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n    vMaskCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
-        "precision lowp float;\n\nvarying vec2 vMaskCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\nuniform float alpha;\nuniform sampler2D mask;\n\nvoid main(void)\n{\n    // check clip! this will stop the mask bleeding out from the edges\n    vec2 text = abs( vMaskCoord - 0.5 );\n    text = step(0.5, text);\n    float clip = 1.0 - max(text.y, text.x);\n    vec4 original = texture2D(uSampler, vTextureCoord);\n    vec4 masky = texture2D(mask, vMaskCoord);\n    original *= (masky.r * masky.a * alpha * clip);\n    gl_FragColor = original;\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform mat3 otherMatrix;\n\nvarying vec2 vMaskCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n    vMaskCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
+        'precision lowp float;\n\nvarying vec2 vMaskCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\nuniform float alpha;\nuniform sampler2D mask;\n\nvoid main(void)\n{\n    // check clip! this will stop the mask bleeding out from the edges\n    vec2 text = abs( vMaskCoord - 0.5 );\n    text = step(0.5, text);\n    float clip = 1.0 - max(text.y, text.x);\n    vec4 original = texture2D(uSampler, vTextureCoord);\n    vec4 masky = texture2D(mask, vMaskCoord);\n    original *= (masky.r * masky.a * alpha * clip);\n    gl_FragColor = original;\n}\n',
         {
             mask:           { type: 'sampler2D', value: sprite._texture },
             alpha:          { type: 'f', value: 1},
@@ -28054,7 +28054,7 @@ Object.defineProperties(SpriteMaskFilter.prototype, {
     }
 });
 
-},{"../../../math":33,"./AbstractFilter":50}],53:[function(require,module,exports){
+},{'../../../math':33,'./AbstractFilter':50}],53:[function(require,module,exports){
 var WebGLManager = require('./WebGLManager');
 
 /**
@@ -28098,7 +28098,7 @@ BlendModeManager.prototype.setBlendMode = function (blendMode)
     return true;
 };
 
-},{"./WebGLManager":58}],54:[function(require,module,exports){
+},{'./WebGLManager':58}],54:[function(require,module,exports){
 var WebGLManager = require('./WebGLManager'),
     RenderTarget = require('../utils/RenderTarget'),
     CONST = require('../../../const'),
@@ -28535,9 +28535,9 @@ FilterManager.prototype.resize = function ( width, height )
 FilterManager.prototype.destroy = function ()
 {
     this.quad.destroy();
-    
+
     WebGLManager.prototype.destroy.call(this);
-    
+
     this.filterStack = null;
     this.offsetY = 0;
 
@@ -28550,7 +28550,7 @@ FilterManager.prototype.destroy = function ()
     this.texturePool = null;
 };
 
-},{"../../../const":22,"../../../math":33,"../utils/Quad":64,"../utils/RenderTarget":65,"./WebGLManager":58}],55:[function(require,module,exports){
+},{'../../../const':22,'../../../math':33,'../utils/Quad':64,'../utils/RenderTarget':65,'./WebGLManager':58}],55:[function(require,module,exports){
 var WebGLManager = require('./WebGLManager'),
     AlphaMaskFilter = require('../filters/SpriteMaskFilter');
 
@@ -28665,7 +28665,7 @@ MaskManager.prototype.popStencilMask = function (target, maskData)
 };
 
 
-},{"../filters/SpriteMaskFilter":52,"./WebGLManager":58}],56:[function(require,module,exports){
+},{'../filters/SpriteMaskFilter':52,'./WebGLManager':58}],56:[function(require,module,exports){
 var WebGLManager = require('./WebGLManager'),
     TextureShader = require('../shaders/TextureShader'),
     ComplexPrimitiveShader = require('../shaders/ComplexPrimitiveShader'),
@@ -28834,7 +28834,7 @@ ShaderManager.prototype.destroy = function ()
     this.tempAttribState = null;
 };
 
-},{"../../../utils":77,"../shaders/ComplexPrimitiveShader":59,"../shaders/PrimitiveShader":60,"../shaders/TextureShader":62,"./WebGLManager":58}],57:[function(require,module,exports){
+},{'../../../utils':77,'../shaders/ComplexPrimitiveShader':59,'../shaders/PrimitiveShader':60,'../shaders/TextureShader':62,'./WebGLManager':58}],57:[function(require,module,exports){
 var WebGLManager = require('./WebGLManager'),
     utils = require('../../../utils');
 
@@ -29180,7 +29180,7 @@ WebGLMaskManager.prototype.popMask = function (maskData)
 };
 
 
-},{"../../../utils":77,"./WebGLManager":58}],58:[function(require,module,exports){
+},{'../../../utils':77,'./WebGLManager':58}],58:[function(require,module,exports){
 /**
  * @class
  * @memberof PIXI
@@ -29283,7 +29283,7 @@ ComplexPrimitiveShader.prototype = Object.create(Shader.prototype);
 ComplexPrimitiveShader.prototype.constructor = ComplexPrimitiveShader;
 module.exports = ComplexPrimitiveShader;
 
-},{"./Shader":61}],60:[function(require,module,exports){
+},{'./Shader':61}],60:[function(require,module,exports){
 var Shader = require('./Shader');
 
 /**
@@ -29346,7 +29346,7 @@ PrimitiveShader.prototype = Object.create(Shader.prototype);
 PrimitiveShader.prototype.constructor = PrimitiveShader;
 module.exports = PrimitiveShader;
 
-},{"./Shader":61}],61:[function(require,module,exports){
+},{'./Shader':61}],61:[function(require,module,exports){
 /*global console */
 var utils = require('../../../utils');
 
@@ -29910,7 +29910,7 @@ Shader.prototype._glCompile = function (type, src)
     return shader;
 };
 
-},{"../../../utils":77}],62:[function(require,module,exports){
+},{'../../../utils':77}],62:[function(require,module,exports){
 var Shader = require('./Shader');
 
 /**
@@ -30021,7 +30021,7 @@ TextureShader.defaultFragmentSrc = [
     '}'
 ].join('\n');
 
-},{"./Shader":61}],63:[function(require,module,exports){
+},{'./Shader':61}],63:[function(require,module,exports){
 var WebGLManager = require('../managers/WebGLManager');
 
 /**
@@ -30079,7 +30079,7 @@ ObjectRenderer.prototype.render = function (object) // jshint unused:false
     // render the object
 };
 
-},{"../managers/WebGLManager":58}],64:[function(require,module,exports){
+},{'../managers/WebGLManager':58}],64:[function(require,module,exports){
 /**
  * Helper class to create a quad
  *
@@ -30225,7 +30225,7 @@ Quad.prototype.upload = function()
 Quad.prototype.destroy = function()
 {
     var gl = this.gl;
-    
+
      gl.deleteBuffer(this.vertexBuffer);
      gl.deleteBuffer(this.indexBuffer);
 };
@@ -30556,7 +30556,7 @@ RenderTarget.prototype.destroy = function ()
     this.texture = null;
 };
 
-},{"../../../const":22,"../../../math":33,"../../../utils":77,"./StencilMaskStack":66}],66:[function(require,module,exports){
+},{'../../../const':22,'../../../math':33,'../../../utils':77,'./StencilMaskStack':66}],66:[function(require,module,exports){
 /**
  * Generic Mask Stack data structure
  * @class
@@ -31157,7 +31157,7 @@ Sprite.fromImage = function (imageId, crossorigin, scaleMode)
     return new Sprite(Texture.fromImage(imageId, crossorigin, scaleMode));
 };
 
-},{"../const":22,"../display/Container":23,"../math":33,"../renderers/canvas/utils/CanvasTinter":48,"../textures/Texture":72,"../utils":77}],68:[function(require,module,exports){
+},{'../const':22,'../display/Container':23,'../math':33,'../renderers/canvas/utils/CanvasTinter':48,'../textures/Texture':72,'../utils':77}],68:[function(require,module,exports){
 var ObjectRenderer = require('../../renderers/webgl/utils/ObjectRenderer'),
     WebGLRenderer = require('../../renderers/webgl/WebGLRenderer'),
     CONST = require('../../const');
@@ -31630,7 +31630,7 @@ SpriteRenderer.prototype.destroy = function ()
     this.shader = null;
 };
 
-},{"../../const":22,"../../renderers/webgl/WebGLRenderer":49,"../../renderers/webgl/utils/ObjectRenderer":63}],69:[function(require,module,exports){
+},{'../../const':22,'../../renderers/webgl/WebGLRenderer':49,'../../renderers/webgl/utils/ObjectRenderer':63}],69:[function(require,module,exports){
 var Sprite = require('../sprites/Sprite'),
     Texture = require('../textures/Texture'),
     math = require('../math'),
@@ -32040,7 +32040,7 @@ Text.prototype.drawLetterSpacing = function(text, x, y, isStroke)
     while (index < text.length)
     {
         current = characters[index++];
-        if (isStroke) 
+        if (isStroke)
         {
             this.context.strokeText(current, currentPosition, y);
         }
@@ -32242,21 +32242,21 @@ Text.prototype.wordWrap = function (text)
         for (var j = 0; j < words.length; j++)
         {
             var wordWidth = this.context.measureText(words[j]).width;
-            if (this._style.breakWords && wordWidth > wordWrapWidth) 
+            if (this._style.breakWords && wordWidth > wordWrapWidth)
             {
                 // Word should be split in the middle
                 var characters = words[j].split('');
-                for (var c = 0; c < characters.length; c++) 
+                for (var c = 0; c < characters.length; c++)
                 {
                   var characterWidth = this.context.measureText(characters[c]).width;
-                  if (characterWidth > spaceLeft) 
+                  if (characterWidth > spaceLeft)
                   {
                     result += '\n' + characters[c];
                     spaceLeft = wordWrapWidth - characterWidth;
-                  } 
-                  else 
+                  }
+                  else
                   {
-                    if (c === 0) 
+                    if (c === 0)
                     {
                       result += ' ';
                     }
@@ -32265,7 +32265,7 @@ Text.prototype.wordWrap = function (text)
                   }
                 }
             }
-            else 
+            else
             {
                 var wordWidthWithSpace = wordWidth + this.context.measureText(' ').width;
                 if (j === 0 || wordWidthWithSpace > spaceLeft)
@@ -32327,7 +32327,7 @@ Text.prototype.destroy = function (destroyBaseTexture)
     this._texture.destroy(destroyBaseTexture === undefined ? true : destroyBaseTexture);
 };
 
-},{"../const":22,"../math":33,"../sprites/Sprite":67,"../textures/Texture":72,"../utils":77}],70:[function(require,module,exports){
+},{'../const':22,'../math':33,'../sprites/Sprite':67,'../textures/Texture':72,'../utils':77}],70:[function(require,module,exports){
 var utils = require('../utils'),
     CONST = require('../const'),
     EventEmitter = require('eventemitter3');
@@ -32763,7 +32763,7 @@ BaseTexture.fromCanvas = function (canvas, scaleMode)
     return baseTexture;
 };
 
-},{"../const":22,"../utils":77,"eventemitter3":10}],71:[function(require,module,exports){
+},{'../const':22,'../utils':77,'eventemitter3':10}],71:[function(require,module,exports){
 var BaseTexture = require('./BaseTexture'),
     Texture = require('./Texture'),
     RenderTarget = require('../renderers/webgl/utils/RenderTarget'),
@@ -33242,7 +33242,7 @@ RenderTexture.prototype.getPixel = function (x, y)
     }
 };
 
-},{"../const":22,"../math":33,"../renderers/canvas/utils/CanvasBuffer":45,"../renderers/webgl/managers/FilterManager":54,"../renderers/webgl/utils/RenderTarget":65,"./BaseTexture":70,"./Texture":72}],72:[function(require,module,exports){
+},{'../const':22,'../math':33,'../renderers/canvas/utils/CanvasBuffer':45,'../renderers/webgl/managers/FilterManager':54,'../renderers/webgl/utils/RenderTarget':65,'./BaseTexture':70,'./Texture':72}],72:[function(require,module,exports){
 var BaseTexture = require('./BaseTexture'),
     VideoBaseTexture = require('./VideoBaseTexture'),
     TextureUvs = require('./TextureUvs'),
@@ -33694,7 +33694,7 @@ Texture.removeTextureFromCache = function (id)
  */
 Texture.EMPTY = new Texture(new BaseTexture());
 
-},{"../math":33,"../utils":77,"./BaseTexture":70,"./TextureUvs":73,"./VideoBaseTexture":74,"eventemitter3":10}],73:[function(require,module,exports){
+},{'../math':33,'../utils':77,'./BaseTexture':70,'./TextureUvs':73,'./VideoBaseTexture':74,'eventemitter3':10}],73:[function(require,module,exports){
 
 /**
  * A standard object to store the Uvs of a texture
@@ -33773,7 +33773,7 @@ TextureUvs.prototype.set = function (frame, baseFrame, rotate)
     }
 };
 
-},{"../math/GroupD8":30}],74:[function(require,module,exports){
+},{'../math/GroupD8':30}],74:[function(require,module,exports){
 var BaseTexture = require('./BaseTexture'),
     utils = require('../utils');
 
@@ -34010,7 +34010,7 @@ function createSource(path, type)
     return source;
 }
 
-},{"../utils":77,"./BaseTexture":70}],75:[function(require,module,exports){
+},{'../utils':77,'./BaseTexture':70}],75:[function(require,module,exports){
 var CONST = require('../const'),
     EventEmitter = require('eventemitter3'),
     // Internal event used by composed emitter
@@ -34365,7 +34365,7 @@ Ticker.prototype.update = function update(currentTime)
 
 module.exports = Ticker;
 
-},{"../const":22,"eventemitter3":10}],76:[function(require,module,exports){
+},{'../const':22,'eventemitter3':10}],76:[function(require,module,exports){
 var Ticker = require('./Ticker');
 
 /**
@@ -34421,7 +34421,7 @@ module.exports = {
     Ticker: Ticker
 };
 
-},{"./Ticker":75}],77:[function(require,module,exports){
+},{'./Ticker':75}],77:[function(require,module,exports){
 var CONST = require('../const');
 
 /**
@@ -34698,7 +34698,7 @@ var utils = module.exports = {
     BaseTextureCache: {}
 };
 
-},{"../const":22,"./pluginTarget":78,"async":1,"eventemitter3":10}],78:[function(require,module,exports){
+},{'../const':22,'./pluginTarget':78,'async':1,'eventemitter3':10}],78:[function(require,module,exports){
 /**
  * Mixins functionality to make an object have "plugins".
  *
@@ -35119,7 +35119,7 @@ core.utils.uuid = function ()
     return core.utils.uid();
 };
 
-},{"./core":29,"./extras":86,"./filters":103,"./mesh":128}],80:[function(require,module,exports){
+},{'./core':29,'./extras':86,'./filters':103,'./mesh':128}],80:[function(require,module,exports){
 var core = require('../core');
 
 /**
@@ -35507,7 +35507,7 @@ BitmapText.prototype.validate = function()
 
 BitmapText.fonts = {};
 
-},{"../core":29}],81:[function(require,module,exports){
+},{'../core':29}],81:[function(require,module,exports){
 var core = require('../core');
 
 /**
@@ -35827,7 +35827,7 @@ MovieClip.fromImages = function (images)
 
     return new MovieClip(textures);
 };
-},{"../core":29}],82:[function(require,module,exports){
+},{'../core':29}],82:[function(require,module,exports){
 var core = require('../core'),
     // a sprite use dfor rendering textures..
     tempPoint = new core.Point(),
@@ -36279,7 +36279,7 @@ TilingSprite.fromImage = function (imageId, width, height, crossorigin, scaleMod
     return new TilingSprite(core.Texture.fromImage(imageId, crossorigin, scaleMode),width,height);
 };
 
-},{"../core":29,"../core/renderers/canvas/utils/CanvasTinter":48}],83:[function(require,module,exports){
+},{'../core':29,'../core/renderers/canvas/utils/CanvasTinter':48}],83:[function(require,module,exports){
 var core = require('../core'),
     DisplayObject = core.DisplayObject,
     _tempMatrix = new core.Matrix();
@@ -36551,7 +36551,7 @@ DisplayObject.prototype._cacheAsBitmapDestroy = function ()
     this._originalDestroy();
 };
 
-},{"../core":29}],84:[function(require,module,exports){
+},{'../core':29}],84:[function(require,module,exports){
 var core = require('../core');
 
 /**
@@ -36581,7 +36581,7 @@ core.Container.prototype.getChildByName = function (name)
     return null;
 };
 
-},{"../core":29}],85:[function(require,module,exports){
+},{'../core':29}],85:[function(require,module,exports){
 var core = require('../core');
 
 /**
@@ -36611,7 +36611,7 @@ core.DisplayObject.prototype.getGlobalPosition = function (point)
     return point;
 };
 
-},{"../core":29}],86:[function(require,module,exports){
+},{'../core':29}],86:[function(require,module,exports){
 /**
  * @file        Main export of the PIXI extras library
  * @author      Mat Groves <mat@goodboydigital.com>
@@ -36632,7 +36632,7 @@ module.exports = {
     BitmapText:     require('./BitmapText')
 };
 
-},{"./BitmapText":80,"./MovieClip":81,"./TilingSprite":82,"./cacheAsBitmap":83,"./getChildByName":84,"./getGlobalPosition":85}],87:[function(require,module,exports){
+},{'./BitmapText':80,'./MovieClip':81,'./TilingSprite':82,'./cacheAsBitmap':83,'./getChildByName':84,'./getGlobalPosition':85}],87:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -36657,7 +36657,7 @@ function AsciiFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nuniform vec4 dimensions;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n    if (clamp(p.x, 0.0, 4.0) == p.x && clamp(p.y, 0.0, 4.0) == p.y)\n    {\n        if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 uv = gl_FragCoord.xy;\n\n    vec3 col = texture2D(uSampler, floor( uv / pixelSize ) * pixelSize / dimensions.xy).rgb;\n\n    float gray = (col.r + col.g + col.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    vec2 p = mod( uv / ( pixelSize * 0.5 ), 2.0) - vec2(1.0);\n    col = col * character(n, p);\n\n    gl_FragColor = vec4(col, 1.0);\n}\n",
+        'precision mediump float;\n\nuniform vec4 dimensions;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n    if (clamp(p.x, 0.0, 4.0) == p.x && clamp(p.y, 0.0, 4.0) == p.y)\n    {\n        if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 uv = gl_FragCoord.xy;\n\n    vec3 col = texture2D(uSampler, floor( uv / pixelSize ) * pixelSize / dimensions.xy).rgb;\n\n    float gray = (col.r + col.g + col.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    vec2 p = mod( uv / ( pixelSize * 0.5 ), 2.0) - vec2(1.0);\n    col = col * character(n, p);\n\n    gl_FragColor = vec4(col, 1.0);\n}\n',
         // custom uniforms
         {
             dimensions: { type: '4fv', value: new Float32Array([0, 0, 0, 0]) },
@@ -36689,7 +36689,7 @@ Object.defineProperties(AsciiFilter.prototype, {
     }
 });
 
-},{"../../core":29}],88:[function(require,module,exports){
+},{'../../core':29}],88:[function(require,module,exports){
 var core = require('../../core'),
     BlurXFilter = require('../blur/BlurXFilter'),
     BlurYFilter = require('../blur/BlurYFilter');
@@ -36790,7 +36790,7 @@ Object.defineProperties(BloomFilter.prototype, {
     }
 });
 
-},{"../../core":29,"../blur/BlurXFilter":91,"../blur/BlurYFilter":92}],89:[function(require,module,exports){
+},{'../../core':29,'../blur/BlurXFilter':91,'../blur/BlurYFilter':92}],89:[function(require,module,exports){
 var core = require('../../core');
 
 
@@ -36807,9 +36807,9 @@ function BlurDirFilter(dirX, dirY)
 {
     core.AbstractFilter.call(this,
         // vertex shader
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform float dirX;\nuniform float dirY;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[3];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[0] = aTextureCoord + vec2( (0.004 * strength) * dirX, (0.004 * strength) * dirY );\n    vBlurTexCoords[1] = aTextureCoord + vec2( (0.008 * strength) * dirX, (0.008 * strength) * dirY );\n    vBlurTexCoords[2] = aTextureCoord + vec2( (0.012 * strength) * dirX, (0.012 * strength) * dirY );\n\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform float dirX;\nuniform float dirY;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[3];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[0] = aTextureCoord + vec2( (0.004 * strength) * dirX, (0.004 * strength) * dirY );\n    vBlurTexCoords[1] = aTextureCoord + vec2( (0.008 * strength) * dirX, (0.008 * strength) * dirY );\n    vBlurTexCoords[2] = aTextureCoord + vec2( (0.012 * strength) * dirX, (0.012 * strength) * dirY );\n\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
         // fragment shader
-        "precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[3];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vTextureCoord     ) * 0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0]) * 0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1]) * 0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2]) * 0.004431848411938341;\n}\n",
+        'precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[3];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vTextureCoord     ) * 0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0]) * 0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1]) * 0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2]) * 0.004431848411938341;\n}\n',
         // set the uniforms
         {
             strength: { type: '1f', value: 1 },
@@ -36932,7 +36932,7 @@ Object.defineProperties(BlurDirFilter.prototype, {
     }
 });
 
-},{"../../core":29}],90:[function(require,module,exports){
+},{'../../core':29}],90:[function(require,module,exports){
 var core = require('../../core'),
     BlurXFilter = require('./BlurXFilter'),
     BlurYFilter = require('./BlurYFilter');
@@ -37042,7 +37042,7 @@ Object.defineProperties(BlurFilter.prototype, {
     }
 });
 
-},{"../../core":29,"./BlurXFilter":91,"./BlurYFilter":92}],91:[function(require,module,exports){
+},{'../../core':29,'./BlurXFilter':91,'./BlurYFilter':92}],91:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37058,9 +37058,9 @@ function BlurXFilter()
 {
     core.AbstractFilter.call(this,
         // vertex shader
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(-0.012 * strength, 0.0);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(-0.008 * strength, 0.0);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(-0.004 * strength, 0.0);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2( 0.004 * strength, 0.0);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2( 0.008 * strength, 0.0);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2( 0.012 * strength, 0.0);\n\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(-0.012 * strength, 0.0);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(-0.008 * strength, 0.0);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(-0.004 * strength, 0.0);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2( 0.004 * strength, 0.0);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2( 0.008 * strength, 0.0);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2( 0.012 * strength, 0.0);\n\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
         // fragment shader
-        "precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n}\n",
+        'precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n}\n',
         // set the uniforms
         {
             strength: { type: '1f', value: 1 }
@@ -37135,7 +37135,7 @@ Object.defineProperties(BlurXFilter.prototype, {
     }
 });
 
-},{"../../core":29}],92:[function(require,module,exports){
+},{'../../core':29}],92:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37151,9 +37151,9 @@ function BlurYFilter()
 {
     core.AbstractFilter.call(this,
         // vertex shader
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(0.0, -0.012 * strength);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(0.0, -0.008 * strength);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(0.0, -0.004 * strength);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2(0.0,  0.004 * strength);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2(0.0,  0.008 * strength);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2(0.0,  0.012 * strength);\n\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(0.0, -0.012 * strength);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(0.0, -0.008 * strength);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(0.0, -0.004 * strength);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2(0.0,  0.004 * strength);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2(0.0,  0.008 * strength);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2(0.0,  0.012 * strength);\n\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
         // fragment shader
-        "precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n}\n",
+        'precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = vec4(0.0);\n\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    gl_FragColor += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n}\n',
         // set the uniforms
         {
             strength: { type: '1f', value: 1 }
@@ -37221,7 +37221,7 @@ Object.defineProperties(BlurYFilter.prototype, {
     }
 });
 
-},{"../../core":29}],93:[function(require,module,exports){
+},{'../../core':29}],93:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37239,7 +37239,7 @@ function SmartBlurFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 delta;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta * percent);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    gl_FragColor = color / total;\n    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 delta;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta * percent);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    gl_FragColor = color / total;\n    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\n}\n',
         // uniforms
         {
           delta: { type: 'v2', value: { x: 0.1, y: 0.0 } }
@@ -37251,7 +37251,7 @@ SmartBlurFilter.prototype = Object.create(core.AbstractFilter.prototype);
 SmartBlurFilter.prototype.constructor = SmartBlurFilter;
 module.exports = SmartBlurFilter;
 
-},{"../../core":29}],94:[function(require,module,exports){
+},{'../../core':29}],94:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37277,7 +37277,7 @@ function ColorMatrixFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform float m[25];\n\nvoid main(void)\n{\n\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    gl_FragColor.r = (m[0] * c.r);\n        gl_FragColor.r += (m[1] * c.g);\n        gl_FragColor.r += (m[2] * c.b);\n        gl_FragColor.r += (m[3] * c.a);\n        gl_FragColor.r += m[4] * c.a;\n\n    gl_FragColor.g = (m[5] * c.r);\n        gl_FragColor.g += (m[6] * c.g);\n        gl_FragColor.g += (m[7] * c.b);\n        gl_FragColor.g += (m[8] * c.a);\n        gl_FragColor.g += m[9] * c.a;\n\n     gl_FragColor.b = (m[10] * c.r);\n        gl_FragColor.b += (m[11] * c.g);\n        gl_FragColor.b += (m[12] * c.b);\n        gl_FragColor.b += (m[13] * c.a);\n        gl_FragColor.b += m[14] * c.a;\n\n     gl_FragColor.a = (m[15] * c.r);\n        gl_FragColor.a += (m[16] * c.g);\n        gl_FragColor.a += (m[17] * c.b);\n        gl_FragColor.a += (m[18] * c.a);\n        gl_FragColor.a += m[19] * c.a;\n\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform float m[25];\n\nvoid main(void)\n{\n\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    gl_FragColor.r = (m[0] * c.r);\n        gl_FragColor.r += (m[1] * c.g);\n        gl_FragColor.r += (m[2] * c.b);\n        gl_FragColor.r += (m[3] * c.a);\n        gl_FragColor.r += m[4] * c.a;\n\n    gl_FragColor.g = (m[5] * c.r);\n        gl_FragColor.g += (m[6] * c.g);\n        gl_FragColor.g += (m[7] * c.b);\n        gl_FragColor.g += (m[8] * c.a);\n        gl_FragColor.g += m[9] * c.a;\n\n     gl_FragColor.b = (m[10] * c.r);\n        gl_FragColor.b += (m[11] * c.g);\n        gl_FragColor.b += (m[12] * c.b);\n        gl_FragColor.b += (m[13] * c.a);\n        gl_FragColor.b += m[14] * c.a;\n\n     gl_FragColor.a = (m[15] * c.r);\n        gl_FragColor.a += (m[16] * c.g);\n        gl_FragColor.a += (m[17] * c.b);\n        gl_FragColor.a += (m[18] * c.a);\n        gl_FragColor.a += m[19] * c.a;\n\n}\n',
         // custom uniforms
         {
             m: {
@@ -37787,7 +37787,7 @@ Object.defineProperties(ColorMatrixFilter.prototype, {
     }
 });
 
-},{"../../core":29}],95:[function(require,module,exports){
+},{'../../core':29}],95:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37805,7 +37805,7 @@ function ColorStepFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float step;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    color = floor(color * step) / step;\n\n    gl_FragColor = color;\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float step;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    color = floor(color * step) / step;\n\n    gl_FragColor = color;\n}\n',
         // custom uniforms
         {
             step: { type: '1f', value: 5 }
@@ -37836,7 +37836,7 @@ Object.defineProperties(ColorStepFilter.prototype, {
     }
 });
 
-},{"../../core":29}],96:[function(require,module,exports){
+},{'../../core':29}],96:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37861,7 +37861,7 @@ function ConvolutionFilter(matrix, width, height)
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n",
+        'precision mediump float;\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n',
         // custom uniforms
         {
             matrix:     { type: '1fv', value: new Float32Array(matrix) },
@@ -37927,7 +37927,7 @@ Object.defineProperties(ConvolutionFilter.prototype, {
     }
 });
 
-},{"../../core":29}],97:[function(require,module,exports){
+},{'../../core':29}],97:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37945,7 +37945,7 @@ function CrossHatchFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n"
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n'
     );
 }
 
@@ -37953,7 +37953,7 @@ CrossHatchFilter.prototype = Object.create(core.AbstractFilter.prototype);
 CrossHatchFilter.prototype.constructor = CrossHatchFilter;
 module.exports = CrossHatchFilter;
 
-},{"../../core":29}],98:[function(require,module,exports){
+},{'../../core':29}],98:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -37975,9 +37975,9 @@ function DisplacementFilter(sprite, scale)
 
     core.AbstractFilter.call(this,
         // vertex shader
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform mat3 otherMatrix;\n\nvarying vec2 vMapCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvoid main(void)\n{\n   gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n   vTextureCoord = aTextureCoord;\n   vMapCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform mat3 projectionMatrix;\nuniform mat3 otherMatrix;\n\nvarying vec2 vMapCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nvoid main(void)\n{\n   gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n   vTextureCoord = aTextureCoord;\n   vMapCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vMapCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec2 scale;\n\nuniform sampler2D uSampler;\nuniform sampler2D mapSampler;\n\nvoid main(void)\n{\n   vec4 map =  texture2D(mapSampler, vMapCoord);\n\n   map -= 0.5;\n   map.xy *= scale;\n\n   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.x + map.x, vTextureCoord.y + map.y));\n}\n",
+        'precision mediump float;\n\nvarying vec2 vMapCoord;\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec2 scale;\n\nuniform sampler2D uSampler;\nuniform sampler2D mapSampler;\n\nvoid main(void)\n{\n   vec4 map =  texture2D(mapSampler, vMapCoord);\n\n   map -= 0.5;\n   map.xy *= scale;\n\n   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.x + map.x, vTextureCoord.y + map.y));\n}\n',
         // uniforms
         {
             mapSampler:     { type: 'sampler2D', value: sprite.texture },
@@ -38037,7 +38037,7 @@ Object.defineProperties(DisplacementFilter.prototype, {
     }
 });
 
-},{"../../core":29}],99:[function(require,module,exports){
+},{'../../core':29}],99:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38061,7 +38061,7 @@ function DotScreenFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 dimensions;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * dimensions.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 dimensions;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * dimensions.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n',
         // custom uniforms
         {
             scale:      { type: '1f', value: 1 },
@@ -38109,7 +38109,7 @@ Object.defineProperties(DotScreenFilter.prototype, {
     }
 });
 
-},{"../../core":29}],100:[function(require,module,exports){
+},{'../../core':29}],100:[function(require,module,exports){
 var core = require('../../core');
 
 // @see https://github.com/substack/brfs/issues/25
@@ -38126,9 +38126,9 @@ function BlurYTintFilter()
 {
     core.AbstractFilter.call(this,
         // vertex shader
-        "attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform vec2 offset;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition+offset), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(0.0, -0.012 * strength);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(0.0, -0.008 * strength);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(0.0, -0.004 * strength);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2(0.0,  0.004 * strength);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2(0.0,  0.008 * strength);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2(0.0,  0.012 * strength);\n\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n",
+        'attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\nattribute vec4 aColor;\n\nuniform float strength;\nuniform vec2 offset;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\nvarying vec2 vBlurTexCoords[6];\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3((aVertexPosition+offset), 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n\n    vBlurTexCoords[ 0] = aTextureCoord + vec2(0.0, -0.012 * strength);\n    vBlurTexCoords[ 1] = aTextureCoord + vec2(0.0, -0.008 * strength);\n    vBlurTexCoords[ 2] = aTextureCoord + vec2(0.0, -0.004 * strength);\n    vBlurTexCoords[ 3] = aTextureCoord + vec2(0.0,  0.004 * strength);\n    vBlurTexCoords[ 4] = aTextureCoord + vec2(0.0,  0.008 * strength);\n    vBlurTexCoords[ 5] = aTextureCoord + vec2(0.0,  0.012 * strength);\n\n   vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n}\n',
         // fragment shader
-        "precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform vec3 color;\nuniform float alpha;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    vec4 sum = vec4(0.0);\n\n    sum += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    sum += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    sum += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    sum += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    sum += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    sum += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    sum += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n\n    gl_FragColor = vec4( color.rgb * sum.a * alpha, sum.a * alpha );\n}\n",
+        'precision lowp float;\n\nvarying vec2 vTextureCoord;\nvarying vec2 vBlurTexCoords[6];\nvarying vec4 vColor;\n\nuniform vec3 color;\nuniform float alpha;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    vec4 sum = vec4(0.0);\n\n    sum += texture2D(uSampler, vBlurTexCoords[ 0])*0.004431848411938341;\n    sum += texture2D(uSampler, vBlurTexCoords[ 1])*0.05399096651318985;\n    sum += texture2D(uSampler, vBlurTexCoords[ 2])*0.2419707245191454;\n    sum += texture2D(uSampler, vTextureCoord     )*0.3989422804014327;\n    sum += texture2D(uSampler, vBlurTexCoords[ 3])*0.2419707245191454;\n    sum += texture2D(uSampler, vBlurTexCoords[ 4])*0.05399096651318985;\n    sum += texture2D(uSampler, vBlurTexCoords[ 5])*0.004431848411938341;\n\n    gl_FragColor = vec4( color.rgb * sum.a * alpha, sum.a * alpha );\n}\n',
         // set the uniforms
         {
             blur: { type: '1f', value: 1 / 512 },
@@ -38200,7 +38200,7 @@ Object.defineProperties(BlurYTintFilter.prototype, {
     }
 });
 
-},{"../../core":29}],101:[function(require,module,exports){
+},{'../../core':29}],101:[function(require,module,exports){
 var core = require('../../core'),
     BlurXFilter = require('../blur/BlurXFilter'),
     BlurYTintFilter = require('./BlurYTintFilter');
@@ -38393,7 +38393,7 @@ Object.defineProperties(DropShadowFilter.prototype, {
     }
 });
 
-},{"../../core":29,"../blur/BlurXFilter":91,"./BlurYTintFilter":100}],102:[function(require,module,exports){
+},{'../../core':29,'../blur/BlurXFilter':91,'./BlurYTintFilter':100}],102:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38411,7 +38411,7 @@ function GrayFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\nuniform float gray;\n\nvoid main(void)\n{\n   gl_FragColor = texture2D(uSampler, vTextureCoord);\n   gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.2126*gl_FragColor.r + 0.7152*gl_FragColor.g + 0.0722*gl_FragColor.b), gray);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\nuniform float gray;\n\nvoid main(void)\n{\n   gl_FragColor = texture2D(uSampler, vTextureCoord);\n   gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.2126*gl_FragColor.r + 0.7152*gl_FragColor.g + 0.0722*gl_FragColor.b), gray);\n}\n',
         // set the uniforms
         {
             gray: { type: '1f', value: 1 }
@@ -38442,7 +38442,7 @@ Object.defineProperties(GrayFilter.prototype, {
     }
 });
 
-},{"../../core":29}],103:[function(require,module,exports){
+},{'../../core':29}],103:[function(require,module,exports){
 /**
  * @file        Main export of the PIXI filters library
  * @author      Mat Groves <mat@goodboydigital.com>
@@ -38481,7 +38481,7 @@ module.exports = {
     TwistFilter:        require('./twist/TwistFilter')
 };
 
-},{"./ascii/AsciiFilter":87,"./bloom/BloomFilter":88,"./blur/BlurDirFilter":89,"./blur/BlurFilter":90,"./blur/BlurXFilter":91,"./blur/BlurYFilter":92,"./blur/SmartBlurFilter":93,"./color/ColorMatrixFilter":94,"./color/ColorStepFilter":95,"./convolution/ConvolutionFilter":96,"./crosshatch/CrossHatchFilter":97,"./displacement/DisplacementFilter":98,"./dot/DotScreenFilter":99,"./dropshadow/DropShadowFilter":101,"./gray/GrayFilter":102,"./invert/InvertFilter":104,"./noise/NoiseFilter":105,"./pixelate/PixelateFilter":106,"./rgb/RGBSplitFilter":107,"./sepia/SepiaFilter":108,"./shockwave/ShockwaveFilter":109,"./tiltshift/TiltShiftFilter":111,"./tiltshift/TiltShiftXFilter":112,"./tiltshift/TiltShiftYFilter":113,"./twist/TwistFilter":114}],104:[function(require,module,exports){
+},{'./ascii/AsciiFilter':87,'./bloom/BloomFilter':88,'./blur/BlurDirFilter':89,'./blur/BlurFilter':90,'./blur/BlurXFilter':91,'./blur/BlurYFilter':92,'./blur/SmartBlurFilter':93,'./color/ColorMatrixFilter':94,'./color/ColorStepFilter':95,'./convolution/ConvolutionFilter':96,'./crosshatch/CrossHatchFilter':97,'./displacement/DisplacementFilter':98,'./dot/DotScreenFilter':99,'./dropshadow/DropShadowFilter':101,'./gray/GrayFilter':102,'./invert/InvertFilter':104,'./noise/NoiseFilter':105,'./pixelate/PixelateFilter':106,'./rgb/RGBSplitFilter':107,'./sepia/SepiaFilter':108,'./shockwave/ShockwaveFilter':109,'./tiltshift/TiltShiftFilter':111,'./tiltshift/TiltShiftXFilter':112,'./tiltshift/TiltShiftYFilter':113,'./twist/TwistFilter':114}],104:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38499,7 +38499,7 @@ function InvertFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform float invert;\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n\n    gl_FragColor.rgb = mix( (vec3(1)-gl_FragColor.rgb) * gl_FragColor.a, gl_FragColor.rgb, 1.0 - invert);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform float invert;\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n\n    gl_FragColor.rgb = mix( (vec3(1)-gl_FragColor.rgb) * gl_FragColor.a, gl_FragColor.rgb, 1.0 - invert);\n}\n',
         // custom uniforms
         {
             invert: { type: '1f', value: 1 }
@@ -38531,7 +38531,7 @@ Object.defineProperties(InvertFilter.prototype, {
     }
 });
 
-},{"../../core":29}],105:[function(require,module,exports){
+},{'../../core':29}],105:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38554,7 +38554,7 @@ function NoiseFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision highp float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform float noise;\nuniform sampler2D uSampler;\n\nfloat rand(vec2 co)\n{\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main()\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    float diff = (rand(vTextureCoord) - 0.5) * noise;\n\n    color.r += diff;\n    color.g += diff;\n    color.b += diff;\n\n    gl_FragColor = color;\n}\n",
+        'precision highp float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform float noise;\nuniform sampler2D uSampler;\n\nfloat rand(vec2 co)\n{\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main()\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    float diff = (rand(vTextureCoord) - 0.5) * noise;\n\n    color.r += diff;\n    color.g += diff;\n    color.b += diff;\n\n    gl_FragColor = color;\n}\n',
         // custom uniforms
         {
             noise: { type: '1f', value: 0.5 }
@@ -38586,7 +38586,7 @@ Object.defineProperties(NoiseFilter.prototype, {
     }
 });
 
-},{"../../core":29}],106:[function(require,module,exports){
+},{'../../core':29}],106:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38604,7 +38604,7 @@ function PixelateFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform vec4 dimensions;\nuniform vec2 pixelSize;\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    vec2 coord = vTextureCoord;\n\n    vec2 size = dimensions.xy / pixelSize;\n\n    vec2 color = floor( ( vTextureCoord * size ) ) / size + pixelSize/dimensions.xy * 0.5;\n\n    gl_FragColor = texture2D(uSampler, color);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform vec4 dimensions;\nuniform vec2 pixelSize;\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    vec2 coord = vTextureCoord;\n\n    vec2 size = dimensions.xy / pixelSize;\n\n    vec2 color = floor( ( vTextureCoord * size ) ) / size + pixelSize/dimensions.xy * 0.5;\n\n    gl_FragColor = texture2D(uSampler, color);\n}\n',
         // custom uniforms
         {
             dimensions: { type: '4fv',  value: new Float32Array([0, 0, 0, 0]) },
@@ -38637,7 +38637,7 @@ Object.defineProperties(PixelateFilter.prototype, {
     }
 });
 
-},{"../../core":29}],107:[function(require,module,exports){
+},{'../../core':29}],107:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38655,7 +38655,7 @@ function RGBSplitFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 dimensions;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/dimensions.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/dimensions.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/dimensions.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 dimensions;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/dimensions.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/dimensions.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/dimensions.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n',
         // custom uniforms
         {
             red:        { type: 'v2', value: { x: 20, y: 20 } },
@@ -38723,7 +38723,7 @@ Object.defineProperties(RGBSplitFilter.prototype, {
     }
 });
 
-},{"../../core":29}],108:[function(require,module,exports){
+},{'../../core':29}],108:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38741,7 +38741,7 @@ function SepiaFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float sepia;\n\nconst mat3 sepiaMatrix = mat3(0.3588, 0.7044, 0.1368, 0.2990, 0.5870, 0.1140, 0.2392, 0.4696, 0.0912);\n\nvoid main(void)\n{\n   gl_FragColor = texture2D(uSampler, vTextureCoord);\n   gl_FragColor.rgb = mix( gl_FragColor.rgb, gl_FragColor.rgb * sepiaMatrix, sepia);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float sepia;\n\nconst mat3 sepiaMatrix = mat3(0.3588, 0.7044, 0.1368, 0.2990, 0.5870, 0.1140, 0.2392, 0.4696, 0.0912);\n\nvoid main(void)\n{\n   gl_FragColor = texture2D(uSampler, vTextureCoord);\n   gl_FragColor.rgb = mix( gl_FragColor.rgb, gl_FragColor.rgb * sepiaMatrix, sepia);\n}\n',
         // custom uniforms
         {
             sepia: { type: '1f', value: 1 }
@@ -38773,7 +38773,7 @@ Object.defineProperties(SepiaFilter.prototype, {
     }
 });
 
-},{"../../core":29}],109:[function(require,module,exports){
+},{'../../core':29}],109:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38793,7 +38793,7 @@ function ShockwaveFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision lowp float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nuniform vec2 center;\nuniform vec3 params; // 10.0, 0.8, 0.1\nuniform float time;\n\nvoid main()\n{\n    vec2 uv = vTextureCoord;\n    vec2 texCoord = uv;\n\n    float dist = distance(uv, center);\n\n    if ( (dist <= (time + params.z)) && (dist >= (time - params.z)) )\n    {\n        float diff = (dist - time);\n        float powDiff = 1.0 - pow(abs(diff*params.x), params.y);\n\n        float diffTime = diff  * powDiff;\n        vec2 diffUV = normalize(uv - center);\n        texCoord = uv + (diffUV * diffTime);\n    }\n\n    gl_FragColor = texture2D(uSampler, texCoord);\n}\n",
+        'precision lowp float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nuniform vec2 center;\nuniform vec3 params; // 10.0, 0.8, 0.1\nuniform float time;\n\nvoid main()\n{\n    vec2 uv = vTextureCoord;\n    vec2 texCoord = uv;\n\n    float dist = distance(uv, center);\n\n    if ( (dist <= (time + params.z)) && (dist >= (time - params.z)) )\n    {\n        float diff = (dist - time);\n        float powDiff = 1.0 - pow(abs(diff*params.x), params.y);\n\n        float diffTime = diff  * powDiff;\n        vec2 diffUV = normalize(uv - center);\n        texCoord = uv + (diffUV * diffTime);\n    }\n\n    gl_FragColor = texture2D(uSampler, texCoord);\n}\n',
         // custom uniforms
         {
             center: { type: 'v2', value: { x: 0.5, y: 0.5 } },
@@ -38861,7 +38861,7 @@ Object.defineProperties(ShockwaveFilter.prototype, {
     }
 });
 
-},{"../../core":29}],110:[function(require,module,exports){
+},{'../../core':29}],110:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -38884,7 +38884,7 @@ function TiltShiftAxisFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    gl_FragColor = color / total;\n    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    gl_FragColor = color / total;\n    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\n}\n',
         // custom uniforms
         {
             blur:           { type: '1f', value: 100 },
@@ -38986,7 +38986,7 @@ Object.defineProperties(TiltShiftAxisFilter.prototype, {
     }
 });
 
-},{"../../core":29}],111:[function(require,module,exports){
+},{'../../core':29}],111:[function(require,module,exports){
 var core = require('../../core'),
     TiltShiftXFilter = require('./TiltShiftXFilter'),
     TiltShiftYFilter = require('./TiltShiftYFilter');
@@ -39096,7 +39096,7 @@ Object.defineProperties(TiltShiftFilter.prototype, {
     }
 });
 
-},{"../../core":29,"./TiltShiftXFilter":112,"./TiltShiftYFilter":113}],112:[function(require,module,exports){
+},{'../../core':29,'./TiltShiftXFilter':112,'./TiltShiftYFilter':113}],112:[function(require,module,exports){
 var TiltShiftAxisFilter = require('./TiltShiftAxisFilter');
 
 /**
@@ -39134,7 +39134,7 @@ TiltShiftXFilter.prototype.updateDelta = function ()
     this.uniforms.delta.value.y = dy / d;
 };
 
-},{"./TiltShiftAxisFilter":110}],113:[function(require,module,exports){
+},{'./TiltShiftAxisFilter':110}],113:[function(require,module,exports){
 var TiltShiftAxisFilter = require('./TiltShiftAxisFilter');
 
 /**
@@ -39172,7 +39172,7 @@ TiltShiftYFilter.prototype.updateDelta = function ()
     this.uniforms.delta.value.y = dx / d;
 };
 
-},{"./TiltShiftAxisFilter":110}],114:[function(require,module,exports){
+},{'./TiltShiftAxisFilter':110}],114:[function(require,module,exports){
 var core = require('../../core');
 // @see https://github.com/substack/brfs/issues/25
 
@@ -39190,7 +39190,7 @@ function TwistFilter()
         // vertex shader
         null,
         // fragment shader
-        "precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\n\nvoid main(void)\n{\n   vec2 coord = vTextureCoord - offset;\n   float dist = length(coord);\n\n   if (dist < radius)\n   {\n       float ratio = (radius - dist) / radius;\n       float angleMod = ratio * ratio * angle;\n       float s = sin(angleMod);\n       float c = cos(angleMod);\n       coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n   }\n\n   gl_FragColor = texture2D(uSampler, coord+offset);\n}\n",
+        'precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\n\nvoid main(void)\n{\n   vec2 coord = vTextureCoord - offset;\n   float dist = length(coord);\n\n   if (dist < radius)\n   {\n       float ratio = (radius - dist) / radius;\n       float angleMod = ratio * ratio * angle;\n       float s = sin(angleMod);\n       float c = cos(angleMod);\n       coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n   }\n\n   gl_FragColor = texture2D(uSampler, coord+offset);\n}\n',
         // custom uniforms
         {
             radius:     { type: '1f', value: 0.5 },
@@ -39257,7 +39257,7 @@ Object.defineProperties(TwistFilter.prototype, {
     }
 });
 
-},{"../../core":29}],115:[function(require,module,exports){
+},{'../../core':29}],115:[function(require,module,exports){
 (function (global){
 // run the polyfills
 require('./polyfill');
@@ -39288,8 +39288,8 @@ Object.assign(core, require('./deprecation'));
 // Always export pixi globally.
 global.PIXI = core;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./accessibility":21,"./core":29,"./deprecation":79,"./extras":86,"./filters":103,"./interaction":118,"./loaders":121,"./mesh":128,"./polyfill":133}],116:[function(require,module,exports){
+}).call(this,typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
+},{'./accessibility':21,'./core':29,'./deprecation':79,'./extras':86,'./filters':103,'./interaction':118,'./loaders':121,'./mesh':128,'./polyfill':133}],116:[function(require,module,exports){
 var core = require('../core');
 
 /**
@@ -39338,7 +39338,7 @@ InteractionData.prototype.getLocalPosition = function (displayObject, point, glo
     return displayObject.worldTransform.applyInverse(globalPos || this.global, point);
 };
 
-},{"../core":29}],117:[function(require,module,exports){
+},{'../core':29}],117:[function(require,module,exports){
 var core = require('../core'),
     InteractionData = require('./InteractionData');
 
@@ -39433,7 +39433,7 @@ function InteractionManager(renderer, options)
      * @private
      */
     this.moveWhenInside = false;
-    
+
     /**
      * Have events been attached to the dom element?
      *
@@ -39505,7 +39505,7 @@ function InteractionManager(renderer, options)
      * @private
      */
     this._tempPoint = new core.Point();
-    
+
 
     /**
      * The current resolution
@@ -39707,16 +39707,16 @@ InteractionManager.prototype.processInteractive = function (point, displayObject
     }
 
     // Took a little while to rework this function correctly! But now it is done and nice and optimised. ^_^
-    // 
+    //
     // This function will now loop through all objects and then only hit test the objects it HAS to, not all of them. MUCH faster..
     // An object will be hit test if the following is true:
-    // 
+    //
     // 1: It is interactive.
     // 2: It belongs to a parent that is interactive AND one of the parents children have not already been hit.
-    // 
+    //
     // As another little optimisation once an interactive object has been hit we can carry on through the scenegraph, but we know that there will be no more hits! So we can avoid extra hit tests
     // A final optimisation is that an object is not hit test directly if a child has already been hit.
-    
+
     var hit = false,
         interactiveParent = interactive = displayObject.interactive || interactive;
 
@@ -39729,9 +39729,9 @@ InteractionManager.prototype.processInteractive = function (point, displayObject
     // ** FREE TIP **! If an object is not interacttive or has no buttons in it (such as a game scene!) set interactiveChildren to false for that displayObject.
     // This will allow pixi to completly ignore and bypass checking the displayObjects children.
     if(displayObject.interactiveChildren)
-    {       
+    {
         var children = displayObject.children;
-        
+
         for (var i = children.length-1; i >= 0; i--)
         {
             var child = children[i];
@@ -39750,8 +39750,8 @@ InteractionManager.prototype.processInteractive = function (point, displayObject
 
                 // we no longer need to hit test any more objects in this container as we we now know the parent has been hit
                 interactiveParent = false;
-                
-                // If the child is interactive , that means that the object hit was actually interactive and not just the child of an interactive object. 
+
+                // If the child is interactive , that means that the object hit was actually interactive and not just the child of an interactive object.
                 // This means we no longer need to hit test anything else. We still need to run through all objects, but we don't need to perform any hit tests.
                 //if(child.interactive)
                 //{
@@ -39770,7 +39770,7 @@ InteractionManager.prototype.processInteractive = function (point, displayObject
         // if we are hit testing (as in we have no hit any objects yet)
         // We also don't need to worry about hit testing if once of the displayObjects children has already been hit!
         if(hitTest && !hit)
-        {  
+        {
             if(displayObject.hitArea)
             {
                 displayObject.worldTransform.applyInverse(point,  this._tempPoint);
@@ -39784,12 +39784,12 @@ InteractionManager.prototype.processInteractive = function (point, displayObject
 
         if(displayObject.interactive)
         {
-            func(displayObject, hit); 
+            func(displayObject, hit);
         }
     }
 
     return hit;
-  
+
 };
 
 
@@ -39826,7 +39826,7 @@ InteractionManager.prototype.onMouseDown = function (event)
 InteractionManager.prototype.processMouseDown = function ( displayObject, hit )
 {
     var e = this.mouse.originalEvent;
-    
+
     var isRightButton = e.button === 2 || e.which === 3;
 
     if(hit)
@@ -39930,7 +39930,7 @@ InteractionManager.prototype.onMouseMove = function (event)
 InteractionManager.prototype.processMouseMove = function ( displayObject, hit )
 {
     this.processMouseOverOut(displayObject, hit);
-    
+
     // only display on mouse over
     if(!this.moveWhenInside || hit)
     {
@@ -40244,7 +40244,7 @@ InteractionManager.prototype.destroy = function () {
 core.WebGLRenderer.registerPlugin('interaction', InteractionManager);
 core.CanvasRenderer.registerPlugin('interaction', InteractionManager);
 
-},{"../core":29,"./InteractionData":116,"./interactiveTarget":119}],118:[function(require,module,exports){
+},{'../core':29,'./InteractionData':116,'./interactiveTarget':119}],118:[function(require,module,exports){
 /**
  * @file        Main export of the PIXI interactions library
  * @author      Mat Groves <mat@goodboydigital.com>
@@ -40261,7 +40261,7 @@ module.exports = {
     interactiveTarget:  require('./interactiveTarget')
 };
 
-},{"./InteractionData":116,"./InteractionManager":117,"./interactiveTarget":119}],119:[function(require,module,exports){
+},{'./InteractionData':116,'./InteractionManager':117,'./interactiveTarget':119}],119:[function(require,module,exports){
 /**
  * Default property values of interactive objects
  * used by {@link PIXI.interaction.InteractionManager}.
@@ -40434,7 +40434,7 @@ module.exports = function ()
     };
 };
 
-},{"../core":29,"../extras":86,"path":2,"resource-loader":16}],121:[function(require,module,exports){
+},{'../core':29,'../extras':86,'path':2,'resource-loader':16}],121:[function(require,module,exports){
 /**
  * @file        Main export of the PIXI loaders library
  * @author      Mat Groves <mat@goodboydigital.com>
@@ -40455,7 +40455,7 @@ module.exports = {
     Resource:           require('resource-loader').Resource
 };
 
-},{"./bitmapFontParser":120,"./loader":122,"./spritesheetParser":123,"./textureParser":124,"resource-loader":16}],122:[function(require,module,exports){
+},{'./bitmapFontParser':120,'./loader':122,'./spritesheetParser':123,'./textureParser':124,'resource-loader':16}],122:[function(require,module,exports){
 var ResourceLoader = require('resource-loader'),
     textureParser = require('./textureParser'),
     spritesheetParser = require('./spritesheetParser'),
@@ -40517,7 +40517,7 @@ var Resource = ResourceLoader.Resource;
 
 Resource.setExtensionXhrType('fnt', Resource.XHR_RESPONSE_TYPE.DOCUMENT);
 
-},{"./bitmapFontParser":120,"./spritesheetParser":123,"./textureParser":124,"resource-loader":16}],123:[function(require,module,exports){
+},{'./bitmapFontParser':120,'./spritesheetParser':123,'./textureParser':124,'resource-loader':16}],123:[function(require,module,exports){
 var Resource = require('resource-loader').Resource,
     path = require('path'),
     core = require('../core'),
@@ -40636,7 +40636,7 @@ module.exports = function ()
     };
 };
 
-},{"../core":29,"async":1,"path":2,"resource-loader":16}],124:[function(require,module,exports){
+},{'../core':29,'async':1,'path':2,'resource-loader':16}],124:[function(require,module,exports){
 var core = require('../core');
 
 module.exports = function ()
@@ -40658,7 +40658,7 @@ module.exports = function ()
     };
 };
 
-},{"../core":29}],125:[function(require,module,exports){
+},{'../core':29}],125:[function(require,module,exports){
 var core = require('../core'),
     tempPoint = new core.Point(),
     tempPolygon = new core.Polygon();
@@ -41136,7 +41136,7 @@ Mesh.DRAW_MODES = {
     TRIANGLES: 1
 };
 
-},{"../core":29}],126:[function(require,module,exports){
+},{'../core':29}],126:[function(require,module,exports){
 var Mesh = require('./Mesh');
 
 /**
@@ -41216,7 +41216,7 @@ Plane.prototype.refresh = function()
         verts.push((x * sizeX),
                    (y * sizeY));
 
-        // this works for rectangular textures. 
+        // this works for rectangular textures.
         uvs.push(texture._uvs.x0 + (texture._uvs.x1 - texture._uvs.x0) * (x / (this.segmentsX-1)), texture._uvs.y0 + (texture._uvs.y3-texture._uvs.y0) * (y/ (this.segmentsY-1)));
       }
 
@@ -41262,7 +41262,7 @@ Plane.prototype._onTextureUpdate = function ()
     }
 };
 
-},{"./Mesh":125}],127:[function(require,module,exports){
+},{'./Mesh':125}],127:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var core = require('../core');
 
@@ -41475,7 +41475,7 @@ Rope.prototype.updateTransform = function ()
     this.containerUpdateTransform();
 };
 
-},{"../core":29,"./Mesh":125}],128:[function(require,module,exports){
+},{'../core':29,'./Mesh':125}],128:[function(require,module,exports){
 /**
  * @file        Main export of the PIXI extras library
  * @author      Mat Groves <mat@goodboydigital.com>
@@ -41494,7 +41494,7 @@ module.exports = {
     MeshShader:     require('./webgl/MeshShader')
 };
 
-},{"./Mesh":125,"./Plane":126,"./Rope":127,"./webgl/MeshRenderer":129,"./webgl/MeshShader":130}],129:[function(require,module,exports){
+},{'./Mesh':125,'./Plane':126,'./Rope':127,'./webgl/MeshRenderer':129,'./webgl/MeshShader':130}],129:[function(require,module,exports){
 var core = require('../../core'),
     Mesh = require('../Mesh');
 
@@ -41527,7 +41527,7 @@ function MeshRenderer(renderer)
      *
      * @member {Uint16Array}
      */
-    
+
     this.indices = new Uint16Array(15000);
 
     //TODO this could be a single buffer shared amongst all renderers as we reuse this set up in most renderers
@@ -41709,7 +41709,7 @@ MeshRenderer.prototype.flush = function ()
  */
 MeshRenderer.prototype.start = function ()
 {
-    
+
 
     this.currentShader = null;
 };
@@ -41723,7 +41723,7 @@ MeshRenderer.prototype.destroy = function ()
     core.ObjectRenderer.prototype.destroy.call(this);
 };
 
-},{"../../core":29,"../Mesh":125}],130:[function(require,module,exports){
+},{'../../core':29,'../Mesh':125}],130:[function(require,module,exports){
 var core = require('../../core');
 
 /**
@@ -41784,7 +41784,7 @@ module.exports = MeshShader;
 
 core.ShaderManager.registerPlugin('meshShader', MeshShader);
 
-},{"../../core":29}],131:[function(require,module,exports){
+},{'../../core':29}],131:[function(require,module,exports){
 // References:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign
 
@@ -41810,12 +41810,12 @@ if (!Object.assign)
     Object.assign = require('object-assign');
 }
 
-},{"object-assign":11}],133:[function(require,module,exports){
+},{'object-assign':11}],133:[function(require,module,exports){
 require('./Object.assign');
 require('./requestAnimationFrame');
 require('./Math.sign');
 
-},{"./Math.sign":131,"./Object.assign":132,"./requestAnimationFrame":134}],134:[function(require,module,exports){
+},{'./Math.sign':131,'./Object.assign':132,'./requestAnimationFrame':134}],134:[function(require,module,exports){
 (function (global){
 // References:
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -41884,7 +41884,7 @@ if (!global.cancelAnimationFrame) {
     };
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this,typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 },{}]},{},[115])(115)
 });
 //# sourceMappingURL=pixi.js.map
@@ -44096,34 +44096,34 @@ define('text',['module'], function (module) {
             //documents can be added to a document without worry. Also, if the string
             //is an HTML document, only the part inside the body tag is returned.
             if (content) {
-                content = content.replace(xmlRegExp, "");
+                content = content.replace(xmlRegExp, '');
                 var matches = content.match(bodyRegExp);
                 if (matches) {
                     content = matches[1];
                 }
             } else {
-                content = "";
+                content = '';
             }
             return content;
         },
 
         jsEscape: function (content) {
             return content.replace(/(['\\])/g, '\\$1')
-                .replace(/[\f]/g, "\\f")
-                .replace(/[\b]/g, "\\b")
-                .replace(/[\n]/g, "\\n")
-                .replace(/[\t]/g, "\\t")
-                .replace(/[\r]/g, "\\r")
-                .replace(/[\u2028]/g, "\\u2028")
-                .replace(/[\u2029]/g, "\\u2029");
+                .replace(/[\f]/g, '\\f')
+                .replace(/[\b]/g, '\\b')
+                .replace(/[\n]/g, '\\n')
+                .replace(/[\t]/g, '\\t')
+                .replace(/[\r]/g, '\\r')
+                .replace(/[\u2028]/g, '\\u2028')
+                .replace(/[\u2029]/g, '\\u2029');
         },
 
         createXhr: masterConfig.createXhr || function () {
             //Would love to dump the ActiveX crap in here. Need IE 6 to die first.
             var xhr, i, progId;
-            if (typeof XMLHttpRequest !== "undefined") {
+            if (typeof XMLHttpRequest !== 'undefined') {
                 return new XMLHttpRequest();
-            } else if (typeof ActiveXObject !== "undefined") {
+            } else if (typeof ActiveXObject !== 'undefined') {
                 for (i = 0; i < 3; i += 1) {
                     progId = progIds[i];
                     try {
@@ -44151,7 +44151,7 @@ define('text',['module'], function (module) {
         parseName: function (name) {
             var modName, ext, temp,
                 strip = false,
-                index = name.lastIndexOf("."),
+                index = name.lastIndexOf('.'),
                 isRelative = name.indexOf('./') === 0 ||
                              name.indexOf('../') === 0;
 
@@ -44163,10 +44163,10 @@ define('text',['module'], function (module) {
             }
 
             temp = ext || modName;
-            index = temp.indexOf("!");
+            index = temp.indexOf('!');
             if (index !== -1) {
                 //Pull off the strip arg.
-                strip = temp.substring(index + 1) === "strip";
+                strip = temp.substring(index + 1) === 'strip';
                 temp = temp.substring(0, index);
                 if (ext) {
                     ext = temp;
@@ -44276,7 +44276,7 @@ define('text',['module'], function (module) {
         write: function (pluginName, moduleName, write, config) {
             if (buildMap.hasOwnProperty(moduleName)) {
                 var content = text.jsEscape(buildMap[moduleName]);
-                write.asModule(pluginName + "!" + moduleName,
+                write.asModule(pluginName + '!' + moduleName,
                                "define(function () { return '" +
                                    content +
                                "';});\n");
@@ -44311,7 +44311,7 @@ define('text',['module'], function (module) {
     };
 
     if (masterConfig.env === 'node' || (!masterConfig.env &&
-            typeof process !== "undefined" &&
+            typeof process !== 'undefined' &&
             process.versions &&
             !!process.versions.node &&
             !process.versions['node-webkit'] &&
@@ -44382,9 +44382,9 @@ define('text',['module'], function (module) {
         //Why Java, why is this so awkward?
         text.get = function (url, callback) {
             var stringBuffer, line,
-                encoding = "utf-8",
+                encoding = 'utf-8',
                 file = new java.io.File(url),
-                lineSeparator = java.lang.System.getProperty("line.separator"),
+                lineSeparator = java.lang.System.getProperty('line.separator'),
                 input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
                 content = '';
             try {
@@ -44445,7 +44445,7 @@ define('text',['module'], function (module) {
 
                 convertStream = Cc['@mozilla.org/intl/converter-input-stream;1']
                                 .createInstance(Ci.nsIConverterInputStream);
-                convertStream.init(inStream, "utf-8", inStream.available(),
+                convertStream.init(inStream, 'utf-8', inStream.available(),
                 Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 
                 convertStream.readString(inStream.available(), readData);
@@ -44479,7 +44479,7 @@ define('text!common/v3/app/loading-screen.html',[],function () { return '<div cl
  * css: the stylesheet content to normalize
  * fromBasePath: the absolute base path of the css relative to any root (but without ../ backtracking)
  * toBasePath: the absolute new base path of the css relative to the same root
- * 
+ *
  * Absolute dependencies are left untouched.
  *
  * Urls in the CSS are picked up by regular expressions.
@@ -44488,7 +44488,7 @@ define('text!common/v3/app/loading-screen.html',[],function () { return '<div cl
  * url(*)
  * url('*')
  * url("*")
- * 
+ *
  * @import '*'
  * @import "*"
  *
@@ -44499,7 +44499,7 @@ define('text!common/v3/app/loading-screen.html',[],function () { return '<div cl
  */
 
 define('less/normalize',[],function() {
-  
+
   // regular expression for removing double slashes
   // eg http://www.example.com//my///url/here -> http://www.example.com/my/url/here
   var slashes = /([^:])\/+/g
@@ -44520,12 +44520,12 @@ define('less/normalize',[],function() {
     var fromBaseProtocol = fromBase.match(protocolRegEx);
     if (fromBaseProtocol && (!toBaseProtocol || toBaseProtocol[1] != fromBaseProtocol[1] || toBaseProtocol[2] != fromBaseProtocol[2]))
       return absoluteURI(uri, fromBase);
-    
+
     else {
       return relativeURI(absoluteURI(uri, fromBase), toBase);
     }
   };
-  
+
   // given a relative URI, calculate the absolute URI
   function absoluteURI(uri, base) {
     if (uri.substr(0, 2) == './')
@@ -44534,25 +44534,25 @@ define('less/normalize',[],function() {
     // absolute urls are left in tact
     if (uri.match(absUrlRegEx) || uri.match(protocolRegEx))
       return uri;
-    
+
     var baseParts = base.split('/');
     var uriParts = uri.split('/');
-    
+
     baseParts.pop();
-    
+
     while (curPart = uriParts.shift())
       if (curPart == '..')
         baseParts.pop();
       else
         baseParts.push(curPart);
-    
+
     return baseParts.join('/');
   };
 
 
   // given an absolute URI, calculate the relative URI
   function relativeURI(uri, base) {
-    
+
     // reduce base and uri strings to just their difference string
     var baseParts = base.split('/');
     baseParts.pop();
@@ -44571,14 +44571,14 @@ define('less/normalize',[],function() {
     out = '';
     while (baseParts.shift())
       out += '../';
-    
+
     // finally add uri parts
     while (curPart = uriParts.shift())
       out += curPart + '/';
-    
+
     return out.substr(0, out.length - 1);
   };
-  
+
   var normalizeCSS = function(source, fromBase, toBase) {
 
     fromBase = removeDoubleSlashes(fromBase);
@@ -44595,28 +44595,28 @@ define('less/normalize',[],function() {
       source = source.substr(0, urlRegEx.lastIndex - url.length - quoteLen - 1) + newUrl + source.substr(urlRegEx.lastIndex - quoteLen - 1);
       urlRegEx.lastIndex = urlRegEx.lastIndex + (newUrl.length - url.length);
     }
-    
+
     return source;
   };
-  
+
   normalizeCSS.convertURIBase = convertURIBase;
   normalizeCSS.absoluteURI = absoluteURI;
   normalizeCSS.relativeURI = relativeURI;
-  
+
   return normalizeCSS;
 });
 
 define('less/less',['require'], function(require) {
-  
+
   var lessAPI = {};
-  
+
   lessAPI.pluginBuilder = './less-builder';
-  
+
   if (typeof window == 'undefined') {
     lessAPI.load = function(n, r, load) { load(); }
     return lessAPI;
   }
-  
+
   lessAPI.normalize = function(name, normalize) {
     if (name.substr(name.length - 5, 5) == '.less')
       name = name.substr(0, name.length - 5);
@@ -44625,7 +44625,7 @@ define('less/less',['require'], function(require) {
 
     return name;
   }
-  
+
   var head = document.getElementsByTagName('head')[0];
 
   var base = document.getElementsByTagName('base');
@@ -44671,7 +44671,7 @@ define('less/less',['require'], function(require) {
 
     });
   }
-  
+
   return lessAPI;
 });
 
@@ -44715,7 +44715,7 @@ define('common/v3/app/app',['require','jquery','underscore','backbone','text!./a
         defaultSimViewIndex: 0,
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -44944,7 +44944,7 @@ define('common/v3/pixi/view/app',['require','underscore','pixi','../../app/app']
     var PixiAppView = AppView.extend({
 
     	assets: [],
-        
+
         initialize: function(options) {
             AppView.prototype.initialize.apply(this, [options]);
         },
@@ -44952,7 +44952,7 @@ define('common/v3/pixi/view/app',['require','underscore','pixi','../../app/app']
         load: function() {
         	this.$el.empty();
         	this.showLoading();
-        	
+
         	this.on('sim-views-initialized assets-loaded', function() {
         		if (this.simViewsInitialized && this.assetsLoaded)
         			this.postLoad();
@@ -45010,7 +45010,7 @@ define('common/v3/updater/updater',['require','pixi'],function (require) {
         var animationFrame;
         var playing = false;
         var dormant = false;
-        
+
         var last  = 0;
         var now   = 0;
         var delta = 0;
@@ -45028,11 +45028,11 @@ define('common/v3/updater/updater',['require','pixi'],function (require) {
 
             if (!dormant) {
                 for (i = 0; i < listeners.update.length; i++)
-                    listeners.update[i](this.total, delta);    
+                    listeners.update[i](this.total, delta);
             }
             else if (delta < DORMANCY_THRESHOLD)
                 awaken();
-            
+
             animationFrame = window.requestAnimationFrame(frame);
         }.bind(this);
 
@@ -45078,7 +45078,7 @@ define('common/v3/updater/updater',['require','pixi'],function (require) {
             if (!playing) {
                 playing = true;
                 /*
-                 * Subtract the last delta so we don't do two frames 
+                 * Subtract the last delta so we don't do two frames
                  * at the same this.total time after unpausing.
                  */
                 last = Date.now() - delta;
@@ -45343,7 +45343,7 @@ define('common/simulation/simulation',['require','underscore','backbone'],functi
     var Backbone = require('backbone');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var Simulation = Backbone.Model.extend({
 
@@ -45351,7 +45351,7 @@ define('common/simulation/simulation',['require','underscore','backbone'],functi
             paused: false,
             timeScale: 1
         },
-        
+
         /**
          * Initialization code for new Simulation model objects.
          */
@@ -45394,7 +45394,7 @@ define('common/simulation/simulation',['require','underscore','backbone'],functi
                 this.time += delta;
                 this._update(this.time, delta);
             }
-            
+
         },
 
         /**
@@ -45438,13 +45438,13 @@ define('common/simulation/fixed-interval-simulation',['require','./simulation'],
     var Simulation = require('./simulation');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var FixedIntervalSimulation = Simulation.extend({
 
         /**
          * Initialization code for new FixedIntervalSimulation objects.
-         *   Sets the frame duration and initializes the frame 
+         *   Sets the frame duration and initializes the frame
          *   accumulator to zero.
          */
         initialize: function(attributes, options) {
@@ -45463,8 +45463,8 @@ define('common/simulation/fixed-interval-simulation',['require','./simulation'],
          *   for accuracy--especially since the propagator isn't based
          *   off of time but acts in discrete steps--we need a way to
          *   keep track of step intervals independent of the varying
-         *   intervals created by window.requestAnimationFrame. This 
-         *   clever solution was found here: 
+         *   intervals created by window.requestAnimationFrame. This
+         *   clever solution was found here:
          *
          *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
          */
@@ -45480,9 +45480,9 @@ define('common/simulation/fixed-interval-simulation',['require','./simulation'],
 
                     this._update(this.time, this.deltaTimePerFrame);
                     this._updated = true;
-                    
+
                     this.frameAccumulator -= this.frameDuration;
-                }    
+                }
             }
         },
 
@@ -45805,7 +45805,7 @@ define('models/wire-segment',['require','underscore','common/math/vector2'],func
     var Vector2 = require('common/math/vector2');
 
     /**
-     * 
+     *
      */
     var WireSegment = function(start, finish, scalarStart) {
         this.start = new Vector2(start);
@@ -45874,7 +45874,7 @@ define('models/wire-patch',['require','underscore','common/math/vector2','models
     var WireSegment = require('models/wire-segment');
 
     /**
-     * 
+     *
      */
     var WirePatch = function() {
         this.segments = [];
@@ -45894,10 +45894,10 @@ define('models/wire-patch',['require','underscore','common/math/vector2','models
 
             while (dist > length)
                 dist -= length;
-            
+
             while (dist < 0)
                 dist += length;
-            
+
             for (var i = 0; i < this.segments.length; i++) {
                 if (this.segments[i].contains(dist))
                     return this.segments[i].getPosition(dist);
@@ -45921,7 +45921,7 @@ define('models/wire-patch',['require','underscore','common/math/vector2','models
         appendSegmentAt: function(x, y) {
             if (this.segments.length === 0)
                 throw 'No wires specified.';
-            
+
             if (x instanceof Vector2) {
                 y = x.y;
                 x = x.x;
@@ -45956,7 +45956,7 @@ define('models/wire-patch',['require','underscore','common/math/vector2','models
                 y = x.y;
                 x = x.x;
             }
-            
+
             var start = new Vector2(x, y);
             var end = new Vector2(dx, dy).add(start);
 
@@ -46039,7 +46039,7 @@ define('models/wire-region/patch',['require','underscore','models/wire-region'],
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var PatchWireRegion = function(min, max, wirePatch) {
         this.min = min;
@@ -46054,8 +46054,8 @@ define('models/wire-region/patch',['require','underscore','models/wire-region'],
 
         contains: function(wireParticle) {
             return (
-                wireParticle.wirePatch === this.wirePatch && 
-                this.max >= wireParticle.position && 
+                wireParticle.wirePatch === this.wirePatch &&
+                this.max >= wireParticle.position &&
                 this.min <= wireParticle.position
             );
         }
@@ -46074,7 +46074,7 @@ define('models/wire-region/simple-patch',['require','underscore','models/wire-re
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var SimplePatchWireRegion = function(wirePatch) {
         this.wirePatch = wirePatch;
@@ -46103,7 +46103,7 @@ define('models/wire-region/and',['require','underscore','models/wire-region'],fu
     var WireRegion = require('models/wire-region');
 
     /**
-     * 
+     *
      */
     var AndWireRegion = function() {
         this.regions = [];
@@ -46188,7 +46188,7 @@ define('models/wire-particle/electron',['require','underscore','models/wire-part
     var WireParticle = require('models/wire-particle');
 
     /**
-     * 
+     *
      */
     var Electron = function(attributes) {
         WireParticle.apply(this, arguments);
@@ -46210,10 +46210,10 @@ define('models/wire-particle/electron',['require','underscore','models/wire-part
         getLastCollision: function() {
             if (!this.collisionEvent)
                 return null;
-            
+
             if (this.collisionEvent.currentTime() - this.lastCollisionTime > 20)
                 this.collided = true;
-            
+
             return this.lastCollisionObject;
         },
 
@@ -46372,7 +46372,7 @@ define('models/propagator/oscillate',['require','underscore','object-pool','comm
         propagate: function(deltaTime, particle) {
             this.time += deltaTime;
             this.amplitude = this.amplitude * this.amplitudeScale;
-            
+
             var scale = this.amplitude * Math.sin(this.time * this.freq);
             var position = this._pos
                 .set(this.position0)
@@ -46456,7 +46456,7 @@ define('common/models/positionable-object',['require','backbone','../math/vector
         defaults: {
             position: null
         },
-        
+
         initialize: function(attributes, options) {
             // Create vectors
             this.set('position', vectorPool.create().set(this.get('position')));
@@ -46488,7 +46488,7 @@ define('common/models/positionable-object',['require','backbone','../math/vector
                 this.set('position', newPosition.add(x));
             else
                 this.set('position', newPosition.add(x, y), options);
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldPosition);
         },
@@ -46496,7 +46496,7 @@ define('common/models/positionable-object',['require','backbone','../math/vector
         setPosition: function(x, y, options) {
             var oldPosition = this.get('position');
             //console.log(vectorPool.list.length);
-            
+
             if (x instanceof Vector2)
                 this.set('position', vectorPool.create().set(x));
             else
@@ -46535,7 +46535,7 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
     'use strict';
 
     var _ = require('underscore');
-    
+
     var Vector2  = require('../math/vector2');
     var Pool     = require('object-pool');
 
@@ -46565,7 +46565,7 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
      *   which can be used to calculate new positions.
      */
     var MotionObject = PositionableObject.extend({
-        
+
         defaults: _.extend({}, PositionableObject.prototype.defaults, {
             velocity: null,
             acceleration: null
@@ -46629,12 +46629,12 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
         updateMotion: null, // (Defined outside this extend function)
 
         /**
-         * Function that facilitates setting the velocity vector 
+         * Function that facilitates setting the velocity vector
          *   while still triggering a change event.
          */
         setVelocity: function(x, y, options) {
             var oldVelocity = this.get('velocity');
-            
+
             if (x instanceof Vector2)
                 this.set('velocity', vectorPool.create().set(x), y);
             else
@@ -46670,7 +46670,7 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
                 this.set('velocity', newVelocity.add(x), y);
             else
                 this.set('velocity', newVelocity.add(x, y), options);
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldVelocity);
         },
@@ -46680,12 +46680,12 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
         },
 
         /**
-         * Function that facilitates setting the acceleration vector 
+         * Function that facilitates setting the acceleration vector
          *   while still triggering a change event.
          */
         setAcceleration: function(x, y, options) {
             var oldAcceleration = this.get('acceleration');
-            
+
             if (x instanceof Vector2)
                 this.set('acceleration', vectorPool.create().set(x), y);
             else
@@ -46699,7 +46699,7 @@ define('common/models/motion-object',['require','underscore','../math/vector2','
             return this.get('acceleration');
         },
 
-        /** 
+        /**
          * Avoid memory leaks from the pool.
          */
         destroy: function(options) {
@@ -46729,7 +46729,7 @@ define('models/free-particle',['require','underscore','common/models/motion-obje
 
     /**
      * This is a particle that can move independently in 2D space.  It is
-     *   different from a WireParticle in that it isn't constrained to 
+     *   different from a WireParticle in that it isn't constrained to
      *   the path of a wire and moves in two dimensions instead of one.
      *
      * Note that this is a departure in naming from the original.  I made
@@ -46778,7 +46778,7 @@ define('models/free-particle/core',['require','underscore','object-pool','common
     var FreeParticle = require('models/free-particle');
 
     /**
-     * 
+     *
      */
     var Core = FreeParticle.extend({
 
@@ -46796,7 +46796,7 @@ define('models/free-particle/core',['require','underscore','object-pool','common
 
         setOrigin: function(x, y) {
             var oldOrigin = this.get('origin');
-            
+
             if (x instanceof Vector2)
                 this.set('origin', vectorPool.create().set(x));
             else
@@ -46836,7 +46836,7 @@ define('models/law/resistance',['require','underscore','backbone','common/math/v
     var Core                = require('models/free-particle/core');
 
     /**
-     * 
+     *
      */
     var Resistance = function(start, end, coreCount, wirePatch, amplitude, freq, decay, system) {
         this.system = system;
@@ -46859,7 +46859,7 @@ define('models/law/resistance',['require','underscore','backbone','common/math/v
      * Instance functions/properties
      */
     _.extend(Resistance.prototype, Law.prototype, {
-        
+
         /**
          * Note that this only gets called when the number of cores changes, because
          *   we remove it from the system at the end of this function and only add
@@ -46893,14 +46893,14 @@ define('models/law/resistance',['require','underscore','backbone','common/math/v
                 var scalarPosition = this.start + (coreSpacing * i) + 15;
                 if (this.coreCount === 1)
                     scalarPosition = (this.end - this.start) / 2 + this.start;
-                
+
                 var x0 = this.wirePatch.getPosition(scalarPosition);
                 var axis = new Vector2(1, 0);
-                
+
                 var oscillator = new OscillatePropagator(x0, 0 /* instead of this.amplitude */, this.freq, this.decay, axis);
                 var core = new Core({
                     position: x0,
-                    origin: x0, 
+                    origin: x0,
                     scalarPosition: scalarPosition,
                     charge: 0,
                     propagator: oscillator
@@ -46916,7 +46916,7 @@ define('models/law/resistance',['require','underscore','backbone','common/math/v
         getCoreSpacing: function() {
             if (this.coreCount <= 1)
                 return 0;
-            
+
             var coreSpan = this.end - this.start;
             var coreSpacing = coreSpan / (this.coreCount - 1);
 
@@ -46985,7 +46985,7 @@ define('models/law/average-current',['require','underscore','common/math/number-
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var AverageCurrent = function(numSamples) {
         this.series = new NumberSeries(numSamples);
@@ -46998,7 +46998,7 @@ define('models/law/average-current',['require','underscore','common/math/number-
      * Instance functions/properties
      */
     _.extend(AverageCurrent.prototype, Law.prototype, {
-        
+
         update: function(deltaTime, system) {
             var hollyscale = 3.5 * 3.3;
             var hollywood = this.resistance / this.voltage * hollyscale;
@@ -47032,7 +47032,7 @@ define('models/law/collision-event',['require','underscore','models/law'],functi
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var CollisionEvent = function(distThreshold, amplitudeThreshold, oscillateFactory) {
         this.velocityToZero = Number.POSITIVE_INFINITY;
@@ -47090,7 +47090,7 @@ define('models/law/collider',['require','underscore','models/law','models/free-p
     var Core = require('models/free-particle/core');
 
     /**
-     * 
+     *
      */
     var Collider = function(wireSystem, collisionEvent, wirePatch) {
         this.wireSystem = wireSystem;
@@ -47131,7 +47131,7 @@ define('models/law/particle',['require','underscore','models/law'],function (req
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var ParticleLaw = function(propagator) {};
 
@@ -47164,7 +47164,7 @@ define('models/law/turnstile',['require','underscore','common/math/vector2','mod
     var Law = require('models/law');
 
     /**
-     * 
+     *
      */
     var Turnstile = function(center, angleVelocityScale) {
         this.center = new Vector2(center);
@@ -47177,7 +47177,7 @@ define('models/law/turnstile',['require','underscore','common/math/vector2','mod
      * Instance functions/properties
      */
     _.extend(Turnstile.prototype, Law.prototype, {
-        
+
         update: function(deltaTime, system) {
             this.angle = this.angularSpeed * deltaTime + this.angle;
         },
@@ -47306,14 +47306,14 @@ define('models/propagator/ranged',['require','underscore','models/propagator'],f
 
         addInverse: function(out, prop) {
             this.inverseRangedProps.push({
-                wireRegion: out, 
+                wireRegion: out,
                 propagator: prop
             });
         },
 
         addPropagator: function(range, prop) {
             this.rangedProps.push({
-                wireRegion: range, 
+                wireRegion: range,
                 propagator: prop
             });
         }
@@ -47495,7 +47495,7 @@ define('models/propagator/battery-force',['require','underscore','models/propaga
     var Propagator = require('models/propagator');
 
     /**
-     * 
+     *
      */
     var BatteryForcePropagator = function(minSpeed, maxSpeed) {
         this.minSpeed = minSpeed;
@@ -47513,7 +47513,7 @@ define('models/propagator/battery-force',['require','underscore','models/propaga
             var f = 0;
             for (var i = 0; i < this.forces.length; i++)
                 f += this.forces[i].getForce(particle);
-            
+
             var m = particle.mass;
             var v = particle.velocity;
             var x = particle.position;
@@ -47534,7 +47534,7 @@ define('models/propagator/battery-force',['require','underscore','models/propaga
                 else if (v > -this.minSpeed)
                     v = -this.minSpeed;
             }
-            
+
             particle.velocity = v;
             particle.position += v * deltaTime;
         },
@@ -47662,7 +47662,7 @@ define('models/force/friction',['require','underscore','models/force'],function 
     var Force = require('models/force');
 
     /**
-     * 
+     *
      */
     var FrictionForce = function(value) {
         this.value = value;
@@ -47710,7 +47710,7 @@ define('models/force/coulomb-force-parameters',['require','underscore'],function
                 r = this.minDist;
             else if (r > this.maxDist)
                 r = this.maxDist;
-            
+
             var term = this.k * Math.pow(r, this.power) * sourceQ * testQ;
             if (dx > 0)
                 term *= -1;
@@ -47736,7 +47736,7 @@ define('models/force/coulomb',['require','underscore','models/force'],function (
     var Force = require('models/force');
 
     /**
-     * 
+     *
      */
     var CoulombForce = function(params, system) {
         this.system = system;
@@ -47881,9 +47881,9 @@ define('models/force/adjacent-patch-coulomb-beginning-to-end',['require','unders
                 var p = particles[i];
                 if (p !== wireParticle && p.wirePatch === this.a && wireParticle.wirePatch === this.b) {
                     sum += this.params.getForce(
-                        p.position + this.b.getLength(), 
-                        p.charge, 
-                        wireParticle.position, 
+                        p.position + this.b.getLength(),
+                        p.charge,
+                        wireParticle.position,
                         wireParticle.charge
                     );
                 }
@@ -47926,9 +47926,9 @@ define('models/force/adjacent-patch-coulomb-end-to-beginning',['require','unders
                 var p = particles[i];
                 if (p !== wireParticle && p.wirePatch === this.a && wireParticle.wirePatch === this.b) {
                     sum += this.params.getForce(
-                        p.position, 
-                        p.charge, 
-                        wireParticle.position + this.a.getLength(), 
+                        p.position,
+                        p.charge,
+                        wireParticle.position + this.a.getLength(),
                         wireParticle.charge
                     );
                 }
@@ -47993,7 +47993,7 @@ define('constants',['require','common/math/vector2','common/math/range'],functio
     var Vector2 = require('common/math/vector2');
     var range   = require('common/math/range');
 
-    var Constants = {}; 
+    var Constants = {};
 
     /*************************************************************************
      **                                                                     **
@@ -48230,7 +48230,7 @@ define('models/simulation',['require','exports','module','underscore','common/si
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var BRCSimulation = FixedIntervalSimulation.extend({
 
@@ -48239,7 +48239,7 @@ define('models/simulation',['require','exports','module','underscore','common/si
             voltage: Constants.VOLTAGE_RANGE.defaultValue,
             current: 0
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
@@ -48322,14 +48322,14 @@ define('models/simulation',['require','exports','module','underscore','common/si
             var system = new System();
             this.system = system;
 
-            var resistance = new Resistance( 
-                Constants.CORE_START, 
-                Constants.CORE_END, 
-                Constants.DEFAULT_NUM_CORES, 
-                loopWirePatch, 
-                Constants.DEFAULT_AMPLITUDE, 
-                Constants.DEFAULT_FREQUENCY, 
-                Constants.DEFAULT_DECAY, 
+            var resistance = new Resistance(
+                Constants.CORE_START,
+                Constants.CORE_END,
+                Constants.DEFAULT_NUM_CORES,
+                loopWirePatch,
+                Constants.DEFAULT_AMPLITUDE,
+                Constants.DEFAULT_FREQUENCY,
+                Constants.DEFAULT_DECAY,
                 system
             );
             this.resistance = resistance;
@@ -48337,7 +48337,7 @@ define('models/simulation',['require','exports','module','underscore','common/si
             this.resistorLeft  = topLeftInset.x;
             this.resistorRight = topRightInset.x;
             this.resistorY     = topRightInset.y;
-            
+
             // Battery stuff
             var batteryRegion = new SimplePatchRegion(batteryWirePatch);
             var batteryProps = new CompositePropagator(); // original: cpr
@@ -48366,7 +48366,7 @@ define('models/simulation',['require','exports','module','underscore','common/si
             var coulombForce = new CoulombForce(coulombForceParameters, wireSystem); // original: cf
 
             var batteryForcePropagator = new BatteryForcePropagator(0, 10 * Constants.MAX_VEL); // original: fp
-            batteryForcePropagator.addForce(coulombForce); 
+            batteryForcePropagator.addForce(coulombForce);
             // Add a coulomb force from the end of batteryWirePatch onto the beginning of loopWirePatch
             batteryForcePropagator.addForce(new AdjacentPatchCoulombForceEndToBeginning(coulombForceParameters, wireSystem, batteryWirePatch, loopWirePatch));
             batteryForcePropagator.addForce(new AdjacentPatchCoulombForceBeginningToEnd(coulombForceParameters, wireSystem, batteryWirePatch, loopWirePatch));
@@ -48398,10 +48398,10 @@ define('models/simulation',['require','exports','module','underscore','common/si
             resistance.layoutCores();
             var axis = new Vector2(1, 2);
             var oscillateFactory = new OscillateFactory(
-                Constants.V_TO_AMP_SCALE, 
-                Constants.DEFAULT_DECAY, 
-                Constants.DEFAULT_FREQUENCY, 
-                Constants.MAX_ACC, 
+                Constants.V_TO_AMP_SCALE,
+                Constants.DEFAULT_DECAY,
+                Constants.DEFAULT_FREQUENCY,
+                Constants.MAX_ACC,
                 axis
             );
             var collisionEvent = new CollisionEvent(Constants.COLLISION_DIST, Constants.AMPLITUDE_THRESHOLD, oscillateFactory);
@@ -48418,8 +48418,8 @@ define('models/simulation',['require','exports','module','underscore','common/si
                     continue;
 
                 var electron = new Electron({
-                    propagator: props, 
-                    wirePatch: circuit.getPatch(position), 
+                    propagator: props,
+                    wirePatch: circuit.getPatch(position),
                     collisionEvent: collisionEvent,
                     velocity: 0,
                     position: circuit.getLocalPosition(position, circuit.getPatch(position))
@@ -48495,7 +48495,7 @@ define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','
     var PIXI     = require('pixi');
 
     /**
-     * SceneView is the main focus of the app. 
+     * SceneView is the main focus of the app.
      *
      */
     var PixiSceneView = Backbone.View.extend({
@@ -48504,7 +48504,7 @@ define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','
         className: 'scene-view',
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -48533,10 +48533,10 @@ define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','
         },
 
         /**
-         * Renders 
+         * Renders
          */
         renderContent: function() {
-            
+
         },
 
         /**
@@ -48572,7 +48572,7 @@ define('common/v3/pixi/view/scene',['require','jquery','underscore','backbone','
         },
 
         initGraphics: function() {
-            
+
         },
 
         /**
@@ -48705,7 +48705,7 @@ define('common/math/line-intersection',['require','./polyfills','./vector2'],fun
          *   which was adapted from:
          *
          *   Weisstein, Eric W. "Circle-Line Intersection."
-         *   From MathWorld--A Wolfram Web Resource. 
+         *   From MathWorld--A Wolfram Web Resource.
          *   http://mathworld.wolfram.com/Circle-LineIntersection.html
          */
         lineCircleIntersection: function(x1, y1, x2, y2, circleX, circleY, radius) {
@@ -49002,32 +49002,32 @@ define('common/math/solve-cubic-equation',['require'],function (require) {
                 roots[i] = rootsults[i];
             return roots;
         }
-        
+
         // Divide the equation by the cubic coefficient.
         c = equation[0] / c3;
         b = equation[1] / c3;
         a = equation[2] / c3;
-        
+
         // We now need to solve x^3 + ax^2 + bx + c = 0.
         q = a * a - 3 * b;
         r = 2 * a * a * a - 9 * a * b + 27 * c;
-        
+
         Q = q / 9;
         R = r / 54;
-        
+
         Q3 = Q * Q * Q;
         R2 = R * R;
-        
+
         CR2 = 729 * r * r;
         CQ3 = 2916 * q * q * q;
-        
+
         if (R === 0 && Q === 0) {
             // The GNU Scientific Library would return three identical
             // solutions in this case.
             roots[0] = -a / 3;
             return roots;
         }
-        
+
         if (CR2 === CQ3) {
             /* this test is actually R2 == Q3, written in a form suitable
             for exact computation with integers */
@@ -49046,7 +49046,7 @@ define('common/math/solve-cubic-equation',['require'],function (require) {
             }
             return roots;
         }
-        
+
         if (CR2 < CQ3) { /* equivalent to R2 < Q3 */
             sqrtQ = Math.sqrt(Q);
             var sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
@@ -49059,7 +49059,7 @@ define('common/math/solve-cubic-equation',['require'],function (require) {
             // The GNU Scientific Library sorts the rootsults. We don't.
             return roots;
         }
-        
+
         var sgnR = (R >= 0 ? 1 : -1);
         var A = -sgnR * Math.pow(Math.abs(R) + Math.sqrt(R2 - Q3), 1.0 / 3.0);
         var B = Q / A;
@@ -49090,7 +49090,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
      * The purpose of this class is to store paths of points and wathis.yPoints in
      *   the case of curved connections.  This is not a piecewise linear curve
      *   because each connection between two points can have one of several
-     *   this.types of algorithms (linear, quadratic, and cubic). 
+     *   this.types of algorithms (linear, quadratic, and cubic).
      *
      * This class is modeled after Java AWT's GeneralPath and includes sections of
      *   almost verbatim code.  Java.awt.geom.GeneralPath is distributed under the
@@ -49339,7 +49339,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
         /**
          * Adds a new point to a path.
-         * 
+         *
          * @param x  the x-coordinate.
          * @param y  the y-coordinate.
          */
@@ -49357,7 +49357,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
         /**
          * Adds a new point to a path.
-         * 
+         *
          * @param dx  the relative x-coordinate.
          * @param dy  the relative y-coordinate.
          */
@@ -49366,7 +49366,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
                 dy = dx.y;
                 dx = dx.x;
             }
-            
+
             var lastX = 0;
             var lastY = 0;
             if (this.index > 0) {
@@ -49376,7 +49376,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
             return this.moveTo(lastX + dx, lastY + dy);
         },
-        
+
         /**
          * Appends a straight line to the current path.
          *
@@ -49396,7 +49396,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
         /**
          * Appends a straight line to the current path.
-         * 
+         *
          * @param dx  the relative x-coordinate.
          * @param dy  the relative y-coordinate.
          */
@@ -49415,7 +49415,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
             return this.lineTo(lastX + dx, lastY + dy);
         },
-        
+
         /**
          * Appends a quadratic Bezier curve to the current path.
          *
@@ -49438,7 +49438,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
             this.yPoints[this.index++] = y2;
             return this;
         },
-        
+
         /**
          * Appends a cubic Bezier curve to the current path.
          * @param x1 x coordinate of the first control point
@@ -49473,7 +49473,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
             this.yPoints[this.index++] = y3;
             return this;
         },
-        
+
         /**
          * Closes the current subcurve by drawing a line
          * back to the point of the last moveTo, unless the path is already closed.
@@ -49499,9 +49499,9 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
             }
 
             // Does any edge intersect?
-            if (this.getAxisIntersections(x, y,     false, w) !== 0 || 
-                this.getAxisIntersections(x, y + h, false, w) !== 0 || 
-                this.getAxisIntersections(x + w, y, true,  h) !== 0 || 
+            if (this.getAxisIntersections(x, y,     false, w) !== 0 ||
+                this.getAxisIntersections(x, y + h, false, w) !== 0 ||
+                this.getAxisIntersections(x + w, y, true,  h) !== 0 ||
                 this.getAxisIntersections(x, y,     true,  h) !== 0) {
                 return true;
             }
@@ -49528,7 +49528,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
         },
 
         /**
-         * Helper method - Get the total number of intersections from (x,y) along 
+         * Helper method - Get the total number of intersections from (x,y) along
          * a given axis, within a given distance.
          */
         getAxisIntersections: function(x, y, useYAxis, distance) {
@@ -49536,18 +49536,18 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
         },
 
         getWindingNumber: function(x, y) {
-            /* Evaluate the crossings from x,y to infinity on the y axis (arbitrary 
-             *   choice). Note that we don't actually use Double.INFINITY, since that's 
-             *   slower, and may cause problems. 
+            /* Evaluate the crossings from x,y to infinity on the y axis (arbitrary
+             *   choice). Note that we don't actually use Double.INFINITY, since that's
+             *   slower, and may cause problems.
              */
             return this.evaluateCrossings(x, y, true, true, PiecewiseCurve.BIG_VALUE);
         },
 
         /**
-         * Evaluates the number of intersections on an axis from 
+         * Evaluates the number of intersections on an axis from
          *   the point (x,y) to the point (x,y+distance) or (x+distance,y).
          *
-         * Here is a gist explanation of this algorithm: 
+         * Here is a gist explanation of this algorithm:
          *   https://gist.github.com/pwolfert/134d6dda882309bf2c5f
          *
          * @param x x coordinate.
@@ -49605,10 +49605,10 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
 
             /* Get a value which is hopefully small but not insignificant relative the path. */
             epsilon = yPoints[0] * 1E-7;
-            
-            if (epsilon === 0) 
+
+            if (epsilon === 0)
                 epsilon = 1E-7;
-            
+
             pos = 0;
             while (pos < this.index) {
                 switch (types[pos]) {
@@ -49749,7 +49749,7 @@ define('common/math/piecewise-curve',['require','underscore','./solve-cubic-equa
                         break;
                 }
             }
-            
+
             return windingNumber;
         }
 
@@ -49786,7 +49786,7 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
             m10 = a[3], m11 = a[4], m12 = a[5];
 
         var det = determinant(matrix);
-        if (det === 0) 
+        if (det === 0)
             throw 'Cannot invert this transformation matrix--zero determinant';
 
         var inv00, inv01, inv02,
@@ -49832,7 +49832,7 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
     //             components.push(args[i]);
     //         }
     //     }
-        
+
     //     if (components.length < numRequired && defaultValue !== undefined) {
     //         i = components.length - 1;
     //         while (i < numRequired) {
@@ -49840,12 +49840,12 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
     //             i++;
     //         }
     //     }
-        
+
     //     return components;
     // };
 
     /**
-     * This is the equivalent of PhET's 
+     * This is the equivalent of PhET's
      *   phetcommon.view.graphics.transforms.ModelViewTransform,
      *   which stores a transformation for model coordinates to
      *   view coordinates and provides helper functions to
@@ -49893,7 +49893,7 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
         },
 
         /**
-         * Creates a ModelViewTransform that has the specified scale 
+         * Creates a ModelViewTransform that has the specified scale
          *   and offset such that
          *   view = model * scale + offset
          *
@@ -49912,8 +49912,8 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
         },
 
         /**
-         * Creates a shearless ModelViewTransform that maps the 
-         *   specified model point to the specified view point, 
+         * Creates a shearless ModelViewTransform that maps the
+         *   specified model point to the specified view point,
          *   with the given x and y scales.
          *
          * @param modelPoint the reference point in the model which maps to the specified view point
@@ -49933,12 +49933,12 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
         },
 
         /**
-         * Creates a shearless ModelViewTransform that maps the 
-         *   specified model point to the specified view point, 
-         *   with the given scale factor for both x and y 
-         *   dimensions, but inverting the y axis so that +y in 
-         *   the model corresponds to -y in the view. Inverting 
-         *   the y axis is commonly necessary since +y is usually 
+         * Creates a shearless ModelViewTransform that maps the
+         *   specified model point to the specified view point,
+         *   with the given scale factor for both x and y
+         *   dimensions, but inverting the y axis so that +y in
+         *   the model corresponds to -y in the view. Inverting
+         *   the y axis is commonly necessary since +y is usually
          *   up in textbooks and -y is down in pixel coordinates.
          *
          * @param modelPoint the reference point in the model which maps to the specified view point
@@ -50134,14 +50134,14 @@ define('common/math/model-view-transform',['require','underscore','./rectangle',
         scaleX: function(scaleX) {
             if (scaleX === undefined)
                 return this.transformMatrix[0];
-            else 
+            else
                 this.scale(scaleX, this.scaleY());
         },
 
         scaleY: function(scaleY) {
             if (scaleY === undefined)
                 return this.transformMatrix[4];
-            else 
+            else
                 this.scale(this.scaleX(), scaleY);
         },
 
@@ -50249,7 +50249,7 @@ define('common/v3/pixi/view',['require','underscore','backbone','pixi'],function
          *     this.displayObject.touchstart = this.dragStart;
          */
         delegateEvents: function(events) {
-            if (!(events || (events = _.result(this, 'events')))) 
+            if (!(events || (events = _.result(this, 'events'))))
                 return this;
 
             for (var key in events) {
@@ -50271,14 +50271,14 @@ define('common/v3/pixi/view',['require','underscore','backbone','pixi'],function
                     //     throw 'PixiView: ' + eventName + ' is not a valid event.';
 
                     displayObject[eventName] = _.bind(method, this);
-                    displayObject.interactive = true;    
+                    displayObject.interactive = true;
                 }
             }
 
             return this;
         },
 
-        /** 
+        /**
          * Removes the displayObject from its parent and unbinds
          *   event listeners for the model.
          */
@@ -50320,7 +50320,7 @@ define('common/v3/pixi/view',['require','underscore','backbone','pixi'],function
      *   etc.) have .extend that references the same function:
      *
      *     Model.extend = Collection.extend = ... = extend;
-     * 
+     *
      *   This function isn't directly exposed if I require Backbone,
      *   but I could just cheat and grab it off of any old Backbone
      *   object prototype, so I will :)
@@ -50353,7 +50353,7 @@ define('common/colors/colors',['require'],function (require) {
 	var Colors = {
 
 		/**
-		 * 
+		 *
 		 */
 		parseHex: function(string) {
 			// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
@@ -50405,7 +50405,7 @@ define('common/colors/colors',['require'],function (require) {
 		},
 
 		/**
-		 * 
+		 *
 		 */
 		hexToValue: function(hex) {
 			hex = replaceShorthand(hex);
@@ -50461,9 +50461,9 @@ define('common/colors/colors',['require'],function (require) {
 					return rgb;
 				else
 					return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + rgb.a + ')';
-			} 
+			}
 			else
-				return null;	
+				return null;
 		},
 
 		/**
@@ -50551,7 +50551,7 @@ define('common/v3/pixi/assets',['require','underscore','pixi'],function (require
 
     /**
      * There should really only be one Assets object per app, so
-     *   to customize the Assets object to fit the needs of a 
+     *   to customize the Assets object to fit the needs of a
      *   particular app, just use assign new values to the
      *   default properties.  There are three properties that
      *   should be set when customizing the Assets object for a
@@ -50577,10 +50577,10 @@ define('common/v3/pixi/assets',['require','underscore','pixi'],function (require
      * 3) SpriteSheets: Spritesheet is also a json object, but
      *                  the keys here are actually the names of
      *                  the sprite sheet files to be loaded, and
-     *                  each value is an array of keys in the 
+     *                  each value is an array of keys in the
      *                  Images object for each of the images
      *                  contained in the sprite sheet.
-     * 
+     *
      * Example usage:
      *
      *   Assets.Path = 'img/phet/optimized/';
@@ -50640,7 +50640,7 @@ define('common/v3/pixi/assets',['require','underscore','pixi'],function (require
 
     /**
      * This function returns a PIXI texture based on the file
-     *   name, taking into account whether that filename is 
+     *   name, taking into account whether that filename is
      *   part of a sprite sheet.
      */
     Assets.Texture = function(filename) {
@@ -50701,7 +50701,7 @@ define('common/v3/pixi/assets',['require','underscore','pixi'],function (require
 
             var textureRatio = texture.width / texture.height;
             var iconRatio    = iconWidth / iconHeight;
-            
+
             scale = (iconRatio > textureRatio) ? iconHeight / texture.height : iconWidth / texture.width;
         }
 
@@ -50762,7 +50762,7 @@ define('assets',['require','common/v3/pixi/assets'],function (require) {
 
     Assets.Path = 'img/';
 
-    Assets.Images = {   
+    Assets.Images = {
         PINWHEEL:       'pinwheel.png',
         BATTERY:        'battery.png',
         BATTERY_INSIDE: 'battery-inside.png',
@@ -50786,7 +50786,7 @@ define('views/turnstile',['require','pixi','common/v3/pixi/view','common/colors/
 
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
-    
+
     var Assets = require('assets');
     var Constants = require('constants');
     var STICK_COLOR = Colors.parseHex(Constants.TurnstileView.STICK_COLOR);
@@ -50874,7 +50874,7 @@ define('views/ammeter',['require','pixi','common/v3/app/app','common/v3/pixi/vie
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
-    
+
     var Assets = require('assets');
     var Constants = require('constants');
     var NEEDLE_COLOR = Colors.parseHex(Constants.AmmeterView.NEEDLE_COLOR);
@@ -51127,7 +51127,7 @@ define('views/core',['require','pixi','common/v3/pixi/view','assets'],function(r
         updatePosition: function() {
             var viewPosition = this.mvt.modelToView(this.model.get('position'));
             this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y; 
+            this.displayObject.y = viewPosition.y;
         },
 
         update: function() {
@@ -51191,7 +51191,7 @@ define('views/cores',['require','pixi','common/v3/pixi/view','views/core'],funct
                 this.coreViews[i].removeFrom(this.displayObject);
                 this.coreViews.splice(i, 1);
             }
-            
+
             // Create new core views
             for (var i = 0; i < this.cores.length; i++) {
                 var coreView = new CoreView({
@@ -51337,13 +51337,13 @@ define('views/resistor',['require','pixi','common/v3/pixi/view','common/colors/c
         getColor: function(ratio) {
             // Make sure the ratio stays between 0 and 1
             ratio = clamp(0, ratio, 1);
-            
+
             // Use a normalized ratio instead of the raw ratio
             this.ratioSamples.add(ratio);
             ratio = this.ratioSamples.average();
 
             var x = clamp(0, parseInt(this.spectrumWidth * ratio), this.spectrumWidth - 1);
-            
+
             var color = this.spectrumContext.getImageData(x, 0, 1, 1).data;
             this._rgba.r = color[0];
             this._rgba.g = color[1];
@@ -51423,7 +51423,7 @@ define('views/wire-patch',['require','underscore','pixi','common/v3/pixi/view','
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Colors   = require('common/colors/colors');
 
@@ -51468,7 +51468,7 @@ define('views/wire-patch',['require','underscore','pixi','common/v3/pixi/view','
          */
         drawSegments: function(width, color) {
             var graphics = this.displayObject;
-            
+
             var segments = this.model.segments;
             var viewPoint;
 
@@ -51490,7 +51490,7 @@ define('views/wire-patch',['require','underscore','pixi','common/v3/pixi/view','
                     viewPoint = this.mvt.modelToView(segments[i].getStart());
                     graphics.drawCircle(viewPoint.x, viewPoint.y, radius);
                 }
-                
+
                 viewPoint = this.mvt.modelToView(segments[i].getFinish());
                 graphics.drawCircle(viewPoint.x, viewPoint.y, radius);
             }
@@ -51671,7 +51671,7 @@ define('views/electron',['require','pixi','common/v3/pixi/view','constants','ass
             var modelPosition = this.model.wirePatch.getPosition(this.model.position);
             var viewPosition = this.mvt.modelToView(modelPosition);
             this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y; 
+            this.displayObject.y = viewPosition.y;
         },
 
         updateGlow: function(paused) {
@@ -51813,7 +51813,7 @@ define('views/spectrum',['require','pixi','common/v3/pixi/view','common/colors/c
         },
 
         update: function() {
-            
+
         },
 
         powerChanged: function(powerPercent) {
@@ -51860,7 +51860,7 @@ define('views/voltage-calculation',['require','pixi','common/v3/pixi/sprite-from
     var AppView  = require('common/v3/app/app');
     var Colors   = require('common/colors/colors');
     var Vector2  = require('common/math/vector2');
-    
+
     var Assets = require('assets');
 
     var Constants = require('constants');
@@ -51960,7 +51960,7 @@ define('views/voltage-calculation',['require','pixi','common/v3/pixi/sprite-from
             graphics.drawEllipse(rightCenter.x, rightCenter.y, ellipseWidth, ellipseHeight);
 
             // Draw lines connecting to numbers
-            var calculationTopY = AppView.windowIsShort() ? 
+            var calculationTopY = AppView.windowIsShort() ?
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
             var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
@@ -51995,7 +51995,7 @@ define('views/voltage-calculation',['require','pixi','common/v3/pixi/sprite-from
         },
 
         updateCalculationPosition: function() {
-            var calculationTopY = AppView.windowIsShort() ? 
+            var calculationTopY = AppView.windowIsShort() ?
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
                 Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
             var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
@@ -52077,7 +52077,7 @@ define('views/scene',['require','underscore','pixi','common/v3/pixi/view/scene',
     var BRCSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -52085,7 +52085,7 @@ define('views/scene',['require','underscore','pixi','common/v3/pixi/view/scene',
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -52126,9 +52126,9 @@ define('views/scene',['require','underscore','pixi','common/v3/pixi/view/scene',
 
             var simRatio = simWidth / simHeight;
             var screenRatio = usableWidth / usableHeight;
-            
+
             var scale = (screenRatio > simRatio) ? usableHeight / simHeight : usableWidth / simWidth;
-            
+
             this.viewOriginX = (usableWidth - simWidth * scale) / 2; // Center it
             this.viewOriginY = 0;
 
@@ -52269,16 +52269,16 @@ define('views/scene',['require','underscore','pixi','common/v3/pixi/view/scene',
 
 /*! noUiSlider - 7.0.10 - 2014-12-27 14:50:47 */
 
-!function(){"use strict";function a(a){return a.split("").reverse().join("")}function b(a,b){return a.substring(0,b.length)===b}function c(a,b){return a.slice(-1*b.length)===b}function d(a,b,c){if((a[b]||a[c])&&a[b]===a[c])throw new Error(b)}function e(a){return"number"==typeof a&&isFinite(a)}function f(a,b){var c=Math.pow(10,b);return(Math.round(a*c)/c).toFixed(b)}function g(b,c,d,g,h,i,j,k,l,m,n,o){var p,q,r,s=o,t="",u="";return i&&(o=i(o)),e(o)?(b!==!1&&0===parseFloat(o.toFixed(b))&&(o=0),0>o&&(p=!0,o=Math.abs(o)),b!==!1&&(o=f(o,b)),o=o.toString(),-1!==o.indexOf(".")?(q=o.split("."),r=q[0],d&&(t=d+q[1])):r=o,c&&(r=a(r).match(/.{1,3}/g),r=a(r.join(a(c)))),p&&k&&(u+=k),g&&(u+=g),p&&l&&(u+=l),u+=r,u+=t,h&&(u+=h),m&&(u=m(u,s)),u):!1}function h(a,d,f,g,h,i,j,k,l,m,n,o){var p,q="";return n&&(o=n(o)),o&&"string"==typeof o?(k&&b(o,k)&&(o=o.replace(k,""),p=!0),g&&b(o,g)&&(o=o.replace(g,"")),l&&b(o,l)&&(o=o.replace(l,""),p=!0),h&&c(o,h)&&(o=o.slice(0,-1*h.length)),d&&(o=o.split(d).join("")),f&&(o=o.replace(f,".")),p&&(q+="-"),q+=o,q=q.replace(/[^0-9\.\-.]/g,""),""===q?!1:(q=Number(q),j&&(q=j(q)),e(q)?q:!1)):!1}function i(a){var b,c,e,f={};for(b=0;b<l.length;b+=1)if(c=l[b],e=a[c],void 0===e)f[c]="negative"!==c||f.negativeBefore?"mark"===c&&"."!==f.thousand?".":!1:"-";else if("decimals"===c){if(!(e>=0&&8>e))throw new Error(c);f[c]=e}else if("encoder"===c||"decoder"===c||"edit"===c||"undo"===c){if("function"!=typeof e)throw new Error(c);f[c]=e}else{if("string"!=typeof e)throw new Error(c);f[c]=e}return d(f,"mark","thousand"),d(f,"prefix","negative"),d(f,"prefix","negativeBefore"),f}function j(a,b,c){var d,e=[];for(d=0;d<l.length;d+=1)e.push(a[l[d]]);return e.push(c),b.apply("",e)}function k(a){return this instanceof k?void("object"==typeof a&&(a=i(a),this.to=function(b){return j(a,g,b)},this.from=function(b){return j(a,h,b)})):new k(a)}var l=["decimals","thousand","mark","prefix","postfix","encoder","decoder","negativeBefore","negative","edit","undo"];window.wNumb=k}(),function(a){"use strict";function b(b){return b instanceof a||a.zepto&&a.zepto.isZ(b)}function c(b,c){return"string"==typeof b&&0===b.indexOf("-inline-")?(this.method=c||"html",this.target=this.el=a(b.replace("-inline-","")||"<div/>"),!0):void 0}function d(b){if("string"==typeof b&&0!==b.indexOf("-")){this.method="val";var c=document.createElement("input");return c.name=b,c.type="hidden",this.target=this.el=a(c),!0}}function e(a){return"function"==typeof a?(this.target=!1,this.method=a,!0):void 0}function f(a,c){return b(a)&&!c?(a.is("input, select, textarea")?(this.method="val",this.target=a.on("change.liblink",this.changeHandler)):(this.target=a,this.method="html"),!0):void 0}function g(a,c){return b(a)&&("function"==typeof c||"string"==typeof c&&a[c])?(this.method=c,this.target=a,!0):void 0}function h(b,c,d){var e=this,f=!1;if(this.changeHandler=function(b){var c=e.formatInstance.from(a(this).val());return c===!1||isNaN(c)?(a(this).val(e.lastSetValue),!1):void e.changeHandlerMethod.call("",b,c)},this.el=!1,this.formatInstance=d,a.each(k,function(a,d){return f=d.call(e,b,c),!f}),!f)throw new RangeError("(Link) Invalid Link.")}function i(a){this.items=[],this.elements=[],this.origin=a}function j(b,c,d,e){0===b&&(b=this.LinkDefaultFlag),this.linkAPI||(this.linkAPI={}),this.linkAPI[b]||(this.linkAPI[b]=new i(this));var f=new h(c,d,e||this.LinkDefaultFormatter);f.target||(f.target=a(this)),f.changeHandlerMethod=this.LinkConfirm(b,f.el),this.linkAPI[b].push(f,f.el),this.LinkUpdate(b)}var k=[c,d,e,f,g];h.prototype.set=function(a){var b=Array.prototype.slice.call(arguments),c=b.slice(1);this.lastSetValue=this.formatInstance.to(a),c.unshift(this.lastSetValue),("function"==typeof this.method?this.method:this.target[this.method]).apply(this.target,c)},i.prototype.push=function(a,b){this.items.push(a),b&&this.elements.push(b)},i.prototype.reconfirm=function(a){var b;for(b=0;b<this.elements.length;b+=1)this.origin.LinkConfirm(a,this.elements[b])},i.prototype.remove=function(){var a;for(a=0;a<this.items.length;a+=1)this.items[a].target.off(".liblink");for(a=0;a<this.elements.length;a+=1)this.elements[a].remove()},i.prototype.change=function(a){if(this.origin.LinkIsEmitting)return!1;this.origin.LinkIsEmitting=!0;var b,c=Array.prototype.slice.call(arguments,1);for(c.unshift(a),b=0;b<this.items.length;b+=1)this.items[b].set.apply(this.items[b],c);this.origin.LinkIsEmitting=!1},a.fn.Link=function(b){var c=this;if(b===!1)return c.each(function(){this.linkAPI&&(a.map(this.linkAPI,function(a){a.remove()}),delete this.linkAPI)});if(void 0===b)b=0;else if("string"!=typeof b)throw new Error("Flag must be string.");return{to:function(a,d,e){return c.each(function(){j.call(this,b,a,d,e)})}}}}(window.jQuery||window.Zepto),function(a){"use strict";function b(b){return a.grep(b,function(c,d){return d===a.inArray(c,b)})}function c(a,b){return Math.round(a/b)*b}function d(a){return"number"==typeof a&&!isNaN(a)&&isFinite(a)}function e(a){var b=Math.pow(10,7);return Number((Math.round(a*b)/b).toFixed(7))}function f(a,b,c){a.addClass(b),setTimeout(function(){a.removeClass(b)},c)}function g(a){return Math.max(Math.min(a,100),0)}function h(b){return a.isArray(b)?b:[b]}function i(a){var b=a.split(".");return b.length>1?b[1].length:0}function j(a,b){return 100/(b-a)}function k(a,b){return 100*b/(a[1]-a[0])}function l(a,b){return k(a,a[0]<0?b+Math.abs(a[0]):b-a[0])}function m(a,b){return b*(a[1]-a[0])/100+a[0]}function n(a,b){for(var c=1;a>=b[c];)c+=1;return c}function o(a,b,c){if(c>=a.slice(-1)[0])return 100;var d,e,f,g,h=n(c,a);return d=a[h-1],e=a[h],f=b[h-1],g=b[h],f+l([d,e],c)/j(f,g)}function p(a,b,c){if(c>=100)return a.slice(-1)[0];var d,e,f,g,h=n(c,b);return d=a[h-1],e=a[h],f=b[h-1],g=b[h],m([d,e],(c-f)*j(f,g))}function q(a,b,d,e){if(100===e)return e;var f,g,h=n(e,a);return d?(f=a[h-1],g=a[h],e-f>(g-f)/2?g:f):b[h-1]?a[h-1]+c(e-a[h-1],b[h-1]):e}function r(a,b,c){var e;if("number"==typeof b&&(b=[b]),"[object Array]"!==Object.prototype.toString.call(b))throw new Error("noUiSlider: 'range' contains invalid value.");if(e="min"===a?0:"max"===a?100:parseFloat(a),!d(e)||!d(b[0]))throw new Error("noUiSlider: 'range' value isn't numeric.");c.xPct.push(e),c.xVal.push(b[0]),e?c.xSteps.push(isNaN(b[1])?!1:b[1]):isNaN(b[1])||(c.xSteps[0]=b[1])}function s(a,b,c){return b?void(c.xSteps[a]=k([c.xVal[a],c.xVal[a+1]],b)/j(c.xPct[a],c.xPct[a+1])):!0}function t(a,b,c,d){this.xPct=[],this.xVal=[],this.xSteps=[d||!1],this.xNumSteps=[!1],this.snap=b,this.direction=c;var e,f=[];for(e in a)a.hasOwnProperty(e)&&f.push([a[e],e]);for(f.sort(function(a,b){return a[0]-b[0]}),e=0;e<f.length;e++)r(f[e][1],f[e][0],this);for(this.xNumSteps=this.xSteps.slice(0),e=0;e<this.xNumSteps.length;e++)s(e,this.xNumSteps[e],this)}function u(a,b){if(!d(b))throw new Error("noUiSlider: 'step' is not numeric.");a.singleStep=b}function v(b,c){if("object"!=typeof c||a.isArray(c))throw new Error("noUiSlider: 'range' is not an object.");if(void 0===c.min||void 0===c.max)throw new Error("noUiSlider: Missing 'min' or 'max' in 'range'.");b.spectrum=new t(c,b.snap,b.dir,b.singleStep)}function w(b,c){if(c=h(c),!a.isArray(c)||!c.length||c.length>2)throw new Error("noUiSlider: 'start' option is incorrect.");b.handles=c.length,b.start=c}function x(a,b){if(a.snap=b,"boolean"!=typeof b)throw new Error("noUiSlider: 'snap' option must be a boolean.")}function y(a,b){if(a.animate=b,"boolean"!=typeof b)throw new Error("noUiSlider: 'animate' option must be a boolean.")}function z(a,b){if("lower"===b&&1===a.handles)a.connect=1;else if("upper"===b&&1===a.handles)a.connect=2;else if(b===!0&&2===a.handles)a.connect=3;else{if(b!==!1)throw new Error("noUiSlider: 'connect' option doesn't match handle count.");a.connect=0}}function A(a,b){switch(b){case"horizontal":a.ort=0;break;case"vertical":a.ort=1;break;default:throw new Error("noUiSlider: 'orientation' option is invalid.")}}function B(a,b){if(!d(b))throw new Error("noUiSlider: 'margin' option must be numeric.");if(a.margin=a.spectrum.getMargin(b),!a.margin)throw new Error("noUiSlider: 'margin' option is only supported on linear sliders.")}function C(a,b){if(!d(b))throw new Error("noUiSlider: 'limit' option must be numeric.");if(a.limit=a.spectrum.getMargin(b),!a.limit)throw new Error("noUiSlider: 'limit' option is only supported on linear sliders.")}function D(a,b){switch(b){case"ltr":a.dir=0;break;case"rtl":a.dir=1,a.connect=[0,2,1,3][a.connect];break;default:throw new Error("noUiSlider: 'direction' option was not recognized.")}}function E(a,b){if("string"!=typeof b)throw new Error("noUiSlider: 'behaviour' must be a string containing options.");var c=b.indexOf("tap")>=0,d=b.indexOf("drag")>=0,e=b.indexOf("fixed")>=0,f=b.indexOf("snap")>=0;a.events={tap:c||f,drag:d,fixed:e,snap:f}}function F(a,b){if(a.format=b,"function"==typeof b.to&&"function"==typeof b.from)return!0;throw new Error("noUiSlider: 'format' requires 'to' and 'from' methods.")}function G(b){var c,d={margin:0,limit:0,animate:!0,format:Z};return c={step:{r:!1,t:u},start:{r:!0,t:w},connect:{r:!0,t:z},direction:{r:!0,t:D},snap:{r:!1,t:x},animate:{r:!1,t:y},range:{r:!0,t:v},orientation:{r:!1,t:A},margin:{r:!1,t:B},limit:{r:!1,t:C},behaviour:{r:!0,t:E},format:{r:!1,t:F}},b=a.extend({connect:!1,direction:"ltr",behaviour:"tap",orientation:"horizontal"},b),a.each(c,function(a,c){if(void 0===b[a]){if(c.r)throw new Error("noUiSlider: '"+a+"' is required.");return!0}c.t(d,b[a])}),d.style=d.ort?"top":"left",d}function H(a,b,c){var d=a+b[0],e=a+b[1];return c?(0>d&&(e+=Math.abs(d)),e>100&&(d-=e-100),[g(d),g(e)]):[d,e]}function I(a){a.preventDefault();var b,c,d=0===a.type.indexOf("touch"),e=0===a.type.indexOf("mouse"),f=0===a.type.indexOf("pointer"),g=a;return 0===a.type.indexOf("MSPointer")&&(f=!0),a.originalEvent&&(a=a.originalEvent),d&&(b=a.changedTouches[0].pageX,c=a.changedTouches[0].pageY),(e||f)&&(f||void 0!==window.pageXOffset||(window.pageXOffset=document.documentElement.scrollLeft,window.pageYOffset=document.documentElement.scrollTop),b=a.clientX+window.pageXOffset,c=a.clientY+window.pageYOffset),g.points=[b,c],g.cursor=e,g}function J(b,c){var d=a("<div><div/></div>").addClass(Y[2]),e=["-lower","-upper"];return b&&e.reverse(),d.children().addClass(Y[3]+" "+Y[3]+e[c]),d}function K(a,b,c){switch(a){case 1:b.addClass(Y[7]),c[0].addClass(Y[6]);break;case 3:c[1].addClass(Y[6]);case 2:c[0].addClass(Y[7]);case 0:b.addClass(Y[6])}}function L(a,b,c){var d,e=[];for(d=0;a>d;d+=1)e.push(J(b,d).appendTo(c));return e}function M(b,c,d){return d.addClass([Y[0],Y[8+b],Y[4+c]].join(" ")),a("<div/>").appendTo(d).addClass(Y[1])}function N(b,c,d){function e(){return C[["width","height"][c.ort]]()}function j(a){var b,c=[E.val()];for(b=0;b<a.length;b+=1)E.trigger(a[b],c)}function k(a){return 1===a.length?a[0]:c.dir?a.reverse():a}function l(a){return function(b,c){E.val([a?null:c,a?c:null],!0)}}function m(b){var c=a.inArray(b,N);E[0].linkAPI&&E[0].linkAPI[b]&&E[0].linkAPI[b].change(J[c],D[c].children(),E)}function n(b,d){var e=a.inArray(b,N);return d&&d.appendTo(D[e].children()),c.dir&&c.handles>1&&(e=1===e?0:1),l(e)}function o(){var a,b;for(a=0;a<N.length;a+=1)this.linkAPI&&this.linkAPI[b=N[a]]&&this.linkAPI[b].reconfirm(b)}function p(a,b,d,e){return a=a.replace(/\s/g,W+" ")+W,b.on(a,function(a){return E.attr("disabled")?!1:E.hasClass(Y[14])?!1:(a=I(a),a.calcPoint=a.points[c.ort],void d(a,e))})}function q(a,b){var c,d=b.handles||D,f=!1,g=100*(a.calcPoint-b.start)/e(),h=d[0][0]!==D[0][0]?1:0;c=H(g,b.positions,d.length>1),f=v(d[0],c[h],1===d.length),d.length>1&&(f=v(d[1],c[h?0:1],!1)||f),f&&j(["slide"])}function r(b){a("."+Y[15]).removeClass(Y[15]),b.cursor&&a("body").css("cursor","").off(W),U.off(W),E.removeClass(Y[12]),j(["set","change"])}function s(b,c){1===c.handles.length&&c.handles[0].children().addClass(Y[15]),b.stopPropagation(),p(X.move,U,q,{start:b.calcPoint,handles:c.handles,positions:[F[0],F[D.length-1]]}),p(X.end,U,r,null),b.cursor&&(a("body").css("cursor",a(b.target).css("cursor")),D.length>1&&E.addClass(Y[12]),a("body").on("selectstart"+W,!1))}function t(b){var d,g=b.calcPoint,h=0;b.stopPropagation(),a.each(D,function(){h+=this.offset()[c.style]}),h=h/2>g||1===D.length?0:1,g-=C.offset()[c.style],d=100*g/e(),c.events.snap||f(E,Y[14],300),v(D[h],d),j(["slide","set","change"]),c.events.snap&&s(b,{handles:[D[h]]})}function u(a){var b,c;if(!a.fixed)for(b=0;b<D.length;b+=1)p(X.start,D[b].children(),s,{handles:[D[b]]});a.tap&&p(X.start,C,t,{handles:D}),a.drag&&(c=C.find("."+Y[7]).addClass(Y[10]),a.fixed&&(c=c.add(C.children().not(c).children())),p(X.start,c,s,{handles:D}))}function v(a,b,d){var e=a[0]!==D[0][0]?1:0,f=F[0]+c.margin,h=F[1]-c.margin,i=F[0]+c.limit,j=F[1]-c.limit;return D.length>1&&(b=e?Math.max(b,f):Math.min(b,h)),d!==!1&&c.limit&&D.length>1&&(b=e?Math.min(b,i):Math.max(b,j)),b=G.getStep(b),b=g(parseFloat(b.toFixed(7))),b===F[e]?!1:(a.css(c.style,b+"%"),a.is(":first-child")&&a.toggleClass(Y[17],b>50),F[e]=b,J[e]=G.fromStepping(b),m(N[e]),!0)}function w(a,b){var d,e,f;for(c.limit&&(a+=1),d=0;a>d;d+=1)e=d%2,f=b[e],null!==f&&f!==!1&&("number"==typeof f&&(f=String(f)),f=c.format.from(f),(f===!1||isNaN(f)||v(D[e],G.toStepping(f),d===3-c.dir)===!1)&&m(N[e]))}function x(a){if(E[0].LinkIsEmitting)return this;var b,d=h(a);return c.dir&&c.handles>1&&d.reverse(),c.animate&&-1!==F[0]&&f(E,Y[14],300),b=D.length>1?3:1,1===d.length&&(b=1),w(b,d),j(["set"]),this}function y(){var a,b=[];for(a=0;a<c.handles;a+=1)b[a]=c.format.to(J[a]);return k(b)}function z(){return a(this).off(W).removeClass(Y.join(" ")).empty(),delete this.LinkUpdate,delete this.LinkConfirm,delete this.LinkDefaultFormatter,delete this.LinkDefaultFlag,delete this.reappend,delete this.vGet,delete this.vSet,delete this.getCurrentStep,delete this.getInfo,delete this.destroy,d}function A(){var b=a.map(F,function(a,b){var c=G.getApplicableStep(a),d=i(String(c[2])),e=J[b],f=100===a?null:c[2],g=Number((e-c[2]).toFixed(d)),h=0===a?null:g>=c[1]?c[2]:c[0]||!1;return[[h,f]]});return k(b)}function B(){return d}var C,D,E=a(b),F=[-1,-1],G=c.spectrum,J=[],N=["lower","upper"].slice(0,c.handles);if(c.dir&&N.reverse(),b.LinkUpdate=m,b.LinkConfirm=n,b.LinkDefaultFormatter=c.format,b.LinkDefaultFlag="lower",b.reappend=o,E.hasClass(Y[0]))throw new Error("Slider was already initialized.");C=M(c.dir,c.ort,E),D=L(c.handles,c.dir,C),K(c.connect,E,D),u(c.events),b.vSet=x,b.vGet=y,b.destroy=z,b.getCurrentStep=A,b.getOriginalOptions=B,b.getInfo=function(){return[G,c.style,c.ort]},E.val(c.start)}function O(a){var b=G(a,this);return this.each(function(){N(this,b,a)})}function P(b){return this.each(function(){if(!this.destroy)return void a(this).noUiSlider(b);var c=a(this).val(),d=this.destroy(),e=a.extend({},d,b);a(this).noUiSlider(e),this.reappend(),d.start===e.start&&a(this).val(c)})}function Q(){return this[0][arguments.length?"vSet":"vGet"].apply(this[0],arguments)}function R(b,c,d,e){if("range"===c||"steps"===c)return b.xVal;if("count"===c){var f,g=100/(d-1),h=0;for(d=[];(f=h++*g)<=100;)d.push(f);c="positions"}return"positions"===c?a.map(d,function(a){return b.fromStepping(e?b.getStep(a):a)}):"values"===c?e?a.map(d,function(a){return b.fromStepping(b.getStep(b.toStepping(a)))}):d:void 0}function S(c,d,e,f){var g=c.direction,h={},i=c.xVal[0],j=c.xVal[c.xVal.length-1],k=!1,l=!1,m=0;return c.direction=0,f=b(f.slice().sort(function(a,b){return a-b})),f[0]!==i&&(f.unshift(i),k=!0),f[f.length-1]!==j&&(f.push(j),l=!0),a.each(f,function(b){var g,i,j,n,o,p,q,r,s,t,u=f[b],v=f[b+1];if("steps"===e&&(g=c.xNumSteps[b]),g||(g=v-u),u!==!1&&void 0!==v)for(i=u;v>=i;i+=g){for(n=c.toStepping(i),o=n-m,r=o/d,s=Math.round(r),t=o/s,j=1;s>=j;j+=1)p=m+j*t,h[p.toFixed(5)]=["x",0];q=a.inArray(i,f)>-1?1:"steps"===e?2:0,!b&&k&&(q=0),i===v&&l||(h[n.toFixed(5)]=[i,q]),m=n}}),c.direction=g,h}function T(b,c,d,e,f,g){function h(a){return["-normal","-large","-sub"][a]}function i(a,c,d){return'class="'+c+" "+c+"-"+k+" "+c+h(d[1],d[0])+'" style="'+b+": "+a+'%"'}function j(a,b){d&&(a=100-a),b[1]=b[1]&&f?f(b[0],b[1]):b[1],l.append("<div "+i(a,"noUi-marker",b)+"></div>"),b[1]&&l.append("<div "+i(a,"noUi-value",b)+">"+g.to(b[0])+"</div>")}var k=["horizontal","vertical"][c],l=a("<div/>");return l.addClass("noUi-pips noUi-pips-"+k),a.each(e,j),l}var U=a(document),V=a.fn.val,W=".nui",X=window.navigator.pointerEnabled?{start:"pointerdown",move:"pointermove",end:"pointerup"}:window.navigator.msPointerEnabled?{start:"MSPointerDown",move:"MSPointerMove",end:"MSPointerUp"}:{start:"mousedown touchstart",move:"mousemove touchmove",end:"mouseup touchend"},Y=["noUi-target","noUi-base","noUi-origin","noUi-handle","noUi-horizontal","noUi-vertical","noUi-background","noUi-connect","noUi-ltr","noUi-rtl","noUi-dragable","","noUi-state-drag","","noUi-state-tap","noUi-active","","noUi-stacking"];t.prototype.getMargin=function(a){return 2===this.xPct.length?k(this.xVal,a):!1},t.prototype.toStepping=function(a){return a=o(this.xVal,this.xPct,a),this.direction&&(a=100-a),a},t.prototype.fromStepping=function(a){return this.direction&&(a=100-a),e(p(this.xVal,this.xPct,a))},t.prototype.getStep=function(a){return this.direction&&(a=100-a),a=q(this.xPct,this.xSteps,this.snap,a),this.direction&&(a=100-a),a},t.prototype.getApplicableStep=function(a){var b=n(a,this.xPct),c=100===a?2:1;return[this.xNumSteps[b-2],this.xVal[b-c],this.xNumSteps[b-c]]},t.prototype.convert=function(a){return this.getStep(this.toStepping(a))};var Z={to:function(a){return a.toFixed(2)},from:Number};a.fn.val=function(b){function c(a){return a.hasClass(Y[0])?Q:V}if(!arguments.length){var d=a(this[0]);return c(d).call(d)}var e=a.isFunction(b);return this.each(function(d){var f=b,g=a(this);e&&(f=b.call(this,d,g.val())),c(g).call(g,f)})},a.fn.noUiSlider=function(a,b){switch(a){case"step":return this[0].getCurrentStep();case"options":return this[0].getOriginalOptions()}return(b?P:O).call(this,a)},a.fn.noUiSlider_pips=function(b){var c=b.mode,d=b.density||1,e=b.filter||!1,f=b.values||!1,g=b.format||{to:Math.round},h=b.stepped||!1;return this.each(function(){var b=this.getInfo(),i=R(b[0],c,f,h),j=S(b[0],d,c,i);return a(this).append(T(b[1],b[2],b[0].direction,j,e,g))})}}(window.jQuery||window.Zepto);
-define("nouislider", ["jquery"], function(){});
+!function(){'use strict';function a(a){return a.split('').reverse().join('')}function b(a,b){return a.substring(0,b.length)===b}function c(a,b){return a.slice(-1*b.length)===b}function d(a,b,c){if((a[b]||a[c])&&a[b]===a[c])throw new Error(b)}function e(a){return'number'==typeof a&&isFinite(a)}function f(a,b){var c=Math.pow(10,b);return(Math.round(a*c)/c).toFixed(b)}function g(b,c,d,g,h,i,j,k,l,m,n,o){var p,q,r,s=o,t='',u='';return i&&(o=i(o)),e(o)?(b!==!1&&0===parseFloat(o.toFixed(b))&&(o=0),0>o&&(p=!0,o=Math.abs(o)),b!==!1&&(o=f(o,b)),o=o.toString(),-1!==o.indexOf('.')?(q=o.split('.'),r=q[0],d&&(t=d+q[1])):r=o,c&&(r=a(r).match(/.{1,3}/g),r=a(r.join(a(c)))),p&&k&&(u+=k),g&&(u+=g),p&&l&&(u+=l),u+=r,u+=t,h&&(u+=h),m&&(u=m(u,s)),u):!1}function h(a,d,f,g,h,i,j,k,l,m,n,o){var p,q='';return n&&(o=n(o)),o&&'string'==typeof o?(k&&b(o,k)&&(o=o.replace(k,''),p=!0),g&&b(o,g)&&(o=o.replace(g,'')),l&&b(o,l)&&(o=o.replace(l,''),p=!0),h&&c(o,h)&&(o=o.slice(0,-1*h.length)),d&&(o=o.split(d).join('')),f&&(o=o.replace(f,'.')),p&&(q+='-'),q+=o,q=q.replace(/[^0-9\.\-.]/g,''),''===q?!1:(q=Number(q),j&&(q=j(q)),e(q)?q:!1)):!1}function i(a){var b,c,e,f={};for(b=0;b<l.length;b+=1)if(c=l[b],e=a[c],void 0===e)f[c]='negative'!==c||f.negativeBefore?'mark'===c&&'.'!==f.thousand?'.':!1:'-';else if('decimals'===c){if(!(e>=0&&8>e))throw new Error(c);f[c]=e}else if('encoder'===c||'decoder'===c||'edit'===c||'undo'===c){if('function'!=typeof e)throw new Error(c);f[c]=e}else{if('string'!=typeof e)throw new Error(c);f[c]=e}return d(f,'mark','thousand'),d(f,'prefix','negative'),d(f,'prefix','negativeBefore'),f}function j(a,b,c){var d,e=[];for(d=0;d<l.length;d+=1)e.push(a[l[d]]);return e.push(c),b.apply('',e)}function k(a){return this instanceof k?void('object'==typeof a&&(a=i(a),this.to=function(b){return j(a,g,b)},this.from=function(b){return j(a,h,b)})):new k(a)}var l=['decimals','thousand','mark','prefix','postfix','encoder','decoder','negativeBefore','negative','edit','undo'];window.wNumb=k}(),function(a){'use strict';function b(b){return b instanceof a||a.zepto&&a.zepto.isZ(b)}function c(b,c){return'string'==typeof b&&0===b.indexOf('-inline-')?(this.method=c||'html',this.target=this.el=a(b.replace('-inline-','')||'<div/>'),!0):void 0}function d(b){if('string'==typeof b&&0!==b.indexOf('-')){this.method='val';var c=document.createElement('input');return c.name=b,c.type='hidden',this.target=this.el=a(c),!0}}function e(a){return'function'==typeof a?(this.target=!1,this.method=a,!0):void 0}function f(a,c){return b(a)&&!c?(a.is('input, select, textarea')?(this.method='val',this.target=a.on('change.liblink',this.changeHandler)):(this.target=a,this.method='html'),!0):void 0}function g(a,c){return b(a)&&('function'==typeof c||'string'==typeof c&&a[c])?(this.method=c,this.target=a,!0):void 0}function h(b,c,d){var e=this,f=!1;if(this.changeHandler=function(b){var c=e.formatInstance.from(a(this).val());return c===!1||isNaN(c)?(a(this).val(e.lastSetValue),!1):void e.changeHandlerMethod.call('',b,c)},this.el=!1,this.formatInstance=d,a.each(k,function(a,d){return f=d.call(e,b,c),!f}),!f)throw new RangeError('(Link) Invalid Link.')}function i(a){this.items=[],this.elements=[],this.origin=a}function j(b,c,d,e){0===b&&(b=this.LinkDefaultFlag),this.linkAPI||(this.linkAPI={}),this.linkAPI[b]||(this.linkAPI[b]=new i(this));var f=new h(c,d,e||this.LinkDefaultFormatter);f.target||(f.target=a(this)),f.changeHandlerMethod=this.LinkConfirm(b,f.el),this.linkAPI[b].push(f,f.el),this.LinkUpdate(b)}var k=[c,d,e,f,g];h.prototype.set=function(a){var b=Array.prototype.slice.call(arguments),c=b.slice(1);this.lastSetValue=this.formatInstance.to(a),c.unshift(this.lastSetValue),('function'==typeof this.method?this.method:this.target[this.method]).apply(this.target,c)},i.prototype.push=function(a,b){this.items.push(a),b&&this.elements.push(b)},i.prototype.reconfirm=function(a){var b;for(b=0;b<this.elements.length;b+=1)this.origin.LinkConfirm(a,this.elements[b])},i.prototype.remove=function(){var a;for(a=0;a<this.items.length;a+=1)this.items[a].target.off('.liblink');for(a=0;a<this.elements.length;a+=1)this.elements[a].remove()},i.prototype.change=function(a){if(this.origin.LinkIsEmitting)return!1;this.origin.LinkIsEmitting=!0;var b,c=Array.prototype.slice.call(arguments,1);for(c.unshift(a),b=0;b<this.items.length;b+=1)this.items[b].set.apply(this.items[b],c);this.origin.LinkIsEmitting=!1},a.fn.Link=function(b){var c=this;if(b===!1)return c.each(function(){this.linkAPI&&(a.map(this.linkAPI,function(a){a.remove()}),delete this.linkAPI)});if(void 0===b)b=0;else if('string'!=typeof b)throw new Error('Flag must be string.');return{to:function(a,d,e){return c.each(function(){j.call(this,b,a,d,e)})}}}}(window.jQuery||window.Zepto),function(a){'use strict';function b(b){return a.grep(b,function(c,d){return d===a.inArray(c,b)})}function c(a,b){return Math.round(a/b)*b}function d(a){return'number'==typeof a&&!isNaN(a)&&isFinite(a)}function e(a){var b=Math.pow(10,7);return Number((Math.round(a*b)/b).toFixed(7))}function f(a,b,c){a.addClass(b),setTimeout(function(){a.removeClass(b)},c)}function g(a){return Math.max(Math.min(a,100),0)}function h(b){return a.isArray(b)?b:[b]}function i(a){var b=a.split('.');return b.length>1?b[1].length:0}function j(a,b){return 100/(b-a)}function k(a,b){return 100*b/(a[1]-a[0])}function l(a,b){return k(a,a[0]<0?b+Math.abs(a[0]):b-a[0])}function m(a,b){return b*(a[1]-a[0])/100+a[0]}function n(a,b){for(var c=1;a>=b[c];)c+=1;return c}function o(a,b,c){if(c>=a.slice(-1)[0])return 100;var d,e,f,g,h=n(c,a);return d=a[h-1],e=a[h],f=b[h-1],g=b[h],f+l([d,e],c)/j(f,g)}function p(a,b,c){if(c>=100)return a.slice(-1)[0];var d,e,f,g,h=n(c,b);return d=a[h-1],e=a[h],f=b[h-1],g=b[h],m([d,e],(c-f)*j(f,g))}function q(a,b,d,e){if(100===e)return e;var f,g,h=n(e,a);return d?(f=a[h-1],g=a[h],e-f>(g-f)/2?g:f):b[h-1]?a[h-1]+c(e-a[h-1],b[h-1]):e}function r(a,b,c){var e;if('number'==typeof b&&(b=[b]),'[object Array]'!==Object.prototype.toString.call(b))throw new Error("noUiSlider: 'range' contains invalid value.");if(e='min'===a?0:'max'===a?100:parseFloat(a),!d(e)||!d(b[0]))throw new Error("noUiSlider: 'range' value isn't numeric.");c.xPct.push(e),c.xVal.push(b[0]),e?c.xSteps.push(isNaN(b[1])?!1:b[1]):isNaN(b[1])||(c.xSteps[0]=b[1])}function s(a,b,c){return b?void(c.xSteps[a]=k([c.xVal[a],c.xVal[a+1]],b)/j(c.xPct[a],c.xPct[a+1])):!0}function t(a,b,c,d){this.xPct=[],this.xVal=[],this.xSteps=[d||!1],this.xNumSteps=[!1],this.snap=b,this.direction=c;var e,f=[];for(e in a)a.hasOwnProperty(e)&&f.push([a[e],e]);for(f.sort(function(a,b){return a[0]-b[0]}),e=0;e<f.length;e++)r(f[e][1],f[e][0],this);for(this.xNumSteps=this.xSteps.slice(0),e=0;e<this.xNumSteps.length;e++)s(e,this.xNumSteps[e],this)}function u(a,b){if(!d(b))throw new Error("noUiSlider: 'step' is not numeric.");a.singleStep=b}function v(b,c){if('object'!=typeof c||a.isArray(c))throw new Error("noUiSlider: 'range' is not an object.");if(void 0===c.min||void 0===c.max)throw new Error("noUiSlider: Missing 'min' or 'max' in 'range'.");b.spectrum=new t(c,b.snap,b.dir,b.singleStep)}function w(b,c){if(c=h(c),!a.isArray(c)||!c.length||c.length>2)throw new Error("noUiSlider: 'start' option is incorrect.");b.handles=c.length,b.start=c}function x(a,b){if(a.snap=b,'boolean'!=typeof b)throw new Error("noUiSlider: 'snap' option must be a boolean.")}function y(a,b){if(a.animate=b,'boolean'!=typeof b)throw new Error("noUiSlider: 'animate' option must be a boolean.")}function z(a,b){if('lower'===b&&1===a.handles)a.connect=1;else if('upper'===b&&1===a.handles)a.connect=2;else if(b===!0&&2===a.handles)a.connect=3;else{if(b!==!1)throw new Error("noUiSlider: 'connect' option doesn't match handle count.");a.connect=0}}function A(a,b){switch(b){case'horizontal':a.ort=0;break;case'vertical':a.ort=1;break;default:throw new Error("noUiSlider: 'orientation' option is invalid.")}}function B(a,b){if(!d(b))throw new Error("noUiSlider: 'margin' option must be numeric.");if(a.margin=a.spectrum.getMargin(b),!a.margin)throw new Error("noUiSlider: 'margin' option is only supported on linear sliders.")}function C(a,b){if(!d(b))throw new Error("noUiSlider: 'limit' option must be numeric.");if(a.limit=a.spectrum.getMargin(b),!a.limit)throw new Error("noUiSlider: 'limit' option is only supported on linear sliders.")}function D(a,b){switch(b){case'ltr':a.dir=0;break;case'rtl':a.dir=1,a.connect=[0,2,1,3][a.connect];break;default:throw new Error("noUiSlider: 'direction' option was not recognized.")}}function E(a,b){if('string'!=typeof b)throw new Error("noUiSlider: 'behaviour' must be a string containing options.");var c=b.indexOf('tap')>=0,d=b.indexOf('drag')>=0,e=b.indexOf('fixed')>=0,f=b.indexOf('snap')>=0;a.events={tap:c||f,drag:d,fixed:e,snap:f}}function F(a,b){if(a.format=b,'function'==typeof b.to&&'function'==typeof b.from)return!0;throw new Error("noUiSlider: 'format' requires 'to' and 'from' methods.")}function G(b){var c,d={margin:0,limit:0,animate:!0,format:Z};return c={step:{r:!1,t:u},start:{r:!0,t:w},connect:{r:!0,t:z},direction:{r:!0,t:D},snap:{r:!1,t:x},animate:{r:!1,t:y},range:{r:!0,t:v},orientation:{r:!1,t:A},margin:{r:!1,t:B},limit:{r:!1,t:C},behaviour:{r:!0,t:E},format:{r:!1,t:F}},b=a.extend({connect:!1,direction:'ltr',behaviour:'tap',orientation:'horizontal'},b),a.each(c,function(a,c){if(void 0===b[a]){if(c.r)throw new Error("noUiSlider: '"+a+"' is required.");return!0}c.t(d,b[a])}),d.style=d.ort?'top':'left',d}function H(a,b,c){var d=a+b[0],e=a+b[1];return c?(0>d&&(e+=Math.abs(d)),e>100&&(d-=e-100),[g(d),g(e)]):[d,e]}function I(a){a.preventDefault();var b,c,d=0===a.type.indexOf('touch'),e=0===a.type.indexOf('mouse'),f=0===a.type.indexOf('pointer'),g=a;return 0===a.type.indexOf('MSPointer')&&(f=!0),a.originalEvent&&(a=a.originalEvent),d&&(b=a.changedTouches[0].pageX,c=a.changedTouches[0].pageY),(e||f)&&(f||void 0!==window.pageXOffset||(window.pageXOffset=document.documentElement.scrollLeft,window.pageYOffset=document.documentElement.scrollTop),b=a.clientX+window.pageXOffset,c=a.clientY+window.pageYOffset),g.points=[b,c],g.cursor=e,g}function J(b,c){var d=a('<div><div/></div>').addClass(Y[2]),e=['-lower','-upper'];return b&&e.reverse(),d.children().addClass(Y[3]+' '+Y[3]+e[c]),d}function K(a,b,c){switch(a){case 1:b.addClass(Y[7]),c[0].addClass(Y[6]);break;case 3:c[1].addClass(Y[6]);case 2:c[0].addClass(Y[7]);case 0:b.addClass(Y[6])}}function L(a,b,c){var d,e=[];for(d=0;a>d;d+=1)e.push(J(b,d).appendTo(c));return e}function M(b,c,d){return d.addClass([Y[0],Y[8+b],Y[4+c]].join(' ')),a('<div/>').appendTo(d).addClass(Y[1])}function N(b,c,d){function e(){return C[['width','height'][c.ort]]()}function j(a){var b,c=[E.val()];for(b=0;b<a.length;b+=1)E.trigger(a[b],c)}function k(a){return 1===a.length?a[0]:c.dir?a.reverse():a}function l(a){return function(b,c){E.val([a?null:c,a?c:null],!0)}}function m(b){var c=a.inArray(b,N);E[0].linkAPI&&E[0].linkAPI[b]&&E[0].linkAPI[b].change(J[c],D[c].children(),E)}function n(b,d){var e=a.inArray(b,N);return d&&d.appendTo(D[e].children()),c.dir&&c.handles>1&&(e=1===e?0:1),l(e)}function o(){var a,b;for(a=0;a<N.length;a+=1)this.linkAPI&&this.linkAPI[b=N[a]]&&this.linkAPI[b].reconfirm(b)}function p(a,b,d,e){return a=a.replace(/\s/g,W+' ')+W,b.on(a,function(a){return E.attr('disabled')?!1:E.hasClass(Y[14])?!1:(a=I(a),a.calcPoint=a.points[c.ort],void d(a,e))})}function q(a,b){var c,d=b.handles||D,f=!1,g=100*(a.calcPoint-b.start)/e(),h=d[0][0]!==D[0][0]?1:0;c=H(g,b.positions,d.length>1),f=v(d[0],c[h],1===d.length),d.length>1&&(f=v(d[1],c[h?0:1],!1)||f),f&&j(['slide'])}function r(b){a('.'+Y[15]).removeClass(Y[15]),b.cursor&&a('body').css('cursor','').off(W),U.off(W),E.removeClass(Y[12]),j(['set','change'])}function s(b,c){1===c.handles.length&&c.handles[0].children().addClass(Y[15]),b.stopPropagation(),p(X.move,U,q,{start:b.calcPoint,handles:c.handles,positions:[F[0],F[D.length-1]]}),p(X.end,U,r,null),b.cursor&&(a('body').css('cursor',a(b.target).css('cursor')),D.length>1&&E.addClass(Y[12]),a('body').on('selectstart'+W,!1))}function t(b){var d,g=b.calcPoint,h=0;b.stopPropagation(),a.each(D,function(){h+=this.offset()[c.style]}),h=h/2>g||1===D.length?0:1,g-=C.offset()[c.style],d=100*g/e(),c.events.snap||f(E,Y[14],300),v(D[h],d),j(['slide','set','change']),c.events.snap&&s(b,{handles:[D[h]]})}function u(a){var b,c;if(!a.fixed)for(b=0;b<D.length;b+=1)p(X.start,D[b].children(),s,{handles:[D[b]]});a.tap&&p(X.start,C,t,{handles:D}),a.drag&&(c=C.find('.'+Y[7]).addClass(Y[10]),a.fixed&&(c=c.add(C.children().not(c).children())),p(X.start,c,s,{handles:D}))}function v(a,b,d){var e=a[0]!==D[0][0]?1:0,f=F[0]+c.margin,h=F[1]-c.margin,i=F[0]+c.limit,j=F[1]-c.limit;return D.length>1&&(b=e?Math.max(b,f):Math.min(b,h)),d!==!1&&c.limit&&D.length>1&&(b=e?Math.min(b,i):Math.max(b,j)),b=G.getStep(b),b=g(parseFloat(b.toFixed(7))),b===F[e]?!1:(a.css(c.style,b+'%'),a.is(':first-child')&&a.toggleClass(Y[17],b>50),F[e]=b,J[e]=G.fromStepping(b),m(N[e]),!0)}function w(a,b){var d,e,f;for(c.limit&&(a+=1),d=0;a>d;d+=1)e=d%2,f=b[e],null!==f&&f!==!1&&('number'==typeof f&&(f=String(f)),f=c.format.from(f),(f===!1||isNaN(f)||v(D[e],G.toStepping(f),d===3-c.dir)===!1)&&m(N[e]))}function x(a){if(E[0].LinkIsEmitting)return this;var b,d=h(a);return c.dir&&c.handles>1&&d.reverse(),c.animate&&-1!==F[0]&&f(E,Y[14],300),b=D.length>1?3:1,1===d.length&&(b=1),w(b,d),j(['set']),this}function y(){var a,b=[];for(a=0;a<c.handles;a+=1)b[a]=c.format.to(J[a]);return k(b)}function z(){return a(this).off(W).removeClass(Y.join(' ')).empty(),delete this.LinkUpdate,delete this.LinkConfirm,delete this.LinkDefaultFormatter,delete this.LinkDefaultFlag,delete this.reappend,delete this.vGet,delete this.vSet,delete this.getCurrentStep,delete this.getInfo,delete this.destroy,d}function A(){var b=a.map(F,function(a,b){var c=G.getApplicableStep(a),d=i(String(c[2])),e=J[b],f=100===a?null:c[2],g=Number((e-c[2]).toFixed(d)),h=0===a?null:g>=c[1]?c[2]:c[0]||!1;return[[h,f]]});return k(b)}function B(){return d}var C,D,E=a(b),F=[-1,-1],G=c.spectrum,J=[],N=['lower','upper'].slice(0,c.handles);if(c.dir&&N.reverse(),b.LinkUpdate=m,b.LinkConfirm=n,b.LinkDefaultFormatter=c.format,b.LinkDefaultFlag='lower',b.reappend=o,E.hasClass(Y[0]))throw new Error('Slider was already initialized.');C=M(c.dir,c.ort,E),D=L(c.handles,c.dir,C),K(c.connect,E,D),u(c.events),b.vSet=x,b.vGet=y,b.destroy=z,b.getCurrentStep=A,b.getOriginalOptions=B,b.getInfo=function(){return[G,c.style,c.ort]},E.val(c.start)}function O(a){var b=G(a,this);return this.each(function(){N(this,b,a)})}function P(b){return this.each(function(){if(!this.destroy)return void a(this).noUiSlider(b);var c=a(this).val(),d=this.destroy(),e=a.extend({},d,b);a(this).noUiSlider(e),this.reappend(),d.start===e.start&&a(this).val(c)})}function Q(){return this[0][arguments.length?'vSet':'vGet'].apply(this[0],arguments)}function R(b,c,d,e){if('range'===c||'steps'===c)return b.xVal;if('count'===c){var f,g=100/(d-1),h=0;for(d=[];(f=h++*g)<=100;)d.push(f);c='positions'}return'positions'===c?a.map(d,function(a){return b.fromStepping(e?b.getStep(a):a)}):'values'===c?e?a.map(d,function(a){return b.fromStepping(b.getStep(b.toStepping(a)))}):d:void 0}function S(c,d,e,f){var g=c.direction,h={},i=c.xVal[0],j=c.xVal[c.xVal.length-1],k=!1,l=!1,m=0;return c.direction=0,f=b(f.slice().sort(function(a,b){return a-b})),f[0]!==i&&(f.unshift(i),k=!0),f[f.length-1]!==j&&(f.push(j),l=!0),a.each(f,function(b){var g,i,j,n,o,p,q,r,s,t,u=f[b],v=f[b+1];if('steps'===e&&(g=c.xNumSteps[b]),g||(g=v-u),u!==!1&&void 0!==v)for(i=u;v>=i;i+=g){for(n=c.toStepping(i),o=n-m,r=o/d,s=Math.round(r),t=o/s,j=1;s>=j;j+=1)p=m+j*t,h[p.toFixed(5)]=['x',0];q=a.inArray(i,f)>-1?1:'steps'===e?2:0,!b&&k&&(q=0),i===v&&l||(h[n.toFixed(5)]=[i,q]),m=n}}),c.direction=g,h}function T(b,c,d,e,f,g){function h(a){return['-normal','-large','-sub'][a]}function i(a,c,d){return'class="'+c+' '+c+'-'+k+' '+c+h(d[1],d[0])+'" style="'+b+': '+a+'%"'}function j(a,b){d&&(a=100-a),b[1]=b[1]&&f?f(b[0],b[1]):b[1],l.append('<div '+i(a,'noUi-marker',b)+'></div>'),b[1]&&l.append('<div '+i(a,'noUi-value',b)+'>'+g.to(b[0])+'</div>')}var k=['horizontal','vertical'][c],l=a('<div/>');return l.addClass('noUi-pips noUi-pips-'+k),a.each(e,j),l}var U=a(document),V=a.fn.val,W='.nui',X=window.navigator.pointerEnabled?{start:'pointerdown',move:'pointermove',end:'pointerup'}:window.navigator.msPointerEnabled?{start:'MSPointerDown',move:'MSPointerMove',end:'MSPointerUp'}:{start:'mousedown touchstart',move:'mousemove touchmove',end:'mouseup touchend'},Y=['noUi-target','noUi-base','noUi-origin','noUi-handle','noUi-horizontal','noUi-vertical','noUi-background','noUi-connect','noUi-ltr','noUi-rtl','noUi-dragable','','noUi-state-drag','','noUi-state-tap','noUi-active','','noUi-stacking'];t.prototype.getMargin=function(a){return 2===this.xPct.length?k(this.xVal,a):!1},t.prototype.toStepping=function(a){return a=o(this.xVal,this.xPct,a),this.direction&&(a=100-a),a},t.prototype.fromStepping=function(a){return this.direction&&(a=100-a),e(p(this.xVal,this.xPct,a))},t.prototype.getStep=function(a){return this.direction&&(a=100-a),a=q(this.xPct,this.xSteps,this.snap,a),this.direction&&(a=100-a),a},t.prototype.getApplicableStep=function(a){var b=n(a,this.xPct),c=100===a?2:1;return[this.xNumSteps[b-2],this.xVal[b-c],this.xNumSteps[b-c]]},t.prototype.convert=function(a){return this.getStep(this.toStepping(a))};var Z={to:function(a){return a.toFixed(2)},from:Number};a.fn.val=function(b){function c(a){return a.hasClass(Y[0])?Q:V}if(!arguments.length){var d=a(this[0]);return c(d).call(d)}var e=a.isFunction(b);return this.each(function(d){var f=b,g=a(this);e&&(f=b.call(this,d,g.val())),c(g).call(g,f)})},a.fn.noUiSlider=function(a,b){switch(a){case'step':return this[0].getCurrentStep();case'options':return this[0].getOriginalOptions()}return(b?P:O).call(this,a)},a.fn.noUiSlider_pips=function(b){var c=b.mode,d=b.density||1,e=b.filter||!1,f=b.values||!1,g=b.format||{to:Math.round},h=b.stepped||!1;return this.each(function(){var b=this.getInfo(),i=R(b[0],c,f,h),j=S(b[0],d,c,i);return a(this).append(T(b[1],b[2],b[0].direction,j,e,g))})}}(window.jQuery||window.Zepto);
+define('nouislider', ['jquery'], function(){});
 
 /*!
  * Bootstrap v3.4.1 (https://getbootstrap.com/)
  * Copyright 2011-2019 Twitter, Inc.
  * Licensed under the MIT license
  */
-if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");!function(t){"use strict";var e=jQuery.fn.jquery.split(" ")[0].split(".");if(e[0]<2&&e[1]<9||1==e[0]&&9==e[1]&&e[2]<1||3<e[0])throw new Error("Bootstrap's JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4")}(),function(n){"use strict";n.fn.emulateTransitionEnd=function(t){var e=!1,i=this;n(this).one("bsTransitionEnd",function(){e=!0});return setTimeout(function(){e||n(i).trigger(n.support.transition.end)},t),this},n(function(){n.support.transition=function o(){var t=document.createElement("bootstrap"),e={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"};for(var i in e)if(t.style[i]!==undefined)return{end:e[i]};return!1}(),n.support.transition&&(n.event.special.bsTransitionEnd={bindType:n.support.transition.end,delegateType:n.support.transition.end,handle:function(t){if(n(t.target).is(this))return t.handleObj.handler.apply(this,arguments)}})})}(jQuery),function(s){"use strict";var e='[data-dismiss="alert"]',a=function(t){s(t).on("click",e,this.close)};a.VERSION="3.4.1",a.TRANSITION_DURATION=150,a.prototype.close=function(t){var e=s(this),i=e.attr("data-target");i||(i=(i=e.attr("href"))&&i.replace(/.*(?=#[^\s]*$)/,"")),i="#"===i?[]:i;var o=s(document).find(i);function n(){o.detach().trigger("closed.bs.alert").remove()}t&&t.preventDefault(),o.length||(o=e.closest(".alert")),o.trigger(t=s.Event("close.bs.alert")),t.isDefaultPrevented()||(o.removeClass("in"),s.support.transition&&o.hasClass("fade")?o.one("bsTransitionEnd",n).emulateTransitionEnd(a.TRANSITION_DURATION):n())};var t=s.fn.alert;s.fn.alert=function o(i){return this.each(function(){var t=s(this),e=t.data("bs.alert");e||t.data("bs.alert",e=new a(this)),"string"==typeof i&&e[i].call(t)})},s.fn.alert.Constructor=a,s.fn.alert.noConflict=function(){return s.fn.alert=t,this},s(document).on("click.bs.alert.data-api",e,a.prototype.close)}(jQuery),function(s){"use strict";var n=function(t,e){this.$element=s(t),this.options=s.extend({},n.DEFAULTS,e),this.isLoading=!1};function i(o){return this.each(function(){var t=s(this),e=t.data("bs.button"),i="object"==typeof o&&o;e||t.data("bs.button",e=new n(this,i)),"toggle"==o?e.toggle():o&&e.setState(o)})}n.VERSION="3.4.1",n.DEFAULTS={loadingText:"loading..."},n.prototype.setState=function(t){var e="disabled",i=this.$element,o=i.is("input")?"val":"html",n=i.data();t+="Text",null==n.resetText&&i.data("resetText",i[o]()),setTimeout(s.proxy(function(){i[o](null==n[t]?this.options[t]:n[t]),"loadingText"==t?(this.isLoading=!0,i.addClass(e).attr(e,e).prop(e,!0)):this.isLoading&&(this.isLoading=!1,i.removeClass(e).removeAttr(e).prop(e,!1))},this),0)},n.prototype.toggle=function(){var t=!0,e=this.$element.closest('[data-toggle="buttons"]');if(e.length){var i=this.$element.find("input");"radio"==i.prop("type")?(i.prop("checked")&&(t=!1),e.find(".active").removeClass("active"),this.$element.addClass("active")):"checkbox"==i.prop("type")&&(i.prop("checked")!==this.$element.hasClass("active")&&(t=!1),this.$element.toggleClass("active")),i.prop("checked",this.$element.hasClass("active")),t&&i.trigger("change")}else this.$element.attr("aria-pressed",!this.$element.hasClass("active")),this.$element.toggleClass("active")};var t=s.fn.button;s.fn.button=i,s.fn.button.Constructor=n,s.fn.button.noConflict=function(){return s.fn.button=t,this},s(document).on("click.bs.button.data-api",'[data-toggle^="button"]',function(t){var e=s(t.target).closest(".btn");i.call(e,"toggle"),s(t.target).is('input[type="radio"], input[type="checkbox"]')||(t.preventDefault(),e.is("input,button")?e.trigger("focus"):e.find("input:visible,button:visible").first().trigger("focus"))}).on("focus.bs.button.data-api blur.bs.button.data-api",'[data-toggle^="button"]',function(t){s(t.target).closest(".btn").toggleClass("focus",/^focus(in)?$/.test(t.type))})}(jQuery),function(p){"use strict";var c=function(t,e){this.$element=p(t),this.$indicators=this.$element.find(".carousel-indicators"),this.options=e,this.paused=null,this.sliding=null,this.interval=null,this.$active=null,this.$items=null,this.options.keyboard&&this.$element.on("keydown.bs.carousel",p.proxy(this.keydown,this)),"hover"==this.options.pause&&!("ontouchstart"in document.documentElement)&&this.$element.on("mouseenter.bs.carousel",p.proxy(this.pause,this)).on("mouseleave.bs.carousel",p.proxy(this.cycle,this))};function r(n){return this.each(function(){var t=p(this),e=t.data("bs.carousel"),i=p.extend({},c.DEFAULTS,t.data(),"object"==typeof n&&n),o="string"==typeof n?n:i.slide;e||t.data("bs.carousel",e=new c(this,i)),"number"==typeof n?e.to(n):o?e[o]():i.interval&&e.pause().cycle()})}c.VERSION="3.4.1",c.TRANSITION_DURATION=600,c.DEFAULTS={interval:5e3,pause:"hover",wrap:!0,keyboard:!0},c.prototype.keydown=function(t){if(!/input|textarea/i.test(t.target.tagName)){switch(t.which){case 37:this.prev();break;case 39:this.next();break;default:return}t.preventDefault()}},c.prototype.cycle=function(t){return t||(this.paused=!1),this.interval&&clearInterval(this.interval),this.options.interval&&!this.paused&&(this.interval=setInterval(p.proxy(this.next,this),this.options.interval)),this},c.prototype.getItemIndex=function(t){return this.$items=t.parent().children(".item"),this.$items.index(t||this.$active)},c.prototype.getItemForDirection=function(t,e){var i=this.getItemIndex(e);if(("prev"==t&&0===i||"next"==t&&i==this.$items.length-1)&&!this.options.wrap)return e;var o=(i+("prev"==t?-1:1))%this.$items.length;return this.$items.eq(o)},c.prototype.to=function(t){var e=this,i=this.getItemIndex(this.$active=this.$element.find(".item.active"));if(!(t>this.$items.length-1||t<0))return this.sliding?this.$element.one("slid.bs.carousel",function(){e.to(t)}):i==t?this.pause().cycle():this.slide(i<t?"next":"prev",this.$items.eq(t))},c.prototype.pause=function(t){return t||(this.paused=!0),this.$element.find(".next, .prev").length&&p.support.transition&&(this.$element.trigger(p.support.transition.end),this.cycle(!0)),this.interval=clearInterval(this.interval),this},c.prototype.next=function(){if(!this.sliding)return this.slide("next")},c.prototype.prev=function(){if(!this.sliding)return this.slide("prev")},c.prototype.slide=function(t,e){var i=this.$element.find(".item.active"),o=e||this.getItemForDirection(t,i),n=this.interval,s="next"==t?"left":"right",a=this;if(o.hasClass("active"))return this.sliding=!1;var r=o[0],l=p.Event("slide.bs.carousel",{relatedTarget:r,direction:s});if(this.$element.trigger(l),!l.isDefaultPrevented()){if(this.sliding=!0,n&&this.pause(),this.$indicators.length){this.$indicators.find(".active").removeClass("active");var h=p(this.$indicators.children()[this.getItemIndex(o)]);h&&h.addClass("active")}var d=p.Event("slid.bs.carousel",{relatedTarget:r,direction:s});return p.support.transition&&this.$element.hasClass("slide")?(o.addClass(t),"object"==typeof o&&o.length&&o[0].offsetWidth,i.addClass(s),o.addClass(s),i.one("bsTransitionEnd",function(){o.removeClass([t,s].join(" ")).addClass("active"),i.removeClass(["active",s].join(" ")),a.sliding=!1,setTimeout(function(){a.$element.trigger(d)},0)}).emulateTransitionEnd(c.TRANSITION_DURATION)):(i.removeClass("active"),o.addClass("active"),this.sliding=!1,this.$element.trigger(d)),n&&this.cycle(),this}};var t=p.fn.carousel;p.fn.carousel=r,p.fn.carousel.Constructor=c,p.fn.carousel.noConflict=function(){return p.fn.carousel=t,this};var e=function(t){var e=p(this),i=e.attr("href");i&&(i=i.replace(/.*(?=#[^\s]+$)/,""));var o=e.attr("data-target")||i,n=p(document).find(o);if(n.hasClass("carousel")){var s=p.extend({},n.data(),e.data()),a=e.attr("data-slide-to");a&&(s.interval=!1),r.call(n,s),a&&n.data("bs.carousel").to(a),t.preventDefault()}};p(document).on("click.bs.carousel.data-api","[data-slide]",e).on("click.bs.carousel.data-api","[data-slide-to]",e),p(window).on("load",function(){p('[data-ride="carousel"]').each(function(){var t=p(this);r.call(t,t.data())})})}(jQuery),function(a){"use strict";var r=function(t,e){this.$element=a(t),this.options=a.extend({},r.DEFAULTS,e),this.$trigger=a('[data-toggle="collapse"][href="#'+t.id+'"],[data-toggle="collapse"][data-target="#'+t.id+'"]'),this.transitioning=null,this.options.parent?this.$parent=this.getParent():this.addAriaAndCollapsedClass(this.$element,this.$trigger),this.options.toggle&&this.toggle()};function n(t){var e,i=t.attr("data-target")||(e=t.attr("href"))&&e.replace(/.*(?=#[^\s]+$)/,"");return a(document).find(i)}function l(o){return this.each(function(){var t=a(this),e=t.data("bs.collapse"),i=a.extend({},r.DEFAULTS,t.data(),"object"==typeof o&&o);!e&&i.toggle&&/show|hide/.test(o)&&(i.toggle=!1),e||t.data("bs.collapse",e=new r(this,i)),"string"==typeof o&&e[o]()})}r.VERSION="3.4.1",r.TRANSITION_DURATION=350,r.DEFAULTS={toggle:!0},r.prototype.dimension=function(){return this.$element.hasClass("width")?"width":"height"},r.prototype.show=function(){if(!this.transitioning&&!this.$element.hasClass("in")){var t,e=this.$parent&&this.$parent.children(".panel").children(".in, .collapsing");if(!(e&&e.length&&(t=e.data("bs.collapse"))&&t.transitioning)){var i=a.Event("show.bs.collapse");if(this.$element.trigger(i),!i.isDefaultPrevented()){e&&e.length&&(l.call(e,"hide"),t||e.data("bs.collapse",null));var o=this.dimension();this.$element.removeClass("collapse").addClass("collapsing")[o](0).attr("aria-expanded",!0),this.$trigger.removeClass("collapsed").attr("aria-expanded",!0),this.transitioning=1;var n=function(){this.$element.removeClass("collapsing").addClass("collapse in")[o](""),this.transitioning=0,this.$element.trigger("shown.bs.collapse")};if(!a.support.transition)return n.call(this);var s=a.camelCase(["scroll",o].join("-"));this.$element.one("bsTransitionEnd",a.proxy(n,this)).emulateTransitionEnd(r.TRANSITION_DURATION)[o](this.$element[0][s])}}}},r.prototype.hide=function(){if(!this.transitioning&&this.$element.hasClass("in")){var t=a.Event("hide.bs.collapse");if(this.$element.trigger(t),!t.isDefaultPrevented()){var e=this.dimension();this.$element[e](this.$element[e]())[0].offsetHeight,this.$element.addClass("collapsing").removeClass("collapse in").attr("aria-expanded",!1),this.$trigger.addClass("collapsed").attr("aria-expanded",!1),this.transitioning=1;var i=function(){this.transitioning=0,this.$element.removeClass("collapsing").addClass("collapse").trigger("hidden.bs.collapse")};if(!a.support.transition)return i.call(this);this.$element[e](0).one("bsTransitionEnd",a.proxy(i,this)).emulateTransitionEnd(r.TRANSITION_DURATION)}}},r.prototype.toggle=function(){this[this.$element.hasClass("in")?"hide":"show"]()},r.prototype.getParent=function(){return a(document).find(this.options.parent).find('[data-toggle="collapse"][data-parent="'+this.options.parent+'"]').each(a.proxy(function(t,e){var i=a(e);this.addAriaAndCollapsedClass(n(i),i)},this)).end()},r.prototype.addAriaAndCollapsedClass=function(t,e){var i=t.hasClass("in");t.attr("aria-expanded",i),e.toggleClass("collapsed",!i).attr("aria-expanded",i)};var t=a.fn.collapse;a.fn.collapse=l,a.fn.collapse.Constructor=r,a.fn.collapse.noConflict=function(){return a.fn.collapse=t,this},a(document).on("click.bs.collapse.data-api",'[data-toggle="collapse"]',function(t){var e=a(this);e.attr("data-target")||t.preventDefault();var i=n(e),o=i.data("bs.collapse")?"toggle":e.data();l.call(i,o)})}(jQuery),function(a){"use strict";var r='[data-toggle="dropdown"]',o=function(t){a(t).on("click.bs.dropdown",this.toggle)};function l(t){var e=t.attr("data-target");e||(e=(e=t.attr("href"))&&/#[A-Za-z]/.test(e)&&e.replace(/.*(?=#[^\s]*$)/,""));var i="#"!==e?a(document).find(e):null;return i&&i.length?i:t.parent()}function s(o){o&&3===o.which||(a(".dropdown-backdrop").remove(),a(r).each(function(){var t=a(this),e=l(t),i={relatedTarget:this};e.hasClass("open")&&(o&&"click"==o.type&&/input|textarea/i.test(o.target.tagName)&&a.contains(e[0],o.target)||(e.trigger(o=a.Event("hide.bs.dropdown",i)),o.isDefaultPrevented()||(t.attr("aria-expanded","false"),e.removeClass("open").trigger(a.Event("hidden.bs.dropdown",i)))))}))}o.VERSION="3.4.1",o.prototype.toggle=function(t){var e=a(this);if(!e.is(".disabled, :disabled")){var i=l(e),o=i.hasClass("open");if(s(),!o){"ontouchstart"in document.documentElement&&!i.closest(".navbar-nav").length&&a(document.createElement("div")).addClass("dropdown-backdrop").insertAfter(a(this)).on("click",s);var n={relatedTarget:this};if(i.trigger(t=a.Event("show.bs.dropdown",n)),t.isDefaultPrevented())return;e.trigger("focus").attr("aria-expanded","true"),i.toggleClass("open").trigger(a.Event("shown.bs.dropdown",n))}return!1}},o.prototype.keydown=function(t){if(/(38|40|27|32)/.test(t.which)&&!/input|textarea/i.test(t.target.tagName)){var e=a(this);if(t.preventDefault(),t.stopPropagation(),!e.is(".disabled, :disabled")){var i=l(e),o=i.hasClass("open");if(!o&&27!=t.which||o&&27==t.which)return 27==t.which&&i.find(r).trigger("focus"),e.trigger("click");var n=i.find(".dropdown-menu li:not(.disabled):visible a");if(n.length){var s=n.index(t.target);38==t.which&&0<s&&s--,40==t.which&&s<n.length-1&&s++,~s||(s=0),n.eq(s).trigger("focus")}}}};var t=a.fn.dropdown;a.fn.dropdown=function e(i){return this.each(function(){var t=a(this),e=t.data("bs.dropdown");e||t.data("bs.dropdown",e=new o(this)),"string"==typeof i&&e[i].call(t)})},a.fn.dropdown.Constructor=o,a.fn.dropdown.noConflict=function(){return a.fn.dropdown=t,this},a(document).on("click.bs.dropdown.data-api",s).on("click.bs.dropdown.data-api",".dropdown form",function(t){t.stopPropagation()}).on("click.bs.dropdown.data-api",r,o.prototype.toggle).on("keydown.bs.dropdown.data-api",r,o.prototype.keydown).on("keydown.bs.dropdown.data-api",".dropdown-menu",o.prototype.keydown)}(jQuery),function(a){"use strict";var s=function(t,e){this.options=e,this.$body=a(document.body),this.$element=a(t),this.$dialog=this.$element.find(".modal-dialog"),this.$backdrop=null,this.isShown=null,this.originalBodyPad=null,this.scrollbarWidth=0,this.ignoreBackdropClick=!1,this.fixedContent=".navbar-fixed-top, .navbar-fixed-bottom",this.options.remote&&this.$element.find(".modal-content").load(this.options.remote,a.proxy(function(){this.$element.trigger("loaded.bs.modal")},this))};function r(o,n){return this.each(function(){var t=a(this),e=t.data("bs.modal"),i=a.extend({},s.DEFAULTS,t.data(),"object"==typeof o&&o);e||t.data("bs.modal",e=new s(this,i)),"string"==typeof o?e[o](n):i.show&&e.show(n)})}s.VERSION="3.4.1",s.TRANSITION_DURATION=300,s.BACKDROP_TRANSITION_DURATION=150,s.DEFAULTS={backdrop:!0,keyboard:!0,show:!0},s.prototype.toggle=function(t){return this.isShown?this.hide():this.show(t)},s.prototype.show=function(i){var o=this,t=a.Event("show.bs.modal",{relatedTarget:i});this.$element.trigger(t),this.isShown||t.isDefaultPrevented()||(this.isShown=!0,this.checkScrollbar(),this.setScrollbar(),this.$body.addClass("modal-open"),this.escape(),this.resize(),this.$element.on("click.dismiss.bs.modal",'[data-dismiss="modal"]',a.proxy(this.hide,this)),this.$dialog.on("mousedown.dismiss.bs.modal",function(){o.$element.one("mouseup.dismiss.bs.modal",function(t){a(t.target).is(o.$element)&&(o.ignoreBackdropClick=!0)})}),this.backdrop(function(){var t=a.support.transition&&o.$element.hasClass("fade");o.$element.parent().length||o.$element.appendTo(o.$body),o.$element.show().scrollTop(0),o.adjustDialog(),t&&o.$element[0].offsetWidth,o.$element.addClass("in"),o.enforceFocus();var e=a.Event("shown.bs.modal",{relatedTarget:i});t?o.$dialog.one("bsTransitionEnd",function(){o.$element.trigger("focus").trigger(e)}).emulateTransitionEnd(s.TRANSITION_DURATION):o.$element.trigger("focus").trigger(e)}))},s.prototype.hide=function(t){t&&t.preventDefault(),t=a.Event("hide.bs.modal"),this.$element.trigger(t),this.isShown&&!t.isDefaultPrevented()&&(this.isShown=!1,this.escape(),this.resize(),a(document).off("focusin.bs.modal"),this.$element.removeClass("in").off("click.dismiss.bs.modal").off("mouseup.dismiss.bs.modal"),this.$dialog.off("mousedown.dismiss.bs.modal"),a.support.transition&&this.$element.hasClass("fade")?this.$element.one("bsTransitionEnd",a.proxy(this.hideModal,this)).emulateTransitionEnd(s.TRANSITION_DURATION):this.hideModal())},s.prototype.enforceFocus=function(){a(document).off("focusin.bs.modal").on("focusin.bs.modal",a.proxy(function(t){document===t.target||this.$element[0]===t.target||this.$element.has(t.target).length||this.$element.trigger("focus")},this))},s.prototype.escape=function(){this.isShown&&this.options.keyboard?this.$element.on("keydown.dismiss.bs.modal",a.proxy(function(t){27==t.which&&this.hide()},this)):this.isShown||this.$element.off("keydown.dismiss.bs.modal")},s.prototype.resize=function(){this.isShown?a(window).on("resize.bs.modal",a.proxy(this.handleUpdate,this)):a(window).off("resize.bs.modal")},s.prototype.hideModal=function(){var t=this;this.$element.hide(),this.backdrop(function(){t.$body.removeClass("modal-open"),t.resetAdjustments(),t.resetScrollbar(),t.$element.trigger("hidden.bs.modal")})},s.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove(),this.$backdrop=null},s.prototype.backdrop=function(t){var e=this,i=this.$element.hasClass("fade")?"fade":"";if(this.isShown&&this.options.backdrop){var o=a.support.transition&&i;if(this.$backdrop=a(document.createElement("div")).addClass("modal-backdrop "+i).appendTo(this.$body),this.$element.on("click.dismiss.bs.modal",a.proxy(function(t){this.ignoreBackdropClick?this.ignoreBackdropClick=!1:t.target===t.currentTarget&&("static"==this.options.backdrop?this.$element[0].focus():this.hide())},this)),o&&this.$backdrop[0].offsetWidth,this.$backdrop.addClass("in"),!t)return;o?this.$backdrop.one("bsTransitionEnd",t).emulateTransitionEnd(s.BACKDROP_TRANSITION_DURATION):t()}else if(!this.isShown&&this.$backdrop){this.$backdrop.removeClass("in");var n=function(){e.removeBackdrop(),t&&t()};a.support.transition&&this.$element.hasClass("fade")?this.$backdrop.one("bsTransitionEnd",n).emulateTransitionEnd(s.BACKDROP_TRANSITION_DURATION):n()}else t&&t()},s.prototype.handleUpdate=function(){this.adjustDialog()},s.prototype.adjustDialog=function(){var t=this.$element[0].scrollHeight>document.documentElement.clientHeight;this.$element.css({paddingLeft:!this.bodyIsOverflowing&&t?this.scrollbarWidth:"",paddingRight:this.bodyIsOverflowing&&!t?this.scrollbarWidth:""})},s.prototype.resetAdjustments=function(){this.$element.css({paddingLeft:"",paddingRight:""})},s.prototype.checkScrollbar=function(){var t=window.innerWidth;if(!t){var e=document.documentElement.getBoundingClientRect();t=e.right-Math.abs(e.left)}this.bodyIsOverflowing=document.body.clientWidth<t,this.scrollbarWidth=this.measureScrollbar()},s.prototype.setScrollbar=function(){var t=parseInt(this.$body.css("padding-right")||0,10);this.originalBodyPad=document.body.style.paddingRight||"";var n=this.scrollbarWidth;this.bodyIsOverflowing&&(this.$body.css("padding-right",t+n),a(this.fixedContent).each(function(t,e){var i=e.style.paddingRight,o=a(e).css("padding-right");a(e).data("padding-right",i).css("padding-right",parseFloat(o)+n+"px")}))},s.prototype.resetScrollbar=function(){this.$body.css("padding-right",this.originalBodyPad),a(this.fixedContent).each(function(t,e){var i=a(e).data("padding-right");a(e).removeData("padding-right"),e.style.paddingRight=i||""})},s.prototype.measureScrollbar=function(){var t=document.createElement("div");t.className="modal-scrollbar-measure",this.$body.append(t);var e=t.offsetWidth-t.clientWidth;return this.$body[0].removeChild(t),e};var t=a.fn.modal;a.fn.modal=r,a.fn.modal.Constructor=s,a.fn.modal.noConflict=function(){return a.fn.modal=t,this},a(document).on("click.bs.modal.data-api",'[data-toggle="modal"]',function(t){var e=a(this),i=e.attr("href"),o=e.attr("data-target")||i&&i.replace(/.*(?=#[^\s]+$)/,""),n=a(document).find(o),s=n.data("bs.modal")?"toggle":a.extend({remote:!/#/.test(i)&&i},n.data(),e.data());e.is("a")&&t.preventDefault(),n.one("show.bs.modal",function(t){t.isDefaultPrevented()||n.one("hidden.bs.modal",function(){e.is(":visible")&&e.trigger("focus")})}),r.call(n,s,this)})}(jQuery),function(g){"use strict";var o=["sanitize","whiteList","sanitizeFn"],a=["background","cite","href","itemtype","longdesc","poster","src","xlink:href"],t={"*":["class","dir","id","lang","role",/^aria-[\w-]*$/i],a:["target","href","title","rel"],area:[],b:[],br:[],col:[],code:[],div:[],em:[],hr:[],h1:[],h2:[],h3:[],h4:[],h5:[],h6:[],i:[],img:["src","alt","title","width","height"],li:[],ol:[],p:[],pre:[],s:[],small:[],span:[],sub:[],sup:[],strong:[],u:[],ul:[]},r=/^(?:(?:https?|mailto|ftp|tel|file):|[^&:/?#]*(?:[/?#]|$))/gi,l=/^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[a-z0-9+/]+=*$/i;function u(t,e){var i=t.nodeName.toLowerCase();if(-1!==g.inArray(i,e))return-1===g.inArray(i,a)||Boolean(t.nodeValue.match(r)||t.nodeValue.match(l));for(var o=g(e).filter(function(t,e){return e instanceof RegExp}),n=0,s=o.length;n<s;n++)if(i.match(o[n]))return!0;return!1}function n(t,e,i){if(0===t.length)return t;if(i&&"function"==typeof i)return i(t);if(!document.implementation||!document.implementation.createHTMLDocument)return t;var o=document.implementation.createHTMLDocument("sanitization");o.body.innerHTML=t;for(var n=g.map(e,function(t,e){return e}),s=g(o.body).find("*"),a=0,r=s.length;a<r;a++){var l=s[a],h=l.nodeName.toLowerCase();if(-1!==g.inArray(h,n))for(var d=g.map(l.attributes,function(t){return t}),p=[].concat(e["*"]||[],e[h]||[]),c=0,f=d.length;c<f;c++)u(d[c],p)||l.removeAttribute(d[c].nodeName);else l.parentNode.removeChild(l)}return o.body.innerHTML}var m=function(t,e){this.type=null,this.options=null,this.enabled=null,this.timeout=null,this.hoverState=null,this.$element=null,this.inState=null,this.init("tooltip",t,e)};m.VERSION="3.4.1",m.TRANSITION_DURATION=150,m.DEFAULTS={animation:!0,placement:"top",selector:!1,template:'<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,container:!1,viewport:{selector:"body",padding:0},sanitize:!0,sanitizeFn:null,whiteList:t},m.prototype.init=function(t,e,i){if(this.enabled=!0,this.type=t,this.$element=g(e),this.options=this.getOptions(i),this.$viewport=this.options.viewport&&g(document).find(g.isFunction(this.options.viewport)?this.options.viewport.call(this,this.$element):this.options.viewport.selector||this.options.viewport),this.inState={click:!1,hover:!1,focus:!1},this.$element[0]instanceof document.constructor&&!this.options.selector)throw new Error("`selector` option must be specified when initializing "+this.type+" on the window.document object!");for(var o=this.options.trigger.split(" "),n=o.length;n--;){var s=o[n];if("click"==s)this.$element.on("click."+this.type,this.options.selector,g.proxy(this.toggle,this));else if("manual"!=s){var a="hover"==s?"mouseenter":"focusin",r="hover"==s?"mouseleave":"focusout";this.$element.on(a+"."+this.type,this.options.selector,g.proxy(this.enter,this)),this.$element.on(r+"."+this.type,this.options.selector,g.proxy(this.leave,this))}}this.options.selector?this._options=g.extend({},this.options,{trigger:"manual",selector:""}):this.fixTitle()},m.prototype.getDefaults=function(){return m.DEFAULTS},m.prototype.getOptions=function(t){var e=this.$element.data();for(var i in e)e.hasOwnProperty(i)&&-1!==g.inArray(i,o)&&delete e[i];return(t=g.extend({},this.getDefaults(),e,t)).delay&&"number"==typeof t.delay&&(t.delay={show:t.delay,hide:t.delay}),t.sanitize&&(t.template=n(t.template,t.whiteList,t.sanitizeFn)),t},m.prototype.getDelegateOptions=function(){var i={},o=this.getDefaults();return this._options&&g.each(this._options,function(t,e){o[t]!=e&&(i[t]=e)}),i},m.prototype.enter=function(t){var e=t instanceof this.constructor?t:g(t.currentTarget).data("bs."+this.type);if(e||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data("bs."+this.type,e)),t instanceof g.Event&&(e.inState["focusin"==t.type?"focus":"hover"]=!0),e.tip().hasClass("in")||"in"==e.hoverState)e.hoverState="in";else{if(clearTimeout(e.timeout),e.hoverState="in",!e.options.delay||!e.options.delay.show)return e.show();e.timeout=setTimeout(function(){"in"==e.hoverState&&e.show()},e.options.delay.show)}},m.prototype.isInStateTrue=function(){for(var t in this.inState)if(this.inState[t])return!0;return!1},m.prototype.leave=function(t){var e=t instanceof this.constructor?t:g(t.currentTarget).data("bs."+this.type);if(e||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data("bs."+this.type,e)),t instanceof g.Event&&(e.inState["focusout"==t.type?"focus":"hover"]=!1),!e.isInStateTrue()){if(clearTimeout(e.timeout),e.hoverState="out",!e.options.delay||!e.options.delay.hide)return e.hide();e.timeout=setTimeout(function(){"out"==e.hoverState&&e.hide()},e.options.delay.hide)}},m.prototype.show=function(){var t=g.Event("show.bs."+this.type);if(this.hasContent()&&this.enabled){this.$element.trigger(t);var e=g.contains(this.$element[0].ownerDocument.documentElement,this.$element[0]);if(t.isDefaultPrevented()||!e)return;var i=this,o=this.tip(),n=this.getUID(this.type);this.setContent(),o.attr("id",n),this.$element.attr("aria-describedby",n),this.options.animation&&o.addClass("fade");var s="function"==typeof this.options.placement?this.options.placement.call(this,o[0],this.$element[0]):this.options.placement,a=/\s?auto?\s?/i,r=a.test(s);r&&(s=s.replace(a,"")||"top"),o.detach().css({top:0,left:0,display:"block"}).addClass(s).data("bs."+this.type,this),this.options.container?o.appendTo(g(document).find(this.options.container)):o.insertAfter(this.$element),this.$element.trigger("inserted.bs."+this.type);var l=this.getPosition(),h=o[0].offsetWidth,d=o[0].offsetHeight;if(r){var p=s,c=this.getPosition(this.$viewport);s="bottom"==s&&l.bottom+d>c.bottom?"top":"top"==s&&l.top-d<c.top?"bottom":"right"==s&&l.right+h>c.width?"left":"left"==s&&l.left-h<c.left?"right":s,o.removeClass(p).addClass(s)}var f=this.getCalculatedOffset(s,l,h,d);this.applyPlacement(f,s);var u=function(){var t=i.hoverState;i.$element.trigger("shown.bs."+i.type),i.hoverState=null,"out"==t&&i.leave(i)};g.support.transition&&this.$tip.hasClass("fade")?o.one("bsTransitionEnd",u).emulateTransitionEnd(m.TRANSITION_DURATION):u()}},m.prototype.applyPlacement=function(t,e){var i=this.tip(),o=i[0].offsetWidth,n=i[0].offsetHeight,s=parseInt(i.css("margin-top"),10),a=parseInt(i.css("margin-left"),10);isNaN(s)&&(s=0),isNaN(a)&&(a=0),t.top+=s,t.left+=a,g.offset.setOffset(i[0],g.extend({using:function(t){i.css({top:Math.round(t.top),left:Math.round(t.left)})}},t),0),i.addClass("in");var r=i[0].offsetWidth,l=i[0].offsetHeight;"top"==e&&l!=n&&(t.top=t.top+n-l);var h=this.getViewportAdjustedDelta(e,t,r,l);h.left?t.left+=h.left:t.top+=h.top;var d=/top|bottom/.test(e),p=d?2*h.left-o+r:2*h.top-n+l,c=d?"offsetWidth":"offsetHeight";i.offset(t),this.replaceArrow(p,i[0][c],d)},m.prototype.replaceArrow=function(t,e,i){this.arrow().css(i?"left":"top",50*(1-t/e)+"%").css(i?"top":"left","")},m.prototype.setContent=function(){var t=this.tip(),e=this.getTitle();this.options.html?(this.options.sanitize&&(e=n(e,this.options.whiteList,this.options.sanitizeFn)),t.find(".tooltip-inner").html(e)):t.find(".tooltip-inner").text(e),t.removeClass("fade in top bottom left right")},m.prototype.hide=function(t){var e=this,i=g(this.$tip),o=g.Event("hide.bs."+this.type);function n(){"in"!=e.hoverState&&i.detach(),e.$element&&e.$element.removeAttr("aria-describedby").trigger("hidden.bs."+e.type),t&&t()}if(this.$element.trigger(o),!o.isDefaultPrevented())return i.removeClass("in"),g.support.transition&&i.hasClass("fade")?i.one("bsTransitionEnd",n).emulateTransitionEnd(m.TRANSITION_DURATION):n(),this.hoverState=null,this},m.prototype.fixTitle=function(){var t=this.$element;(t.attr("title")||"string"!=typeof t.attr("data-original-title"))&&t.attr("data-original-title",t.attr("title")||"").attr("title","")},m.prototype.hasContent=function(){return this.getTitle()},m.prototype.getPosition=function(t){var e=(t=t||this.$element)[0],i="BODY"==e.tagName,o=e.getBoundingClientRect();null==o.width&&(o=g.extend({},o,{width:o.right-o.left,height:o.bottom-o.top}));var n=window.SVGElement&&e instanceof window.SVGElement,s=i?{top:0,left:0}:n?null:t.offset(),a={scroll:i?document.documentElement.scrollTop||document.body.scrollTop:t.scrollTop()},r=i?{width:g(window).width(),height:g(window).height()}:null;return g.extend({},o,a,r,s)},m.prototype.getCalculatedOffset=function(t,e,i,o){return"bottom"==t?{top:e.top+e.height,left:e.left+e.width/2-i/2}:"top"==t?{top:e.top-o,left:e.left+e.width/2-i/2}:"left"==t?{top:e.top+e.height/2-o/2,left:e.left-i}:{top:e.top+e.height/2-o/2,left:e.left+e.width}},m.prototype.getViewportAdjustedDelta=function(t,e,i,o){var n={top:0,left:0};if(!this.$viewport)return n;var s=this.options.viewport&&this.options.viewport.padding||0,a=this.getPosition(this.$viewport);if(/right|left/.test(t)){var r=e.top-s-a.scroll,l=e.top+s-a.scroll+o;r<a.top?n.top=a.top-r:l>a.top+a.height&&(n.top=a.top+a.height-l)}else{var h=e.left-s,d=e.left+s+i;h<a.left?n.left=a.left-h:d>a.right&&(n.left=a.left+a.width-d)}return n},m.prototype.getTitle=function(){var t=this.$element,e=this.options;return t.attr("data-original-title")||("function"==typeof e.title?e.title.call(t[0]):e.title)},m.prototype.getUID=function(t){for(;t+=~~(1e6*Math.random()),document.getElementById(t););return t},m.prototype.tip=function(){if(!this.$tip&&(this.$tip=g(this.options.template),1!=this.$tip.length))throw new Error(this.type+" `template` option must consist of exactly 1 top-level element!");return this.$tip},m.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".tooltip-arrow")},m.prototype.enable=function(){this.enabled=!0},m.prototype.disable=function(){this.enabled=!1},m.prototype.toggleEnabled=function(){this.enabled=!this.enabled},m.prototype.toggle=function(t){var e=this;t&&((e=g(t.currentTarget).data("bs."+this.type))||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data("bs."+this.type,e))),t?(e.inState.click=!e.inState.click,e.isInStateTrue()?e.enter(e):e.leave(e)):e.tip().hasClass("in")?e.leave(e):e.enter(e)},m.prototype.destroy=function(){var t=this;clearTimeout(this.timeout),this.hide(function(){t.$element.off("."+t.type).removeData("bs."+t.type),t.$tip&&t.$tip.detach(),t.$tip=null,t.$arrow=null,t.$viewport=null,t.$element=null})},m.prototype.sanitizeHtml=function(t){return n(t,this.options.whiteList,this.options.sanitizeFn)};var e=g.fn.tooltip;g.fn.tooltip=function i(o){return this.each(function(){var t=g(this),e=t.data("bs.tooltip"),i="object"==typeof o&&o;!e&&/destroy|hide/.test(o)||(e||t.data("bs.tooltip",e=new m(this,i)),"string"==typeof o&&e[o]())})},g.fn.tooltip.Constructor=m,g.fn.tooltip.noConflict=function(){return g.fn.tooltip=e,this}}(jQuery),function(n){"use strict";var s=function(t,e){this.init("popover",t,e)};if(!n.fn.tooltip)throw new Error("Popover requires tooltip.js");s.VERSION="3.4.1",s.DEFAULTS=n.extend({},n.fn.tooltip.Constructor.DEFAULTS,{placement:"right",trigger:"click",content:"",template:'<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),((s.prototype=n.extend({},n.fn.tooltip.Constructor.prototype)).constructor=s).prototype.getDefaults=function(){return s.DEFAULTS},s.prototype.setContent=function(){var t=this.tip(),e=this.getTitle(),i=this.getContent();if(this.options.html){var o=typeof i;this.options.sanitize&&(e=this.sanitizeHtml(e),"string"===o&&(i=this.sanitizeHtml(i))),t.find(".popover-title").html(e),t.find(".popover-content").children().detach().end()["string"===o?"html":"append"](i)}else t.find(".popover-title").text(e),t.find(".popover-content").children().detach().end().text(i);t.removeClass("fade top bottom left right in"),t.find(".popover-title").html()||t.find(".popover-title").hide()},s.prototype.hasContent=function(){return this.getTitle()||this.getContent()},s.prototype.getContent=function(){var t=this.$element,e=this.options;return t.attr("data-content")||("function"==typeof e.content?e.content.call(t[0]):e.content)},s.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".arrow")};var t=n.fn.popover;n.fn.popover=function e(o){return this.each(function(){var t=n(this),e=t.data("bs.popover"),i="object"==typeof o&&o;!e&&/destroy|hide/.test(o)||(e||t.data("bs.popover",e=new s(this,i)),"string"==typeof o&&e[o]())})},n.fn.popover.Constructor=s,n.fn.popover.noConflict=function(){return n.fn.popover=t,this}}(jQuery),function(s){"use strict";function n(t,e){this.$body=s(document.body),this.$scrollElement=s(t).is(document.body)?s(window):s(t),this.options=s.extend({},n.DEFAULTS,e),this.selector=(this.options.target||"")+" .nav li > a",this.offsets=[],this.targets=[],this.activeTarget=null,this.scrollHeight=0,this.$scrollElement.on("scroll.bs.scrollspy",s.proxy(this.process,this)),this.refresh(),this.process()}function e(o){return this.each(function(){var t=s(this),e=t.data("bs.scrollspy"),i="object"==typeof o&&o;e||t.data("bs.scrollspy",e=new n(this,i)),"string"==typeof o&&e[o]()})}n.VERSION="3.4.1",n.DEFAULTS={offset:10},n.prototype.getScrollHeight=function(){return this.$scrollElement[0].scrollHeight||Math.max(this.$body[0].scrollHeight,document.documentElement.scrollHeight)},n.prototype.refresh=function(){var t=this,o="offset",n=0;this.offsets=[],this.targets=[],this.scrollHeight=this.getScrollHeight(),s.isWindow(this.$scrollElement[0])||(o="position",n=this.$scrollElement.scrollTop()),this.$body.find(this.selector).map(function(){var t=s(this),e=t.data("target")||t.attr("href"),i=/^#./.test(e)&&s(e);return i&&i.length&&i.is(":visible")&&[[i[o]().top+n,e]]||null}).sort(function(t,e){return t[0]-e[0]}).each(function(){t.offsets.push(this[0]),t.targets.push(this[1])})},n.prototype.process=function(){var t,e=this.$scrollElement.scrollTop()+this.options.offset,i=this.getScrollHeight(),o=this.options.offset+i-this.$scrollElement.height(),n=this.offsets,s=this.targets,a=this.activeTarget;if(this.scrollHeight!=i&&this.refresh(),o<=e)return a!=(t=s[s.length-1])&&this.activate(t);if(a&&e<n[0])return this.activeTarget=null,this.clear();for(t=n.length;t--;)a!=s[t]&&e>=n[t]&&(n[t+1]===undefined||e<n[t+1])&&this.activate(s[t])},n.prototype.activate=function(t){this.activeTarget=t,this.clear();var e=this.selector+'[data-target="'+t+'"],'+this.selector+'[href="'+t+'"]',i=s(e).parents("li").addClass("active");i.parent(".dropdown-menu").length&&(i=i.closest("li.dropdown").addClass("active")),i.trigger("activate.bs.scrollspy")},n.prototype.clear=function(){s(this.selector).parentsUntil(this.options.target,".active").removeClass("active")};var t=s.fn.scrollspy;s.fn.scrollspy=e,s.fn.scrollspy.Constructor=n,s.fn.scrollspy.noConflict=function(){return s.fn.scrollspy=t,this},s(window).on("load.bs.scrollspy.data-api",function(){s('[data-spy="scroll"]').each(function(){var t=s(this);e.call(t,t.data())})})}(jQuery),function(r){"use strict";var a=function(t){this.element=r(t)};function e(i){return this.each(function(){var t=r(this),e=t.data("bs.tab");e||t.data("bs.tab",e=new a(this)),"string"==typeof i&&e[i]()})}a.VERSION="3.4.1",a.TRANSITION_DURATION=150,a.prototype.show=function(){var t=this.element,e=t.closest("ul:not(.dropdown-menu)"),i=t.data("target");if(i||(i=(i=t.attr("href"))&&i.replace(/.*(?=#[^\s]*$)/,"")),!t.parent("li").hasClass("active")){var o=e.find(".active:last a"),n=r.Event("hide.bs.tab",{relatedTarget:t[0]}),s=r.Event("show.bs.tab",{relatedTarget:o[0]});if(o.trigger(n),t.trigger(s),!s.isDefaultPrevented()&&!n.isDefaultPrevented()){var a=r(document).find(i);this.activate(t.closest("li"),e),this.activate(a,a.parent(),function(){o.trigger({type:"hidden.bs.tab",relatedTarget:t[0]}),t.trigger({type:"shown.bs.tab",relatedTarget:o[0]})})}}},a.prototype.activate=function(t,e,i){var o=e.find("> .active"),n=i&&r.support.transition&&(o.length&&o.hasClass("fade")||!!e.find("> .fade").length);function s(){o.removeClass("active").find("> .dropdown-menu > .active").removeClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!1),t.addClass("active").find('[data-toggle="tab"]').attr("aria-expanded",!0),n?(t[0].offsetWidth,t.addClass("in")):t.removeClass("fade"),t.parent(".dropdown-menu").length&&t.closest("li.dropdown").addClass("active").end().find('[data-toggle="tab"]').attr("aria-expanded",!0),i&&i()}o.length&&n?o.one("bsTransitionEnd",s).emulateTransitionEnd(a.TRANSITION_DURATION):s(),o.removeClass("in")};var t=r.fn.tab;r.fn.tab=e,r.fn.tab.Constructor=a,r.fn.tab.noConflict=function(){return r.fn.tab=t,this};var i=function(t){t.preventDefault(),e.call(r(this),"show")};r(document).on("click.bs.tab.data-api",'[data-toggle="tab"]',i).on("click.bs.tab.data-api",'[data-toggle="pill"]',i)}(jQuery),function(l){"use strict";var h=function(t,e){this.options=l.extend({},h.DEFAULTS,e);var i=this.options.target===h.DEFAULTS.target?l(this.options.target):l(document).find(this.options.target);this.$target=i.on("scroll.bs.affix.data-api",l.proxy(this.checkPosition,this)).on("click.bs.affix.data-api",l.proxy(this.checkPositionWithEventLoop,this)),this.$element=l(t),this.affixed=null,this.unpin=null,this.pinnedOffset=null,this.checkPosition()};function i(o){return this.each(function(){var t=l(this),e=t.data("bs.affix"),i="object"==typeof o&&o;e||t.data("bs.affix",e=new h(this,i)),"string"==typeof o&&e[o]()})}h.VERSION="3.4.1",h.RESET="affix affix-top affix-bottom",h.DEFAULTS={offset:0,target:window},h.prototype.getState=function(t,e,i,o){var n=this.$target.scrollTop(),s=this.$element.offset(),a=this.$target.height();if(null!=i&&"top"==this.affixed)return n<i&&"top";if("bottom"==this.affixed)return null!=i?!(n+this.unpin<=s.top)&&"bottom":!(n+a<=t-o)&&"bottom";var r=null==this.affixed,l=r?n:s.top;return null!=i&&n<=i?"top":null!=o&&t-o<=l+(r?a:e)&&"bottom"},h.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset;this.$element.removeClass(h.RESET).addClass("affix");var t=this.$target.scrollTop(),e=this.$element.offset();return this.pinnedOffset=e.top-t},h.prototype.checkPositionWithEventLoop=function(){setTimeout(l.proxy(this.checkPosition,this),1)},h.prototype.checkPosition=function(){if(this.$element.is(":visible")){var t=this.$element.height(),e=this.options.offset,i=e.top,o=e.bottom,n=Math.max(l(document).height(),l(document.body).height());"object"!=typeof e&&(o=i=e),"function"==typeof i&&(i=e.top(this.$element)),"function"==typeof o&&(o=e.bottom(this.$element));var s=this.getState(n,t,i,o);if(this.affixed!=s){null!=this.unpin&&this.$element.css("top","");var a="affix"+(s?"-"+s:""),r=l.Event(a+".bs.affix");if(this.$element.trigger(r),r.isDefaultPrevented())return;this.affixed=s,this.unpin="bottom"==s?this.getPinnedOffset():null,this.$element.removeClass(h.RESET).addClass(a).trigger(a.replace("affix","affixed")+".bs.affix")}"bottom"==s&&this.$element.offset({top:n-t-o})}};var t=l.fn.affix;l.fn.affix=i,l.fn.affix.Constructor=h,l.fn.affix.noConflict=function(){return l.fn.affix=t,this},l(window).on("load",function(){l('[data-spy="affix"]').each(function(){var t=l(this),e=t.data();e.offset=e.offset||{},null!=e.offsetBottom&&(e.offset.bottom=e.offsetBottom),null!=e.offsetTop&&(e.offset.top=e.offsetTop),i.call(t,e)})})}(jQuery);
-define("bootstrap", ["jquery"], function(){});
+if('undefined'==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");!function(t){'use strict';var e=jQuery.fn.jquery.split(' ')[0].split('.');if(e[0]<2&&e[1]<9||1==e[0]&&9==e[1]&&e[2]<1||3<e[0])throw new Error("Bootstrap's JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4")}(),function(n){'use strict';n.fn.emulateTransitionEnd=function(t){var e=!1,i=this;n(this).one('bsTransitionEnd',function(){e=!0});return setTimeout(function(){e||n(i).trigger(n.support.transition.end)},t),this},n(function(){n.support.transition=function o(){var t=document.createElement('bootstrap'),e={WebkitTransition:'webkitTransitionEnd',MozTransition:'transitionend',OTransition:'oTransitionEnd otransitionend',transition:'transitionend'};for(var i in e)if(t.style[i]!==undefined)return{end:e[i]};return!1}(),n.support.transition&&(n.event.special.bsTransitionEnd={bindType:n.support.transition.end,delegateType:n.support.transition.end,handle:function(t){if(n(t.target).is(this))return t.handleObj.handler.apply(this,arguments)}})})}(jQuery),function(s){'use strict';var e='[data-dismiss="alert"]',a=function(t){s(t).on('click',e,this.close)};a.VERSION='3.4.1',a.TRANSITION_DURATION=150,a.prototype.close=function(t){var e=s(this),i=e.attr('data-target');i||(i=(i=e.attr('href'))&&i.replace(/.*(?=#[^\s]*$)/,'')),i='#'===i?[]:i;var o=s(document).find(i);function n(){o.detach().trigger('closed.bs.alert').remove()}t&&t.preventDefault(),o.length||(o=e.closest('.alert')),o.trigger(t=s.Event('close.bs.alert')),t.isDefaultPrevented()||(o.removeClass('in'),s.support.transition&&o.hasClass('fade')?o.one('bsTransitionEnd',n).emulateTransitionEnd(a.TRANSITION_DURATION):n())};var t=s.fn.alert;s.fn.alert=function o(i){return this.each(function(){var t=s(this),e=t.data('bs.alert');e||t.data('bs.alert',e=new a(this)),'string'==typeof i&&e[i].call(t)})},s.fn.alert.Constructor=a,s.fn.alert.noConflict=function(){return s.fn.alert=t,this},s(document).on('click.bs.alert.data-api',e,a.prototype.close)}(jQuery),function(s){'use strict';var n=function(t,e){this.$element=s(t),this.options=s.extend({},n.DEFAULTS,e),this.isLoading=!1};function i(o){return this.each(function(){var t=s(this),e=t.data('bs.button'),i='object'==typeof o&&o;e||t.data('bs.button',e=new n(this,i)),'toggle'==o?e.toggle():o&&e.setState(o)})}n.VERSION='3.4.1',n.DEFAULTS={loadingText:'loading...'},n.prototype.setState=function(t){var e='disabled',i=this.$element,o=i.is('input')?'val':'html',n=i.data();t+='Text',null==n.resetText&&i.data('resetText',i[o]()),setTimeout(s.proxy(function(){i[o](null==n[t]?this.options[t]:n[t]),'loadingText'==t?(this.isLoading=!0,i.addClass(e).attr(e,e).prop(e,!0)):this.isLoading&&(this.isLoading=!1,i.removeClass(e).removeAttr(e).prop(e,!1))},this),0)},n.prototype.toggle=function(){var t=!0,e=this.$element.closest('[data-toggle="buttons"]');if(e.length){var i=this.$element.find('input');'radio'==i.prop('type')?(i.prop('checked')&&(t=!1),e.find('.active').removeClass('active'),this.$element.addClass('active')):'checkbox'==i.prop('type')&&(i.prop('checked')!==this.$element.hasClass('active')&&(t=!1),this.$element.toggleClass('active')),i.prop('checked',this.$element.hasClass('active')),t&&i.trigger('change')}else this.$element.attr('aria-pressed',!this.$element.hasClass('active')),this.$element.toggleClass('active')};var t=s.fn.button;s.fn.button=i,s.fn.button.Constructor=n,s.fn.button.noConflict=function(){return s.fn.button=t,this},s(document).on('click.bs.button.data-api','[data-toggle^="button"]',function(t){var e=s(t.target).closest('.btn');i.call(e,'toggle'),s(t.target).is('input[type="radio"], input[type="checkbox"]')||(t.preventDefault(),e.is('input,button')?e.trigger('focus'):e.find('input:visible,button:visible').first().trigger('focus'))}).on('focus.bs.button.data-api blur.bs.button.data-api','[data-toggle^="button"]',function(t){s(t.target).closest('.btn').toggleClass('focus',/^focus(in)?$/.test(t.type))})}(jQuery),function(p){'use strict';var c=function(t,e){this.$element=p(t),this.$indicators=this.$element.find('.carousel-indicators'),this.options=e,this.paused=null,this.sliding=null,this.interval=null,this.$active=null,this.$items=null,this.options.keyboard&&this.$element.on('keydown.bs.carousel',p.proxy(this.keydown,this)),'hover'==this.options.pause&&!('ontouchstart'in document.documentElement)&&this.$element.on('mouseenter.bs.carousel',p.proxy(this.pause,this)).on('mouseleave.bs.carousel',p.proxy(this.cycle,this))};function r(n){return this.each(function(){var t=p(this),e=t.data('bs.carousel'),i=p.extend({},c.DEFAULTS,t.data(),'object'==typeof n&&n),o='string'==typeof n?n:i.slide;e||t.data('bs.carousel',e=new c(this,i)),'number'==typeof n?e.to(n):o?e[o]():i.interval&&e.pause().cycle()})}c.VERSION='3.4.1',c.TRANSITION_DURATION=600,c.DEFAULTS={interval:5e3,pause:'hover',wrap:!0,keyboard:!0},c.prototype.keydown=function(t){if(!/input|textarea/i.test(t.target.tagName)){switch(t.which){case 37:this.prev();break;case 39:this.next();break;default:return}t.preventDefault()}},c.prototype.cycle=function(t){return t||(this.paused=!1),this.interval&&clearInterval(this.interval),this.options.interval&&!this.paused&&(this.interval=setInterval(p.proxy(this.next,this),this.options.interval)),this},c.prototype.getItemIndex=function(t){return this.$items=t.parent().children('.item'),this.$items.index(t||this.$active)},c.prototype.getItemForDirection=function(t,e){var i=this.getItemIndex(e);if(('prev'==t&&0===i||'next'==t&&i==this.$items.length-1)&&!this.options.wrap)return e;var o=(i+('prev'==t?-1:1))%this.$items.length;return this.$items.eq(o)},c.prototype.to=function(t){var e=this,i=this.getItemIndex(this.$active=this.$element.find('.item.active'));if(!(t>this.$items.length-1||t<0))return this.sliding?this.$element.one('slid.bs.carousel',function(){e.to(t)}):i==t?this.pause().cycle():this.slide(i<t?'next':'prev',this.$items.eq(t))},c.prototype.pause=function(t){return t||(this.paused=!0),this.$element.find('.next, .prev').length&&p.support.transition&&(this.$element.trigger(p.support.transition.end),this.cycle(!0)),this.interval=clearInterval(this.interval),this},c.prototype.next=function(){if(!this.sliding)return this.slide('next')},c.prototype.prev=function(){if(!this.sliding)return this.slide('prev')},c.prototype.slide=function(t,e){var i=this.$element.find('.item.active'),o=e||this.getItemForDirection(t,i),n=this.interval,s='next'==t?'left':'right',a=this;if(o.hasClass('active'))return this.sliding=!1;var r=o[0],l=p.Event('slide.bs.carousel',{relatedTarget:r,direction:s});if(this.$element.trigger(l),!l.isDefaultPrevented()){if(this.sliding=!0,n&&this.pause(),this.$indicators.length){this.$indicators.find('.active').removeClass('active');var h=p(this.$indicators.children()[this.getItemIndex(o)]);h&&h.addClass('active')}var d=p.Event('slid.bs.carousel',{relatedTarget:r,direction:s});return p.support.transition&&this.$element.hasClass('slide')?(o.addClass(t),'object'==typeof o&&o.length&&o[0].offsetWidth,i.addClass(s),o.addClass(s),i.one('bsTransitionEnd',function(){o.removeClass([t,s].join(' ')).addClass('active'),i.removeClass(['active',s].join(' ')),a.sliding=!1,setTimeout(function(){a.$element.trigger(d)},0)}).emulateTransitionEnd(c.TRANSITION_DURATION)):(i.removeClass('active'),o.addClass('active'),this.sliding=!1,this.$element.trigger(d)),n&&this.cycle(),this}};var t=p.fn.carousel;p.fn.carousel=r,p.fn.carousel.Constructor=c,p.fn.carousel.noConflict=function(){return p.fn.carousel=t,this};var e=function(t){var e=p(this),i=e.attr('href');i&&(i=i.replace(/.*(?=#[^\s]+$)/,''));var o=e.attr('data-target')||i,n=p(document).find(o);if(n.hasClass('carousel')){var s=p.extend({},n.data(),e.data()),a=e.attr('data-slide-to');a&&(s.interval=!1),r.call(n,s),a&&n.data('bs.carousel').to(a),t.preventDefault()}};p(document).on('click.bs.carousel.data-api','[data-slide]',e).on('click.bs.carousel.data-api','[data-slide-to]',e),p(window).on('load',function(){p('[data-ride="carousel"]').each(function(){var t=p(this);r.call(t,t.data())})})}(jQuery),function(a){'use strict';var r=function(t,e){this.$element=a(t),this.options=a.extend({},r.DEFAULTS,e),this.$trigger=a('[data-toggle="collapse"][href="#'+t.id+'"],[data-toggle="collapse"][data-target="#'+t.id+'"]'),this.transitioning=null,this.options.parent?this.$parent=this.getParent():this.addAriaAndCollapsedClass(this.$element,this.$trigger),this.options.toggle&&this.toggle()};function n(t){var e,i=t.attr('data-target')||(e=t.attr('href'))&&e.replace(/.*(?=#[^\s]+$)/,'');return a(document).find(i)}function l(o){return this.each(function(){var t=a(this),e=t.data('bs.collapse'),i=a.extend({},r.DEFAULTS,t.data(),'object'==typeof o&&o);!e&&i.toggle&&/show|hide/.test(o)&&(i.toggle=!1),e||t.data('bs.collapse',e=new r(this,i)),'string'==typeof o&&e[o]()})}r.VERSION='3.4.1',r.TRANSITION_DURATION=350,r.DEFAULTS={toggle:!0},r.prototype.dimension=function(){return this.$element.hasClass('width')?'width':'height'},r.prototype.show=function(){if(!this.transitioning&&!this.$element.hasClass('in')){var t,e=this.$parent&&this.$parent.children('.panel').children('.in, .collapsing');if(!(e&&e.length&&(t=e.data('bs.collapse'))&&t.transitioning)){var i=a.Event('show.bs.collapse');if(this.$element.trigger(i),!i.isDefaultPrevented()){e&&e.length&&(l.call(e,'hide'),t||e.data('bs.collapse',null));var o=this.dimension();this.$element.removeClass('collapse').addClass('collapsing')[o](0).attr('aria-expanded',!0),this.$trigger.removeClass('collapsed').attr('aria-expanded',!0),this.transitioning=1;var n=function(){this.$element.removeClass('collapsing').addClass('collapse in')[o](''),this.transitioning=0,this.$element.trigger('shown.bs.collapse')};if(!a.support.transition)return n.call(this);var s=a.camelCase(['scroll',o].join('-'));this.$element.one('bsTransitionEnd',a.proxy(n,this)).emulateTransitionEnd(r.TRANSITION_DURATION)[o](this.$element[0][s])}}}},r.prototype.hide=function(){if(!this.transitioning&&this.$element.hasClass('in')){var t=a.Event('hide.bs.collapse');if(this.$element.trigger(t),!t.isDefaultPrevented()){var e=this.dimension();this.$element[e](this.$element[e]())[0].offsetHeight,this.$element.addClass('collapsing').removeClass('collapse in').attr('aria-expanded',!1),this.$trigger.addClass('collapsed').attr('aria-expanded',!1),this.transitioning=1;var i=function(){this.transitioning=0,this.$element.removeClass('collapsing').addClass('collapse').trigger('hidden.bs.collapse')};if(!a.support.transition)return i.call(this);this.$element[e](0).one('bsTransitionEnd',a.proxy(i,this)).emulateTransitionEnd(r.TRANSITION_DURATION)}}},r.prototype.toggle=function(){this[this.$element.hasClass('in')?'hide':'show']()},r.prototype.getParent=function(){return a(document).find(this.options.parent).find('[data-toggle="collapse"][data-parent="'+this.options.parent+'"]').each(a.proxy(function(t,e){var i=a(e);this.addAriaAndCollapsedClass(n(i),i)},this)).end()},r.prototype.addAriaAndCollapsedClass=function(t,e){var i=t.hasClass('in');t.attr('aria-expanded',i),e.toggleClass('collapsed',!i).attr('aria-expanded',i)};var t=a.fn.collapse;a.fn.collapse=l,a.fn.collapse.Constructor=r,a.fn.collapse.noConflict=function(){return a.fn.collapse=t,this},a(document).on('click.bs.collapse.data-api','[data-toggle="collapse"]',function(t){var e=a(this);e.attr('data-target')||t.preventDefault();var i=n(e),o=i.data('bs.collapse')?'toggle':e.data();l.call(i,o)})}(jQuery),function(a){'use strict';var r='[data-toggle="dropdown"]',o=function(t){a(t).on('click.bs.dropdown',this.toggle)};function l(t){var e=t.attr('data-target');e||(e=(e=t.attr('href'))&&/#[A-Za-z]/.test(e)&&e.replace(/.*(?=#[^\s]*$)/,''));var i='#'!==e?a(document).find(e):null;return i&&i.length?i:t.parent()}function s(o){o&&3===o.which||(a('.dropdown-backdrop').remove(),a(r).each(function(){var t=a(this),e=l(t),i={relatedTarget:this};e.hasClass('open')&&(o&&'click'==o.type&&/input|textarea/i.test(o.target.tagName)&&a.contains(e[0],o.target)||(e.trigger(o=a.Event('hide.bs.dropdown',i)),o.isDefaultPrevented()||(t.attr('aria-expanded','false'),e.removeClass('open').trigger(a.Event('hidden.bs.dropdown',i)))))}))}o.VERSION='3.4.1',o.prototype.toggle=function(t){var e=a(this);if(!e.is('.disabled, :disabled')){var i=l(e),o=i.hasClass('open');if(s(),!o){'ontouchstart'in document.documentElement&&!i.closest('.navbar-nav').length&&a(document.createElement('div')).addClass('dropdown-backdrop').insertAfter(a(this)).on('click',s);var n={relatedTarget:this};if(i.trigger(t=a.Event('show.bs.dropdown',n)),t.isDefaultPrevented())return;e.trigger('focus').attr('aria-expanded','true'),i.toggleClass('open').trigger(a.Event('shown.bs.dropdown',n))}return!1}},o.prototype.keydown=function(t){if(/(38|40|27|32)/.test(t.which)&&!/input|textarea/i.test(t.target.tagName)){var e=a(this);if(t.preventDefault(),t.stopPropagation(),!e.is('.disabled, :disabled')){var i=l(e),o=i.hasClass('open');if(!o&&27!=t.which||o&&27==t.which)return 27==t.which&&i.find(r).trigger('focus'),e.trigger('click');var n=i.find('.dropdown-menu li:not(.disabled):visible a');if(n.length){var s=n.index(t.target);38==t.which&&0<s&&s--,40==t.which&&s<n.length-1&&s++,~s||(s=0),n.eq(s).trigger('focus')}}}};var t=a.fn.dropdown;a.fn.dropdown=function e(i){return this.each(function(){var t=a(this),e=t.data('bs.dropdown');e||t.data('bs.dropdown',e=new o(this)),'string'==typeof i&&e[i].call(t)})},a.fn.dropdown.Constructor=o,a.fn.dropdown.noConflict=function(){return a.fn.dropdown=t,this},a(document).on('click.bs.dropdown.data-api',s).on('click.bs.dropdown.data-api','.dropdown form',function(t){t.stopPropagation()}).on('click.bs.dropdown.data-api',r,o.prototype.toggle).on('keydown.bs.dropdown.data-api',r,o.prototype.keydown).on('keydown.bs.dropdown.data-api','.dropdown-menu',o.prototype.keydown)}(jQuery),function(a){'use strict';var s=function(t,e){this.options=e,this.$body=a(document.body),this.$element=a(t),this.$dialog=this.$element.find('.modal-dialog'),this.$backdrop=null,this.isShown=null,this.originalBodyPad=null,this.scrollbarWidth=0,this.ignoreBackdropClick=!1,this.fixedContent='.navbar-fixed-top, .navbar-fixed-bottom',this.options.remote&&this.$element.find('.modal-content').load(this.options.remote,a.proxy(function(){this.$element.trigger('loaded.bs.modal')},this))};function r(o,n){return this.each(function(){var t=a(this),e=t.data('bs.modal'),i=a.extend({},s.DEFAULTS,t.data(),'object'==typeof o&&o);e||t.data('bs.modal',e=new s(this,i)),'string'==typeof o?e[o](n):i.show&&e.show(n)})}s.VERSION='3.4.1',s.TRANSITION_DURATION=300,s.BACKDROP_TRANSITION_DURATION=150,s.DEFAULTS={backdrop:!0,keyboard:!0,show:!0},s.prototype.toggle=function(t){return this.isShown?this.hide():this.show(t)},s.prototype.show=function(i){var o=this,t=a.Event('show.bs.modal',{relatedTarget:i});this.$element.trigger(t),this.isShown||t.isDefaultPrevented()||(this.isShown=!0,this.checkScrollbar(),this.setScrollbar(),this.$body.addClass('modal-open'),this.escape(),this.resize(),this.$element.on('click.dismiss.bs.modal','[data-dismiss="modal"]',a.proxy(this.hide,this)),this.$dialog.on('mousedown.dismiss.bs.modal',function(){o.$element.one('mouseup.dismiss.bs.modal',function(t){a(t.target).is(o.$element)&&(o.ignoreBackdropClick=!0)})}),this.backdrop(function(){var t=a.support.transition&&o.$element.hasClass('fade');o.$element.parent().length||o.$element.appendTo(o.$body),o.$element.show().scrollTop(0),o.adjustDialog(),t&&o.$element[0].offsetWidth,o.$element.addClass('in'),o.enforceFocus();var e=a.Event('shown.bs.modal',{relatedTarget:i});t?o.$dialog.one('bsTransitionEnd',function(){o.$element.trigger('focus').trigger(e)}).emulateTransitionEnd(s.TRANSITION_DURATION):o.$element.trigger('focus').trigger(e)}))},s.prototype.hide=function(t){t&&t.preventDefault(),t=a.Event('hide.bs.modal'),this.$element.trigger(t),this.isShown&&!t.isDefaultPrevented()&&(this.isShown=!1,this.escape(),this.resize(),a(document).off('focusin.bs.modal'),this.$element.removeClass('in').off('click.dismiss.bs.modal').off('mouseup.dismiss.bs.modal'),this.$dialog.off('mousedown.dismiss.bs.modal'),a.support.transition&&this.$element.hasClass('fade')?this.$element.one('bsTransitionEnd',a.proxy(this.hideModal,this)).emulateTransitionEnd(s.TRANSITION_DURATION):this.hideModal())},s.prototype.enforceFocus=function(){a(document).off('focusin.bs.modal').on('focusin.bs.modal',a.proxy(function(t){document===t.target||this.$element[0]===t.target||this.$element.has(t.target).length||this.$element.trigger('focus')},this))},s.prototype.escape=function(){this.isShown&&this.options.keyboard?this.$element.on('keydown.dismiss.bs.modal',a.proxy(function(t){27==t.which&&this.hide()},this)):this.isShown||this.$element.off('keydown.dismiss.bs.modal')},s.prototype.resize=function(){this.isShown?a(window).on('resize.bs.modal',a.proxy(this.handleUpdate,this)):a(window).off('resize.bs.modal')},s.prototype.hideModal=function(){var t=this;this.$element.hide(),this.backdrop(function(){t.$body.removeClass('modal-open'),t.resetAdjustments(),t.resetScrollbar(),t.$element.trigger('hidden.bs.modal')})},s.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove(),this.$backdrop=null},s.prototype.backdrop=function(t){var e=this,i=this.$element.hasClass('fade')?'fade':'';if(this.isShown&&this.options.backdrop){var o=a.support.transition&&i;if(this.$backdrop=a(document.createElement('div')).addClass('modal-backdrop '+i).appendTo(this.$body),this.$element.on('click.dismiss.bs.modal',a.proxy(function(t){this.ignoreBackdropClick?this.ignoreBackdropClick=!1:t.target===t.currentTarget&&('static'==this.options.backdrop?this.$element[0].focus():this.hide())},this)),o&&this.$backdrop[0].offsetWidth,this.$backdrop.addClass('in'),!t)return;o?this.$backdrop.one('bsTransitionEnd',t).emulateTransitionEnd(s.BACKDROP_TRANSITION_DURATION):t()}else if(!this.isShown&&this.$backdrop){this.$backdrop.removeClass('in');var n=function(){e.removeBackdrop(),t&&t()};a.support.transition&&this.$element.hasClass('fade')?this.$backdrop.one('bsTransitionEnd',n).emulateTransitionEnd(s.BACKDROP_TRANSITION_DURATION):n()}else t&&t()},s.prototype.handleUpdate=function(){this.adjustDialog()},s.prototype.adjustDialog=function(){var t=this.$element[0].scrollHeight>document.documentElement.clientHeight;this.$element.css({paddingLeft:!this.bodyIsOverflowing&&t?this.scrollbarWidth:'',paddingRight:this.bodyIsOverflowing&&!t?this.scrollbarWidth:''})},s.prototype.resetAdjustments=function(){this.$element.css({paddingLeft:'',paddingRight:''})},s.prototype.checkScrollbar=function(){var t=window.innerWidth;if(!t){var e=document.documentElement.getBoundingClientRect();t=e.right-Math.abs(e.left)}this.bodyIsOverflowing=document.body.clientWidth<t,this.scrollbarWidth=this.measureScrollbar()},s.prototype.setScrollbar=function(){var t=parseInt(this.$body.css('padding-right')||0,10);this.originalBodyPad=document.body.style.paddingRight||'';var n=this.scrollbarWidth;this.bodyIsOverflowing&&(this.$body.css('padding-right',t+n),a(this.fixedContent).each(function(t,e){var i=e.style.paddingRight,o=a(e).css('padding-right');a(e).data('padding-right',i).css('padding-right',parseFloat(o)+n+'px')}))},s.prototype.resetScrollbar=function(){this.$body.css('padding-right',this.originalBodyPad),a(this.fixedContent).each(function(t,e){var i=a(e).data('padding-right');a(e).removeData('padding-right'),e.style.paddingRight=i||''})},s.prototype.measureScrollbar=function(){var t=document.createElement('div');t.className='modal-scrollbar-measure',this.$body.append(t);var e=t.offsetWidth-t.clientWidth;return this.$body[0].removeChild(t),e};var t=a.fn.modal;a.fn.modal=r,a.fn.modal.Constructor=s,a.fn.modal.noConflict=function(){return a.fn.modal=t,this},a(document).on('click.bs.modal.data-api','[data-toggle="modal"]',function(t){var e=a(this),i=e.attr('href'),o=e.attr('data-target')||i&&i.replace(/.*(?=#[^\s]+$)/,''),n=a(document).find(o),s=n.data('bs.modal')?'toggle':a.extend({remote:!/#/.test(i)&&i},n.data(),e.data());e.is('a')&&t.preventDefault(),n.one('show.bs.modal',function(t){t.isDefaultPrevented()||n.one('hidden.bs.modal',function(){e.is(':visible')&&e.trigger('focus')})}),r.call(n,s,this)})}(jQuery),function(g){'use strict';var o=['sanitize','whiteList','sanitizeFn'],a=['background','cite','href','itemtype','longdesc','poster','src','xlink:href'],t={'*':['class','dir','id','lang','role',/^aria-[\w-]*$/i],a:['target','href','title','rel'],area:[],b:[],br:[],col:[],code:[],div:[],em:[],hr:[],h1:[],h2:[],h3:[],h4:[],h5:[],h6:[],i:[],img:['src','alt','title','width','height'],li:[],ol:[],p:[],pre:[],s:[],small:[],span:[],sub:[],sup:[],strong:[],u:[],ul:[]},r=/^(?:(?:https?|mailto|ftp|tel|file):|[^&:/?#]*(?:[/?#]|$))/gi,l=/^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[a-z0-9+/]+=*$/i;function u(t,e){var i=t.nodeName.toLowerCase();if(-1!==g.inArray(i,e))return-1===g.inArray(i,a)||Boolean(t.nodeValue.match(r)||t.nodeValue.match(l));for(var o=g(e).filter(function(t,e){return e instanceof RegExp}),n=0,s=o.length;n<s;n++)if(i.match(o[n]))return!0;return!1}function n(t,e,i){if(0===t.length)return t;if(i&&'function'==typeof i)return i(t);if(!document.implementation||!document.implementation.createHTMLDocument)return t;var o=document.implementation.createHTMLDocument('sanitization');o.body.innerHTML=t;for(var n=g.map(e,function(t,e){return e}),s=g(o.body).find('*'),a=0,r=s.length;a<r;a++){var l=s[a],h=l.nodeName.toLowerCase();if(-1!==g.inArray(h,n))for(var d=g.map(l.attributes,function(t){return t}),p=[].concat(e['*']||[],e[h]||[]),c=0,f=d.length;c<f;c++)u(d[c],p)||l.removeAttribute(d[c].nodeName);else l.parentNode.removeChild(l)}return o.body.innerHTML}var m=function(t,e){this.type=null,this.options=null,this.enabled=null,this.timeout=null,this.hoverState=null,this.$element=null,this.inState=null,this.init('tooltip',t,e)};m.VERSION='3.4.1',m.TRANSITION_DURATION=150,m.DEFAULTS={animation:!0,placement:'top',selector:!1,template:'<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:'hover focus',title:'',delay:0,html:!1,container:!1,viewport:{selector:'body',padding:0},sanitize:!0,sanitizeFn:null,whiteList:t},m.prototype.init=function(t,e,i){if(this.enabled=!0,this.type=t,this.$element=g(e),this.options=this.getOptions(i),this.$viewport=this.options.viewport&&g(document).find(g.isFunction(this.options.viewport)?this.options.viewport.call(this,this.$element):this.options.viewport.selector||this.options.viewport),this.inState={click:!1,hover:!1,focus:!1},this.$element[0]instanceof document.constructor&&!this.options.selector)throw new Error('`selector` option must be specified when initializing '+this.type+' on the window.document object!');for(var o=this.options.trigger.split(' '),n=o.length;n--;){var s=o[n];if('click'==s)this.$element.on('click.'+this.type,this.options.selector,g.proxy(this.toggle,this));else if('manual'!=s){var a='hover'==s?'mouseenter':'focusin',r='hover'==s?'mouseleave':'focusout';this.$element.on(a+'.'+this.type,this.options.selector,g.proxy(this.enter,this)),this.$element.on(r+'.'+this.type,this.options.selector,g.proxy(this.leave,this))}}this.options.selector?this._options=g.extend({},this.options,{trigger:'manual',selector:''}):this.fixTitle()},m.prototype.getDefaults=function(){return m.DEFAULTS},m.prototype.getOptions=function(t){var e=this.$element.data();for(var i in e)e.hasOwnProperty(i)&&-1!==g.inArray(i,o)&&delete e[i];return(t=g.extend({},this.getDefaults(),e,t)).delay&&'number'==typeof t.delay&&(t.delay={show:t.delay,hide:t.delay}),t.sanitize&&(t.template=n(t.template,t.whiteList,t.sanitizeFn)),t},m.prototype.getDelegateOptions=function(){var i={},o=this.getDefaults();return this._options&&g.each(this._options,function(t,e){o[t]!=e&&(i[t]=e)}),i},m.prototype.enter=function(t){var e=t instanceof this.constructor?t:g(t.currentTarget).data('bs.'+this.type);if(e||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data('bs.'+this.type,e)),t instanceof g.Event&&(e.inState['focusin'==t.type?'focus':'hover']=!0),e.tip().hasClass('in')||'in'==e.hoverState)e.hoverState='in';else{if(clearTimeout(e.timeout),e.hoverState='in',!e.options.delay||!e.options.delay.show)return e.show();e.timeout=setTimeout(function(){'in'==e.hoverState&&e.show()},e.options.delay.show)}},m.prototype.isInStateTrue=function(){for(var t in this.inState)if(this.inState[t])return!0;return!1},m.prototype.leave=function(t){var e=t instanceof this.constructor?t:g(t.currentTarget).data('bs.'+this.type);if(e||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data('bs.'+this.type,e)),t instanceof g.Event&&(e.inState['focusout'==t.type?'focus':'hover']=!1),!e.isInStateTrue()){if(clearTimeout(e.timeout),e.hoverState='out',!e.options.delay||!e.options.delay.hide)return e.hide();e.timeout=setTimeout(function(){'out'==e.hoverState&&e.hide()},e.options.delay.hide)}},m.prototype.show=function(){var t=g.Event('show.bs.'+this.type);if(this.hasContent()&&this.enabled){this.$element.trigger(t);var e=g.contains(this.$element[0].ownerDocument.documentElement,this.$element[0]);if(t.isDefaultPrevented()||!e)return;var i=this,o=this.tip(),n=this.getUID(this.type);this.setContent(),o.attr('id',n),this.$element.attr('aria-describedby',n),this.options.animation&&o.addClass('fade');var s='function'==typeof this.options.placement?this.options.placement.call(this,o[0],this.$element[0]):this.options.placement,a=/\s?auto?\s?/i,r=a.test(s);r&&(s=s.replace(a,'')||'top'),o.detach().css({top:0,left:0,display:'block'}).addClass(s).data('bs.'+this.type,this),this.options.container?o.appendTo(g(document).find(this.options.container)):o.insertAfter(this.$element),this.$element.trigger('inserted.bs.'+this.type);var l=this.getPosition(),h=o[0].offsetWidth,d=o[0].offsetHeight;if(r){var p=s,c=this.getPosition(this.$viewport);s='bottom'==s&&l.bottom+d>c.bottom?'top':'top'==s&&l.top-d<c.top?'bottom':'right'==s&&l.right+h>c.width?'left':'left'==s&&l.left-h<c.left?'right':s,o.removeClass(p).addClass(s)}var f=this.getCalculatedOffset(s,l,h,d);this.applyPlacement(f,s);var u=function(){var t=i.hoverState;i.$element.trigger('shown.bs.'+i.type),i.hoverState=null,'out'==t&&i.leave(i)};g.support.transition&&this.$tip.hasClass('fade')?o.one('bsTransitionEnd',u).emulateTransitionEnd(m.TRANSITION_DURATION):u()}},m.prototype.applyPlacement=function(t,e){var i=this.tip(),o=i[0].offsetWidth,n=i[0].offsetHeight,s=parseInt(i.css('margin-top'),10),a=parseInt(i.css('margin-left'),10);isNaN(s)&&(s=0),isNaN(a)&&(a=0),t.top+=s,t.left+=a,g.offset.setOffset(i[0],g.extend({using:function(t){i.css({top:Math.round(t.top),left:Math.round(t.left)})}},t),0),i.addClass('in');var r=i[0].offsetWidth,l=i[0].offsetHeight;'top'==e&&l!=n&&(t.top=t.top+n-l);var h=this.getViewportAdjustedDelta(e,t,r,l);h.left?t.left+=h.left:t.top+=h.top;var d=/top|bottom/.test(e),p=d?2*h.left-o+r:2*h.top-n+l,c=d?'offsetWidth':'offsetHeight';i.offset(t),this.replaceArrow(p,i[0][c],d)},m.prototype.replaceArrow=function(t,e,i){this.arrow().css(i?'left':'top',50*(1-t/e)+'%').css(i?'top':'left','')},m.prototype.setContent=function(){var t=this.tip(),e=this.getTitle();this.options.html?(this.options.sanitize&&(e=n(e,this.options.whiteList,this.options.sanitizeFn)),t.find('.tooltip-inner').html(e)):t.find('.tooltip-inner').text(e),t.removeClass('fade in top bottom left right')},m.prototype.hide=function(t){var e=this,i=g(this.$tip),o=g.Event('hide.bs.'+this.type);function n(){'in'!=e.hoverState&&i.detach(),e.$element&&e.$element.removeAttr('aria-describedby').trigger('hidden.bs.'+e.type),t&&t()}if(this.$element.trigger(o),!o.isDefaultPrevented())return i.removeClass('in'),g.support.transition&&i.hasClass('fade')?i.one('bsTransitionEnd',n).emulateTransitionEnd(m.TRANSITION_DURATION):n(),this.hoverState=null,this},m.prototype.fixTitle=function(){var t=this.$element;(t.attr('title')||'string'!=typeof t.attr('data-original-title'))&&t.attr('data-original-title',t.attr('title')||'').attr('title','')},m.prototype.hasContent=function(){return this.getTitle()},m.prototype.getPosition=function(t){var e=(t=t||this.$element)[0],i='BODY'==e.tagName,o=e.getBoundingClientRect();null==o.width&&(o=g.extend({},o,{width:o.right-o.left,height:o.bottom-o.top}));var n=window.SVGElement&&e instanceof window.SVGElement,s=i?{top:0,left:0}:n?null:t.offset(),a={scroll:i?document.documentElement.scrollTop||document.body.scrollTop:t.scrollTop()},r=i?{width:g(window).width(),height:g(window).height()}:null;return g.extend({},o,a,r,s)},m.prototype.getCalculatedOffset=function(t,e,i,o){return'bottom'==t?{top:e.top+e.height,left:e.left+e.width/2-i/2}:'top'==t?{top:e.top-o,left:e.left+e.width/2-i/2}:'left'==t?{top:e.top+e.height/2-o/2,left:e.left-i}:{top:e.top+e.height/2-o/2,left:e.left+e.width}},m.prototype.getViewportAdjustedDelta=function(t,e,i,o){var n={top:0,left:0};if(!this.$viewport)return n;var s=this.options.viewport&&this.options.viewport.padding||0,a=this.getPosition(this.$viewport);if(/right|left/.test(t)){var r=e.top-s-a.scroll,l=e.top+s-a.scroll+o;r<a.top?n.top=a.top-r:l>a.top+a.height&&(n.top=a.top+a.height-l)}else{var h=e.left-s,d=e.left+s+i;h<a.left?n.left=a.left-h:d>a.right&&(n.left=a.left+a.width-d)}return n},m.prototype.getTitle=function(){var t=this.$element,e=this.options;return t.attr('data-original-title')||('function'==typeof e.title?e.title.call(t[0]):e.title)},m.prototype.getUID=function(t){for(;t+=~~(1e6*Math.random()),document.getElementById(t););return t},m.prototype.tip=function(){if(!this.$tip&&(this.$tip=g(this.options.template),1!=this.$tip.length))throw new Error(this.type+' `template` option must consist of exactly 1 top-level element!');return this.$tip},m.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find('.tooltip-arrow')},m.prototype.enable=function(){this.enabled=!0},m.prototype.disable=function(){this.enabled=!1},m.prototype.toggleEnabled=function(){this.enabled=!this.enabled},m.prototype.toggle=function(t){var e=this;t&&((e=g(t.currentTarget).data('bs.'+this.type))||(e=new this.constructor(t.currentTarget,this.getDelegateOptions()),g(t.currentTarget).data('bs.'+this.type,e))),t?(e.inState.click=!e.inState.click,e.isInStateTrue()?e.enter(e):e.leave(e)):e.tip().hasClass('in')?e.leave(e):e.enter(e)},m.prototype.destroy=function(){var t=this;clearTimeout(this.timeout),this.hide(function(){t.$element.off('.'+t.type).removeData('bs.'+t.type),t.$tip&&t.$tip.detach(),t.$tip=null,t.$arrow=null,t.$viewport=null,t.$element=null})},m.prototype.sanitizeHtml=function(t){return n(t,this.options.whiteList,this.options.sanitizeFn)};var e=g.fn.tooltip;g.fn.tooltip=function i(o){return this.each(function(){var t=g(this),e=t.data('bs.tooltip'),i='object'==typeof o&&o;!e&&/destroy|hide/.test(o)||(e||t.data('bs.tooltip',e=new m(this,i)),'string'==typeof o&&e[o]())})},g.fn.tooltip.Constructor=m,g.fn.tooltip.noConflict=function(){return g.fn.tooltip=e,this}}(jQuery),function(n){'use strict';var s=function(t,e){this.init('popover',t,e)};if(!n.fn.tooltip)throw new Error('Popover requires tooltip.js');s.VERSION='3.4.1',s.DEFAULTS=n.extend({},n.fn.tooltip.Constructor.DEFAULTS,{placement:'right',trigger:'click',content:'',template:'<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),((s.prototype=n.extend({},n.fn.tooltip.Constructor.prototype)).constructor=s).prototype.getDefaults=function(){return s.DEFAULTS},s.prototype.setContent=function(){var t=this.tip(),e=this.getTitle(),i=this.getContent();if(this.options.html){var o=typeof i;this.options.sanitize&&(e=this.sanitizeHtml(e),'string'===o&&(i=this.sanitizeHtml(i))),t.find('.popover-title').html(e),t.find('.popover-content').children().detach().end()['string'===o?'html':'append'](i)}else t.find('.popover-title').text(e),t.find('.popover-content').children().detach().end().text(i);t.removeClass('fade top bottom left right in'),t.find('.popover-title').html()||t.find('.popover-title').hide()},s.prototype.hasContent=function(){return this.getTitle()||this.getContent()},s.prototype.getContent=function(){var t=this.$element,e=this.options;return t.attr('data-content')||('function'==typeof e.content?e.content.call(t[0]):e.content)},s.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find('.arrow')};var t=n.fn.popover;n.fn.popover=function e(o){return this.each(function(){var t=n(this),e=t.data('bs.popover'),i='object'==typeof o&&o;!e&&/destroy|hide/.test(o)||(e||t.data('bs.popover',e=new s(this,i)),'string'==typeof o&&e[o]())})},n.fn.popover.Constructor=s,n.fn.popover.noConflict=function(){return n.fn.popover=t,this}}(jQuery),function(s){'use strict';function n(t,e){this.$body=s(document.body),this.$scrollElement=s(t).is(document.body)?s(window):s(t),this.options=s.extend({},n.DEFAULTS,e),this.selector=(this.options.target||'')+' .nav li > a',this.offsets=[],this.targets=[],this.activeTarget=null,this.scrollHeight=0,this.$scrollElement.on('scroll.bs.scrollspy',s.proxy(this.process,this)),this.refresh(),this.process()}function e(o){return this.each(function(){var t=s(this),e=t.data('bs.scrollspy'),i='object'==typeof o&&o;e||t.data('bs.scrollspy',e=new n(this,i)),'string'==typeof o&&e[o]()})}n.VERSION='3.4.1',n.DEFAULTS={offset:10},n.prototype.getScrollHeight=function(){return this.$scrollElement[0].scrollHeight||Math.max(this.$body[0].scrollHeight,document.documentElement.scrollHeight)},n.prototype.refresh=function(){var t=this,o='offset',n=0;this.offsets=[],this.targets=[],this.scrollHeight=this.getScrollHeight(),s.isWindow(this.$scrollElement[0])||(o='position',n=this.$scrollElement.scrollTop()),this.$body.find(this.selector).map(function(){var t=s(this),e=t.data('target')||t.attr('href'),i=/^#./.test(e)&&s(e);return i&&i.length&&i.is(':visible')&&[[i[o]().top+n,e]]||null}).sort(function(t,e){return t[0]-e[0]}).each(function(){t.offsets.push(this[0]),t.targets.push(this[1])})},n.prototype.process=function(){var t,e=this.$scrollElement.scrollTop()+this.options.offset,i=this.getScrollHeight(),o=this.options.offset+i-this.$scrollElement.height(),n=this.offsets,s=this.targets,a=this.activeTarget;if(this.scrollHeight!=i&&this.refresh(),o<=e)return a!=(t=s[s.length-1])&&this.activate(t);if(a&&e<n[0])return this.activeTarget=null,this.clear();for(t=n.length;t--;)a!=s[t]&&e>=n[t]&&(n[t+1]===undefined||e<n[t+1])&&this.activate(s[t])},n.prototype.activate=function(t){this.activeTarget=t,this.clear();var e=this.selector+'[data-target="'+t+'"],'+this.selector+'[href="'+t+'"]',i=s(e).parents('li').addClass('active');i.parent('.dropdown-menu').length&&(i=i.closest('li.dropdown').addClass('active')),i.trigger('activate.bs.scrollspy')},n.prototype.clear=function(){s(this.selector).parentsUntil(this.options.target,'.active').removeClass('active')};var t=s.fn.scrollspy;s.fn.scrollspy=e,s.fn.scrollspy.Constructor=n,s.fn.scrollspy.noConflict=function(){return s.fn.scrollspy=t,this},s(window).on('load.bs.scrollspy.data-api',function(){s('[data-spy="scroll"]').each(function(){var t=s(this);e.call(t,t.data())})})}(jQuery),function(r){'use strict';var a=function(t){this.element=r(t)};function e(i){return this.each(function(){var t=r(this),e=t.data('bs.tab');e||t.data('bs.tab',e=new a(this)),'string'==typeof i&&e[i]()})}a.VERSION='3.4.1',a.TRANSITION_DURATION=150,a.prototype.show=function(){var t=this.element,e=t.closest('ul:not(.dropdown-menu)'),i=t.data('target');if(i||(i=(i=t.attr('href'))&&i.replace(/.*(?=#[^\s]*$)/,'')),!t.parent('li').hasClass('active')){var o=e.find('.active:last a'),n=r.Event('hide.bs.tab',{relatedTarget:t[0]}),s=r.Event('show.bs.tab',{relatedTarget:o[0]});if(o.trigger(n),t.trigger(s),!s.isDefaultPrevented()&&!n.isDefaultPrevented()){var a=r(document).find(i);this.activate(t.closest('li'),e),this.activate(a,a.parent(),function(){o.trigger({type:'hidden.bs.tab',relatedTarget:t[0]}),t.trigger({type:'shown.bs.tab',relatedTarget:o[0]})})}}},a.prototype.activate=function(t,e,i){var o=e.find('> .active'),n=i&&r.support.transition&&(o.length&&o.hasClass('fade')||!!e.find('> .fade').length);function s(){o.removeClass('active').find('> .dropdown-menu > .active').removeClass('active').end().find('[data-toggle="tab"]').attr('aria-expanded',!1),t.addClass('active').find('[data-toggle="tab"]').attr('aria-expanded',!0),n?(t[0].offsetWidth,t.addClass('in')):t.removeClass('fade'),t.parent('.dropdown-menu').length&&t.closest('li.dropdown').addClass('active').end().find('[data-toggle="tab"]').attr('aria-expanded',!0),i&&i()}o.length&&n?o.one('bsTransitionEnd',s).emulateTransitionEnd(a.TRANSITION_DURATION):s(),o.removeClass('in')};var t=r.fn.tab;r.fn.tab=e,r.fn.tab.Constructor=a,r.fn.tab.noConflict=function(){return r.fn.tab=t,this};var i=function(t){t.preventDefault(),e.call(r(this),'show')};r(document).on('click.bs.tab.data-api','[data-toggle="tab"]',i).on('click.bs.tab.data-api','[data-toggle="pill"]',i)}(jQuery),function(l){'use strict';var h=function(t,e){this.options=l.extend({},h.DEFAULTS,e);var i=this.options.target===h.DEFAULTS.target?l(this.options.target):l(document).find(this.options.target);this.$target=i.on('scroll.bs.affix.data-api',l.proxy(this.checkPosition,this)).on('click.bs.affix.data-api',l.proxy(this.checkPositionWithEventLoop,this)),this.$element=l(t),this.affixed=null,this.unpin=null,this.pinnedOffset=null,this.checkPosition()};function i(o){return this.each(function(){var t=l(this),e=t.data('bs.affix'),i='object'==typeof o&&o;e||t.data('bs.affix',e=new h(this,i)),'string'==typeof o&&e[o]()})}h.VERSION='3.4.1',h.RESET='affix affix-top affix-bottom',h.DEFAULTS={offset:0,target:window},h.prototype.getState=function(t,e,i,o){var n=this.$target.scrollTop(),s=this.$element.offset(),a=this.$target.height();if(null!=i&&'top'==this.affixed)return n<i&&'top';if('bottom'==this.affixed)return null!=i?!(n+this.unpin<=s.top)&&'bottom':!(n+a<=t-o)&&'bottom';var r=null==this.affixed,l=r?n:s.top;return null!=i&&n<=i?'top':null!=o&&t-o<=l+(r?a:e)&&'bottom'},h.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset;this.$element.removeClass(h.RESET).addClass('affix');var t=this.$target.scrollTop(),e=this.$element.offset();return this.pinnedOffset=e.top-t},h.prototype.checkPositionWithEventLoop=function(){setTimeout(l.proxy(this.checkPosition,this),1)},h.prototype.checkPosition=function(){if(this.$element.is(':visible')){var t=this.$element.height(),e=this.options.offset,i=e.top,o=e.bottom,n=Math.max(l(document).height(),l(document.body).height());'object'!=typeof e&&(o=i=e),'function'==typeof i&&(i=e.top(this.$element)),'function'==typeof o&&(o=e.bottom(this.$element));var s=this.getState(n,t,i,o);if(this.affixed!=s){null!=this.unpin&&this.$element.css('top','');var a='affix'+(s?'-'+s:''),r=l.Event(a+'.bs.affix');if(this.$element.trigger(r),r.isDefaultPrevented())return;this.affixed=s,this.unpin='bottom'==s?this.getPinnedOffset():null,this.$element.removeClass(h.RESET).addClass(a).trigger(a.replace('affix','affixed')+'.bs.affix')}'bottom'==s&&this.$element.offset({top:n-t-o})}};var t=l.fn.affix;l.fn.affix=i,l.fn.affix.Constructor=h,l.fn.affix.noConflict=function(){return l.fn.affix=t,this},l(window).on('load',function(){l('[data-spy="affix"]').each(function(){var t=l(this),e=t.data();e.offset=e.offset||{},null!=e.offsetBottom&&(e.offset.bottom=e.offsetBottom),null!=e.offsetTop&&(e.offset.top=e.offsetTop),i.call(t,e)})})}(jQuery);
+define('bootstrap', ['jquery'], function(){});
 
 (function ($) {
   'use strict';
@@ -52503,7 +52503,7 @@ define("bootstrap", ["jquery"], function(){});
   // <editor-fold desc="Shims">
   if (!String.prototype.startsWith) {
     (function () {
-      'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+       // needed to support `apply`/`call` with `undefined`/`null`
       var defineProperty = (function () {
         // IE 8 only supports `Object.defineProperty` on DOM elements
         try {
@@ -55501,7 +55501,7 @@ define("bootstrap", ["jquery"], function(){});
   });
 })(jQuery);
 
-define("bootstrap-select", ["bootstrap"], function(){});
+define('bootstrap-select', ['bootstrap'], function(){});
 
 
 define('less/less!styles/sim',[],function(){});
@@ -55634,7 +55634,7 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
                 simulation: this.simulation
             };
             this.$el.html(this.template(data));
-            
+
             this.$('.resistance-slider').noUiSlider({
                 start: Constants.RESISTANCE_RANGE.defaultValue,
                 connect: 'lower',
@@ -55757,7 +55757,7 @@ define('views/sim',['require','jquery','underscore','common/v3/app/sim','models/
 
 define('less/less!styles/font-awesome',[],function(){});
 define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','less!styles/font-awesome'],function(require) {
-    
+
     'use strict';
 
     var PixiAppView = require('common/v3/pixi/view/app');
@@ -55797,13 +55797,13 @@ define('views/app',['require','common/v3/pixi/view/app','views/sim','assets','le
                 // Render main app view
                 appView.load();
             });
-    
+
         });
     });
 
 })();
 
-define("main", function(){});
+define('main', function(){});
 
 
 (function(c){var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})

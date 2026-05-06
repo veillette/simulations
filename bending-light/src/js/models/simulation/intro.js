@@ -19,23 +19,23 @@ define(function (require, exports, module) {
     var MediumPropertiesPresets = require('medium-properties-presets');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var IntroSimulation = BendingLightSimulation.extend({
 
         // defaults: _.extend(BendingLightSimulation.prototype.defaults, {
         // }),
-        
+
         initialize: function(attributes, options) {
             BendingLightSimulation.prototype.initialize.apply(this, [attributes, options]);
 
-            
+
 
             this._bottom = new Rectangle(-10, -10, 20, 10);
             this._top    = new Rectangle(-10,   0, 20, 10);
             this._vec = new Vector2();
             this._distVec = new Vector2();
-            
+
         },
 
         /**
@@ -71,7 +71,7 @@ define(function (require, exports, module) {
         },
 
         /**
-         * Light rays were cleared from model before propagateRays was called, 
+         * Light rays were cleared from model before propagateRays was called,
          *   this creates them according to the laser and mediums
          */
         propagateRays: function() {
@@ -82,7 +82,7 @@ define(function (require, exports, module) {
             if (this.laser.get('on')) {
                 var tail = this.laser.get('emissionPoint');
 
-                // Snell's law, see http://en.wikipedia.org/wiki/Snell's_law 
+                // Snell's law, see http://en.wikipedia.org/wiki/Snell's_law
                 //   for definition of n1, n2, theta1, theta2
                 var n1 = this.getN1(); // Index in top medium
                 var n2 = this.getN2(); // Index of bottom medium
@@ -127,20 +127,20 @@ define(function (require, exports, module) {
                         reflectedPowerRatio = this.getReflectedPower(n1, n2, Math.cos(theta1), Math.cos(theta2));
                     else
                         reflectedPowerRatio = 1.0;
-                    
+
                     var reflectedWaveWidth = sourceWaveWidth;
                     this.addAndAbsorb(LightRay.create(
-                        null, 
+                        null,
                         this._vec.set(1, 0).rotate(Math.PI - this.laser.getAngle()),
-                        n1, 
-                        wavelengthInTopMedium, 
-                        reflectedPowerRatio * sourcePower, 
-                        wavelength, 
-                        reflectedWaveWidth, 
-                        incidentRay.getNumberOfWavelengths(), 
-                        bottom, 
-                        true, 
-                        false 
+                        n1,
+                        wavelengthInTopMedium,
+                        reflectedPowerRatio * sourcePower,
+                        wavelength,
+                        reflectedWaveWidth,
+                        incidentRay.getNumberOfWavelengths(),
+                        bottom,
+                        true,
+                        false
                     ));
 
                     // Fire a transmitted ray if there wasn't total internal reflection
@@ -161,15 +161,15 @@ define(function (require, exports, module) {
 
                             var transmittedRay = LightRay.create(
                                 null,
-                                this._vec.set(1, 0).rotate(theta2 - Math.PI / 2), 
-                                n2, 
+                                this._vec.set(1, 0).rotate(theta2 - Math.PI / 2),
+                                n2,
                                 transmittedWavelength,
-                                transmittedPowerRatio * sourcePower, 
-                                wavelength, 
-                                transmittedWaveWidth, 
-                                incidentRay.getNumberOfWavelengths(), 
-                                top, 
-                                true, 
+                                transmittedPowerRatio * sourcePower,
+                                wavelength,
+                                transmittedWaveWidth,
+                                incidentRay.getNumberOfWavelengths(),
+                                top,
+                                true,
                                 true
                             );
                             this.addAndAbsorb(transmittedRay);
@@ -205,7 +205,7 @@ define(function (require, exports, module) {
             var intersects = ray.intersectsCircle(sx, sy, sr);
             var rayAbsorbed = intersects && this.intensityMeter.get('enabled');
             if (rayAbsorbed) {
-                
+
                 // Find intersection points with the intensity sensor
                 var line = ray.toLine();
                 var intersections = LineIntersection.lineCircleIntersection(line.start.x, line.start.y, line.end.x, line.end.y, sx, sy, sr);
@@ -215,15 +215,15 @@ define(function (require, exports, module) {
                     var y = intersections[0].y + intersections[1].y;
                     var interruptedRay = LightRay.create(
                         ray.tail,
-                        this._vec.set(x / 2, y / 2), 
-                        ray.indexOfRefraction, 
+                        this._vec.set(x / 2, y / 2),
+                        ray.indexOfRefraction,
                         ray.getWavelength(),
-                        ray.getPowerFraction(), 
-                        this.laser.get('wavelength'), 
-                        ray.getWaveWidth(), 
-                        ray.getNumWavelengthsPhaseOffset(), 
-                        ray.getOppositeMedium(), 
-                        false, 
+                        ray.getPowerFraction(),
+                        this.laser.get('wavelength'),
+                        ray.getWaveWidth(),
+                        ray.getNumWavelengthsPhaseOffset(),
+                        ray.getOppositeMedium(),
+                        false,
                         ray.extendBackwards
                     );
 

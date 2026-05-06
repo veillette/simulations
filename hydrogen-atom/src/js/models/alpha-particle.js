@@ -22,7 +22,7 @@ define(function (require) {
         getInitialPosition: function() {
             return this.initialPosition;
         },
-        
+
         getInitialSpeed: function() {
             return this.initialSpeed;
         },

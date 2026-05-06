@@ -11,12 +11,12 @@ define(function (require) {
 
     /**
      * Solves for unknowns in resistive circuits using the Modified Nodal Analysis (MNA) method.
-     *   This method is outlined here: 
+     *   This method is outlined here:
      *
      *   http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA3.html
      *
      * Other links that are helpful for understanding:
-     *   
+     *
      *   http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA1.html
      *   http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA2.html
      *
@@ -37,7 +37,7 @@ define(function (require) {
         solve: function(circuit, deltaTime) {
             if (!circuit.branches.length)
                 return;
-            
+
             // Create a DynamicCircuit representation of the simulation circuit
             var dynamicCircuit = DynamicCircuit.fromCircuit(circuit);
 
@@ -63,7 +63,7 @@ define(function (require) {
          *   DynamicSolution. These temporary states should be properly destroyed.
          */
         _solveWithSubdivisions: function(dynamicCircuit, deltaTime) {
-            
+
             var state = DynamicState.create(dynamicCircuit);
             var dynamicSolution = DynamicSolution.create();
 
@@ -143,11 +143,11 @@ define(function (require) {
         getEuclideanDistance: function(x, y) {
             if (x.length != y.length)
                 throw 'Vector length mismatch';
-            
+
             var sumSqDiffs = 0;
             for (var i = 0; i < x.length; i++)
                 sumSqDiffs += Math.pow(x[i] - y[i], 2);
-            
+
             return Math.sqrt(sumSqDiffs);
         },
 

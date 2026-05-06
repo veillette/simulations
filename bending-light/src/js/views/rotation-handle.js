@@ -84,7 +84,7 @@ define(function(require) {
             this.hoverHandle.visible = true;
             this.idleHandle.visible = false;
         },
-        
+
         unhover: function() {
             this.hovering = false;
             if (!this.dragging) {

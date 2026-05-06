@@ -25,7 +25,7 @@ define(function (require) {
             initY: 0,
             initVX: 0,
             initVY: 0,
-            
+
             color: '#000',
             number: 0
         }),

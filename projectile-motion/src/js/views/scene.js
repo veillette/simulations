@@ -54,7 +54,7 @@ define(function(require) {
     var ProjectileMotionSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -67,10 +67,10 @@ define(function(require) {
         },
 
         /**
-         * Renders 
+         * Renders
          */
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {

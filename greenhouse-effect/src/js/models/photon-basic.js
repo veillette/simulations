@@ -51,7 +51,7 @@ define(function (require) {
 
         /**
          * I want it to act like the original photon externally
-         *   so I don't need to change as much code, so I'm 
+         *   so I don't need to change as much code, so I'm
          *   writing get and set functions.
          */
         get: function(attr) {
@@ -130,7 +130,7 @@ define(function (require) {
          * Calculates and returns the body's kinetic energy.
          */
         getKineticEnergy: function() {
-            return (this.mass * this.velocity.lengthSq() / 2) + 
+            return (this.mass * this.velocity.lengthSq() / 2) +
                 (this.getMomentOfInertia() * this.omega * this.omega / 2);
         }
 

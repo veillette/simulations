@@ -127,13 +127,13 @@ define(function(require) {
 			 *   their right.  But if [fraction === 1], that means it's
 			 *   surrounded by modified values and is somewhere inside
 			 *   the mass of cells that the wave has already passed
-			 *   over. 
+			 *   over.
 			 */
 			return (fraction > 0 && fraction < 1);
 		},
 
 		/**
-		 * 
+		 *
 		 */
 		clearOffscreenLatticeValue: function(x, y) {
 			this.prevLat1.data[x][y]  = 0;

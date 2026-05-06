@@ -56,7 +56,7 @@ define(function (require) {
          */
         setOrigin: function(x, y, options) {
             var oldOrigin = this.get('origin');
-            
+
             if (x instanceof Vector2)
                 this.set('origin', vectorPool.create().set(x), y);
             else
@@ -66,7 +66,7 @@ define(function (require) {
             vectorPool.remove(oldOrigin);
         },
 
-        /** 
+        /**
          * Avoid memory leaks from the pool.
          */
         destroy: function(options) {
@@ -84,7 +84,7 @@ define(function (require) {
             var currentFrequency = primaryWavefront.getFrequencyAtTime(wavefrontDist);
             var currentAmplitude = primaryWavefront.getMaxAmplitudeAtTime(wavefrontDist);
             var currentOctaveAmplitude = this.get('simulation').octaveWavefront.getMaxAmplitudeAtTime(wavefrontDist);
-            
+
             this.frequencyHeard = currentFrequency;
             this.amplitudeHeard = currentAmplitude;
             this.octaveAmplitudeHeard = currentOctaveAmplitude;

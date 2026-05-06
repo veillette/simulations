@@ -19,7 +19,7 @@ define(function (require, exports, module) {
         defaults: _.extend({}, FixedIntervalSimulation.prototype.defaults, {
 
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 framesPerSecond: Constants.FRAME_RATE,
@@ -34,7 +34,7 @@ define(function (require, exports, module) {
          * Initializes the models used in the simulation
          */
         initComponents: function() {
-            
+
         }
 
     });

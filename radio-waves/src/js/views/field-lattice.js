@@ -106,7 +106,7 @@ define(function(require) {
             // Create lattice points for full-field view
             for (var i = 0; i < totalLatticePoints; i++) {
                 this.latticePoints[i] = this.createLatticePoint(
-                    offsetX + (i % numLatticePointsX) * latticeSpacingX, 
+                    offsetX + (i % numLatticePointsX) * latticeSpacingX,
                     offsetY + (i / numLatticePointsX) * latticeSpacingY
                 );
             }
@@ -187,7 +187,7 @@ define(function(require) {
                     // Set the field magnitudes for all the negative and positive arrows
                     for (i = 0; i < this.latticePointsLeft.length; i++)
                         this.evaluateLatticePoint(this.latticePointsLeft[i]);
-                    
+
                     for (i = 0; i < this.latticePointsRight.length; i++)
                         this.evaluateLatticePoint(this.latticePointsRight[i]);
 
@@ -245,10 +245,10 @@ define(function(require) {
                     targetY = originY + field.y;
 
                     graphics.drawArrow(
-                        this.mvt.modelToViewX(originX), this.mvt.modelToViewY(originY), 
-                        this.mvt.modelToViewX(targetX), this.mvt.modelToViewY(targetY), 
-                        FieldLatticeView.ARROW_TAIL_WIDTH, 
-                        FieldLatticeView.ARROW_HEAD_WIDTH, 
+                        this.mvt.modelToViewX(originX), this.mvt.modelToViewY(originY),
+                        this.mvt.modelToViewX(targetX), this.mvt.modelToViewY(targetY),
+                        FieldLatticeView.ARROW_TAIL_WIDTH,
+                        FieldLatticeView.ARROW_HEAD_WIDTH,
                         FieldLatticeView.ARROW_HEAD_LENGTH
                     );
                 }
@@ -274,7 +274,7 @@ define(function(require) {
             var orig = points[this.curveStartingIndex];
             var xDist = orig.location.x - this.origin.x;
             var xSign = Math.sign(xDist);
-            
+
             var yLast = orig.field.length() * Math.sign(orig.field.y * curveAmplitudeOffset);
             var yCurr = yLast;
             var maxX = this.maxX;
@@ -339,7 +339,7 @@ define(function(require) {
 
             // Show/hide curve
             this.curveGraphics.visible = (
-                fieldDisplayType === FieldLatticeView.CURVE || 
+                fieldDisplayType === FieldLatticeView.CURVE ||
                 fieldDisplayType === FieldLatticeView.CURVE_WITH_VECTORS
             );
 

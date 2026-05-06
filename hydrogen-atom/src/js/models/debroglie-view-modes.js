@@ -1,7 +1,7 @@
 define(function (require) {
 
     'use strict';
-    
+
     var DeBroglieViewModes = {
         BRIGHTNESS_MAGNITUDE: 0, // Magnitude of amplitude is mapped to brightness in 2D
         BRIGHTNESS:           1, // Amplitude is mapped to brightness in 2D

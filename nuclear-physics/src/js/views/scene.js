@@ -42,7 +42,7 @@ define(function(require) {
             var $rightPanel = this.$el.parents('.sim-view').find('.sim-controls-right');
             if ($rightPanel.length === 0)
                 return 0;
-            
+
             if (AppView.windowIsShort())
                 return $rightPanel.outerWidth() + 12;
             else

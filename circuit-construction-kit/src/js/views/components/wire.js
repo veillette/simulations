@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView    = require('common/v3/pixi/view');
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
     var Colors      = require('common/colors/colors');
@@ -80,7 +80,7 @@ define(function(require) {
                 endRadius = radius;
                 endColor = this.endColor;
             }
-            
+
             var point;
             point = this.mvt.modelToView(this.model.get('startJunction').get('position'));
             var x0 = point.x;

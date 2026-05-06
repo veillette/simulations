@@ -12,8 +12,8 @@ define(function (require) {
      * Original PhET documentation by Sam Reid:
      *   Models dispersion functions for each material.  Uses the actual dispersion
      *   equation for air (A) and the actual dispersion equation for glass (G) then
-     *   interpolates between the functions 
-     *             n(lambda) = beta * A(lambda) + (1-beta) * G(lambda) 
+     *   interpolates between the functions
+     *             n(lambda) = beta * A(lambda) + (1-beta) * G(lambda)
      *   where 0<=beta<=infinity is a characteristic of the material.  The material
      *   is characterized by a reference wavelength, so that when light is the
      *   specified wavelength, the index of refraction takes the reference value.

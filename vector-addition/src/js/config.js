@@ -53,5 +53,5 @@
     } else if (typeof require !== 'undefined' && require.config) {
         require.config(config);
     }
-    
+
 })();

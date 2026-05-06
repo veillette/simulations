@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiToImage = require('common/v3/pixi/pixi-to-image');
 
     var RectangularComponentView = require('views/components/rectangular');
@@ -116,12 +116,12 @@ define(function(require) {
 
         showHoverGraphics: function() {
             RectangularComponentView.prototype.showHoverGraphics.apply(this, arguments);
-            this.topLayer.visible = false; 
+            this.topLayer.visible = false;
         },
 
         hideHoverGraphics: function() {
             RectangularComponentView.prototype.hideHoverGraphics.apply(this, arguments);
-            this.topLayer.visible = !this.circuit.get('schematic'); 
+            this.topLayer.visible = !this.circuit.get('schematic');
         },
 
     });

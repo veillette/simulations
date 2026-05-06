@@ -59,7 +59,7 @@ define(function(require) {
         initGraphics: function() {
             this.displayObject.x = this.x;
             this.displayObject.y = this.y;
-           
+
             this.areaBounds = new Rectangle(
                 MomentaDiagram.PANEL_PADDING,
                 MomentaDiagram.PANEL_PADDING_TOP,
@@ -164,7 +164,7 @@ define(function(require) {
         },
 
         update: function(time, deltaTime, paused) {
-            
+
         },
 
         ballsReset: function(balls) {

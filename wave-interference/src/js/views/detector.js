@@ -9,7 +9,7 @@ define(function (require) {
 	var DetectorGraphView = require('./graph/detector');
 
 	var Utils = require('../utils/utils');
-	
+
 	var html  = require('text!../../templates/detector.html');
 
 	// CSS
@@ -195,7 +195,7 @@ define(function (require) {
 
 		calculateLatticePoint: function() {
 			var point = this.heatmapView.offsetToPoint(
-				this.sampler.y + this.offset.top, 
+				this.sampler.y + this.offset.top,
 				this.sampler.x + this.offset.left
 			);
 
@@ -204,16 +204,16 @@ define(function (require) {
 
 		positionComponents: function() {
 			angle = -Utils.angleFromLine(
-				this.sampler.x, 
-				this.sampler.y, 
-				this.visualizer.x + this.relativeConnectorAnchorPosition.x, 
+				this.sampler.x,
+				this.sampler.y,
+				this.visualizer.x + this.relativeConnectorAnchorPosition.x,
 				this.visualizer.y + this.relativeConnectorAnchorPosition.y
 			);
 
 			lineLength = Utils.lineLength(
-				this.sampler.x, 
-				this.sampler.y, 
-				this.visualizer.x + this.relativeConnectorAnchorPosition.x, 
+				this.sampler.x,
+				this.sampler.y,
+				this.visualizer.x + this.relativeConnectorAnchorPosition.x,
 				this.visualizer.y + this.relativeConnectorAnchorPosition.y
 			);
 
@@ -235,7 +235,7 @@ define(function (require) {
 
 			// Move the sampler so it's centered on the sample point
 			translate = 'translateX(' + this.sampler.x + 'px) translateY(' + this.sampler.y + 'px)';
-			
+
 			this.$sampler.css({
 				'-webkit-transform': translate,
 				'-ms-transform':     translate,
@@ -250,7 +250,7 @@ define(function (require) {
 		},
 
 		update: function(time, delta) {
-			
+
 			if (this.updateOnNextFrame) {
 				this.updateOnNextFrame = false;
 

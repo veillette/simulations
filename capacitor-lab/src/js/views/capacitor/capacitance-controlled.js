@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var Colors     = require('common/colors/colors');
     var AppView    = require('common/v3/app/app');
     var SliderView = require('common/v3/pixi/view/slider');
@@ -14,7 +14,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var CapacitanceControlledCapacitorView = CapacitorView.extend({
 

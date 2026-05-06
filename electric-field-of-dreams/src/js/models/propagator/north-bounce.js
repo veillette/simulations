@@ -9,7 +9,7 @@ define(function (require) {
     var BoundsBouncePropagator = require('models/propagator/bounds-bounce');
 
     /**
-     * 
+     *
      */
     var NorthBouncePropagator = function(yMin, distFromWall) {
         this.yMin = yMin;
@@ -30,7 +30,7 @@ define(function (require) {
         getPointAtBounds: function(oldPosition) {
             return this._vec.set(oldPosition.x, this.yMin + this.distFromWall);
         },
-        
+
         getNewVelocity: function(oldVelocity) {
             var y = Math.abs(oldVelocity.y);
             return this._vec.set(oldVelocity.x, y);

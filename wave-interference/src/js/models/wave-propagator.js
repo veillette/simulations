@@ -8,11 +8,11 @@ define(function(require) {
 	var Potential = require('./potential');
 
 	/**
-	 * The WavePropagator object is responsible for propagating values over a discrete 
+	 * The WavePropagator object is responsible for propagating values over a discrete
 	 *   grid space (represeneted by a lattice) over time.  Unlike the oscillator, it
-	 *   doesn't use time (a continuous independent variable) in its algorithm because 
-	 *   it is discrete; the end result is determined by the number of steps the 
-	 *   propagator has taken.  It is a mixture of PhET's ClassicalWavePropagator and 
+	 *   doesn't use time (a continuous independent variable) in its algorithm because
+	 *   it is discrete; the end result is determined by the number of steps the
+	 *   propagator has taken.  It is a mixture of PhET's ClassicalWavePropagator and
 	 *   DampedClassicalWavePropagator classes.  More details about how propagation
 	 *   works are given in the propagation functions' notes.
 	 */
@@ -25,7 +25,7 @@ define(function(require) {
 				y: 20
 			},
 		}, options);
-		
+
 		// Object properties
 		this.potential = options.potential || new Potential(); // The lattice point values
 		this.dampX = options.damping.x;
@@ -96,7 +96,7 @@ define(function(require) {
 
 		/**
 		 * Perform propagation from the discrete wave propagation model outlined
-		 *   in Paul Budnik's "What is and what will be" found here: 
+		 *   in Paul Budnik's "What is and what will be" found here:
 		 *   http://www.mtnmath.com/whatth/node47.html
 		 */
 		_propagate: function() {
@@ -186,9 +186,9 @@ define(function(require) {
 		 *   I don't know where they got this algorithm, so when I renamed
 		 *   the variables, it was to convey my own understanding of what is
 		 *   happening.
-		 * What it does is scale down the values of all the lattice points 
+		 * What it does is scale down the values of all the lattice points
 		 *   at a given x value on towards the right or left (depending on
-		 *   the direction) with decreasing damping strength as it farther 
+		 *   the direction) with decreasing damping strength as it farther
 		 *   from the xOrigin.
 		 */
 		dampVertical: function(xOrigin, direction, xDistance) {
@@ -256,8 +256,8 @@ define(function(require) {
 		/**
 		 * Because the value of lattice[x][y] during propagation is always a function
 		 *   of prevLat1[x][y] and prevLat2[x][y], we need to set these historical
-		 *   lattice point values if we ever want a change in a point's value to last 
-		 *   through  propagation.  The oscillator calls this function instead of 
+		 *   lattice point values if we ever want a change in a point's value to last
+		 *   through  propagation.  The oscillator calls this function instead of
 		 *   applying its oscillating values directly to the current lattice because
 		 *   that current lattice will just be overriden when it passes through the
 		 *   propagation function.
@@ -276,7 +276,7 @@ define(function(require) {
 
 		/**
 		 * Copies current lattice values to the padded lattice and historical
-		 *   lattices, effectively clearing it as long as the current lattice 
+		 *   lattices, effectively clearing it as long as the current lattice
 		 *   is what is desired.
 		 */
 		initLattices: function(){

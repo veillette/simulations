@@ -26,9 +26,9 @@ define(function (require, exports, module) {
             soundVolume: 80,
             won: false
         }),
-        
+
         initialize: function(attributes, options) {
-            this.particle = new Particle(); 
+            this.particle = new Particle();
 
             // Sounds
             this.ambientSound = new buzz.sound('audio/ambient-loop', {

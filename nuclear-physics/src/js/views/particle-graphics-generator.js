@@ -21,7 +21,7 @@ define(function(require) {
     var NEUTRON_COLOR      = Colors.parseHex(Constants.NEUTRON_COLOR);
     var ELECTRON_COLOR     = Colors.parseHex(Constants.ELECTRON_COLOR);
     var ANTINEUTRINO_COLOR = Colors.parseHex(Constants.ANTINEUTRINO_COLOR);
-    
+
     var CARBON_COLOR   = Colors.parseHex(Constants.CARBON_COLOR);
     var NITROGEN_COLOR = Colors.parseHex(Constants.NITROGEN_COLOR);
     var URANIUM_COLOR  = Colors.parseHex(Constants.URANIUM_COLOR);
@@ -52,13 +52,13 @@ define(function(require) {
 
             var cache = renderer[cacheKey];
             if (cache &&
-                cache[scale] && 
-                cache[scale][numProtons] && 
+                cache[scale] &&
+                cache[scale][numProtons] &&
                 cache[scale][numProtons][numNeutrons]
             ) {
                 return cache[scale][numProtons][numNeutrons];
             }
-                
+
             return null;
         },
 
@@ -90,7 +90,7 @@ define(function(require) {
             var noCachingAsBitmap = false;
             if (labelScale === undefined)
                 labelScale = 1;
-            
+
             // Create a graphical image that will represent this nucleus in the view.
             if (hideNucleons) {
                 // Show as a single sphere
@@ -152,7 +152,7 @@ define(function(require) {
         generateNucleus: function(nucleus, mvt, renderer, hideNucleons, normalized) {
             var sprite;
             var noCachingAsBitmap = false;
-            
+
             // Create a graphical image that will represent this nucleus in the view.
             if (hideNucleons) {
                 // Show as a single sphere
@@ -211,7 +211,7 @@ define(function(require) {
             // Add them all to the container
             for (i = 0; i < nucleons.length; i++)
                 container.addChild(nucleons[i]);
-            
+
             // Set their positions in the appropriate manner for the nucleus' size
             if (nucleons.length == 3) {
                 // This is a special case of a 3-neucleon nucleus.  Position all
@@ -222,7 +222,7 @@ define(function(require) {
                     var angle = (Math.PI * 2 / 3) * i + rotationOffset;
                     var xOffset = Math.sin(angle) * distanceFromCenter;
                     var yOffset = Math.cos(angle) * distanceFromCenter;
-                    nucleons[i].x = xOffset; 
+                    nucleons[i].x = xOffset;
                     nucleons[i].y = yOffset;
                 }
             }
@@ -271,16 +271,16 @@ define(function(require) {
             // Determine the size of the nucleus in femtometers.
             var nucleusRadius = this.getDiameterFromAtomicWeight(numProtons + numNeutrons) / 2;
             var viewNucleusRadius = mvt.modelToViewDeltaX(nucleusRadius);
-                    
+
             // Add sprites of individual nucleons together in order to create the
             //   overall image of the nucleus.
-                    
+
             if (numProtons + numNeutrons === 3) {
                 // This special case was added to handle H3 and He3.  It places
-                //   the nucleons such that there is no overlap between them. 
+                //   the nucleons such that there is no overlap between them.
                 //   It may also be possible to generalize it somewhat to handle
                 //   small numbers of nuclei.
-                
+
                 var protonsToAdd = numProtons;
                 var neutronsToAdd = numNeutrons;
                 var rotationOffset = Math.PI;  // In radians, arbitrary and just for looks.
@@ -305,25 +305,25 @@ define(function(require) {
                     container.addChild(nucleonSprite);
                 }
             }
-            else { 
+            else {
                 // Decide on the proportion of free protons and neutrons versus those
                 //   tied up in alpha particles.
                 var numAlphas = ((numProtons + numNeutrons) / 2) / 4; // Assume half of all particles are tied up in alphas.
                 var numFreeProtons = numProtons - (numAlphas * 2);
                 var numFreeNeutrons = numNeutrons - (numAlphas * 2);
-        
+
                 // For the following loop to work, it is assumed that the number of
                 //   neutrons equals or exceeds the number of protons, which is always
                 //   true (I think) in the real world.  However, just in case the caller
                 //   has not done this, we adjust the values here if necessary.
                 if (numFreeProtons > numFreeNeutrons)
                     numFreeNeutrons = numFreeProtons;
-        
+
                 // Add the individual images.  We add the most abundant images (usually
                 //   neutrons) first, since otherwise they end up dominating the image.
                 var maxParticleType = Math.max(numAlphas, numFreeProtons);
                 maxParticleType = Math.max(numFreeNeutrons, maxParticleType);
-        
+
                 var sprite;
                 for (var i = 0; i < maxParticleType; i++) {
                     if (numAlphas === numFreeNeutrons) {
@@ -341,7 +341,7 @@ define(function(require) {
                         numFreeProtons--;
                         container.addChild(sprite);
                     }
-        
+
                     // Add a neutron
                     sprite = this.createNeutronSprite(mvt);
                     this.setParticlePosition(sprite, viewNucleusRadius);
@@ -370,7 +370,7 @@ define(function(require) {
                 neutron1.x = -diameter / 3; neutron1.y = -diameter / 3;
                 neutron2.x =  diameter / 3; neutron2.y =  diameter / 3;
                 proton2.x  = -diameter / 4; proton2.y  =  diameter / 4;
-                
+
             }
             else {
                 proton1.x  = 0;             proton1.y = diameter / 3;
@@ -439,7 +439,7 @@ define(function(require) {
         wrapSprite: function(sprite, noCachingAsBitmap) {
             var scaleUpWrapper   = new PIXI.Container();
             var scaleDownWrapper = new PIXI.Container();
-            
+
             scaleUpWrapper.addChild(sprite);
             if (!noCachingAsBitmap)
                 scaleUpWrapper.scale.x = scaleUpWrapper.scale.y = 2;
@@ -454,7 +454,7 @@ define(function(require) {
 
         createTexture: function(sprite, renderer) {
             var scaleUpWrapper   = new PIXI.Container();
-            
+
             scaleUpWrapper.addChild(sprite);
             scaleUpWrapper.scale.x = scaleUpWrapper.scale.y = 2;
 
@@ -487,27 +487,27 @@ define(function(require) {
                 case 6:
                     // Carbon
                     return CARBON_COLOR;
-                    
+
                 case 7:
                     // Nitrogen
                     return NITROGEN_COLOR;
-                    
+
                 case 92:
                     // Uranium
                     return URANIUM_COLOR;
-                    
+
                 case 83:
                     // Bismuth, which by internal convention is the pre-decay custom nucleus.
                     return CUSTOM_NUCLEUS_PRE_DECAY_COLOR;
-                    
+
                 case 82:
                     // Lead
                     return LEAD_COLOR;
-                    
+
                 case 81:
                     // Thallium, which by internal convention is the post-decay custom nucleus.
                     return CUSTOM_NUCLEUS_POST_DECAY_COLOR;
-                    
+
                 default:
                     // Unknown
                     console.warn('Warning: Don\'t have a color assignment for this element.');

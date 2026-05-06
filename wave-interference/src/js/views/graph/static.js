@@ -59,7 +59,7 @@ define(function(require) {
 			this.$showButton.addClass('clicked');
 
 			this.duration = this.animationDuration();
-			
+
 			var self = this;
 			setTimeout(function(){
 				self._afterShow();
@@ -76,7 +76,7 @@ define(function(require) {
 		hide: function(event) {
 			if (this.toggling)
 				return;
-			
+
 			this.toggling = true;
 
 			this.$el.removeClass('open');

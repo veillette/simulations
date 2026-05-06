@@ -18,7 +18,7 @@ define(function (require) {
     var HeatTransfer = Constants.HeatTransfer;
 
     /**
-     * 
+     *
      */
     var Air = Backbone.Model.extend({
 
@@ -26,7 +26,7 @@ define(function (require) {
             energy: Constants.Air.INITIAL_ENERGY,
             energyContainerCategory: EnergyContainerCategory.AIR
         },
-        
+
         initialize: function(attributes, options) {
             this.energyChunkList = new EnergyChunkCollection();
             this.energyChunkWanderControllers = [];
@@ -121,7 +121,7 @@ define(function (require) {
         requestEnergyChunk: function(point) {
             // Create a new chunk at the top of the air above the specified point.
             return EnergyChunk.create({
-                energyType: EnergyChunk.THERMAL, 
+                energyType: EnergyChunk.THERMAL,
                 position:   new Vector2(point.x, Air.HEIGHT)
             });
         },

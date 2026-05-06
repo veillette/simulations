@@ -23,7 +23,7 @@ define(function (require) {
 
         initialize: function(attributes, options) {
             PositionableObject.prototype.initialize.apply(this, arguments);
-            
+
             this._bounds = new Rectangle();
         },
 

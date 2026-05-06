@@ -26,7 +26,7 @@ define(function (require) {
          */
         reset: function(deltaTime) {
             AbstractAlphaDecayNucleus.prototype.reset.apply(this, arguments);
-            
+
             // Reset the decay time to 0, indicating that it shouldn't occur
             //   until something changes.
             this.decayTime = 0;

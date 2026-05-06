@@ -25,7 +25,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var BaseLasersSimulation = LasersSimulation.extend({
 
@@ -43,7 +43,7 @@ define(function (require, exports, module) {
             mirrorsEnabled: false,
             exploded: false
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 silentReset: false
@@ -104,9 +104,9 @@ define(function (require, exports, module) {
                 wavelength:          Photon.RED,
                 position:            this.getSeedBeamOrigin(),
                 length:              this.boxWidth + this.laserOffsetX * 2,
-                beamWidth:           this.boxHeight - Photon.RADIUS,           
+                beamWidth:           this.boxHeight - Photon.RADIUS,
                 maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
-                fanout:              Constants.SEED_BEAM_FANOUT, 
+                fanout:              Constants.SEED_BEAM_FANOUT,
                 speed:               this.get('photonSpeedScale'),
                 enabled:             true
             }, {
@@ -117,9 +117,9 @@ define(function (require, exports, module) {
                 wavelength:          Photon.BLUE,
                 position:            this.getPumpingBeamOrigin(),
                 length:              1000,
-                beamWidth:           this.tube.get('width'),           
+                beamWidth:           this.tube.get('width'),
                 maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
-                fanout:              Constants.PUMPING_BEAM_FANOUT, 
+                fanout:              Constants.PUMPING_BEAM_FANOUT,
                 speed:               this.get('photonSpeedScale'),
                 enabled:             true
             }, {
@@ -149,7 +149,7 @@ define(function (require, exports, module) {
             );
             var bandPass = new BandPassReflectionStrategy(QuantumConfig.MIN_WAVELENGTH, QuantumConfig.MAX_WAVELENGTH);
             this.rightMirror = new PartialMirror({}, {
-                start: p1, 
+                start: p1,
                 end:   p2
             });
             this.rightMirror.addReflectionStrategy(bandPass);
@@ -165,7 +165,7 @@ define(function (require, exports, module) {
                 this.tube.getY() + this.tube.get('height')
             );
             this.leftMirror = new PartialMirror({}, {
-                start: p3, 
+                start: p3,
                 end:   p4
             });
             this.leftMirror.addReflectionStrategy(bandPass);
@@ -195,8 +195,8 @@ define(function (require, exports, module) {
             // Was the photon emitted by an atom?
             if (source instanceof Atom) {
                 // Don't show certain photons
-                if (source.getStates().length > 2 && 
-                    source.getCurrentState().equals(source.getStates()[2]) && 
+                if (source.getStates().length > 2 &&
+                    source.getCurrentState().equals(source.getStates()[2]) &&
                     !this.get('displayHighLevelEmissions')
                 ) {
                     photonVisible = false;
@@ -240,7 +240,7 @@ define(function (require, exports, module) {
         elementPropertiesChanged: function(simulation, elementProperties) {
             if (elementProperties) {
                 this.getMiddleEnergyState().set('meanLifetime', this.defaultMiddleStateMeanLifetime);
-                this.getHighEnergyState().set('meanLifetime', this.defaultHighStateMeanLifetime);    
+                this.getHighEnergyState().set('meanLifetime', this.defaultHighStateMeanLifetime);
             }
         },
 

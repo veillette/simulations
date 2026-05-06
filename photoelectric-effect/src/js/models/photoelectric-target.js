@@ -8,7 +8,7 @@ define(function (require) {
     var LineIntersection = require('common/math/line-intersection');
     var Plate            = require('common/quantum/models/plate');
     var Electron         = require('common/quantum/models/electron-vanilla');
-    
+
     var TargetMaterials               = require('models/target-materials');
     var InitialElectronSpeedStrategy  = require('models/initial-electron-speed-strategy');
     var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');

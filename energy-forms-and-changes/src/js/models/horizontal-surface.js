@@ -6,7 +6,7 @@ define(function (require) {
     var Backbone = require('backbone');
 
     /**
-     * 
+     *
      */
     var HorizontalSurface = function(xMin, xMax, yPos, owner) {
         this.xMin = xMin;

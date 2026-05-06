@@ -16,21 +16,21 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var BendingLightSimulation = FixedIntervalSimulation.extend({
 
         defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
             wavelength: Constants.WAVELENGTH_RED
         }),
-        
+
         initialize: function(attributes, options) {
             options = _.extend({
                 frameDuration: Constants.FRAME_DURATION,
                 deltaTimePerFrame: Constants.DEFAULT_DT,
 
-                laserDistanceFromPivot: Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT, 
-                laserAngle: Math.PI * 3 / 4, 
+                laserDistanceFromPivot: Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT,
+                laserAngle: Math.PI * 3 / 4,
                 topLeftQuadrant: true
             }, options);
 
@@ -54,8 +54,8 @@ define(function (require, exports, module) {
             this.laser = new Laser({
                 wavelength: this.get('wavelength')
             }, {
-                distanceFromPivot: this.laserDistanceFromPivot, 
-                angle: this.laserAngle, 
+                distanceFromPivot: this.laserDistanceFromPivot,
+                angle: this.laserAngle,
                 topLeftQuadrant: this.topLeftQuadrant
             });
 
@@ -107,7 +107,7 @@ define(function (require, exports, module) {
 
         _update: function(time, deltaTime) {
             this.simTime += deltaTime;
-            
+
             this.dirty = false;
 
             if (this._updateOnNextFrame) {

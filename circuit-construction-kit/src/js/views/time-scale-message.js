@@ -6,7 +6,7 @@ define(function(require) {
     var Backbone = require('backbone'); Backbone.$ = $;
 
     /**
-     * 
+     *
      */
     var TimeScaleMessageView = Backbone.View.extend({
 

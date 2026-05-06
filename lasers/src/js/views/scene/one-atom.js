@@ -27,7 +27,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -35,7 +35,7 @@ define(function(require) {
 
             this.initAtom();
             this.initLamps();
-            
+
             this.determineLaserWaveViewVisibility();
 
             this.elementPropertiesChanged(this.simulation, this.simulation.get('elementProperties'));
@@ -52,7 +52,7 @@ define(function(require) {
             else {
                 this.viewOriginX = 150;
                 this.viewOriginY = 80;
-                scale = 0.98; 
+                scale = 0.98;
             }
 
             this.mvt = ModelViewTransform.createSinglePointScaleMapping(
@@ -89,7 +89,7 @@ define(function(require) {
         _update: function(time, deltaTime, paused, timeScale) {
             LasersSceneView.prototype._update.apply(this, arguments);
 
-            
+
         },
 
         elementPropertiesChanged: function(simulation, elementProperties) {

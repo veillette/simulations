@@ -32,7 +32,7 @@ define(function(require) {
     var BRCSceneView = PixiSceneView.extend({
 
         events: {
-            
+
         },
 
         initialize: function(options) {
@@ -40,7 +40,7 @@ define(function(require) {
         },
 
         renderContent: function() {
-            
+
         },
 
         initGraphics: function() {
@@ -81,9 +81,9 @@ define(function(require) {
 
             var simRatio = simWidth / simHeight;
             var screenRatio = usableWidth / usableHeight;
-            
+
             var scale = (screenRatio > simRatio) ? usableHeight / simHeight : usableWidth / simWidth;
-            
+
             this.viewOriginX = (usableWidth - simWidth * scale) / 2; // Center it
             this.viewOriginY = 0;
 

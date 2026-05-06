@@ -14,7 +14,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var VoltmeterView = PixiView.extend({
 
@@ -117,7 +117,7 @@ define(function(require) {
             // Vertical line at zero-point of guage.
             graphics.moveTo(0, 0);
             graphics.lineTo(0, -radius);
-            
+
             // Major and minor tick marks around the outside of the guage.
             var angle = VoltmeterView.MINOR_TICK_SPACING;
             var tickCount = 1;
@@ -133,19 +133,19 @@ define(function(require) {
                     graphics.lineStyle(VoltmeterView.MINOR_TICK_STROKE_WIDTH, color, 1);
                     length = VoltmeterView.MINOR_TICK_LENGTH;
                 }
-                
+
                 // Positive tick mark
                 vec.set(-radius, 0).rotate(angle);
                 graphics.moveTo(vec.x, vec.y);
                 vec.set(-radius + length, 0).rotate(angle);
                 graphics.lineTo(vec.x, vec.y);
-                
+
                 // // Negative tick mark
                 vec.set(radius, 0).rotate(-angle);
                 graphics.moveTo(vec.x, vec.y);
                 vec.set(radius - length, 0).rotate(-angle);
                 graphics.lineTo(vec.x, vec.y);
-                
+
                 angle += VoltmeterView.MINOR_TICK_SPACING;
                 tickCount++;
             }

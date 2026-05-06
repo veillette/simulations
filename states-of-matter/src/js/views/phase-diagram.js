@@ -96,7 +96,7 @@ define(function(require) {
 
             // Graph dimensions
             var gw = this.getGraphWidth();
-            var gh = this.getGraphHeight(); 
+            var gh = this.getGraphHeight();
 
             // Graph offsets
             var graphOffsetX = this.getGraphXOffset();
@@ -210,7 +210,7 @@ define(function(require) {
 
             triplePoint.add(graphOffsetX, graphOffsetY);
             criticalPoint.add(graphOffsetX, graphOffsetY);
-            
+
             // Paint the filled areas
             this.drawAreas(solidArea, liquidArea, gasArea, criticalArea);
 
@@ -241,7 +241,7 @@ define(function(require) {
             PIXI.drawPiecewiseCurve(ctx, gasArea, 0, 0, true, false);
 
             var gw = this.getGraphWidth();
-            var gh = this.getGraphHeight(); 
+            var gh = this.getGraphHeight();
 
             var x = this.getGraphXOffset();
             var y = this.getGraphYOffset();
@@ -302,7 +302,7 @@ define(function(require) {
             this.$solidLabel.css({  left: C.SOLID_LABEL_LOCATION.x  * gw + x + 'px', top: C.SOLID_LABEL_LOCATION.y  * -gh + y + 'px' });
             this.$liquidLabel.css({ left: C.LIQUID_LABEL_LOCATION.x * gw + x + 'px', top: C.LIQUID_LABEL_LOCATION.y * -gh + y + 'px' });
             this.$gasLabel.css({    left: C.GAS_LABEL_LOCATION.x    * gw + x + 'px', top: C.GAS_LABEL_LOCATION.y    * -gh + y + 'px' });
-            
+
             this.$triplePointLabel.css({   left: C.SOLID_LABEL_LOCATION.x  * gw + x + 'px', top: C.SOLID_LABEL_LOCATION.y  * -gh + y + 'px' });
             this.$criticalPointLabel.css({ left: C.SOLID_LABEL_LOCATION.x  * gw + x + 'px', top: C.SOLID_LABEL_LOCATION.y  * -gh + y + 'px' });
 
@@ -311,10 +311,10 @@ define(function(require) {
                 this.$liquidLabel,
                 this.$gasLabel,
 
-                this.$pressureLabel, 
+                this.$pressureLabel,
                 this.$temperatureLabel
             ], function($label) {
-                $label.css({ 
+                $label.css({
                     'margin-left': (-$label.width() / 2) + 'px',
                     'margin-top':  (-$label.height() / 2) + 'px'
                 });
@@ -352,7 +352,7 @@ define(function(require) {
 
             // Graph dimensions
             var gw = this.getGraphWidth();
-            var gh = this.getGraphHeight(); 
+            var gh = this.getGraphHeight();
 
             // Graph offsets
             var graphOffsetX = this.getGraphXOffset();
@@ -376,7 +376,7 @@ define(function(require) {
                 left: '0px',
                 top:  '0px'
             });
-            
+
             this.$currentStateMarker.css({
                 '-webkit-transform': transform,
                 '-ms-transform':     transform,
@@ -419,7 +419,7 @@ define(function(require) {
                 mappedPressure = Math.pow(mappedTemperature, 1.5);
             else
                 mappedPressure = Math.pow(mappedTemperature - cutOverTemperature, 1.8) + 0.2;
- 
+
             return Math.min(mappedPressure, 1);
         },
 

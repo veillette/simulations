@@ -12,7 +12,7 @@ define(function (require, exports, module) {
     var Constants = require('constants');
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var VariableAirPressureSimulation = SoundSimulation.extend({
 
@@ -21,7 +21,7 @@ define(function (require, exports, module) {
         }),
 
         /**
-         * 
+         *
          */
         initialize: function(attributes, options) {
             SoundSimulation.prototype.initialize.apply(this, arguments);
@@ -46,7 +46,7 @@ define(function (require, exports, module) {
             attenuationFunction.radius = Constants.BoxView.RADIUS_IN_METERS - Constants.SpeakerView.WIDTH_IN_METERS;
             attenuationFunction.insideRadiusAttenuation = 1;
             attenuationFunction.outsideRadiusAttenuation = 1;
-            
+
             this.waveMedium.attenuationFunction = attenuationFunction;
 
             // Move the speaker listener out in front of the speaker a bit so it

@@ -4,7 +4,7 @@ define(function(require) {
 
     var _    = require('underscore');
     var PIXI = require('pixi');
-    
+
     var PixiView = require('common/v3/pixi/view');
     var Vector2  = require('common/math/vector2');
     var Colors   = require('common/colors/colors');
@@ -17,7 +17,7 @@ define(function(require) {
     var AtomicBondView = PixiView.extend({
 
         /**
-         * Overrides PixiView's initializeDisplayObject function 
+         * Overrides PixiView's initializeDisplayObject function
          *   make the displayObject a graphics object
          */
         initializeDisplayObject: function() {
@@ -46,7 +46,7 @@ define(function(require) {
          */
         drawBond: function() {
             this.displayObject.clear();
-            
+
             var bond = this.model;
 
             var averageAtomRadius = this.mvt.modelToViewDeltaX(

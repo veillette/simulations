@@ -22,7 +22,7 @@ define(function (require, exports, module) {
     };
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var CollisionLabSimulation = Simulation.extend({
 
@@ -30,7 +30,7 @@ define(function (require, exports, module) {
             // Settings
             defaultBallSettings: Constants.Simulation.DEFAULT_BALL_SETTINGS,
             oneDimensional: false,
-            
+
             // Attributes that affect the sim
             paused: true,
             started: false,
@@ -43,14 +43,14 @@ define(function (require, exports, module) {
             yCenterOfMass: 0,
             kineticEnergy: 0
         }),
-        
+
         initialize: function(attributes, options) {
             this.balls = new Backbone.Collection([],{
                 model: Ball
             });
 
-            this.bounds = this.get('oneDimensional') ? 
-                Constants.Simulation.BORDER_BOUNDS_1D : 
+            this.bounds = this.get('oneDimensional') ?
+                Constants.Simulation.BORDER_BOUNDS_1D :
                 Constants.Simulation.BORDER_BOUNDS_2D;
 
             Simulation.prototype.initialize.apply(this, [attributes, options]);
@@ -76,7 +76,7 @@ define(function (require, exports, module) {
             this.time = 0;
             this.set('time', this.time);
             this.set('started', false);
-            
+
             this.initComponents();
         },
 
@@ -85,7 +85,7 @@ define(function (require, exports, module) {
          */
         addBall: function() {
             this.balls.add(new Ball({
-                color: Constants.Ball.COLORS[this.balls.length], 
+                color: Constants.Ball.COLORS[this.balls.length],
                 number: this.balls.length + 1,
 
                 mass:     this.get('defaultBallSettings')[this.balls.length].mass,
@@ -161,14 +161,14 @@ define(function (require, exports, module) {
                 if (this.colliding)
                     this.colliding = false;
             }
-            
+
             // Multiply by our time scale
             deltaTime *= this.get('timeScale');
 
             // Go backwards in time if we're reversing
             if (this.reversing)
                 deltaTime *= -1;
-            
+
             // Update our last sim time and then our sim time
             if (!this.reversing)
                 this.lastTime = this.time;
@@ -296,10 +296,10 @@ define(function (require, exports, module) {
                     ball.setY(this.bounds.top() - radius);
                 else if ((y - radius) < this.bounds.bottom())
                     ball.setY(this.bounds.bottom() + radius);
-                    
+
             }
         },
-        
+
         /**
          * Checks for collisions between balls
          */
@@ -425,7 +425,7 @@ define(function (require, exports, module) {
                 var dyBall2 =  m1 * overlap * dy / (dr * (m1 + m2));
                 var ball1WallCollision = this.checkWallCollision(ball1, x1 + dxBall1, y1 + dyBall1);
                 var ball2WallCollision = this.checkWallCollision(ball2, x2 + dxBall2, y2 + dyBall2);
-                
+
                 var wallXOffset = 0;  // Translate both balls away from colliding wall
                 var wallYOffset = 0;
                 if (ball1WallCollision === WallCollisions.TOP || ball2WallCollision === WallCollisions.TOP)
@@ -451,11 +451,11 @@ define(function (require, exports, module) {
         collide: function() {
             this.colliding = true;
             // Play a sound or something
-            
+
         },
 
         /**
-         * 
+         *
          */
         collideBalls: function(ball1, ball2) {
             this.collide();
@@ -464,7 +464,7 @@ define(function (require, exports, module) {
 
             // Note: Function copied almost verbatim from the original.
 
-            // Balls have already overlapped, so they currently 
+            // Balls have already overlapped, so they currently
             //   have incorrect positions
             var contactTime = this.getContactTime(ball1, ball2);
             var delTBefore = contactTime - this.lastTime;
@@ -542,7 +542,7 @@ define(function (require, exports, module) {
             var delRSq = delX * delX + delY * delY;
             var underSqRoot = delRDotDelV * delRDotDelV - delVSq * (delRSq - SSq);
 
-            // If collision is superslow and tiny number precision causes 
+            // If collision is superslow and tiny number precision causes
             //   number under square root to be negative, then set collision
             //   time equal to the half-way point since last time step.
             if (delVSq < 0.000000001 || underSqRoot < 0) {
@@ -575,9 +575,9 @@ define(function (require, exports, module) {
                 sumXiMi += mass * this.balls.at(i).get('position').x;
                 sumYiMi += mass * this.balls.at(i).get('position').y;
             }
-         
+
             this.set('xCenterOfMass', sumXiMi / totalMass);
-            this.set('yCenterOfMass', sumYiMi / totalMass);       
+            this.set('yCenterOfMass', sumYiMi / totalMass);
         },
 
         /**
@@ -586,7 +586,7 @@ define(function (require, exports, module) {
          */
         calculateKineticEnergy: function() {
             var total = 0;
-            for (var i = 0; i < this.balls.length; i++) 
+            for (var i = 0; i < this.balls.length; i++)
                 total += this.balls.at(i).getKineticEnergy();
             this.set('kineticEnergy', total);
         },

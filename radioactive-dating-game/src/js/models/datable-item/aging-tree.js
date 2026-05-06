@@ -40,29 +40,29 @@ define(function (require) {
 
         animate: function(age, deltaTime) {
             if (!this._closurePossibleSent) {
-                // At the moment of birth for the tree, closure is possible. 
+                // At the moment of birth for the tree, closure is possible.
                 //   If we haven't set the state to indicate this, do it now.
                 this.set('closureState', AgingTree.CLOSURE_POSSIBLE);
                 this._closurePossibleSent = true;
             }
-            
+
             // Handle growth.
             if (this.get('height') < AgingTree.FULL_GROWN_TREE_HEIGHT && this.get('closureState') !== AgingTree.CLOSED) {
                 // Grow a little bit.
                 this.set('width',  this.get('width') * AgingTree.GROWTH_RATE);
-                
+
                 // Shift up a bit so that it looks like the tree is growing up out of the ground.
                 var center = this.getPosition();
                 this.setPosition(center.x, center.y + this.get('height') * 0.012);
             }
-            
+
             // Handle death by natural causes.
             if (this.get('closureState') !== AgingTree.CLOSED && age > AgingTree.AGE_OF_NATURAL_DEATH && this._dyingCounter > 0) {
                 var fadeAmount = 1 / AgingTree.DEATH_COUNT;
                 this.set('dead', Math.min(this.get('dead') + fadeAmount, 1));
 
                 this._dyingCounter--;
-                
+
                 // Time to die, a.k.a. to radiometrically "close".
                 if (this._dyingCounter === 0)
                     this.set('closureState', AgingTree.CLOSED);
@@ -72,21 +72,21 @@ define(function (require) {
             if (this.get('closureState') === AgingTree.CLOSED) {
                 // Make sure it's fully dead, not just mostly dead.
                 this.set('dead', 1);
-                
+
                 if (this._swayCounter > 0) {
                     // Set the angle for the sway.
                     var swayPercent = -((this._swayCounter - AgingTree.SWAY_COUNT) / AgingTree.SWAY_COUNT);
                     var swayDeflection = Math.cos(-swayPercent * Math.PI * 2);
                     swayDeflection *= AgingTree.MAX_SWAY_DEFLECTION;
-                    
+
                     this.rotateAboutBottomCenter(swayDeflection);
-                    
+
                     // Move to the next step in the cycle.
                     this._swayCounter--;
                 }
                 else if (this._fallCounter > 0) {
                     this.rotateAboutBottomCenter(AgingTree.FALL_ANGLE_SCALE_FACTOR * (AgingTree.FALL_COUNT - this._fallCounter));
-                    
+
                     // Move to the next step in the cycle.
                     this._fallCounter--;
                 }
@@ -95,7 +95,7 @@ define(function (require) {
                     var yTranslation = -Math.sin(-bouncePercent * Math.PI * 2);
                     yTranslation *= (AgingTree.BOUNCE_PROPORTION * this.get('width'));
                     this.translate(0, yTranslation);
-                    
+
                     // Give it a little random rotation to make it look a bit
                     //   more like a real bounce.
                     if ((AgingTree.BOUNCE_COUNT - this._bounceCounter) % 4 === 0) {
@@ -113,7 +113,7 @@ define(function (require) {
                     this.set('decomposed', Math.min(this.get('decomposed') + decomposeAmount, 1));
 
                     this._decomposeCounter--;
-                    
+
                     if (this._decomposeCounter === 0) {
                         this.set('decomposed', 1);
                         this.set('width', this.get('width') * (100 / 580), { silent: true });

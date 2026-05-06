@@ -3,7 +3,7 @@ define(function(require) {
     'use strict';
 
     var PIXI = require('pixi');
-    
+
     var PixiView  = require('common/v3/pixi/view');
     var Colors    = require('common/colors/colors');
     //var Vector2  = require('common/math/vector2');
@@ -26,7 +26,7 @@ define(function(require) {
         initGraphics: function() {
             this.trace = new PIXI.Graphics();
             this.trace.lineStyle(BallTraceView.LINE_WIDTH, LINE_COLOR, BallTraceView.LINE_ALPHA);
-                        
+
             this.displayObject.addChild(this.trace);
 
             this.updateMVT(this.mvt);
@@ -38,7 +38,7 @@ define(function(require) {
 
             this.trace.moveTo(this.previousPoint.x, this.previousPoint.y);
             this.trace.lineTo(x, y);
-            
+
             this.previousPoint.x = x;
             this.previousPoint.y = y;
         },

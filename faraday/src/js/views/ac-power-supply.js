@@ -30,7 +30,7 @@ define(function(require) {
     var CURSOR_WRAP_AROUND_TOLERANCE = Constants.ACPowerSupplyView.CURSOR_WRAP_AROUND_TOLERANCE;
 
     /**
-     * 
+     *
      */
     var ACPowerSupplyView = PixiView.extend({
 
@@ -298,7 +298,7 @@ define(function(require) {
         },
 
         /**
-         * 
+         *
          */
         update: function() {
             if (this.model.get('enabled') && this.simulation.updated()) {

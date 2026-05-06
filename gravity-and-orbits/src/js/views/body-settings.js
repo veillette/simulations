@@ -17,7 +17,7 @@ define(function(require) {
     var templateHtml = require('text!templates/body-settings-item.html');
 
     /**
-     * 
+     *
      */
     var BodySettingsView = Backbone.View.extend({
 

@@ -33,7 +33,7 @@ define(function (require) {
      * This class represents an object (indirect light source) or direct
      *   light source that will be projected or seen through a lens with
      *   two points of interest whose rays we will track through the
-     *   lens and onto a projected image (or screen). 
+     *   lens and onto a projected image (or screen).
      */
     var SourceObject = PositionableObject.extend({
 
@@ -58,7 +58,7 @@ define(function (require) {
          */
         setSecondPoint: function(x, y, options) {
             var oldPoint = this.get('secondPoint');
-            
+
             if (x instanceof Vector2)
                 this.set('secondPoint', vectorPool.create().set(x), y);
             else
@@ -80,12 +80,12 @@ define(function (require) {
                 this.set('secondPoint', newPoint.add(x));
             else
                 this.set('secondPoint', newPoint.add(x, y));
-            
+
             // Only remove it at the end or we might be given the same one
             vectorPool.remove(oldPoint);
         },
 
-        /** 
+        /**
          * Avoid memory leaks from the pool.
          */
         destroy: function(options) {

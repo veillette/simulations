@@ -18,13 +18,13 @@ define(function (require, exports, module) {
 
     // Plain object holding initial information about the stage objects
     // i.e. Springs, Pegs, Bodies, etc.
-    // 
+    //
     // I wanted to isolate that data into it's own file.
     var Initials = require('initials');
 
 
     /**
-     * Wraps the update function in 
+     * Wraps the update function in
      */
     var MassesAndSpringsSimulation = Simulation.extend({
 

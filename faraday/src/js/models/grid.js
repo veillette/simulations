@@ -5,7 +5,7 @@ define(function (require) {
     var _ = require('underscore');
 
     /**
-     * 
+     *
      */
     var Grid = function(bxCsvString, byCsvString, size, spacing) {
         this.size = size;
@@ -55,7 +55,7 @@ define(function (require) {
         },
 
         /**
-         * 
+         *
          */
         parseCSV: function(csv) {
             var data = [];

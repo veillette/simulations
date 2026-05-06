@@ -11,7 +11,7 @@ define(function(require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var WiggleMeView = PixiView.extend({
 
@@ -40,7 +40,7 @@ define(function(require) {
             this.arrowGraphics = new PIXI.Graphics();
 
             this.initText();
-            this.displayObject.addChild(this.arrowGraphics);          
+            this.displayObject.addChild(this.arrowGraphics);
 
             this.updateMVT(this.mvt);
         },
@@ -64,17 +64,17 @@ define(function(require) {
             var graphics = this.arrowGraphics;
             graphics.beginFill(this.fillColor, 1);
             graphics.drawArrow(
-                leftX, bottomY, 
-                leftX - arrowWidth, bottomY + arrowHeight, 
-                WiggleMeView.ARROW_TAIL_WIDTH, 
-                WiggleMeView.ARROW_HEAD_WIDTH, 
+                leftX, bottomY,
+                leftX - arrowWidth, bottomY + arrowHeight,
+                WiggleMeView.ARROW_TAIL_WIDTH,
+                WiggleMeView.ARROW_HEAD_WIDTH,
                 WiggleMeView.ARROW_HEAD_HEIGHT
             );
             graphics.drawArrow(
-                rightX, bottomY, 
-                rightX + arrowWidth, bottomY + arrowHeight, 
-                WiggleMeView.ARROW_TAIL_WIDTH, 
-                WiggleMeView.ARROW_HEAD_WIDTH, 
+                rightX, bottomY,
+                rightX + arrowWidth, bottomY + arrowHeight,
+                WiggleMeView.ARROW_TAIL_WIDTH,
+                WiggleMeView.ARROW_HEAD_WIDTH,
                 WiggleMeView.ARROW_HEAD_HEIGHT
             );
             graphics.endFill();
@@ -109,7 +109,7 @@ define(function(require) {
                     this.cycles += delta;
                 else
                     this.cycles -= delta;
-                
+
                 var x = Math.floor(this.startX + (this.xRange * Math.cos(this.cycles)));
                 var y = Math.floor(this.startY + (this.yRange * Math.sin(this.cycles)));
 

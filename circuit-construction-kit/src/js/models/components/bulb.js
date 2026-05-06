@@ -29,11 +29,11 @@ define(function (require) {
 
         initialize: function(attributes, options) {
             this.filament = new Filament({
-                startJunction: this.get('startJunction'), 
-                endJunction: this.get('endJunction'), 
-                numPeaks: 3, 
-                pivotToResistorDY: this.get('height') * 0.8, 
-                resistorWidth: this.get('width') * 0.8, 
+                startJunction: this.get('startJunction'),
+                endJunction: this.get('endJunction'),
+                numPeaks: 3,
+                pivotToResistorDY: this.get('height') * 0.8,
+                resistorWidth: this.get('width') * 0.8,
                 zigHeight: this.get('height') * 0.061
             });
 
@@ -59,7 +59,7 @@ define(function (require) {
             else {
                 if (isNaN(this.getLength()))
                     throw 'Length was NaN.';
-                
+
                 // This occurs when dragging the bulb after splitting.  maybe splitting needs to relayout.
                 throw 'Position not within bulb: x=' + x + ', length=' + this.getLength();
             }
@@ -83,7 +83,7 @@ define(function (require) {
             var maxPower = 60;
             if (power > maxPower)
                 power = maxPower;
-            
+
             return Math.pow(power / maxPower, 0.354);
         },
 

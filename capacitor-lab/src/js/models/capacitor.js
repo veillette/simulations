@@ -14,7 +14,7 @@ define(function (require) {
     var Constants = require('constants');
 
     /**
-     * 
+     *
      */
     var Capacitor = PositionableObject3D.extend({
 
@@ -50,14 +50,14 @@ define(function (require) {
          * Resets the model to its original state
          */
         reset: function() {
-            
+
         },
 
         /**
          * Updates every simulation step
          */
         update: function(time, deltaTime) {
-            
+
         },
 
         //----------------------------------------------------------------------------------
@@ -108,9 +108,9 @@ define(function (require) {
          */
         getTopPlateRect: function() {
             return this._topPlate2D.set(
-                this.get('position').x - this.get('plateWidth') / 2, 
-                this.get('position').y - (this.get('plateSeparation') / 2) - this.get('plateHeight'), 
-                this.get('plateWidth'), 
+                this.get('position').x - this.get('plateWidth') / 2,
+                this.get('position').y - (this.get('plateSeparation') / 2) - this.get('plateHeight'),
+                this.get('plateWidth'),
                 this.get('plateHeight')
             );
         },
@@ -120,9 +120,9 @@ define(function (require) {
          */
         getBottomPlateRect: function() {
             return this._bottomPlate2D.set(
-                this.get('position').x - this.get('plateWidth') / 2, 
-                this.get('position').y + (this.get('plateSeparation') / 2), 
-                this.get('plateWidth'), 
+                this.get('position').x - this.get('plateWidth') / 2,
+                this.get('position').y + (this.get('plateSeparation') / 2),
+                this.get('plateWidth'),
                 this.get('plateHeight')
             );
         },
@@ -169,7 +169,7 @@ define(function (require) {
         getDielectricContactArea: function() {
             var absoluteOffset = Math.abs(this.get('dielectricOffset'));
             // Front * side
-            var area = (this.get('plateWidth') - absoluteOffset) * this.get('plateDepth'); 
+            var area = (this.get('plateWidth') - absoluteOffset) * this.get('plateDepth');
             if (area < 0)
                 area = 0;
             return area;
@@ -371,7 +371,7 @@ define(function (require) {
             return this.getPlatesDielectricEField() - this.getEffectiveEField();
         }
 
-    }, 
+    },
 
     /*************************************************************************
      **                                                                     **
@@ -381,7 +381,7 @@ define(function (require) {
     {
 
         /**
-         * Calculates a plate separation from the dielectric constant, 
+         * Calculates a plate separation from the dielectric constant,
          *   plate width, and capacitance.
          */
         calculatePlateSeparation: function(dielectricConstant, plateWidth, capacitance) {
