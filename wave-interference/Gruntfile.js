@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
 
+	var fs = require('fs');
+
 	'use strict';
 
 	var _               = grunt.util._;
@@ -15,7 +17,7 @@ module.exports = function(grunt) {
 		},
 		copy: {
 			require: {
-				src: 'bower_components/requirejs/require.js',
+				src: 'node_modules/requirejs/require.js',
 				dest: 'dist/js/require.js'
 			},
 			images: {
@@ -43,12 +45,6 @@ module.exports = function(grunt) {
 				src: 'src/screenshot.png',
 				dest: 'dist/screenshot.png'
 			}
-		},
-		rename: {
-		    optimized: {
-		        src: 'src/optimized.js',
-		        dest: 'dist/js/optimized.js'
-		    }
 		},
 		connect: {
 			dist: {
@@ -118,6 +114,10 @@ module.exports = function(grunt) {
 		grunt.file.write(options.runner, template);
 	});
 
+	grunt.registerTask('move-optimized', function() {
+		fs.renameSync('src/optimized.js', 'dist/js/optimized.js');
+	});
+
 	grunt.registerTask('default', [
 		'watch'
 	]);
@@ -126,7 +126,7 @@ module.exports = function(grunt) {
 		'clean:dist',
 		'requirejs:compile',
 		'copy',
-		'rename:optimized',
+		'move-optimized',
 		'targethtml'
 	]);
 

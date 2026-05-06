@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
 
+	var fs = require('fs');
+
 	var _               = grunt.util._;
 	var requireJsConfig = require('./src/js/config.js');
 
@@ -46,12 +48,6 @@ module.exports = function(grunt) {
 			screenshot: {
 				src: 'src/screenshot.png',
 				dest: 'dist/screenshot.png'
-			}
-		},
-		rename: {
-			optimized: {
-				src: 'src/optimized.js',
-				dest: 'dist/js/optimized.js'
 			}
 		},
 		connect: {
@@ -126,6 +122,10 @@ module.exports = function(grunt) {
 
 	require('load-grunt-tasks')(grunt);
 
+	grunt.registerTask('move-optimized', function() {
+		fs.renameSync('src/optimized.js', 'dist/js/optimized.js');
+	});
+
 	grunt.registerTask('default', [
 		'watch'
 	]);
@@ -134,7 +134,7 @@ module.exports = function(grunt) {
 		'clean:dist',
 		'requirejs:compile',
 		'copy',
-		'rename:optimized',
+		'move-optimized',
 		'targethtml'
 	]);
 

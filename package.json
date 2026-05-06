@@ -2,8 +2,16 @@
   "name": "os-simulations",
   "version": "0.0.0",
   "description": "A collection of web-based simulations from OpenStax",
+  "type": "module",
   "scripts": {
-    "postinstall": "grunt npm-install"
+    "postinstall": "node scripts/npm-install.mjs",
+    "dev": "npx http-server . -p 8080 -c-1",
+    "dist": "node scripts/dist.mjs",
+    "dist:all": "node scripts/dist.mjs --all",
+    "deploy": "node scripts/deploy.mjs",
+    "npm-install": "node scripts/npm-install.mjs",
+    "npm-install:all": "node scripts/npm-install.mjs --all",
+    "npm-clean": "node scripts/npm-clean.mjs"
   },
   "repository": {
     "type": "git",
@@ -19,14 +27,8 @@
   },
   "homepage": "https://github.com/veillette/simulations",
   "devDependencies": {
-    "grunt": "^1.6.1",
-    "grunt-cli": "^1.5.0",
-    "grunt-contrib-clean": "^2.0.1",
-    "grunt-contrib-connect": "^5.0.1",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-gh-pages": "^4.0.0",
-    "grunt-targethtml": "^0.2.6",
-    "load-grunt-tasks": "^5.1.0"
+    "gh-pages": "^6.3.0",
+    "http-server": "^14.1.1"
   },
   "overrides": {
     "braces": "^3.0.3",
