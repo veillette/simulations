@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 
 	var SimManager = require('./grunt/sim-manager')(grunt);
 
-	require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
+	require('load-grunt-tasks')(grunt);
 
 	grunt.registerTask('create-no-jekyll', function(){
 		grunt.file.write('./dist/.nojekyll', '');
