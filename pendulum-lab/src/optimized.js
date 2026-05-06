@@ -19325,9 +19325,9 @@ define('views/scene',['require','underscore','pixi','common/math/vector2','commo
         },
 
         initLayers: function() {
-            this.toolsLayer  = new PIXI.DisplayObjectContainer();
-            this.bodyLayer   = new PIXI.DisplayObjectContainer();
-            this.springLayer = new PIXI.DisplayObjectContainer();
+            this.toolsLayer  = new PIXI.Container();
+            this.bodyLayer   = new PIXI.Container();
+            this.springLayer = new PIXI.Container();
 
             this.stage.addChild(this.toolsLayer);
             this.stage.addChild(this.bodyLayer);

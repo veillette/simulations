@@ -16658,7 +16658,7 @@ define('common/pixi/view',['require','underscore','backbone','pixi'],function(re
          *   displayObject, which should work for general purposes.
          */
         initializeDisplayObject: function() {
-            this.displayObject = new PIXI.DisplayObjectContainer();
+            this.displayObject = new PIXI.Container();
         },
 
         /**
@@ -17223,7 +17223,7 @@ define('common/pixi/view/arrow',['require','underscore','backbone','pixi','../vi
             this.tailGraphics = new PIXI.Graphics();
             this.headGraphics = new PIXI.Graphics();
 
-            this.transformFrame = new PIXI.DisplayObjectContainer();
+            this.transformFrame = new PIXI.Container();
             this.transformFrame.addChild(this.tailGraphics);
             this.transformFrame.addChild(this.headGraphics);
 

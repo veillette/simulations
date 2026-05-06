@@ -98,10 +98,10 @@ define(function(require) {
 
         initLayers: function() {
             // Create layers
-            this.backLayer       = new PIXI.DisplayObjectContainer();
-            this.propLayer       = new PIXI.DisplayObjectContainer();
-            this.trajectoryLayer = new PIXI.DisplayObjectContainer();
-            this.projectileLayer = new PIXI.DisplayObjectContainer();
+            this.backLayer       = new PIXI.Container();
+            this.propLayer       = new PIXI.Container();
+            this.trajectoryLayer = new PIXI.Container();
+            this.projectileLayer = new PIXI.Container();
 
             this.stage.addChild(this.backLayer);
             this.stage.addChild(this.propLayer);

@@ -46031,7 +46031,7 @@ define('common/pixi/view',['require','underscore','backbone','pixi'],function(re
          *   displayObject, which should work for general purposes.
          */
         initializeDisplayObject: function() {
-            this.displayObject = new PIXI.DisplayObjectContainer();
+            this.displayObject = new PIXI.Container();
         },
 
         /**
@@ -50769,8 +50769,8 @@ define('views/body',['require','underscore','common/v3/pixi/extensions','common/
 
                 this._positionLabel(labelText, unitsLabel);
 
-                labelText.blendMode = PIXI.blendModes.MULTIPLY;
-                unitsLabel.blendMode = PIXI.blendModes.MULTIPLY;
+                labelText.blendMode = PIXI.BLEND_MODES.MULTIPLY;
+                unitsLabel.blendMode = PIXI.BLEND_MODES.MULTIPLY;
                 this.body.addChild(labelText);
                 this.body.addChild(unitsLabel);
             }

@@ -49928,7 +49928,7 @@ define('common/pixi/view',['require','underscore','backbone','pixi'],function(re
          *   displayObject, which should work for general purposes.
          */
         initializeDisplayObject: function() {
-            this.displayObject = new PIXI.DisplayObjectContainer();
+            this.displayObject = new PIXI.Container();
         },
 
         /**

@@ -88,7 +88,7 @@ define(function(require) {
 			this.pressureParticleSprites = [];
 
 			this.pressureParticleSpriteBatch = new PIXI.SpriteBatch();
-			this.pressureParticleSpriteBatchContainer = new PIXI.DisplayObjectContainer();
+			this.pressureParticleSpriteBatchContainer = new PIXI.Container();
 			this.pressureParticleSpriteBatchContainer.addChild(this.pressureParticleSpriteBatch);
 			this.stage.addChild(this.pressureParticleSpriteBatchContainer);
 

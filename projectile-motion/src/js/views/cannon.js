@@ -73,7 +73,7 @@ define(function(require) {
              *   sprites at once instead of individually so they
              *   stay as a group with a common transform origin.
              */
-            this.spritesLayer = new PIXI.DisplayObjectContainer();
+            this.spritesLayer = new PIXI.Container();
 
             this.initCannon();
             this.initCarriage();
@@ -159,7 +159,7 @@ define(function(require) {
                 particle = new PIXI.Sprite(flameParticleTexture);
                 particle.visible = false;
                 particle.anchor.x = particle.anchor.y = 0.5;
-                particle.blendMode = PIXI.blendModes.ADD; // Get that good bright flame effect
+                particle.blendMode = PIXI.BLEND_MODES.ADD; // Get that good bright flame effect
                 particle.velocity = new Vector2();
 
                 particleContainer.addChild(particle);

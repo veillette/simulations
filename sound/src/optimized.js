@@ -66049,7 +66049,7 @@ define('common/pixi/extensions',['require','underscore','pixi','../math/piecewis
         sprite.y = bounds.y;
 
         // Put them both in a wrapping DisplayObjectContainer
-        var wrapper = new PIXI.DisplayObjectContainer();
+        var wrapper = new PIXI.Container();
         wrapper.addChild(sprite);
         wrapper.addChild(mask);
 

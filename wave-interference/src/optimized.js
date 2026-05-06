@@ -23213,7 +23213,7 @@ define('views/heatmap',['require','jquery','underscore','backbone','pixi','../ut
 			this.stage = new PIXI.Stage(0x000000);
 
 			// Create a specialized container for rendering lots of particles
-			this.spriteBatchContainer = new PIXI.DisplayObjectContainer();
+			this.spriteBatchContainer = new PIXI.Container();
 			this.spriteBatch = new PIXI.SpriteBatch();
 			this.spriteBatchContainer.addChild(this.spriteBatch);
 			this.stage.addChild(this.spriteBatchContainer);
@@ -42935,7 +42935,7 @@ define('views/heatmap/sound',['require','underscore','pixi','../../models/partic
 			this.pressureParticleSprites = [];
 
 			this.pressureParticleSpriteBatch = new PIXI.SpriteBatch();
-			this.pressureParticleSpriteBatchContainer = new PIXI.DisplayObjectContainer();
+			this.pressureParticleSpriteBatchContainer = new PIXI.Container();
 			this.pressureParticleSpriteBatchContainer.addChild(this.pressureParticleSpriteBatch);
 			this.stage.addChild(this.pressureParticleSpriteBatchContainer);
 

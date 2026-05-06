@@ -49747,7 +49747,7 @@ define('views/cannon',['require','buzz','pixi','common/v3/pixi/extensions','comm
              *   sprites at once instead of individually so they
              *   stay as a group with a common transform origin.
              */
-            this.spritesLayer = new PIXI.DisplayObjectContainer();
+            this.spritesLayer = new PIXI.Container();
 
             this.initCannon();
             this.initCarriage();
@@ -49833,7 +49833,7 @@ define('views/cannon',['require','buzz','pixi','common/v3/pixi/extensions','comm
                 particle = new PIXI.Sprite(flameParticleTexture);
                 particle.visible = false;
                 particle.anchor.x = particle.anchor.y = 0.5;
-                particle.blendMode = PIXI.blendModes.ADD; // Get that good bright flame effect
+                particle.blendMode = PIXI.BLEND_MODES.ADD; // Get that good bright flame effect
                 particle.velocity = new Vector2();
 
                 particleContainer.addChild(particle);
@@ -51029,10 +51029,10 @@ define('views/scene',['require','jquery','underscore','pixi','common/math/vector
 
         initLayers: function() {
             // Create layers
-            this.backLayer       = new PIXI.DisplayObjectContainer();
-            this.propLayer       = new PIXI.DisplayObjectContainer();
-            this.trajectoryLayer = new PIXI.DisplayObjectContainer();
-            this.projectileLayer = new PIXI.DisplayObjectContainer();
+            this.backLayer       = new PIXI.Container();
+            this.propLayer       = new PIXI.Container();
+            this.trajectoryLayer = new PIXI.Container();
+            this.projectileLayer = new PIXI.Container();
 
             this.stage.addChild(this.backLayer);
             this.stage.addChild(this.propLayer);

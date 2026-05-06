@@ -136,8 +136,8 @@ define(function(require) {
 
                 this._positionLabel(labelText, unitsLabel);
 
-                labelText.blendMode = PIXI.blendModes.MULTIPLY;
-                unitsLabel.blendMode = PIXI.blendModes.MULTIPLY;
+                labelText.blendMode = PIXI.BLEND_MODES.MULTIPLY;
+                unitsLabel.blendMode = PIXI.BLEND_MODES.MULTIPLY;
                 this.body.addChild(labelText);
                 this.body.addChild(unitsLabel);
             }
