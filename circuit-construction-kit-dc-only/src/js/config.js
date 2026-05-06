@@ -10,7 +10,7 @@
             text:         '../../../circuit-construction-kit/bower_components/requirejs-text/text',
             pixi:         '../../../circuit-construction-kit/bower_components/pixi/bin/pixi',
             nouislider:   '../../../circuit-construction-kit/bower_components/nouislider/distribute/jquery.nouislider.all.min',
-            'file-saver': '../../../circuit-construction-kit/bower_components/file-saver/FileSaver',
+            'file-saver': '../../../circuit-construction-kit/bower_components/file-saver/dist/FileSaver',
 
             'vector2-node':          '../../../common/math/vector2',
             'object-pool':           '../../../common/pool',
