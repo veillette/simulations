@@ -208,7 +208,7 @@ var MSSSimView = SimView.extend({
 
         if (AppView.windowIsShort()) {
             this.$('#body-settings-table tr td:first-child').each(function() {
-                $(this).html($(this).text().substr(4));
+                $(this).text($(this).text().substr(4));
             })
         }
     },
