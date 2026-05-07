@@ -27,7 +27,10 @@ function resolveFromSimRoot() {
         resolveId(id) {
             if (!id || id.startsWith('.') || id.startsWith('/') || id.startsWith('\0') ||
                 id.startsWith('node:') || NODE_BUILTINS.has(id)) return null;
-            try { return simRequire.resolve(id); } catch { return null; }
+            // Both common/ and each sim have their own node_modules, so Vite's
+            // built-in resolver finds every package via normal Node resolution and
+            // the dep optimizer can pre-bundle CJS packages (→ ESM) properly.
+            // Returning null here for all bare imports lets that happen.
         },
     };
 }
@@ -36,6 +39,7 @@ export default defineConfig({
     root,
     plugins: [resolveFromSimRoot()],
     resolve: {
+        dedupe: ['jquery', 'backbone', 'underscore'],
         alias: [
             { find: 'views',     replacement: path.resolve(jsDir, 'views') },
             { find: 'models',    replacement: path.resolve(jsDir, 'models') },
@@ -43,7 +47,7 @@ export default defineConfig({
             { find: /^constants$/, replacement: path.resolve(jsDir, 'constants.js') },
             { find: 'templates', replacement: path.resolve(root, 'templates') },
             { find: 'styles',    replacement: path.resolve(root, 'styles') },
-            { find: /^nouislider$/, replacement: path.resolve(__dirname, 'node_modules/nouislider/distribute/jquery.nouislider.js') },
+            { find: /^nouislider$/, replacement: path.resolve(__dirname, 'node_modules/nouislider/distribute/jquery.nouislider.all.js') },
             { find: /^persistence$/, replacement: path.resolve(jsDir, 'persistence.js') },
             { find: 'shape-creators', replacement: path.resolve(jsDir, 'shape-creators') },
             { find: 'common',           replacement: commonDir },
@@ -66,4 +70,8 @@ export default defineConfig({
         outDir: path.resolve(__dirname, 'dist'),
         emptyOutDir: true,
     },
+    optimizeDeps: {
+        include: ['jquery', 'backbone', 'underscore', 'nouislider'],
+    },
+
 });

@@ -29,7 +29,10 @@ function resolveFromSimRoot() {
         resolveId(id) {
             if (!id || id.startsWith('.') || id.startsWith('/') || id.startsWith('\0') ||
                 id.startsWith('node:') || NODE_BUILTINS.has(id)) return null;
-            try { return simRequire.resolve(id); } catch { return null; }
+            // Both common/ and each sim have their own node_modules, so Vite's
+            // built-in resolver finds every package via normal Node resolution and
+            // the dep optimizer can pre-bundle CJS packages (→ ESM) properly.
+            // Returning null here for all bare imports lets that happen.
         },
     };
 }
@@ -38,6 +41,7 @@ export default defineConfig({
     root,
     plugins: [resolveFromSimRoot()],
     resolve: {
+        dedupe: ['jquery', 'backbone', 'underscore'],
         alias: [
             { find: 'local',       replacement: jsDir },
             { find: /^assets$/,    replacement: path.resolve(jsDir, 'assets.js') },
@@ -48,7 +52,7 @@ export default defineConfig({
             { find: 'persistence', replacement: path.resolve(cckSrcJs, 'persistence') },
             { find: 'templates',   replacement: path.resolve(cckDir, 'src/templates') },
             { find: 'styles',      replacement: path.resolve(cckDir, 'src/styles') },
-            { find: /^nouislider$/, replacement: path.resolve(__dirname, 'node_modules/nouislider/distribute/jquery.nouislider.js') },
+            { find: /^nouislider$/, replacement: path.resolve(__dirname, 'node_modules/nouislider/distribute/jquery.nouislider.all.js') },
             { find: 'common',           replacement: commonDir },
             { find: /^object-pool$/,    replacement: path.resolve(commonDir, 'pool.js') },
             { find: /^vector2-node$/,   replacement: path.resolve(commonDir, 'math/vector2.js') },
@@ -70,4 +74,8 @@ export default defineConfig({
         outDir: path.resolve(__dirname, 'dist'),
         emptyOutDir: true,
     },
+    optimizeDeps: {
+        include: ['jquery', 'backbone', 'underscore', 'nouislider'],
+    },
+
 });
