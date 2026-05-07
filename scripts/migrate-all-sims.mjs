@@ -10,7 +10,7 @@
  *   5. Rewrites src/index.html to use <script type="module">
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -146,10 +146,17 @@ function runCodemod(simDir) {
 
     if (targets.length === 0 && rootFiles.length === 0) return;
 
-    const allTargets = [...targets, ...rootFiles].join(' ');
-    const cmd = `npx --yes jscodeshift --transform "${REPO}/scripts/amd-to-esm.cjs" --extensions=js --no-babel ${allTargets}`;
+    const allTargets = [...targets, ...rootFiles];
+    const args = [
+        '--yes',
+        'jscodeshift',
+        '--transform', path.join(REPO, 'scripts', 'amd-to-esm.cjs'),
+        '--extensions=js',
+        '--no-babel',
+        ...allTargets
+    ];
     try {
-        const out = execSync(cmd, { cwd: REPO, encoding: 'utf8', stdio: ['pipe','pipe','pipe'] });
+        const out = execFileSync('npx', args, { cwd: REPO, encoding: 'utf8', stdio: ['pipe','pipe','pipe'] });
         const m = out.match(/(\d+) ok/);
         if (m) console.log(`  codemod: ${m[1]} files converted`);
     } catch (e) {
