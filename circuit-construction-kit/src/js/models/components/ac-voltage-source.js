@@ -1,40 +1,34 @@
-define(function (require) {
+import _ from 'underscore';
+import Battery from 'models/components/battery';
 
-    'use strict';
+/**
+ * An alternating-current voltage source
+ */
+var ACVoltageSource = Battery.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Battery.prototype.defaults, {
+        time: 0,
+        amplitude: 10,
+        frequency: 0.5 //Hz
+    }),
 
-    var Battery = require('models/components/battery');
+    initialize: function(attributes, options) {
+        Battery.prototype.initialize.apply(this, [attributes, options]);
+    },
 
-    /**
-     * An alternating-current voltage source
-     */
-    var ACVoltageSource = Battery.extend({
+    getVoltageDrop: function() {
+        var scale = Math.sin(this.get('time') * this.get('frequency') * Math.PI * 2);
+        return this.get('amplitude') * scale;
+    },
 
-        defaults: _.extend({}, Battery.prototype.defaults, {
-            time: 0,
-            amplitude: 10,
-            frequency: 0.5 //Hz
-        }),
+    update: function(time, deltaTime) {
+        this.set('time', this.get('time') + deltaTime);
+    },
 
-        initialize: function(attributes, options) {
-            Battery.prototype.initialize.apply(this, [attributes, options]);
-        },
+    resetDynamics: function() {
+        this.set('time', 0);
+    }
 
-        getVoltageDrop: function() {
-            var scale = Math.sin(this.get('time') * this.get('frequency') * Math.PI * 2);
-            return this.get('amplitude') * scale;
-        },
-
-        update: function(time, deltaTime) {
-            this.set('time', this.get('time') + deltaTime);
-        },
-
-        resetDynamics: function() {
-            this.set('time', 0);
-        }
-
-    });
-
-    return ACVoltageSource;
 });
+
+export default ACVoltageSource;

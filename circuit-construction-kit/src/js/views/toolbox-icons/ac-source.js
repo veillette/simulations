@@ -1,78 +1,69 @@
-define(function(require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import ACVoltageSource from 'models/components/ac-voltage-source';
+import Junction from 'models/junction';
+import ACSourceView from 'views/components/ac-source';
+import ComponentToolboxIcon from 'views/component-toolbox-icon';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A visual representation of some kind of object supply.  The
+ *   user creates new objects with this view.  Dragging from
+ *   the view creates a new object and places it in the scene,
+ *   while dragging an existing object back onto this view
+ *   destroys it.
+ */
+var ACSourceToolboxIcon = ComponentToolboxIcon.extend({
 
-    var _    = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            labelText: 'AC Voltage'
+        }, options);
 
-    var Vector2 = require('common/math/vector2');
-
-    var ACVoltageSource = require('models/components/ac-voltage-source');
-    var Junction = require('models/junction');
-
-    var ACSourceView         = require('views/components/ac-source');
-    var ComponentToolboxIcon = require('views/component-toolbox-icon');
-
-    var Assets    = require('assets');
+        ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from
-     *   the view creates a new object and places it in the scene,
-     *   while dragging an existing object back onto this view
-     *   destroys it.
+     * Returns the icon sprite
      */
-    var ACSourceToolboxIcon = ComponentToolboxIcon.extend({
+    createIconSprite: function() {
+        return Assets.createSprite(Assets.Images.AC);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                labelText: 'AC Voltage'
-            }, options);
+    /**
+     * Returns the schematic-mode icon sprite
+     */
+    createSchematicIconSprite: function() {
+        return Assets.createSprite(Assets.Images.SCHEMATIC_AC);
+    },
 
-            ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Creates a new object of whatever this icon represents
+     */
+    createComponentView: function(x, y) {
+        var L = 1;
+        var H = 1;
 
-        /**
-         * Returns the icon sprite
-         */
-        createIconSprite: function() {
-            return Assets.createSprite(Assets.Images.AC);
-        },
+        var model = new ACVoltageSource({
+            startJunction: new Junction({ position: new Vector2(0, 0) }),
+            endJunction:   new Junction({ position: new Vector2(L, 0) }),
+            length: L,
+            height: H,
+            internalResistance: 0.01,
+            internalResistanceOn: true
+        });
+        this.setJunctionPositions(model, x, y);
 
-        /**
-         * Returns the schematic-mode icon sprite
-         */
-        createSchematicIconSprite: function() {
-            return Assets.createSprite(Assets.Images.SCHEMATIC_AC);
-        },
+        var view = new ACSourceView({
+            mvt: this.mvt,
+            simulation: this.simulation,
+            circuit: this.simulation.circuit,
+            model: model
+        });
+        return view;
+    }
 
-        /**
-         * Creates a new object of whatever this icon represents
-         */
-        createComponentView: function(x, y) {
-            var L = 1;
-            var H = 1;
-
-            var model = new ACVoltageSource({
-                startJunction: new Junction({ position: new Vector2(0, 0) }),
-                endJunction:   new Junction({ position: new Vector2(L, 0) }),
-                length: L,
-                height: H,
-                internalResistance: 0.01,
-                internalResistanceOn: true
-            });
-            this.setJunctionPositions(model, x, y);
-
-            var view = new ACSourceView({
-                mvt: this.mvt,
-                simulation: this.simulation,
-                circuit: this.simulation.circuit,
-                model: model
-            });
-            return view;
-        }
-
-    });
-
-
-    return ACSourceToolboxIcon;
 });
+
+
+export default ACSourceToolboxIcon;

@@ -1,106 +1,101 @@
-define(function(require) {
+import OscillatorView from '../oscillator';
 
-	'use strict';
+var SpeakerOscillatorView = OscillatorView.extend({
 
-	var OscillatorView = require('../oscillator');
+    className: OscillatorView.prototype.className + ' speaker-oscillator-view',
 
-	var SpeakerOscillatorView = OscillatorView.extend({
+    initialize: function(options) {
+        OscillatorView.prototype.initialize.apply(this, [options]);
 
-		className: OscillatorView.prototype.className + ' speaker-oscillator-view',
+        this.time = 0;
 
-		initialize: function(options) {
-			OscillatorView.prototype.initialize.apply(this, [options]);
+        this.listenTo(this.waveSimulation, 'change:amplitude change:frequency', this.resize);
+        this.listenTo(this.waveSimulation, 'play',             this.play);
+        this.listenTo(this.waveSimulation, 'pause',            this.pause);
+    },
 
-			this.time = 0;
+    render: function() {
+        this.$el.html(this.template({ unique: this.cid }));
+        this.$graphic = this.$('.oscillator-graphic');
 
-			this.listenTo(this.waveSimulation, 'change:amplitude change:frequency', this.resize);
-			this.listenTo(this.waveSimulation, 'play',             this.play);
-			this.listenTo(this.waveSimulation, 'pause',            this.pause);
-		},
+        this.$speakerCone = this.$graphic.find('.part-2');
 
-		render: function() {
-			this.$el.html(this.template({ unique: this.cid }));
-			this.$graphic = this.$('.oscillator-graphic');
+        this.resize();
+        this.update(0, 0);
+    },
 
-			this.$speakerCone = this.$graphic.find('.part-2');
+    play: function() {
+        this.paused = false;
+    },
 
-			this.resize();
-			this.update(0, 0);
-		},
+    pause: function() {
+        this.paused = true;
+    },
 
-		play: function() {
-			this.paused = false;
-		},
+    update: function(time, delta) {
+        if (!this.waveSimulation.paused) {
+            this.time += delta / 1000;
+        }
 
-		pause: function() {
-			this.paused = true;
-		},
+        if (!this.hidden && !this.waveSimulation.paused && this.oscillator.get('enabled')) {
+            this.updateSpeaker();
+        }
 
-		update: function(time, delta) {
-			if (!this.waveSimulation.paused) {
-				this.time += delta / 1000;
-			}
+        if (this.updateOnNextFrame) {
+            // Change the distance the cone moves in a cycle
+            this.movementDistance = 4 * this.waveSimulation.get('amplitude');
+            this.halfPeriod = this.oscillator.period() / 2;
+        }
 
-			if (!this.hidden && !this.waveSimulation.paused && this.oscillator.get('enabled')) {
-				this.updateSpeaker();
-			}
-
-			if (this.updateOnNextFrame) {
-				// Change the distance the cone moves in a cycle
-				this.movementDistance = 4 * this.waveSimulation.get('amplitude');
-				this.halfPeriod = this.oscillator.period() / 2;
-			}
-
-			OscillatorView.prototype.update.apply(this, [time, delta]);
-		},
+        OscillatorView.prototype.update.apply(this, [time, delta]);
+    },
 
 
-		updateSpeaker: function() {
+    updateSpeaker: function() {
 
-			// First starting (captures undefined, 0, NaN)
-			if (!this.nextPeakTime) {
-				this.nextPeakTime   = this.oscillator.getNextPeakTime();
-				this.nextTroughTime = this.oscillator.getNextTroughTime();
-			}
+        // First starting (captures undefined, 0, NaN)
+        if (!this.nextPeakTime) {
+            this.nextPeakTime   = this.oscillator.getNextPeakTime();
+            this.nextTroughTime = this.oscillator.getNextTroughTime();
+        }
 
-			// We've hit a peak
-			if (this.time > this.nextPeakTime) {
-				this.nextPeakTime = this.oscillator.getNextPeakTime();
-			}
+        // We've hit a peak
+        if (this.time > this.nextPeakTime) {
+            this.nextPeakTime = this.oscillator.getNextPeakTime();
+        }
 
-			// We've hit a trough
-			if (this.time > this.nextTroughTime) {
-				this.nextTroughTime = this.oscillator.getNextTroughTime();
-			}
+        // We've hit a trough
+        if (this.time > this.nextTroughTime) {
+            this.nextTroughTime = this.oscillator.getNextTroughTime();
+        }
 
-			// Figure out which way we're going and our progress in that direction
-			var movementPercentage;
-			if (this.nextPeakTime > this.nextTroughTime) {
-				// We're on our way to a trough
-				movementPercentage = 1 - ((this.nextTroughTime - this.time) / this.halfPeriod);
-			}
-			else {
-				// We're on our way to a peak
-				movementPercentage = (this.nextPeakTime - this.time) / this.halfPeriod;
-			}
+        // Figure out which way we're going and our progress in that direction
+        var movementPercentage;
+        if (this.nextPeakTime > this.nextTroughTime) {
+            // We're on our way to a trough
+            movementPercentage = 1 - ((this.nextTroughTime - this.time) / this.halfPeriod);
+        }
+        else {
+            // We're on our way to a peak
+            movementPercentage = (this.nextPeakTime - this.time) / this.halfPeriod;
+        }
 
-			// While the slider is being moved, make sure it stays within reasonable bounds
-			movementPercentage = Math.min(movementPercentage, 1);
-			movementPercentage = Math.max(movementPercentage, 0);
+        // While the slider is being moved, make sure it stays within reasonable bounds
+        movementPercentage = Math.min(movementPercentage, 1);
+        movementPercentage = Math.max(movementPercentage, 0);
 
-			// The rotation is a fix for webkit and firefox that triggers sub-pixel rendering
-			var transform = 'translateX(' + (-this.movementDistance * movementPercentage) + 'px) rotate(.0001deg)';
+        // The rotation is a fix for webkit and firefox that triggers sub-pixel rendering
+        var transform = 'translateX(' + (-this.movementDistance * movementPercentage) + 'px) rotate(.0001deg)';
 
-			// Set the width so it spans the two points
-			this.$speakerCone.css({
-				'-webkit-transform': transform,
-				'-ms-transform':     transform,
-				'-o-transform':      transform,
-				'transform':         transform,
-			});
-		}
+        // Set the width so it spans the two points
+        this.$speakerCone.css({
+            '-webkit-transform': transform,
+            '-ms-transform':     transform,
+            '-o-transform':      transform,
+            'transform':         transform,
+        });
+    }
 
-	});
-
-	return SpeakerOscillatorView;
 });
+
+export default SpeakerOscillatorView;

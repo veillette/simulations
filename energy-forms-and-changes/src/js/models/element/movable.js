@@ -1,56 +1,50 @@
-define(function (require) {
+import Vector2 from 'common/math/vector2';
+import IntroElement from 'models/intro-element';
 
-    'use strict';
+/**
+ *
+ */
+var MovableElement = IntroElement.extend({
 
-    var Vector2 = require('common/math/vector2');
+    defaults: {
+        // Physical properties
+        verticalVelocity: 0,
 
-    var IntroElement = require('models/intro-element');
+        // State properties
+        userControlled: false,
+    },
 
-    /**
-     *
-     */
-    var MovableElement = IntroElement.extend({
+    initialize: function(attributes, options) {
+        IntroElement.prototype.initialize.apply(this, [attributes, options]);
 
-        defaults: {
-            // Physical properties
-            verticalVelocity: 0,
+        this._initialPosition = new Vector2(this.get('position'));
 
-            // State properties
-            userControlled: false,
-        },
-
-        initialize: function(attributes, options) {
-            IntroElement.prototype.initialize.apply(this, [attributes, options]);
-
-            this._initialPosition = new Vector2(this.get('position'));
-
-            this.on('change:userControlled', function(model, userControlled) {
-                if (userControlled && this.getSupportingSurface()) {
-                    this.stopListening(this.getSupportingSurface());
-                    this.getSupportingSurface().clearSurface();
-                    this.setSupportingSurface(null);
-                }
-            });
-        },
-
-        reset: function() {
-            this.set('userControlled', true);
-            this.setPosition(this._initialPosition);
-            this.set('verticalVelocity', 0);
-
-            IntroElement.prototype.reset.apply(this);
-        },
-
-        setSupportingSurface: function(supportingSurface) {
-            this.set('supportingSurface', supportingSurface);
-            if (supportingSurface) {
-                this.listenTo(supportingSurface, 'change', function() {
-                    this.setPosition(supportingSurface.getCenterX(), supportingSurface.yPos);
-                });
+        this.on('change:userControlled', function(model, userControlled) {
+            if (userControlled && this.getSupportingSurface()) {
+                this.stopListening(this.getSupportingSurface());
+                this.getSupportingSurface().clearSurface();
+                this.setSupportingSurface(null);
             }
+        });
+    },
+
+    reset: function() {
+        this.set('userControlled', true);
+        this.setPosition(this._initialPosition);
+        this.set('verticalVelocity', 0);
+
+        IntroElement.prototype.reset.apply(this);
+    },
+
+    setSupportingSurface: function(supportingSurface) {
+        this.set('supportingSurface', supportingSurface);
+        if (supportingSurface) {
+            this.listenTo(supportingSurface, 'change', function() {
+                this.setPosition(supportingSurface.getCenterX(), supportingSurface.yPos);
+            });
         }
+    }
 
-    });
-
-    return MovableElement;
 });
+
+export default MovableElement;

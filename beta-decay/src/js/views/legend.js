@@ -1,60 +1,53 @@
-define(function(require) {
+import _ from 'underscore';
+import LegendView from 'views/legend';
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
 
-    'use strict';
+/**
+ *
+ */
+var BetaDecayLegendView = LegendView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            scale: 16
+        }, options);
 
-    var LegendView = require('views/legend');
-
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
+        LegendView.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     *
+     * Creates the views and labels that will be used to render the legend
      */
-    var BetaDecayLegendView = LegendView.extend({
+    initItems: function() {
+        var items = [];
 
-        initialize: function(options) {
-            options = _.extend({
-                scale: 16
-            }, options);
+        // Neutron
+        items.push({
+            label: 'Neutron',
+            displayObject: ParticleGraphicsGenerator.generateNeutron(this.mvt)
+        });
 
-            LegendView.prototype.initialize.apply(this, [options]);
-        },
+        // Proton
+        items.push({
+            label: 'Proton',
+            displayObject: ParticleGraphicsGenerator.generateProton(this.mvt)
+        });
 
-        /**
-         * Creates the views and labels that will be used to render the legend
-         */
-        initItems: function() {
-            var items = [];
+        // Electron
+        items.push({
+            label: 'Electron',
+            displayObject: ParticleGraphicsGenerator.generateElectron(this.mvt)
+        });
 
-            // Neutron
-            items.push({
-                label: 'Neutron',
-                displayObject: ParticleGraphicsGenerator.generateNeutron(this.mvt)
-            });
+        // Antineutrino
+        items.push({
+            label: 'Antineutrino',
+            displayObject: ParticleGraphicsGenerator.generateAntineutrino(this.mvt)
+        });
 
-            // Proton
-            items.push({
-                label: 'Proton',
-                displayObject: ParticleGraphicsGenerator.generateProton(this.mvt)
-            });
+        this.items = items;
+    }
 
-            // Electron
-            items.push({
-                label: 'Electron',
-                displayObject: ParticleGraphicsGenerator.generateElectron(this.mvt)
-            });
-
-            // Antineutrino
-            items.push({
-                label: 'Antineutrino',
-                displayObject: ParticleGraphicsGenerator.generateAntineutrino(this.mvt)
-            });
-
-            this.items = items;
-        }
-
-    });
-
-    return BetaDecayLegendView;
 });
+
+export default BetaDecayLegendView;

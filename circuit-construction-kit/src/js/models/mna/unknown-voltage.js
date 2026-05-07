@@ -1,36 +1,31 @@
-define(function (require) {
+import PooledObject from 'common/pooled-object/pooled-object';
 
-    'use strict';
-
-    var PooledObject = require('common/pooled-object/pooled-object');
+/**
+ * Represents an unknown current in the circuit equations.
+ */
+var UnknownVoltage = PooledObject.extend({
 
     /**
-     * Represents an unknown current in the circuit equations.
+     * Initializes the UnknownVoltage's properties with provided initial values
      */
-    var UnknownVoltage = PooledObject.extend({
+    init: function(node) {
+        this.node = node;
+    },
 
-        /**
-         * Initializes the UnknownVoltage's properties with provided initial values
-         */
-        init: function(node) {
-            this.node = node;
-        },
-
-        equals: function(obj) {
-            if (this === obj)
-                return true;
-
-            if (!obj || this.prototype !== obj.prototype)
-                return false;
-
-            if (this.node !== obj.node)
-                return false;
-
+    equals: function(obj) {
+        if (this === obj)
             return true;
-        }
 
-    });
+        if (!obj || this.prototype !== obj.prototype)
+            return false;
 
+        if (this.node !== obj.node)
+            return false;
 
-    return UnknownVoltage;
+        return true;
+    }
+
 });
+
+
+export default UnknownVoltage;

@@ -1,5 +1,15 @@
 // Bootstrap 3 vendor-prefix mixin stubs — modern browsers no longer need most of these
 @import "gradients.less";
+.box-sizing(@boxmodel) {
+  -webkit-box-sizing: @boxmodel;
+     -moz-box-sizing: @boxmodel;
+          box-sizing: @boxmodel;
+}
+.opacity(@opacity) {
+  opacity: @opacity;
+  @opacity-ie: (@opacity * 100);
+  filter: ~"alpha(opacity=@{opacity-ie})";
+}
 .transition(@transition) {
   -webkit-transition: @transition;
           transition: @transition;

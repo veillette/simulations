@@ -1,39 +1,34 @@
-define(function (require) {
+import Backbone from 'backbone';
+import Constants from 'constants';
+var C = Constants.AtomModel.MIN_NUCLEUS_RADIUS / Math.pow( Constants.AtomModel.MIN_PARTICLE_COUNT, Constants.AtomModel.PARTICLE_COUNT_EXP );
 
-    'use strict';
+var Atom = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
-    var Constants = require('constants');
-    var C = Constants.AtomModel.MIN_NUCLEUS_RADIUS / Math.pow( Constants.AtomModel.MIN_PARTICLE_COUNT, Constants.AtomModel.PARTICLE_COUNT_EXP );
+    defaults: {
+        protonCount: Constants.DEFAULT_PROTON_COUNT,
+        neutronCount: Constants.DEFAULT_NEUTRON_COUNT,
+        hold: false
+    },
 
-    var Atom = Backbone.Model.extend({
+    initialize: function(attributes, options) {
+        Backbone.Model.prototype.initialize.apply(this, [attributes, options]);
+        this.updateRadius(options.simulation);
+    },
 
-        defaults: {
-            protonCount: Constants.DEFAULT_PROTON_COUNT,
-            neutronCount: Constants.DEFAULT_NEUTRON_COUNT,
-            hold: false
-        },
+    updateRadius: function(simulation) {
+        var protonCount = simulation.get('protonCount');
+        var neutronCount = simulation.get('neutronCount');
 
-        initialize: function(attributes, options) {
-            Backbone.Model.prototype.initialize.apply(this, [attributes, options]);
-            this.updateRadius(options.simulation);
-        },
+        var currentParticles = protonCount + neutronCount;
+        var radius = C * Math.pow( currentParticles, Constants.AtomModel.PARTICLE_COUNT_EXP );
 
-        updateRadius: function(simulation) {
-            var protonCount = simulation.get('protonCount');
-            var neutronCount = simulation.get('neutronCount');
+        this.set({
+            protonCount: protonCount,
+            neutronCount: neutronCount,
+            radius: radius
+        });
+    }
 
-            var currentParticles = protonCount + neutronCount;
-            var radius = C * Math.pow( currentParticles, Constants.AtomModel.PARTICLE_COUNT_EXP );
-
-            this.set({
-                protonCount: protonCount,
-                neutronCount: neutronCount,
-                radius: radius
-            });
-        }
-
-    });
-
-    return Atom;
 });
+
+export default Atom;

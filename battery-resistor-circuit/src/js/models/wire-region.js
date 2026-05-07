@@ -1,21 +1,16 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var WireRegion = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(WireRegion.prototype, {
 
-    var WireRegion = function() {};
+    contains: function(wireParticle) {
+        throw 'Update function not implemented.';
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(WireRegion.prototype, {
-
-        contains: function(wireParticle) {
-            throw 'Update function not implemented.';
-        }
-
-    });
-
-    return WireRegion;
 });
+
+export default WireRegion;

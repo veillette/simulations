@@ -1,20 +1,15 @@
-define(function (require) {
+import Projectile from 'models/projectile';
 
-    'use strict';
+var AdultHuman = Projectile.extend({
 
-    var Projectile = require('models/projectile');
+    defaults: {
+        mass:           70,
+        diameter:        0.5,
+        dragCoefficient: 1.3
+    }
 
-    var AdultHuman = Projectile.extend({
-
-        defaults: {
-            mass:           70,
-            diameter:        0.5,
-            dragCoefficient: 1.3
-        }
-
-    }, {
-        getName: function() { return 'adult human'; }
-    });
-
-    return AdultHuman;
+}, {
+    getName: function() { return 'adult human'; }
 });
+
+export default AdultHuman;

@@ -1,15 +1,9 @@
+import Backbone from 'backbone';
 
-define(function (require) {
+import BodyModel from 'models/body';
 
-    'use strict';
-
-    var Backbone = require('backbone');
-
-    var BodyModel = require('models/body');
-
-    var BodiesCollection = Backbone.Collection.extend({
-        model: BodyModel
-    });
-
-    return BodiesCollection;
+var BodiesCollection = Backbone.Collection.extend({
+    model: BodyModel
 });
+
+export default BodiesCollection;

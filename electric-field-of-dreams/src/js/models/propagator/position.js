@@ -1,26 +1,20 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * Keeps a particle within four bounding walls.
+ */
+var PositionPropagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(PositionPropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, particle) {
+        particle.updatePositionFromVelocity(deltaTime);
+    }
 
-    /**
-     * Keeps a particle within four bounding walls.
-     */
-    var PositionPropagator = function() {};
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(PositionPropagator.prototype, Propagator.prototype, {
-
-        propagate: function(deltaTime, particle) {
-            particle.updatePositionFromVelocity(deltaTime);
-        }
-
-    });
-
-    return PositionPropagator;
 });
+
+export default PositionPropagator;

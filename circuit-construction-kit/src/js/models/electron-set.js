@@ -1,116 +1,110 @@
-define(function (require) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import ConstantDensityPropagator from 'models/constant-density-propagator';
 
-    'use strict';
+var ElectronSet = function(circuit) {
+    this.circuit = circuit;
+    this.particles = new Backbone.Collection();
+    this.propagator = new ConstantDensityPropagator(this, circuit);
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+    this.listenTo(circuit.branches, 'remove', this.removeParticles);
+    this.listenTo(circuit.branches, 'reset',  this.clear);
+};
 
-    var ConstantDensityPropagator = require('models/constant-density-propagator');
+_.extend(ElectronSet.prototype, Backbone.Events, {
 
-    var ElectronSet = function(circuit) {
-        this.circuit = circuit;
-        this.particles = new Backbone.Collection();
-        this.propagator = new ConstantDensityPropagator(this, circuit);
+    clear: function() {
+        this.particles.reset();
+        return this;
+    },
 
-        this.listenTo(circuit.branches, 'remove', this.removeParticles);
-        this.listenTo(circuit.branches, 'reset',  this.clear);
-    };
+    addParticle: function(particle) {
+        if (!this.particles.contains(particle))
+            this.particles.add(particle);
+        return this;
+    },
 
-    _.extend(ElectronSet.prototype, Backbone.Events, {
+    addParticles: function(particles) {
+        for (var i = 0; i < particles.length; i++)
+            this.addParticle(particles[i]);
+        return this;
+    },
 
-        clear: function() {
-            this.particles.reset();
-            return this;
-        },
-
-        addParticle: function(particle) {
-            if (!this.particles.contains(particle))
-                this.particles.add(particle);
-            return this;
-        },
-
-        addParticles: function(particles) {
-            for (var i = 0; i < particles.length; i++)
-                this.addParticle(particles[i]);
-            return this;
-        },
-
-        removeParticles: function(branch) {
-            var p = this.getParticles(branch);
-            for (var i = 0; i < p.length; i++) {
-                var electron = p[i];
-                this.particles.remove(electron);
-                electron.destroy();
-            }
-        },
-
-        getParticles: function(branch) {
-            var all = [];
-            for (var i = 0; i < this.particles.length; i++) {
-                if (this.particles.at(i).get('branch') === branch)
-                    all.push(this.particles.at(i));
-            }
-            return all;
-        },
-
-        particleAt: function(i) {
-            return this.particles.at(i);
-        },
-
-        numParticles: function() {
-            return this.particles.length;
-        },
-
-        update: function(time, deltaTime) {
-            this.propagator.update(time, deltaTime);
-        },
-
-        getDensity: function(branch) {
-            var electrons = this.getParticles(branch);
-            return electrons.length / branch.getLength();
-        },
-
-        getUpperNeighborInBranch: function(myElectron) {
-            var branchElectrons = this.getParticles(myElectron.get('branch'));
-            var upper = null;
-            var dist = Number.POSITIVE_INFINITY;
-            for (var i = 0; i < branchElectrons.length; i++) {
-                if (branchElectrons[i] != myElectron) {
-                    var yourDist = branchElectrons[i].get('distAlongWire');
-                    var myDist = myElectron.get('distAlongWire');
-                    if (yourDist > myDist) {
-                        var distance = yourDist - myDist;
-                        if (distance < dist) {
-                            dist = distance;
-                            upper = branchElectrons[i];
-                        }
-                    }
-                }
-            }
-            return upper;
-        },
-
-        getLowerNeighborInBranch: function(myElectron) {
-            var branchElectrons = this.getParticles(myElectron.get('branch'));
-            var lower = null;
-            var dist = Number.POSITIVE_INFINITY;
-            for (var i = 0; i < branchElectrons.length; i++) {
-                if (branchElectrons[i] != myElectron) {
-                    var yourDist = branchElectrons[i].get('distAlongWire');
-                    var myDist = myElectron.get('distAlongWire');
-                    if (yourDist < myDist) {
-                        var distance = myDist - yourDist;
-                        if (distance < dist) {
-                            dist = distance;
-                            lower = branchElectrons[i];
-                        }
-                    }
-                }
-            }
-            return lower;
+    removeParticles: function(branch) {
+        var p = this.getParticles(branch);
+        for (var i = 0; i < p.length; i++) {
+            var electron = p[i];
+            this.particles.remove(electron);
+            electron.destroy();
         }
+    },
 
-    });
+    getParticles: function(branch) {
+        var all = [];
+        for (var i = 0; i < this.particles.length; i++) {
+            if (this.particles.at(i).get('branch') === branch)
+                all.push(this.particles.at(i));
+        }
+        return all;
+    },
 
-    return ElectronSet;
+    particleAt: function(i) {
+        return this.particles.at(i);
+    },
+
+    numParticles: function() {
+        return this.particles.length;
+    },
+
+    update: function(time, deltaTime) {
+        this.propagator.update(time, deltaTime);
+    },
+
+    getDensity: function(branch) {
+        var electrons = this.getParticles(branch);
+        return electrons.length / branch.getLength();
+    },
+
+    getUpperNeighborInBranch: function(myElectron) {
+        var branchElectrons = this.getParticles(myElectron.get('branch'));
+        var upper = null;
+        var dist = Number.POSITIVE_INFINITY;
+        for (var i = 0; i < branchElectrons.length; i++) {
+            if (branchElectrons[i] != myElectron) {
+                var yourDist = branchElectrons[i].get('distAlongWire');
+                var myDist = myElectron.get('distAlongWire');
+                if (yourDist > myDist) {
+                    var distance = yourDist - myDist;
+                    if (distance < dist) {
+                        dist = distance;
+                        upper = branchElectrons[i];
+                    }
+                }
+            }
+        }
+        return upper;
+    },
+
+    getLowerNeighborInBranch: function(myElectron) {
+        var branchElectrons = this.getParticles(myElectron.get('branch'));
+        var lower = null;
+        var dist = Number.POSITIVE_INFINITY;
+        for (var i = 0; i < branchElectrons.length; i++) {
+            if (branchElectrons[i] != myElectron) {
+                var yourDist = branchElectrons[i].get('distAlongWire');
+                var myDist = myElectron.get('distAlongWire');
+                if (yourDist < myDist) {
+                    var distance = myDist - yourDist;
+                    if (distance < dist) {
+                        dist = distance;
+                        lower = branchElectrons[i];
+                    }
+                }
+            }
+        }
+        return lower;
+    }
+
 });
+
+export default ElectronSet;

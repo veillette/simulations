@@ -1,143 +1,134 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import MeasuringTapeView from 'common/v3/tools/measuring-tape';
+import GOSimulation from 'models/simulation';
+import GOSimView from 'views/sim';
+import Scenarios from 'scenarios';
+import Constants from 'constants';
+import advancedVisibilityControlsHtml from 'templates/advanced-visibility-controls.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var ToScaleSimView = GOSimView.extend({
 
-    var _ = require('underscore');
-    var $ = require('jquery');
+    advancedVisibilityControlsTemplate: _.template(advancedVisibilityControlsHtml),
 
-    var MeasuringTapeView = require('common/v3/tools/measuring-tape');
+    events: _.extend(GOSimView.prototype.events, {
+        'click .mass-check'           : 'toggleMassLabels',
+        'click .measuring-tape-check' : 'toggleMeasuringTape',
+    }),
 
-    var GOSimulation = require('models/simulation');
-    var GOSimView    = require('views/sim');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Actual Scale',
+            name:  'to-scale'
+        }, options);
 
-    var Scenarios = require('scenarios');
-    var Constants = require('constants');
+        GOSimView.prototype.initialize.apply(this, [ options ]);
 
-    var advancedVisibilityControlsHtml = require('text!templates/advanced-visibility-controls.html');
+        this.initMeasuringTapeView();
+    },
 
     /**
-     *
+     * Initializes the Simulation.
      */
-    var ToScaleSimView = GOSimView.extend({
+    initSimulation: function() {
+        this.simulation = new GOSimulation({
+            scenario: Scenarios.ToScale[0]
+        });
+    },
 
-        advancedVisibilityControlsTemplate: _.template(advancedVisibilityControlsHtml),
+    /**
+     * Initializes the MeasuringTapeView.
+     */
+    initMeasuringTapeView: function() {
+        this.measuringTapeView = new MeasuringTapeView({
+            dragFrame: this.el,
+            viewToModelDeltaX: _.bind(function(dx){
+                return this.sceneView.mvt.viewToModelDeltaX(dx);
+            }, this),
+            viewToModelDeltaY: _.bind(function(dy){
+                return this.sceneView.mvt.viewToModelDeltaY(dy);
+            }, this),
+            format: function(meters) {
+                var miles = meters * Constants.METERS_PER_MILE;
+                var distance = miles / 1E3;
 
-        events: _.extend(GOSimView.prototype.events, {
-            'click .mass-check'           : 'toggleMassLabels',
-            'click .measuring-tape-check' : 'toggleMeasuringTape',
-        }),
+                if (distance < 0.01)
+                    distance = distance.toFixed(0);
+                else if (distance < 10)
+                    distance = distance.toFixed(1);
+                else
+                    distance = distance.toFixed(0);
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Actual Scale',
-                name:  'to-scale'
-            }, options);
+                return distance + ' thousand miles';
+            }
+        });
+        this.listenTo(this.sceneView, 'change:mvt', function() {
+            this.measuringTapeView.updateOnNextFrame = true;
+        });
+    },
 
-            GOSimView.prototype.initialize.apply(this, [ options ]);
+    getScenarios: function() {
+        return Scenarios.ToScale;
+    },
 
-            this.initMeasuringTapeView();
-        },
+    render: function() {
+        GOSimView.prototype.render.apply(this);
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new GOSimulation({
-                scenario: Scenarios.ToScale[0]
-            });
-        },
+        this.renderMeasuringTape();
 
-        /**
-         * Initializes the MeasuringTapeView.
-         */
-        initMeasuringTapeView: function() {
-            this.measuringTapeView = new MeasuringTapeView({
-                dragFrame: this.el,
-                viewToModelDeltaX: _.bind(function(dx){
-                    return this.sceneView.mvt.viewToModelDeltaX(dx);
-                }, this),
-                viewToModelDeltaY: _.bind(function(dy){
-                    return this.sceneView.mvt.viewToModelDeltaY(dy);
-                }, this),
-                format: function(meters) {
-                    var miles = meters * Constants.METERS_PER_MILE;
-                    var distance = miles / 1E3;
+        return this;
+    },
 
-                    if (distance < 0.01)
-                        distance = distance.toFixed(0);
-                    else if (distance < 10)
-                        distance = distance.toFixed(1);
-                    else
-                        distance = distance.toFixed(0);
+    renderScaffolding: function() {
+        GOSimView.prototype.renderScaffolding.apply(this);
 
-                    return distance + ' thousand miles';
-                }
-            });
-            this.listenTo(this.sceneView, 'change:mvt', function() {
-                this.measuringTapeView.updateOnNextFrame = true;
-            });
-        },
+        var data = {
+            name: this.name
+        };
+        this.$('.visibility-controls').append(this.advancedVisibilityControlsTemplate(data));
+    },
 
-        getScenarios: function() {
-            return Scenarios.ToScale;
-        },
+    renderMeasuringTape: function() {
+        this.measuringTapeView.render();
+        this.$el.append(this.measuringTapeView.el);
+    },
 
-        render: function() {
-            GOSimView.prototype.render.apply(this);
+    postRender: function() {
+        GOSimView.prototype.postRender.apply(this);
 
-            this.renderMeasuringTape();
+        this.measuringTapeView.postRender();
+        this.measuringTapeView.setStart(this.sceneView.width * 0.5,  this.sceneView.height * 0.58);
+        this.measuringTapeView.setEnd(  this.sceneView.width * 0.75, this.sceneView.height * 0.58);
+        this.measuringTapeView.hide();
+    },
 
-            return this;
-        },
+    update: function(time, deltaTime) {
+        GOSimView.prototype.update.apply(this, arguments);
 
-        renderScaffolding: function() {
-            GOSimView.prototype.renderScaffolding.apply(this);
+        var timeSeconds = time / 1000;
+        var dtSeconds   = deltaTime / 1000;
 
-            var data = {
-                name: this.name
-            };
-            this.$('.visibility-controls').append(this.advancedVisibilityControlsTemplate(data));
-        },
+        // Update the measuring tape view
+        this.measuringTapeView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
+    },
 
-        renderMeasuringTape: function() {
-            this.measuringTapeView.render();
-            this.$el.append(this.measuringTapeView.el);
-        },
+    toggleMassLabels: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showMassLabels();
+        else
+            this.sceneView.hideMassLabels();
+    },
 
-        postRender: function() {
-            GOSimView.prototype.postRender.apply(this);
-
-            this.measuringTapeView.postRender();
-            this.measuringTapeView.setStart(this.sceneView.width * 0.5,  this.sceneView.height * 0.58);
-            this.measuringTapeView.setEnd(  this.sceneView.width * 0.75, this.sceneView.height * 0.58);
+    toggleMeasuringTape: function(event) {
+        if ($(event.target).is(':checked'))
+            this.measuringTapeView.show();
+        else
             this.measuringTapeView.hide();
-        },
+    }
 
-        update: function(time, deltaTime) {
-            GOSimView.prototype.update.apply(this, arguments);
-
-            var timeSeconds = time / 1000;
-            var dtSeconds   = deltaTime / 1000;
-
-            // Update the measuring tape view
-            this.measuringTapeView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
-        },
-
-        toggleMassLabels: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showMassLabels();
-            else
-                this.sceneView.hideMassLabels();
-        },
-
-        toggleMeasuringTape: function(event) {
-            if ($(event.target).is(':checked'))
-                this.measuringTapeView.show();
-            else
-                this.measuringTapeView.hide();
-        }
-
-    });
-
-    return ToScaleSimView;
 });
+
+export default ToScaleSimView;

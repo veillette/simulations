@@ -1,30 +1,25 @@
-define(function(require) {
+import Backbone from 'backbone';
 
-    'use strict';
+var LightAbsorbingShape = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
+    defaults: {
+        shape: null,
+        lightAbsorptionCoefficient: 0
+    },
 
-    var LightAbsorbingShape = Backbone.Model.extend({
+    initialize: function(attrs, options) {
+        if (!this.get('shape'))
+            throw 'LightAbsorbingShapes must be given a shape object';
+    },
 
-        defaults: {
-            shape: null,
-            lightAbsorptionCoefficient: 0
-        },
+    getBounds: function() {
+        return this.get('shape').getBounds();
+    },
 
-        initialize: function(attrs, options) {
-            if (!this.get('shape'))
-                throw 'LightAbsorbingShapes must be given a shape object';
-        },
+    contains: function(x, y) {
+        return this.get('shape').contains(x, y);
+    }
 
-        getBounds: function() {
-            return this.get('shape').getBounds();
-        },
-
-        contains: function(x, y) {
-            return this.get('shape').contains(x, y);
-        }
-
-    });
-
-    return LightAbsorbingShape;
 });
+
+export default LightAbsorbingShape;

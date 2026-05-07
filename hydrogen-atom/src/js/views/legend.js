@@ -1,54 +1,47 @@
-define(function(require) {
+import _ from 'underscore';
+import LegendView from 'views/legend';
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
 
-    'use strict';
+/**
+ *
+ */
+var HydrogenAtomLegendView = LegendView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            scale: 16
+        }, options);
 
-    var LegendView = require('views/legend');
-
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
+        LegendView.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     *
+     * Creates the views and labels that will be used to render the legend
      */
-    var HydrogenAtomLegendView = LegendView.extend({
+    initItems: function() {
+        var items = [];
 
-        initialize: function(options) {
-            options = _.extend({
-                scale: 16
-            }, options);
+        // Electron
+        items.push({
+            label: 'Electron',
+            displayObject: ParticleGraphicsGenerator.generateElectron(this.mvt)
+        });
 
-            LegendView.prototype.initialize.apply(this, [options]);
-        },
+        // Proton
+        items.push({
+            label: 'Proton',
+            displayObject: ParticleGraphicsGenerator.generateProton(this.mvt)
+        });
 
-        /**
-         * Creates the views and labels that will be used to render the legend
-         */
-        initItems: function() {
-            var items = [];
+        // Neutron
+        items.push({
+            label: 'Neutron',
+            displayObject: ParticleGraphicsGenerator.generateNeutron(this.mvt)
+        });
 
-            // Electron
-            items.push({
-                label: 'Electron',
-                displayObject: ParticleGraphicsGenerator.generateElectron(this.mvt)
-            });
+        this.items = items;
+    }
 
-            // Proton
-            items.push({
-                label: 'Proton',
-                displayObject: ParticleGraphicsGenerator.generateProton(this.mvt)
-            });
-
-            // Neutron
-            items.push({
-                label: 'Neutron',
-                displayObject: ParticleGraphicsGenerator.generateNeutron(this.mvt)
-            });
-
-            this.items = items;
-        }
-
-    });
-
-    return HydrogenAtomLegendView;
 });
+
+export default HydrogenAtomLegendView;

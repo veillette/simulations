@@ -1,126 +1,118 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import PiecewiseCurve from 'common/math/piecewise-curve';
+import PathBranch from 'models/components/path-branch';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * The filament in a light bulb
+ */
+var Filament = PathBranch.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PathBranch.prototype.defaults, {
+        pivotToResistorDY: undefined, // The pin is the assumed origin.
+        resistorWidth: undefined,
+        connectAtRight: true
+    }),
 
-    var Vector2        = require('common/math/vector2');
-    var PiecewiseCurve = require('common/math/piecewise-curve');
+    initialize: function(attributes, options) {
+        this.northDir = new Vector2();
+        this.eastDir  = new Vector2();
+        this.pin      = new Vector2();
 
-    var PathBranch = require('models/components/path-branch');
+        // Cached objects
+        this._e = new Vector2();
+        this._n = new Vector2();
 
-    var Constants = require('constants');
+        PathBranch.prototype.initialize.apply(this, [attributes, options]);
 
-    /**
-     * The filament in a light bulb
-     */
-    var Filament = PathBranch.extend({
+        this.recompute();
+    },
 
-        defaults: _.extend({}, PathBranch.prototype.defaults, {
-            pivotToResistorDY: undefined, // The pin is the assumed origin.
-            resistorWidth: undefined,
-            connectAtRight: true
-        }),
+    startJunctionChanged: function(models, startJunction) {
+        PathBranch.prototype.startJunctionChanged.apply(this, arguments);
+        this.recompute();
+    },
 
-        initialize: function(attributes, options) {
-            this.northDir = new Vector2();
-            this.eastDir  = new Vector2();
-            this.pin      = new Vector2();
+    endJunctionChanged: function(models, endJunction) {
+        PathBranch.prototype.endJunctionChanged.apply(this, arguments);
+        this.recompute();
+    },
 
-            // Cached objects
-            this._e = new Vector2();
-            this._n = new Vector2();
+    getPoint: function(east, north) {
+        var e = this._e.set(this.eastDir).scale(east);
+        var n = this._n.set(this.northDir).scale(north);
+        var sum = e.add(n);
+        return sum.add(this.pin);
+    },
 
-            PathBranch.prototype.initialize.apply(this, [attributes, options]);
+    getVector: function(east, north) {
+        var e = this._e.set(this.eastDir).scale(east);
+        var n = this._n.set(this.northDir).scale(north);
+        return e.add(n);
+    },
 
-            this.recompute();
-        },
+    getPath: function() {
+        var curve = new PiecewiseCurve();
+        curve.moveTo(this.segments[0].start);
 
-        startJunctionChanged: function(models, startJunction) {
-            PathBranch.prototype.startJunctionChanged.apply(this, arguments);
-            this.recompute();
-        },
+        for (var i = 0; i < this.segments.length; i++)
+            curve.lineTo(this.segments[i].end.x, this.segments[i].end.y);
 
-        endJunctionChanged: function(models, endJunction) {
-            PathBranch.prototype.endJunctionChanged.apply(this, arguments);
-            this.recompute();
-        },
+        return curve;
+    },
 
-        getPoint: function(east, north) {
-            var e = this._e.set(this.eastDir).scale(east);
-            var n = this._n.set(this.northDir).scale(north);
-            var sum = e.add(n);
-            return sum.add(this.pin);
-        },
+    isNaN: function(vector) {
+        return isNaN(vector.x) || isNaN(vector.y);
+    },
 
-        getVector: function(east, north) {
-            var e = this._e.set(this.eastDir).scale(east);
-            var n = this._n.set(this.northDir).scale(north);
-            return e.add(n);
-        },
+    recompute: function() {
+        if (!this.get('startJunction') || !this.get('endJunction'))
+            return;
 
-        getPath: function() {
-            var curve = new PiecewiseCurve();
-            curve.moveTo(this.segments[0].start);
+        var tilt = Constants.TILT;
+        if (!this.get('connectAtRight'))
+            tilt = -tilt;
 
-            for (var i = 0; i < this.segments.length; i++)
-                curve.lineTo(this.segments[i].end.x, this.segments[i].end.y);
+        this.northDir
+            .set(this.get('endJunction').get('position'))
+            .sub(this.get('startJunction').get('position'))
+            .normalize()
+            .rotate(-tilt);
 
-            return curve;
-        },
+        this.eastDir
+            .set(-this.northDir.y, this.northDir.x) // Perpendicular to northDir
+            .normalize();
 
-        isNaN: function(vector) {
-            return isNaN(vector.x) || isNaN(vector.y);
-        },
+        if (!this.get('connectAtRight'))
+            this.eastDir.scale(-1);
 
-        recompute: function() {
-            if (!this.get('startJunction') || !this.get('endJunction'))
-                return;
-
-            var tilt = Constants.TILT;
-            if (!this.get('connectAtRight'))
-                tilt = -tilt;
-
-            this.northDir
-                .set(this.get('endJunction').get('position'))
-                .sub(this.get('startJunction').get('position'))
-                .normalize()
-                .rotate(-tilt);
-
-            this.eastDir
-                .set(-this.northDir.y, this.northDir.x) // Perpendicular to northDir
-                .normalize();
-
-            if (!this.get('connectAtRight'))
-                this.eastDir.scale(-1);
-
-            if (this.isNaN(this.northDir) || this.isNaN(this.eastDir)) {
-                console.error('Bulb basis set is not a number.');
-                return;
-            }
-
-            this.pin.set(this.get('endJunction').get('position'));
-
-            var firstPoint = new Vector2(this.getPoint(-this.get('resistorWidth') * 0.35, Constants.BULB_DIMENSION.height * 0.4));
-            if (isNaN(firstPoint.x) || isNaN(firstPoint.y))
-                throw 'Point was nan: ' + firstPoint;
-
-            var origin = this.get('startJunction').get('position');
-            this.reset(this.getVector(0.01, 0.04).add(origin), firstPoint);
-            this.appendPointFromVector(this.getVector(-this.get('resistorWidth') * 0.15,  Constants.BULB_DIMENSION.height * 0.25));
-            this.appendPointFromVector(this.getVector( this.get('resistorWidth') * 0.68, -Constants.BULB_DIMENSION.height * 0.05));
-            this.appendPointFromVector(this.getVector(-this.get('resistorWidth') * 0.35, -Constants.BULB_DIMENSION.height * 0.58));
-            this.appendPoint(this.pin);
-
-            this.trigger('recomputed');
-        },
-
-        indexOf: function(seg) {
-            return this.segments.indexOf(seg);
+        if (this.isNaN(this.northDir) || this.isNaN(this.eastDir)) {
+            console.error('Bulb basis set is not a number.');
+            return;
         }
 
-    });
+        this.pin.set(this.get('endJunction').get('position'));
 
+        var firstPoint = new Vector2(this.getPoint(-this.get('resistorWidth') * 0.35, Constants.BULB_DIMENSION.height * 0.4));
+        if (isNaN(firstPoint.x) || isNaN(firstPoint.y))
+            throw 'Point was nan: ' + firstPoint;
 
-    return Filament;
+        var origin = this.get('startJunction').get('position');
+        this.reset(this.getVector(0.01, 0.04).add(origin), firstPoint);
+        this.appendPointFromVector(this.getVector(-this.get('resistorWidth') * 0.15,  Constants.BULB_DIMENSION.height * 0.25));
+        this.appendPointFromVector(this.getVector( this.get('resistorWidth') * 0.68, -Constants.BULB_DIMENSION.height * 0.05));
+        this.appendPointFromVector(this.getVector(-this.get('resistorWidth') * 0.35, -Constants.BULB_DIMENSION.height * 0.58));
+        this.appendPoint(this.pin);
+
+        this.trigger('recomputed');
+    },
+
+    indexOf: function(seg) {
+        return this.segments.indexOf(seg);
+    }
+
 });
+
+
+export default Filament;

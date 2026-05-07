@@ -1,15 +1,9 @@
+import Backbone from 'backbone';
 
-define(function (require) {
+import BodySpringSystemModel from 'models/body-spring-system';
 
-    'use strict';
-
-    var Backbone = require('backbone');
-
-    var BodySpringSystemModel = require('models/body-spring-system');
-
-    var BodySpringSystemsCollections = Backbone.Collection.extend({
-        model: BodySpringSystemModel
-    });
-
-    return BodySpringSystemsCollections;
+var BodySpringSystemsCollections = Backbone.Collection.extend({
+    model: BodySpringSystemModel
 });
+
+export default BodySpringSystemsCollections;

@@ -1,25 +1,18 @@
-define(function (require) {
+import _ from 'underscore';
+import Body from 'models/body';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var Satellite = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        name: 'satellite',
+        referenceMassLabel: 'space station',
+        color: Constants.SATELLITE_COLOR
+    })
 
-    var Body = require('models/body');
-
-    var Constants = require('constants');
-
-    /**
-     *
-     */
-    var Satellite = Body.extend({
-
-        defaults: _.extend({}, Body.prototype.defaults, {
-            name: 'satellite',
-            referenceMassLabel: 'space station',
-            color: Constants.SATELLITE_COLOR
-        })
-
-    });
-
-    return Satellite;
 });
+
+export default Satellite;

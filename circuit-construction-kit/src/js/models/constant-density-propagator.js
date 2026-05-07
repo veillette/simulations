@@ -1,262 +1,255 @@
-define(function (require) {
+import _ from 'underscore';
+import Pool from 'object-pool';
+import SmoothData from 'models/smooth-data';
+import Constants from 'constants';
+var FIRE_CURRENT = Constants.ConstantDensityPropagator.FIRE_CURRENT;
+var MIN_CURRENT  = Constants.ConstantDensityPropagator.MIN_CURRENT;
+var MAX_STEP     = Constants.ConstantDensityPropagator.MAX_STEP;
 
-    'use strict';
+var locationPool = Pool({
+    init: function() {
+        return {
+            branch: undefined,
+            x: undefined
+        };
+    }
+});
 
-    var _    = require('underscore');
-    var Pool = require('object-pool');
+/**
+ * Propagates electrons
+ */
+var ConstantDensityPropagator = function(particleSet, circuit) {
+    this.particleSet = particleSet;
+    this.circuit = circuit;
 
-    var SmoothData = require('models/smooth-data');
+    this.speedScale = 0.01 / 0.03;
+    this.numEqualize = 2;
+    this.scale = 0;
+    this.smoothData = new SmoothData(30);
+    this.timeScalingPercentValue = 0;
+};
 
-    var Constants = require('constants');
-    var FIRE_CURRENT = Constants.ConstantDensityPropagator.FIRE_CURRENT;
-    var MIN_CURRENT  = Constants.ConstantDensityPropagator.MIN_CURRENT;
-    var MAX_STEP     = Constants.ConstantDensityPropagator.MAX_STEP;
+_.extend(ConstantDensityPropagator.prototype, {
 
-    var locationPool = Pool({
-        init: function() {
-            return {
-                branch: undefined,
-                x: undefined
-            };
-        }
-    });
+    update: function(time, deltaTime) {
+        var maxCurrent = this.getMaxCurrent();
+        var maxVelocity = maxCurrent * this.speedScale;
+        var maxStep = maxVelocity * deltaTime;
+        if (maxStep >= MAX_STEP)
+            this.scale = MAX_STEP / maxStep;
+        else
+            this.scale = 1;
 
-    /**
-     * Propagates electrons
-     */
-    var ConstantDensityPropagator = function(particleSet, circuit) {
-        this.particleSet = particleSet;
-        this.circuit = circuit;
+        this.smoothData.addData(this.scale * 100);
+        this.timeScalingPercentValue = this.smoothData.getAverage();
 
-        this.speedScale = 0.01 / 0.03;
-        this.numEqualize = 2;
-        this.scale = 0;
-        this.smoothData = new SmoothData(30);
-        this.timeScalingPercentValue = 0;
-    };
+        this.percent = Math.round(this.timeScalingPercentValue);
+        if (this.percent === 0)
+            this.percent = 1;
 
-    _.extend(ConstantDensityPropagator.prototype, {
+        // Todo add test for change before notify
+        for (var i = 0; i < this.particleSet.numParticles(); i++)
+            this.propagate(this.particleSet.particleAt(i), deltaTime);
+        // Maybe this should be done in random order, otherwise we may get artefacts.
 
-        update: function(time, deltaTime) {
-            var maxCurrent = this.getMaxCurrent();
-            var maxVelocity = maxCurrent * this.speedScale;
-            var maxStep = maxVelocity * deltaTime;
-            if (maxStep >= MAX_STEP)
-                this.scale = MAX_STEP / maxStep;
-            else
-                this.scale = 1;
+        for (var j = 0; j < this.numEqualize; j++)
+            this.equalize(deltaTime);
+    },
 
-            this.smoothData.addData(this.scale * 100);
-            this.timeScalingPercentValue = this.smoothData.getAverage();
+    getTimeScalingPercentPercent: function() {
+        return this.percent;
+    },
 
-            this.percent = Math.round(this.timeScalingPercentValue);
-            if (this.percent === 0)
-                this.percent = 1;
-
-            // Todo add test for change before notify
-            for (var i = 0; i < this.particleSet.numParticles(); i++)
-                this.propagate(this.particleSet.particleAt(i), deltaTime);
-            // Maybe this should be done in random order, otherwise we may get artefacts.
-
-            for (var j = 0; j < this.numEqualize; j++)
-                this.equalize(deltaTime);
-        },
-
-        getTimeScalingPercentPercent: function() {
-            return this.percent;
-        },
-
-        getMaxCurrent: function() {
-            var branches = this.circuit.branches;
-            var max = 0;
-            for (var i = 0; i < branches.length; i++) {
-                var current = branches.at(i).get('current');
-                if (typeof current !== 'number' || !isFinite(current))
-                    continue;
-                max = Math.max(max, Math.abs(current));
-            }
-            return max;
-        },
-
-        equalize: function(deltaTime) {
-            var i;
-            var indices = [];
-            for (i = 0; i < this.particleSet.numParticles(); i++)
-                indices.push(i);
-
-            _.shuffle(indices);
-
-            for (i = 0; i < this.particleSet.numParticles(); i++)
-                this.equalizeElectron(this.particleSet.particleAt(indices[i]), deltaTime);
-        },
-
-        equalizeElectron: function(e, deltaTime) {
-            // If it has a lower and upper neighbor, try to get the distance to each to be half of ELECTRON_DX
-            var upper = this.particleSet.getUpperNeighborInBranch(e);
-            var lower = this.particleSet.getLowerNeighborInBranch(e);
-            if (!upper || !lower)
-                return;
-
-            var sep = upper.get('distAlongWire') - lower.get('distAlongWire');
-            var myloc = e.get('distAlongWire');
-            var midpoint = lower.get('distAlongWire') + sep / 2;
-
-            var dest = midpoint;
-            var distMoving = Math.abs(dest - myloc);
-            var vec = dest - myloc;
-            var sameDirAsCurrent = vec > 0 && e.get('branch').get('current') > 0;
-            var myscale = 1000.0 / 30.0; // To have same scale as 3.17.00
-            var correctionSpeed = 0.055 / this.numEqualize * myscale;
-            if (!sameDirAsCurrent)
-                correctionSpeed = 0.01 / this.numEqualize * myscale;
-
-            var maxDX = Math.abs(correctionSpeed * deltaTime);
-
-            if (distMoving > maxDX) {
-                //move in the appropriate direction maxDX
-                if (dest < myloc)
-                    dest = myloc - maxDX;
-                else if (dest > myloc)
-                    dest = myloc + maxDX;
-            }
-
-            if (dest >= 0 && dest <= e.get('branch').getLength())
-                e.set('distAlongWire', dest);
-        },
-
-        propagate: function(e, deltaTime) {
-            var x = e.get('distAlongWire');
-            if (isNaN(x)) {
-                //TODO fix this
-                return;
-            }
-
-            if (typeof deltaTime !== 'number' || !isFinite(deltaTime))
-                return;
-
-            var current = e.get('branch').get('current');
+    getMaxCurrent: function() {
+        var branches = this.circuit.branches;
+        var max = 0;
+        for (var i = 0; i < branches.length; i++) {
+            var current = branches.at(i).get('current');
             if (typeof current !== 'number' || !isFinite(current))
-                return;
+                continue;
+            max = Math.max(max, Math.abs(current));
+        }
+        return max;
+    },
 
-            if (current === 0 || Math.abs(current) < MIN_CURRENT)
-                return;
+    equalize: function(deltaTime) {
+        var i;
+        var indices = [];
+        for (i = 0; i < this.particleSet.numParticles(); i++)
+            indices.push(i);
 
-            var speed = current * this.speedScale;
-            var dx = (speed * deltaTime) * this.scale;
-            if (!isFinite(dx))
-                return;
-            var newX = x + dx;
+        _.shuffle(indices);
 
-            var branch = e.get('branch');
-            var branchLength = branch.getLength();
-            if (typeof branchLength !== 'number' || !isFinite(branchLength))
-                return;
-            if (branch.containsScalarLocation(newX)) {
-                e.set('distAlongWire', newX);
+        for (i = 0; i < this.particleSet.numParticles(); i++)
+            this.equalizeElectron(this.particleSet.particleAt(indices[i]), deltaTime);
+    },
+
+    equalizeElectron: function(e, deltaTime) {
+        // If it has a lower and upper neighbor, try to get the distance to each to be half of ELECTRON_DX
+        var upper = this.particleSet.getUpperNeighborInBranch(e);
+        var lower = this.particleSet.getLowerNeighborInBranch(e);
+        if (!upper || !lower)
+            return;
+
+        var sep = upper.get('distAlongWire') - lower.get('distAlongWire');
+        var myloc = e.get('distAlongWire');
+        var midpoint = lower.get('distAlongWire') + sep / 2;
+
+        var dest = midpoint;
+        var distMoving = Math.abs(dest - myloc);
+        var vec = dest - myloc;
+        var sameDirAsCurrent = vec > 0 && e.get('branch').get('current') > 0;
+        var myscale = 1000.0 / 30.0; // To have same scale as 3.17.00
+        var correctionSpeed = 0.055 / this.numEqualize * myscale;
+        if (!sameDirAsCurrent)
+            correctionSpeed = 0.01 / this.numEqualize * myscale;
+
+        var maxDX = Math.abs(correctionSpeed * deltaTime);
+
+        if (distMoving > maxDX) {
+            //move in the appropriate direction maxDX
+            if (dest < myloc)
+                dest = myloc - maxDX;
+            else if (dest > myloc)
+                dest = myloc + maxDX;
+        }
+
+        if (dest >= 0 && dest <= e.get('branch').getLength())
+            e.set('distAlongWire', dest);
+    },
+
+    propagate: function(e, deltaTime) {
+        var x = e.get('distAlongWire');
+        if (isNaN(x)) {
+            //TODO fix this
+            return;
+        }
+
+        if (typeof deltaTime !== 'number' || !isFinite(deltaTime))
+            return;
+
+        var current = e.get('branch').get('current');
+        if (typeof current !== 'number' || !isFinite(current))
+            return;
+
+        if (current === 0 || Math.abs(current) < MIN_CURRENT)
+            return;
+
+        var speed = current * this.speedScale;
+        var dx = (speed * deltaTime) * this.scale;
+        if (!isFinite(dx))
+            return;
+        var newX = x + dx;
+
+        var branch = e.get('branch');
+        var branchLength = branch.getLength();
+        if (typeof branchLength !== 'number' || !isFinite(branchLength))
+            return;
+        if (branch.containsScalarLocation(newX)) {
+            e.set('distAlongWire', newX);
+        }
+        else {
+            // Need a new branch.
+            var overshoot = 0;
+            var under = false;
+            if (newX < 0) {
+                overshoot = -newX;
+                under = true;
             }
             else {
-                // Need a new branch.
-                var overshoot = 0;
-                var under = false;
-                if (newX < 0) {
-                    overshoot = -newX;
-                    under = true;
-                }
-                else {
-                    overshoot = Math.abs(branchLength - newX);
-                    under = false;
-                }
-
-                if (isNaN(overshoot)) // Never happens
-                    throw 'Overshoot is NaN';
-
-                if (overshoot < 0) // Never happens
-                    throw 'Overshoot is <0';
-
-                var locations = this.getLocations(e, overshoot, under);
-                if (locations.length === 0)
-                    return;
-
-                // Choose the branch with the furthest away electron
-                var chosen = this.chooseDestinationBranch(locations);
-                e.setLocation(chosen.branch, Math.abs(chosen.x));
-
-                // Clean up
-                for (var i = 0; i < locations.length; i++)
-                    locationPool.remove(locations[i]);
+                overshoot = Math.abs(branchLength - newX);
+                under = false;
             }
-        },
 
-        chooseDestinationBranch: function(locations) {
+            if (isNaN(overshoot)) // Never happens
+                throw 'Overshoot is NaN';
+
+            if (overshoot < 0) // Never happens
+                throw 'Overshoot is <0';
+
+            var locations = this.getLocations(e, overshoot, under);
+            if (locations.length === 0)
+                return;
+
+            // Choose the branch with the furthest away electron
+            var chosen = this.chooseDestinationBranch(locations);
+            e.setLocation(chosen.branch, Math.abs(chosen.x));
+
+            // Clean up
             for (var i = 0; i < locations.length; i++)
-                locations[i].density = this.getDensity(locations[i]);
+                locationPool.remove(locations[i]);
+        }
+    },
 
-            if (!this._densitySortFunction) {
-                this._densitySortFunction = function(loc1, loc2) {
-                    return loc1.density - loc2.density;
-                };
-            }
+    chooseDestinationBranch: function(locations) {
+        for (var i = 0; i < locations.length; i++)
+            locations[i].density = this.getDensity(locations[i]);
 
-            locations.sort(this._densitySortFunction);
-
-            return locations[0];
-        },
-
-        getDensity: function(circuitLocation) {
-            return this.particleSet.getDensity(circuitLocation.branch);
-        },
-
-        getLocations: function(e, overshoot, under) {
-            var branch = e.get('branch');
-            var jroot = (under) ?
-                branch.get('startJunction') :
-                branch.get('endJunction');
-
-            var adj = this.circuit.getAdjacentBranches(jroot);
-            var all = [];
-
-            // Keep only those with outgoing current.
-            var location;
-            for (var i = 0; i < adj.length; i++) {
-                var neighbor = adj[i];
-
-                var current = neighbor.get('current');
-                if (current > FIRE_CURRENT)
-                    current = FIRE_CURRENT;
-                else if (current < -FIRE_CURRENT)
-                    current = -FIRE_CURRENT;
-
-                var distAlongNew;
-                if (current > 0 && neighbor.get('startJunction') == jroot) { // Start near the beginning.
-                    distAlongNew = overshoot;
-                    if (distAlongNew > neighbor.getLength())
-                        distAlongNew = neighbor.getLength();
-                    else if (distAlongNew < 0)
-                        distAlongNew = 0;
-
-                    location = locationPool.create();
-                    location.branch = neighbor;
-                    location.x = distAlongNew;
-                    all.push(location);
-                }
-                else if (current < 0 && neighbor.get('endJunction') == jroot) {
-                    distAlongNew = neighbor.getLength() - overshoot;
-                    if (distAlongNew > neighbor.getLength())
-                        distAlongNew = neighbor.getLength();
-                    else if (distAlongNew < 0)
-                        distAlongNew = 0;
-
-                    location = locationPool.create();
-                    location.branch = neighbor;
-                    location.x = distAlongNew;
-                    all.push(location);
-                }
-            }
-
-            return all;
+        if (!this._densitySortFunction) {
+            this._densitySortFunction = function(loc1, loc2) {
+                return loc1.density - loc2.density;
+            };
         }
 
-    });
+        locations.sort(this._densitySortFunction);
 
-    return ConstantDensityPropagator;
+        return locations[0];
+    },
+
+    getDensity: function(circuitLocation) {
+        return this.particleSet.getDensity(circuitLocation.branch);
+    },
+
+    getLocations: function(e, overshoot, under) {
+        var branch = e.get('branch');
+        var jroot = (under) ?
+            branch.get('startJunction') :
+            branch.get('endJunction');
+
+        var adj = this.circuit.getAdjacentBranches(jroot);
+        var all = [];
+
+        // Keep only those with outgoing current.
+        var location;
+        for (var i = 0; i < adj.length; i++) {
+            var neighbor = adj[i];
+
+            var current = neighbor.get('current');
+            if (current > FIRE_CURRENT)
+                current = FIRE_CURRENT;
+            else if (current < -FIRE_CURRENT)
+                current = -FIRE_CURRENT;
+
+            var distAlongNew;
+            if (current > 0 && neighbor.get('startJunction') == jroot) { // Start near the beginning.
+                distAlongNew = overshoot;
+                if (distAlongNew > neighbor.getLength())
+                    distAlongNew = neighbor.getLength();
+                else if (distAlongNew < 0)
+                    distAlongNew = 0;
+
+                location = locationPool.create();
+                location.branch = neighbor;
+                location.x = distAlongNew;
+                all.push(location);
+            }
+            else if (current < 0 && neighbor.get('endJunction') == jroot) {
+                distAlongNew = neighbor.getLength() - overshoot;
+                if (distAlongNew > neighbor.getLength())
+                    distAlongNew = neighbor.getLength();
+                else if (distAlongNew < 0)
+                    distAlongNew = 0;
+
+                location = locationPool.create();
+                location.branch = neighbor;
+                location.x = distAlongNew;
+                all.push(location);
+            }
+        }
+
+        return all;
+    }
+
 });
+
+export default ConstantDensityPropagator;

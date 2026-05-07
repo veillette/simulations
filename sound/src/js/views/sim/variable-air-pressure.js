@@ -1,118 +1,110 @@
-define(function (require) {
+import _ from 'underscore';
+import VariableAirPressureSimulation from 'models/simulation/variable-air-pressure';
+import SoundSimView from 'views/sim';
+import VariableAirPressureSceneView from 'views/scene/variable-air-pressure';
+import airDensityControlsHtml from 'templates/air-density-controls.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var VariableAirPressureSimView = SoundSimView.extend({
 
-    var _ = require('underscore');
-
-    var VariableAirPressureSimulation = require('models/simulation/variable-air-pressure');
-
-    var SoundSimView                 = require('views/sim');
-    var VariableAirPressureSceneView = require('views/scene/variable-air-pressure');
-
-    var airDensityControlsHtml = require('text!templates/air-density-controls.html');
+    showHelpBtn: false,
 
     /**
-     *
+     * Dom event listeners
      */
-    var VariableAirPressureSimView = SoundSimView.extend({
+    events: _.extend({}, SoundSimView.prototype.events, {
+        'click .btn-add-air'    : 'addAirToBox',
+        'click .btn-remove-air' : 'removeAirFromBox',
+        'click .btn-reset-box'  : 'resetBox'
+    }),
 
-        showHelpBtn: false,
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Varying Air Pressure',
+            name: 'variable-air-pressure',
+        }, options);
 
-        /**
-         * Dom event listeners
-         */
-        events: _.extend({}, SoundSimView.prototype.events, {
-            'click .btn-add-air'    : 'addAirToBox',
-            'click .btn-remove-air' : 'removeAirFromBox',
-            'click .btn-reset-box'  : 'resetBox'
-        }),
+        SoundSimView.prototype.initialize.apply(this, [options]);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Varying Air Pressure',
-                name: 'variable-air-pressure',
-            }, options);
+        this.listenTo(this.simulation, 'change:airDensityPercent', this.airDensityChanged);
+    },
 
-            SoundSimView.prototype.initialize.apply(this, [options]);
+    reset: function() {
+        SoundSimView.prototype.reset.apply(this, arguments);
 
-            this.listenTo(this.simulation, 'change:airDensityPercent', this.airDensityChanged);
-        },
+        this.$('.audio-listener').click();
+    },
 
-        reset: function() {
-            SoundSimView.prototype.reset.apply(this, arguments);
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new VariableAirPressureSimulation();
+    },
 
-            this.$('.audio-listener').click();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new VariableAirPressureSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new VariableAirPressureSimulation();
-        },
+    /**
+     * Renders page content
+     */
+    renderScaffolding: function() {
+        SoundSimView.prototype.renderScaffolding.apply(this, arguments);
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new VariableAirPressureSceneView({
-                simulation: this.simulation
-            });
-        },
+        this.renderAudioControls();
+        this.$('.audio-listener').click();
 
-        /**
-         * Renders page content
-         */
-        renderScaffolding: function() {
-            SoundSimView.prototype.renderScaffolding.apply(this, arguments);
+        // Air density controls
+        this.$('.sim-controls-column').append(airDensityControlsHtml);
 
-            this.renderAudioControls();
-            this.$('.audio-listener').click();
+        this.$addAirBtn    = this.$('.btn-add-air');
+        this.$removeAirBtn = this.$('.btn-remove-air');
+        this.$resetBoxBtn  = this.$('.btn-reset-box');
+    },
 
-            // Air density controls
-            this.$('.sim-controls-column').append(airDensityControlsHtml);
+    addAirToBox: function() {
+        this.sceneView.addAirToBox();
+        this.$addAirBtn.prop('disabled', true);
+    },
 
-            this.$addAirBtn    = this.$('.btn-add-air');
-            this.$removeAirBtn = this.$('.btn-remove-air');
-            this.$resetBoxBtn  = this.$('.btn-reset-box');
-        },
+    removeAirFromBox: function() {
+        this.sceneView.removeAirFromBox();
+        this.$removeAirBtn.prop('disabled', true);
+    },
 
-        addAirToBox: function() {
-            this.sceneView.addAirToBox();
-            this.$addAirBtn.prop('disabled', true);
-        },
+    resetBox: function() {
+        this.sceneView.resetBox();
+        this.$addAirBtn.hide();
+        this.$removeAirBtn.show();
+        this.$removeAirBtn.removeAttr('disabled');
+    },
 
-        removeAirFromBox: function() {
-            this.sceneView.removeAirFromBox();
-            this.$removeAirBtn.prop('disabled', true);
-        },
-
-        resetBox: function() {
-            this.sceneView.resetBox();
+    airDensityChanged: function(simulation, airDensityPercent) {
+        if (airDensityPercent === 1) {
             this.$addAirBtn.hide();
             this.$removeAirBtn.show();
             this.$removeAirBtn.removeAttr('disabled');
-        },
-
-        airDensityChanged: function(simulation, airDensityPercent) {
-            if (airDensityPercent === 1) {
-                this.$addAirBtn.hide();
-                this.$removeAirBtn.show();
-                this.$removeAirBtn.removeAttr('disabled');
-            }
-            else if (airDensityPercent === 0) {
-                this.$removeAirBtn.hide();
-                this.$addAirBtn.show();
-                this.$addAirBtn.removeAttr('disabled');
-            }
         }
+        else if (airDensityPercent === 0) {
+            this.$removeAirBtn.hide();
+            this.$addAirBtn.show();
+            this.$addAirBtn.removeAttr('disabled');
+        }
+    }
 
-    });
-
-    return VariableAirPressureSimView;
 });
+
+export default VariableAirPressureSimView;

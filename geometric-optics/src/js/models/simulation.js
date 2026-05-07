@@ -1,52 +1,41 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Simulation from 'common/simulation/simulation';
+import Lens from 'models/lens';
+import SourceObject from 'models/source-object';
+import TargetImage from 'models/target-image';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var GeometricOpticsSimulation = Simulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(Simulation.prototype.defaults, {
 
-    var Simulation = require('common/simulation/simulation');
+    }),
 
-    var Lens         = require('models/lens');
-    var SourceObject = require('models/source-object');
-    var TargetImage  = require('models/target-image');
+    initialize: function(attributes, options) {
+        Simulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        this.lens = new Lens();
 
-    /**
-     * Wraps the update function in
-     */
-    var GeometricOpticsSimulation = Simulation.extend({
+        this.sourceObject = new SourceObject({
+            position:    Constants.DEFAULT_SOURCE_POINT_1,
+            secondPoint: Constants.DEFAULT_SOURCE_POINT_2
+        });
 
-        defaults: _.extend(Simulation.prototype.defaults, {
+        this.targetImage = new TargetImage({}, {
+            lens:         this.lens,
+            sourceObject: this.sourceObject
+        });
+    }
 
-        }),
-
-        initialize: function(attributes, options) {
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
-
-        },
-
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            this.lens = new Lens();
-
-            this.sourceObject = new SourceObject({
-                position:    Constants.DEFAULT_SOURCE_POINT_1,
-                secondPoint: Constants.DEFAULT_SOURCE_POINT_2
-            });
-
-            this.targetImage = new TargetImage({}, {
-                lens:         this.lens,
-                sourceObject: this.sourceObject
-            });
-        }
-
-    });
-
-    return GeometricOpticsSimulation;
 });
+
+export default GeometricOpticsSimulation;

@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import TransformerSimView from 'views/sim/transformer';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var TransformerSimView = require('views/sim/transformer');
+/**
+ * "Generator" version of the original
+ */
+var GeneratorTransformerSimView = TransformerSimView.extend({
 
     /**
-     * "Generator" version of the original
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var GeneratorTransformerSimView = TransformerSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            link: 'generator'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'generator'
-            }, options);
+        TransformerSimView.prototype.initialize.apply(this, [options]);
+    }
 
-            TransformerSimView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return GeneratorTransformerSimView;
 });
+
+export default GeneratorTransformerSimView;

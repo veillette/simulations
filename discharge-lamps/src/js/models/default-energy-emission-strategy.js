@@ -1,30 +1,25 @@
-define(function (require) {
+import EnergyEmissionStrategy from 'common/quantum/models/energy-emission-strategy';
+import GroundState from 'common/quantum/models/ground-state';
 
-    'use strict';
+/**
+ * An energy emission strategy that always sets the atom to the ground state
+ */
+var DefaultEnergyEmissionStrategy = EnergyEmissionStrategy.extend({
 
-    var EnergyEmissionStrategy = require('common/quantum/models/energy-emission-strategy');
-    var GroundState           = require('common/quantum/models/ground-state');
+    emitEnergy: function(atom) {
+        var newState = null;
+        var states = atom.getStates();
 
-    /**
-     * An energy emission strategy that always sets the atom to the ground state
-     */
-    var DefaultEnergyEmissionStrategy = EnergyEmissionStrategy.extend({
-
-        emitEnergy: function(atom) {
-            var newState = null;
-            var states = atom.getStates();
-
-            for (var i = 0; i < states.length; i++) {
-                var state = states[i];
-                if (state instanceof GroundState)
-                    newState = state;
-            }
-
-            return newState;
+        for (var i = 0; i < states.length; i++) {
+            var state = states[i];
+            if (state instanceof GroundState)
+                newState = state;
         }
 
-    });
+        return newState;
+    }
 
-
-    return DefaultEnergyEmissionStrategy;
 });
+
+
+export default DefaultEnergyEmissionStrategy;

@@ -1,128 +1,120 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import RectangularComponentView from 'views/components/rectangular';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a resistor
+ */
+var SeriesAmmeterView = RectangularComponentView.extend({
 
-    var PIXI = require('pixi');
+    imagePath:     Assets.Images.SERIES_AMMETER,
+    maskImagePath: Assets.Images.SERIES_AMMETER_MASK,
+    topImagePath:  Assets.Images.SERIES_AMMETER_TOP,
 
-
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Assets    = require('assets');
+    schematicImagePath:     Assets.Images.SCHEMATIC_SERIES_AMMETER,
+    schematicMaskImagePath: Assets.Images.SCHEMATIC_SERIES_AMMETER_MASK,
 
     /**
-     * A view that represents a resistor
+     * Initializes the new SeriesAmmeterView.
      */
-    var SeriesAmmeterView = RectangularComponentView.extend({
+    initialize: function(options) {
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
 
-        imagePath:     Assets.Images.SERIES_AMMETER,
-        maskImagePath: Assets.Images.SERIES_AMMETER_MASK,
-        topImagePath:  Assets.Images.SERIES_AMMETER_TOP,
+        this.listenTo(this.model, 'change:current', this.updateAmperage);
+    },
 
-        schematicImagePath:     Assets.Images.SCHEMATIC_SERIES_AMMETER,
-        schematicMaskImagePath: Assets.Images.SCHEMATIC_SERIES_AMMETER_MASK,
+    detach: function() {
+        RectangularComponentView.prototype.detach.apply(this, arguments);
 
-        /**
-         * Initializes the new SeriesAmmeterView.
-         */
-        initialize: function(options) {
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
+        if (this.topLayer.parent)
+            this.topLayer.parent.removeChild(this.topLayer);
+    },
 
-            this.listenTo(this.model, 'change:current', this.updateAmperage);
-        },
+    initGraphics: function() {
+        this.topLayer = new PIXI.Container();
 
-        detach: function() {
-            RectangularComponentView.prototype.detach.apply(this, arguments);
+        RectangularComponentView.prototype.initGraphics.apply(this, arguments);
 
-            if (this.topLayer.parent)
-                this.topLayer.parent.removeChild(this.topLayer);
-        },
+        this.initLabels();
+    },
 
-        initGraphics: function() {
-            this.topLayer = new PIXI.Container();
+    initComponentGraphics: function() {
+        this.topTexture = Assets.Texture(this.topImagePath);
 
-            RectangularComponentView.prototype.initGraphics.apply(this, arguments);
+        this.topSprite = new PIXI.Sprite(this.topTexture);
+        this.topSprite.anchor.x = this.anchorX;
+        this.topSprite.anchor.y = this.anchorY;
 
-            this.initLabels();
-        },
+        this.topLayer.addChild(this.topSprite);
 
-        initComponentGraphics: function() {
-            this.topTexture = Assets.Texture(this.topImagePath);
+        RectangularComponentView.prototype.initComponentGraphics.apply(this, arguments);
+    },
 
-            this.topSprite = new PIXI.Sprite(this.topTexture);
-            this.topSprite.anchor.x = this.anchorX;
-            this.topSprite.anchor.y = this.anchorY;
+    initLabels: function() {
+        var ammeter = new PIXI.Text('Ammeter', {
+            font: '32px Helvetica Neue',
+            fill: '#000'
+        });
+        ammeter.resolution = this.getResolution();
+        ammeter.anchor.x = 0.5;
+        ammeter.anchor.y = 0.5;
+        ammeter.x = this.topSprite.width / 2;
+        ammeter.y = -54;
+        ammeter.alpha = 0.4;
 
-            this.topLayer.addChild(this.topSprite);
+        this.topLayer.addChild(ammeter);
 
-            RectangularComponentView.prototype.initComponentGraphics.apply(this, arguments);
-        },
+        var amperage = new PIXI.Text('0.00 AMPS', {
+            font: 'bold 40px Helvetica Neue',
+            fill: '#000'
+        });
+        amperage.resolution = this.getResolution();
+        amperage.anchor.x = 1;
+        amperage.anchor.y = 0.5;
+        amperage.x = this.topSprite.width - 124;
+        amperage.y = 41;
 
-        initLabels: function() {
-            var ammeter = new PIXI.Text('Ammeter', {
-                font: '32px Helvetica Neue',
-                fill: '#000'
-            });
-            ammeter.resolution = this.getResolution();
-            ammeter.anchor.x = 0.5;
-            ammeter.anchor.y = 0.5;
-            ammeter.x = this.topSprite.width / 2;
-            ammeter.y = -54;
-            ammeter.alpha = 0.4;
+        this.amperage = amperage;
 
-            this.topLayer.addChild(ammeter);
+        this.topLayer.addChild(amperage);
+    },
 
-            var amperage = new PIXI.Text('0.00 AMPS', {
-                font: 'bold 40px Helvetica Neue',
-                fill: '#000'
-            });
-            amperage.resolution = this.getResolution();
-            amperage.anchor.x = 1;
-            amperage.anchor.y = 0.5;
-            amperage.x = this.topSprite.width - 124;
-            amperage.y = 41;
+    updateComponentGraphics: function() {
+        this.topLayer.visible = !this.circuit.get('schematic');
 
-            this.amperage = amperage;
+        RectangularComponentView.prototype.updateComponentGraphics.apply(this, arguments);
+    },
 
-            this.topLayer.addChild(amperage);
-        },
+    updateGraphics: function() {
+        RectangularComponentView.prototype.updateGraphics.apply(this, arguments);
 
-        updateComponentGraphics: function() {
-            this.topLayer.visible = !this.circuit.get('schematic');
+        this.topLayer.scale.x = this.displayObject.scale.x;
+        this.topLayer.scale.y = this.displayObject.scale.y;
+        this.topLayer.x = this.displayObject.x;
+        this.topLayer.y = this.displayObject.y;
+        this.topLayer.rotation = this.displayObject.rotation;
+    },
 
-            RectangularComponentView.prototype.updateComponentGraphics.apply(this, arguments);
-        },
+    updateAmperage: function(model, current) {
+        if (Math.abs(current) > 9999)
+            current = current.toFixed(0);
+        else if (Math.abs(current) > 999)
+            current = current.toFixed(1);
+        else
+            current = current.toFixed(2);
+        this.amperage.text = current + ' AMPS';
+    },
 
-        updateGraphics: function() {
-            RectangularComponentView.prototype.updateGraphics.apply(this, arguments);
+    showHoverGraphics: function() {
+        RectangularComponentView.prototype.showHoverGraphics.apply(this, arguments);
+        this.topLayer.visible = false;
+    },
 
-            this.topLayer.scale.x = this.displayObject.scale.x;
-            this.topLayer.scale.y = this.displayObject.scale.y;
-            this.topLayer.x = this.displayObject.x;
-            this.topLayer.y = this.displayObject.y;
-            this.topLayer.rotation = this.displayObject.rotation;
-        },
+    hideHoverGraphics: function() {
+        RectangularComponentView.prototype.hideHoverGraphics.apply(this, arguments);
+        this.topLayer.visible = !this.circuit.get('schematic');
+    },
 
-        updateAmperage: function(model, current) {
-            if (Math.abs(current) > 9999)
-                current = current.toFixed(0);
-            else if (Math.abs(current) > 999)
-                current = current.toFixed(1);
-            else
-                current = current.toFixed(2);
-            this.amperage.text = current + ' AMPS';
-        },
-
-        showHoverGraphics: function() {
-            RectangularComponentView.prototype.showHoverGraphics.apply(this, arguments);
-            this.topLayer.visible = false;
-        },
-
-        hideHoverGraphics: function() {
-            RectangularComponentView.prototype.hideHoverGraphics.apply(this, arguments);
-            this.topLayer.visible = !this.circuit.get('schematic');
-        },
-
-    });
-
-    return SeriesAmmeterView;
 });
+
+export default SeriesAmmeterView;

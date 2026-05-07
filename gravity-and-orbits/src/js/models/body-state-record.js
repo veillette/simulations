@@ -1,77 +1,71 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
 
-    'use strict';
+/**
+ * An object that holds a body model's state at a
+ *   given point in time. It is intended for these
+ *   objects to get recycled.
+ */
+var BodyStateRecord = function() {
+    this.time = 0;
 
-    var _ = require('underscore');
+    this.position     = new Vector2();
+    this.velocity     = new Vector2();
+    this.acceleration = new Vector2();
 
-    var Vector2 = require('common/math/vector2');
+    this.mass = 0;
+    this.exploded = false;
+};
+
+/**
+ * Instance functions/properties
+ */
+_.extend(BodyStateRecord.prototype, {
 
     /**
-     * An object that holds a body model's state at a
-     *   given point in time. It is intended for these
-     *   objects to get recycled.
+     * For when we don't care about time
      */
-    var BodyStateRecord = function() {
-        this.time = 0;
-
-        this.position     = new Vector2();
-        this.velocity     = new Vector2();
-        this.acceleration = new Vector2();
-
-        this.mass = 0;
-        this.exploded = false;
-    };
+    saveState: function(body) {
+        this.recordState(0, body);
+    },
 
     /**
-     * Instance functions/properties
+     * Records the data from a given body
      */
-    _.extend(BodyStateRecord.prototype, {
+    recordState: function(time, body) {
+        this.time = time;
 
-        /**
-         * For when we don't care about time
-         */
-        saveState: function(body) {
-            this.recordState(0, body);
-        },
+        this.position.set(body.get('position'));
+        this.velocity.set(body.get('velocity'));
+        this.acceleration.set(body.get('acceleration'));
 
-        /**
-         * Records the data from a given body
-         */
-        recordState: function(time, body) {
-            this.time = time;
+        this.mass = body.get('mass');
+        this.exploded = body.get('exploded');
+    },
 
-            this.position.set(body.get('position'));
-            this.velocity.set(body.get('velocity'));
-            this.acceleration.set(body.get('acceleration'));
-
-            this.mass = body.get('mass');
-            this.exploded = body.get('exploded');
-        },
-
-        /**
-         * Applies the data stored in this state to the given body.
-         */
-        applyState: function(body) {
-            if (!body.get('fixed')) {
-                body.setPosition(this.position);
-                body.setVelocity(this.velocity);
-            }
-            body.setAcceleration(this.acceleration);
-            body.updateForce();
-
-            body.set('mass', this.mass);
-            body.set('exploded', this.exploded);
-        },
-
-        /**
-         * Returns the time at which this state was recorded in seconds.
-         */
-        getTime: function() {
-            return this.time;
+    /**
+     * Applies the data stored in this state to the given body.
+     */
+    applyState: function(body) {
+        if (!body.get('fixed')) {
+            body.setPosition(this.position);
+            body.setVelocity(this.velocity);
         }
+        body.setAcceleration(this.acceleration);
+        body.updateForce();
 
-    });
+        body.set('mass', this.mass);
+        body.set('exploded', this.exploded);
+    },
 
+    /**
+     * Returns the time at which this state was recorded in seconds.
+     */
+    getTime: function() {
+        return this.time;
+    }
 
-    return BodyStateRecord;
 });
+
+
+export default BodyStateRecord;

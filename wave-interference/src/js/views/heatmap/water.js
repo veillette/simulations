@@ -1,49 +1,43 @@
-define(function(require) {
+import _ from 'underscore';
+import HeatmapView from '../heatmap';
+import FaucetOscillatorView from '../oscillator/faucet';
 
-	'use strict';
-
-	var _ = require('underscore');
-
-	var HeatmapView          = require('../heatmap');
-	var FaucetOscillatorView = require('../oscillator/faucet');
-
-	/*
-	 * "Local" variables for functions to share and recycle
-	 */
+/*
+ * "Local" variables for functions to share and recycle
+ */
 
 
-	/**
-	 * WaterHeatmapView is the water simulation version of the HeatmapView
-	 *   that uses different sub-views where necessary.
-	 */
-	var WaterHeatmapView = HeatmapView.extend({
+/**
+ * WaterHeatmapView is the water simulation version of the HeatmapView
+ *   that uses different sub-views where necessary.
+ */
+var WaterHeatmapView = HeatmapView.extend({
 
-		initialize: function(options) {
-			// Default values
-			options = _.extend({
-				title: 'Water &ndash; Top View',
-				color: '#fff'
-			}, options);
+    initialize: function(options) {
+        // Default values
+        options = _.extend({
+            title: 'Water &ndash; Top View',
+            color: '#fff'
+        }, options);
 
-			HeatmapView.prototype.initialize.apply(this, [ options ]);
-		},
+        HeatmapView.prototype.initialize.apply(this, [ options ]);
+    },
 
-		/**
-		 * Overrides HeatmapView.renderOscillatorView so it can use the
-		 *   FaucetOscillatorView instead of the plain OscillatorView.
-		 */
-		renderOscillatorView: function(oscillator) {
-			// Create a new view and render it
-			var oscillatorView = new FaucetOscillatorView({
-				heatmapView: this,
-				oscillator: oscillator
-			});
-			oscillatorView.render();
+    /**
+     * Overrides HeatmapView.renderOscillatorView so it can use the
+     *   FaucetOscillatorView instead of the plain OscillatorView.
+     */
+    renderOscillatorView: function(oscillator) {
+        // Create a new view and render it
+        var oscillatorView = new FaucetOscillatorView({
+            heatmapView: this,
+            oscillator: oscillator
+        });
+        oscillatorView.render();
 
-			this.addOscillatorView(oscillatorView);
-		},
+        this.addOscillatorView(oscillatorView);
+    },
 
-	});
-
-	return WaterHeatmapView;
 });
+
+export default WaterHeatmapView;

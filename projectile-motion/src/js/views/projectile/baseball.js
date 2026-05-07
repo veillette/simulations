@@ -1,31 +1,24 @@
-define(function(require) {
+import Baseball from 'models/projectile/baseball';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var BaseballView = ProjectileView.extend({
 
-    var Baseball = require('models/projectile/baseball');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.BASEBALL);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        return this.createProjectileSprite();
+    }
 
-    var Assets = require('assets');
-
-    var BaseballView = ProjectileView.extend({
-
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.BASEBALL);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            return this.createProjectileSprite();
-        }
-
-    }, {
-        getModelClass: function() {
-            return Baseball;
-        }
-    });
-
-    return BaseballView;
+}, {
+    getModelClass: function() {
+        return Baseball;
+    }
 });
+
+export default BaseballView;

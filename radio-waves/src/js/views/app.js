@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import RadioWavesSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var RadioWavesAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var RadioWavesSimView = require('views/sim');
+    simViewConstructors: [
+        RadioWavesSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var RadioWavesAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            RadioWavesSimView
-        ]
-
-    });
-
-    return RadioWavesAppView;
 });
+
+export default RadioWavesAppView;

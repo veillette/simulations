@@ -1,26 +1,16 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import SoundSimulation from 'models/simulation';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var ReflectionInterferenceSimulation = SoundSimulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, SoundSimulation.prototype.defaults, {
+        amplitude: Constants.MAX_AMPLITUDE
+    })
 
-    var SoundSimulation = require('models/simulation');
-
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-
-    /**
-     *
-     */
-    var ReflectionInterferenceSimulation = SoundSimulation.extend({
-
-        defaults: _.extend({}, SoundSimulation.prototype.defaults, {
-            amplitude: Constants.MAX_AMPLITUDE
-        })
-
-    });
-
-    return ReflectionInterferenceSimulation;
 });
+
+export default ReflectionInterferenceSimulation;

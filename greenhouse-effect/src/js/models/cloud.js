@@ -1,58 +1,51 @@
-define(function (require) {
+import _ from 'underscore';
+import Rectangle from 'common/math/rectangle';
+import Body from 'models/body';
 
-    'use strict';
+/**
+ * Model representation of a cloud in an atmosphere.
+ */
+var Cloud = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        bounds: null
+    }),
 
-    var Rectangle = require('common/math/rectangle');
+    initialize: function(attributes, options) {
+        Body.prototype.initialize.apply(this, [attributes, options]);
 
-    var Body = require('models/body');
+        this.set('bounds', new Rectangle(this.get('bounds')));
+        this.setPosition(this.getCenterOfMass().x, this.getCenterOfMass().y);
+    },
 
     /**
-     * Model representation of a cloud in an atmosphere.
+     * Returns center of mass of the cloud.
      */
-    var Cloud = Body.extend({
+    getCenterOfMass: function() {
+        return this.get('bounds').center();
+    },
 
-        defaults: _.extend({}, Body.prototype.defaults, {
-            bounds: null
-        }),
+    /**
+     * Returns the moment of inertia.
+     */
+    getMomentOfInertia: function() {
+        return Number.MAX_VALUE;
+    },
 
-        initialize: function(attributes, options) {
-            Body.prototype.initialize.apply(this, [attributes, options]);
+    /**
+     * Returns the width of the cloud.
+     */
+    width: function() {
+        return this.get('bounds').w;
+    },
 
-            this.set('bounds', new Rectangle(this.get('bounds')));
-            this.setPosition(this.getCenterOfMass().x, this.getCenterOfMass().y);
-        },
+    /**
+     * Returns the height of the cloud.
+     */
+    height: function() {
+        return this.get('bounds').h;
+    }
 
-        /**
-         * Returns center of mass of the cloud.
-         */
-        getCenterOfMass: function() {
-            return this.get('bounds').center();
-        },
-
-        /**
-         * Returns the moment of inertia.
-         */
-        getMomentOfInertia: function() {
-            return Number.MAX_VALUE;
-        },
-
-        /**
-         * Returns the width of the cloud.
-         */
-        width: function() {
-            return this.get('bounds').w;
-        },
-
-        /**
-         * Returns the height of the cloud.
-         */
-        height: function() {
-            return this.get('bounds').h;
-        }
-
-    });
-
-    return Cloud;
 });
+
+export default Cloud;

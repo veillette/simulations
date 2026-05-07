@@ -1,13 +1,8 @@
-define(function (require) {
+import CircuitComponent from 'models/components/circuit-component';
 
-    'use strict';
+/**
+ * A series ammeter
+ */
+var SeriesAmmeter = CircuitComponent.extend();
 
-    var CircuitComponent = require('models/components/circuit-component');
-
-    /**
-     * A series ammeter
-     */
-    var SeriesAmmeter = CircuitComponent.extend();
-
-    return SeriesAmmeter;
-});
+export default SeriesAmmeter;

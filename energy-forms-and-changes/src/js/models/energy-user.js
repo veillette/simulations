@@ -1,42 +1,37 @@
-define(function (require) {
+import EnergySystemsElement from 'models/energy-systems-element';
+import EnergyChunkCollection from 'models/energy-chunk-collection';
 
-    'use strict';
+/**
+ * Basic building block model for all the elements in the intro tab scene
+ */
+var EnergyUser = EnergySystemsElement.extend({
 
-    var EnergySystemsElement   = require('models/energy-systems-element');
-    var EnergyChunkCollection = require('models/energy-chunk-collection');
+    initialize: function(attributes, options) {
+        EnergySystemsElement.prototype.initialize.apply(this, [attributes, options]);
 
-    /**
-     * Basic building block model for all the elements in the intro tab scene
-     */
-    var EnergyUser = EnergySystemsElement.extend({
+        this.incomingEnergyChunks = new EnergyChunkCollection();
+    },
 
-        initialize: function(attributes, options) {
-            EnergySystemsElement.prototype.initialize.apply(this, [attributes, options]);
+    update: function(time, deltaTime, incomingEnergy) {},
 
-            this.incomingEnergyChunks = new EnergyChunkCollection();
-        },
+    preloadEnergyChunks: function(incomingEnergyRate) {},
 
-        update: function(time, deltaTime, incomingEnergy) {},
+    injectEnergyChunks: function(energyChunks) {
+        this.incomingEnergyChunks.add(energyChunks);
+    },
 
-        preloadEnergyChunks: function(incomingEnergyRate) {},
+    clearEnergyChunks: function() {
+        EnergySystemsElement.prototype.clearEnergyChunks.apply(this);
 
-        injectEnergyChunks: function(energyChunks) {
-            this.incomingEnergyChunks.add(energyChunks);
-        },
-
-        clearEnergyChunks: function() {
-            EnergySystemsElement.prototype.clearEnergyChunks.apply(this);
-
-            // Remove and destroy the models
-            var chunk;
-            for (var i = this.incomingEnergyChunks.models.length - 1; i >= 0; i--) {
-                chunk = this.incomingEnergyChunks.models[i];
-                this.incomingEnergyChunks.remove(chunk);
-                chunk.destroy();
-            }
+        // Remove and destroy the models
+        var chunk;
+        for (var i = this.incomingEnergyChunks.models.length - 1; i >= 0; i--) {
+            chunk = this.incomingEnergyChunks.models[i];
+            this.incomingEnergyChunks.remove(chunk);
+            chunk.destroy();
         }
+    }
 
-    });
-
-    return EnergyUser;
 });
+
+export default EnergyUser;

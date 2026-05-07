@@ -1,173 +1,166 @@
-define(function(require) {
-
-    'use strict';
-
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
-
-    var CoilView          = require('views/coil');
-    var BatteryView       = require('views/battery');
-    var ACPowerSupplyView = require('views/ac-power-supply');
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Vector2 from 'common/math/vector2';
+import CoilView from 'views/coil';
+import BatteryView from 'views/battery';
+import ACPowerSupplyView from 'views/ac-power-supply';
 
 
+
+/**
+ * View that represents the electromagnet model
+ */
+var ElectromagnetView = PixiView.extend({
+
+    events: {
+        'touchstart      .foregroundLayer': 'dragStart',
+        'mousedown       .foregroundLayer': 'dragStart',
+        'touchmove       .foregroundLayer': 'drag',
+        'mousemove       .foregroundLayer': 'drag',
+        'touchend        .foregroundLayer': 'dragEnd',
+        'mouseup         .foregroundLayer': 'dragEnd',
+        'touchendoutside .foregroundLayer': 'dragEnd',
+        'mouseupoutside  .foregroundLayer': 'dragEnd'
+    },
 
     /**
-     * View that represents the electromagnet model
+     * Initializes the new ElectromagnetView.
      */
-    var ElectromagnetView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-        events: {
-            'touchstart      .foregroundLayer': 'dragStart',
-            'mousedown       .foregroundLayer': 'dragStart',
-            'touchmove       .foregroundLayer': 'drag',
-            'mousemove       .foregroundLayer': 'drag',
-            'touchend        .foregroundLayer': 'dragEnd',
-            'mouseup         .foregroundLayer': 'dragEnd',
-            'touchendoutside .foregroundLayer': 'dragEnd',
-            'mouseupoutside  .foregroundLayer': 'dragEnd'
-        },
+        this._dragOffset   = new PIXI.Point();
+        this._dragLocation = new PIXI.Point();
+        this._vec = new Vector2();
 
-        /**
-         * Initializes the new ElectromagnetView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+        this.initGraphics();
 
-            this._dragOffset   = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._vec = new Vector2();
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+    },
 
-            this.initGraphics();
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.foregroundLayer = new PIXI.Container();
+        this.backgroundLayer = new PIXI.Container();
 
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-        },
+        this.foregroundLayer.buttonMode = true;
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.foregroundLayer = new PIXI.Container();
-            this.backgroundLayer = new PIXI.Container();
+        this.initCoilView();
+        this.initBatteryView();
+        this.initAcPowerSupplyView();
 
-            this.foregroundLayer.buttonMode = true;
+        this.updateMVT(this.mvt);
+    },
 
-            this.initCoilView();
-            this.initBatteryView();
-            this.initAcPowerSupplyView();
+    initCoilView: function() {
+        this.coilView = new CoilView({
+            mvt: this.mvt,
+            model: this.model.get('sourceCoilModel'),
+            simulation: this.simulation
+        });
 
-            this.updateMVT(this.mvt);
-        },
+        this.backgroundLayer.addChild(this.coilView.backgroundLayer);
+        this.foregroundLayer.addChild(this.coilView.foregroundLayer);
+    },
 
-        initCoilView: function() {
-            this.coilView = new CoilView({
-                mvt: this.mvt,
-                model: this.model.get('sourceCoilModel'),
-                simulation: this.simulation
-            });
+    initBatteryView: function() {
+        this.batteryView = new BatteryView({
+            mvt: this.mvt,
+            model: this.simulation.battery,
+            simulation: this.simulation
+        });
 
-            this.backgroundLayer.addChild(this.coilView.backgroundLayer);
-            this.foregroundLayer.addChild(this.coilView.foregroundLayer);
-        },
+        this.foregroundLayer.addChild(this.batteryView.displayObject);
+    },
 
-        initBatteryView: function() {
-            this.batteryView = new BatteryView({
-                mvt: this.mvt,
-                model: this.simulation.battery,
-                simulation: this.simulation
-            });
+    initAcPowerSupplyView: function() {
+        this.acPowerSupplyView = new ACPowerSupplyView({
+            mvt: this.mvt,
+            model: this.simulation.acPowerSupply,
+            simulation: this.simulation
+        });
 
-            this.foregroundLayer.addChild(this.batteryView.displayObject);
-        },
+        this.foregroundLayer.addChild(this.acPowerSupplyView.displayObject);
+    },
 
-        initAcPowerSupplyView: function() {
-            this.acPowerSupplyView = new ACPowerSupplyView({
-                mvt: this.mvt,
-                model: this.simulation.acPowerSupply,
-                simulation: this.simulation
-            });
+    reset: function() {
+        this.updateMVT(this.mvt);
+        this.coilView.reset();
+        this.batteryView.reset();
+        this.acPowerSupplyView.reset();
+    },
 
-            this.foregroundLayer.addChild(this.acPowerSupplyView.displayObject);
-        },
+    update: function(time, deltaTime, paused) {
+        this.coilView.update(time, deltaTime, paused);
+        this.batteryView.update(time, deltaTime, paused);
+        this.acPowerSupplyView.update(time, deltaTime, paused);
+    },
 
-        reset: function() {
-            this.updateMVT(this.mvt);
-            this.coilView.reset();
-            this.batteryView.reset();
-            this.acPowerSupplyView.reset();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        update: function(time, deltaTime, paused) {
-            this.coilView.update(time, deltaTime, paused);
-            this.batteryView.update(time, deltaTime, paused);
-            this.acPowerSupplyView.update(time, deltaTime, paused);
-        },
+        this.updateComponentPositions();
+        this.updatePosition(this.model, this.model.get('position'));
+    },
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        this.backgroundLayer.x = viewPosition.x;
+        this.backgroundLayer.y = viewPosition.y;
+        this.foregroundLayer.x = viewPosition.x;
+        this.foregroundLayer.y = viewPosition.y;
+    },
 
-            this.updateComponentPositions();
-            this.updatePosition(this.model, this.model.get('position'));
-        },
+    updateComponentPositions: function() {
+        var x = 0;
+        var y = -this.coilView.getTopOffset();
+        this.batteryView.displayObject.x = x;
+        this.batteryView.displayObject.y = y + 13;
+        this.acPowerSupplyView.displayObject.x = x;
+        this.acPowerSupplyView.displayObject.y = y + 13;
+    },
 
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            this.backgroundLayer.x = viewPosition.x;
-            this.backgroundLayer.y = viewPosition.y;
-            this.foregroundLayer.x = viewPosition.x;
-            this.foregroundLayer.y = viewPosition.y;
-        },
+    dragStart: function(event) {
+        if (this.simulation.get('paused'))
+            return;
 
-        updateComponentPositions: function() {
-            var x = 0;
-            var y = -this.coilView.getTopOffset();
-            this.batteryView.displayObject.x = x;
-            this.batteryView.displayObject.y = y + 13;
-            this.acPowerSupplyView.displayObject.x = x;
-            this.acPowerSupplyView.displayObject.y = y + 13;
-        },
+        this.dragOffset = event.data.getLocalPosition(this.foregroundLayer, this._dragOffset);
+        this.dragging = true;
+    },
 
-        dragStart: function(event) {
-            if (this.simulation.get('paused'))
-                return;
+    drag: function(event) {
+        if (this.dragging) {
+            var local = event.data.getLocalPosition(this.foregroundLayer.parent, this._dragLocation);
+            var x = local.x - this.dragOffset.x;
+            var y = local.y - this.dragOffset.y;
 
-            this.dragOffset = event.data.getLocalPosition(this.foregroundLayer, this._dragOffset);
-            this.dragging = true;
-        },
+            var mx = this.mvt.viewToModelX(x);
+            var my = this.mvt.viewToModelY(y);
 
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.foregroundLayer.parent, this._dragLocation);
-                var x = local.x - this.dragOffset.x;
-                var y = local.y - this.dragOffset.y;
-
-                var mx = this.mvt.viewToModelX(x);
-                var my = this.mvt.viewToModelY(y);
-
-                this.model.setPosition(mx, my);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-        showElectrons: function() {
-            this.coilView.enableElectronAnimation();
-        },
-
-        hideElectrons: function() {
-            this.coilView.disableElectronAnimation();
+            this.model.setPosition(mx, my);
         }
+    },
 
-    });
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
+    showElectrons: function() {
+        this.coilView.enableElectronAnimation();
+    },
 
-    return ElectromagnetView;
+    hideElectrons: function() {
+        this.coilView.disableElectronAnimation();
+    }
+
 });
+
+
+export default ElectromagnetView;

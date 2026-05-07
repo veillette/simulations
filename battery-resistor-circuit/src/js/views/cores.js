@@ -1,68 +1,61 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
+import CoreView from 'views/core';
 
-    'use strict';
-
-
-    var PixiView = require('common/v3/pixi/view');
-
-    var CoreView = require('views/core');
+/**
+ * A view that represents an electron
+ */
+var CoresView = PixiView.extend({
 
     /**
-     * A view that represents an electron
+     * Initializes the new CoresView.
      */
-    var CoresView = PixiView.extend({
+    initialize: function(options) {
+        this.resistance = options.resistance;
+        this.cores = this.resistance.cores;
 
-        /**
-         * Initializes the new CoresView.
-         */
-        initialize: function(options) {
-            this.resistance = options.resistance;
-            this.cores = this.resistance.cores;
+        this.coreViews = [];
 
-            this.coreViews = [];
+        this.updateMVT(options.mvt);
 
-            this.updateMVT(options.mvt);
+        this.listenTo(this.resistance, 'new-cores', this.replaceCores);
+        this.replaceCores();
+    },
 
-            this.listenTo(this.resistance, 'new-cores', this.replaceCores);
-            this.replaceCores();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        for (var i = 0; i < this.coreViews.length; i++)
+            this.coreViews[i].updateMVT(mvt);
+    },
 
-            for (var i = 0; i < this.coreViews.length; i++)
-                this.coreViews[i].updateMVT(mvt);
-        },
+    update: function() {
+        for (var i = 0; i < this.coreViews.length; i++)
+            this.coreViews[i].update();
+    },
 
-        update: function() {
-            for (var i = 0; i < this.coreViews.length; i++)
-                this.coreViews[i].update();
-        },
-
-        replaceCores: function() {
-            // Remove the views for the old cores
-            for (var i = this.coreViews.length - 1; i >= 0; i--) {
-                this.coreViews[i].removeFrom(this.displayObject);
-                this.coreViews.splice(i, 1);
-            }
-
-            // Create new core views
-            for (var i = 0; i < this.cores.length; i++) {
-                var coreView = new CoreView({
-                    mvt: this.mvt,
-                    model: this.cores[i]
-                });
-                this.coreViews.push(coreView);
-                this.displayObject.addChild(coreView.displayObject);
-            }
+    replaceCores: function() {
+        // Remove the views for the old cores
+        for (var i = this.coreViews.length - 1; i >= 0; i--) {
+            this.coreViews[i].removeFrom(this.displayObject);
+            this.coreViews.splice(i, 1);
         }
 
-    });
+        // Create new core views
+        for (var i = 0; i < this.cores.length; i++) {
+            var coreView = new CoreView({
+                mvt: this.mvt,
+                model: this.cores[i]
+            });
+            this.coreViews.push(coreView);
+            this.displayObject.addChild(coreView.displayObject);
+        }
+    }
 
-
-    return CoresView;
 });
+
+
+export default CoresView;

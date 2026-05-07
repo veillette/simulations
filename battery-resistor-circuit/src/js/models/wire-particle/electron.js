@@ -1,55 +1,49 @@
-define(function (require) {
+import _ from 'underscore';
+import WireParticle from 'models/wire-particle';
 
-    'use strict';
+/**
+ *
+ */
+var Electron = function(attributes) {
+    WireParticle.apply(this, arguments);
 
-    var _ = require('underscore');
+    this.collisionEvent = attributes.collisionEvent;
+};
 
-    var WireParticle = require('models/wire-particle');
+/**
+ * Instance functions/properties
+ */
+_.extend(Electron.prototype, WireParticle.prototype, {
 
-    /**
-     *
-     */
-    var Electron = function(attributes) {
-        WireParticle.apply(this, arguments);
+    forgetCollision: function() {
+        this.lastCollisionObject = null;
+        this.lastCollisionTime = NaN;
+        this.collided = false;
+    },
 
-        this.collisionEvent = attributes.collisionEvent;
-    };
+    getLastCollision: function() {
+        if (!this.collisionEvent)
+            return null;
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Electron.prototype, WireParticle.prototype, {
+        if (this.collisionEvent.currentTime() - this.lastCollisionTime > 20)
+            this.collided = true;
 
-        forgetCollision: function() {
-            this.lastCollisionObject = null;
-            this.lastCollisionTime = NaN;
-            this.collided = false;
-        },
+        return this.lastCollisionObject;
+    },
 
-        getLastCollision: function() {
-            if (!this.collisionEvent)
-                return null;
+    setLastCollision: function(object, time) {
+        this.lastCollisionObject = object;
+        this.lastCollisionTime = time;
+    },
 
-            if (this.collisionEvent.currentTime() - this.lastCollisionTime > 20)
-                this.collided = true;
+    setCollided: function(collided) {
+        this.collided = collided;
+    },
 
-            return this.lastCollisionObject;
-        },
+    hasCollided: function() {
+        return this.collided;
+    }
 
-        setLastCollision: function(object, time) {
-            this.lastCollisionObject = object;
-            this.lastCollisionTime = time;
-        },
-
-        setCollided: function(collided) {
-            this.collided = collided;
-        },
-
-        hasCollided: function() {
-            return this.collided;
-        }
-
-    });
-
-    return Electron;
 });
+
+export default Electron;

@@ -1,73 +1,65 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A view that represents a movable target model
+ */
+var DavidView = PixiView.extend({
 
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-    var PixiView = require('common/v3/pixi/view');
+        this.initGraphics();
 
-    var Assets = require('assets');
+        this.listenTo(this.model, 'change:naked', this.updateClothedState);
+    },
 
-    var Constants = require('constants');
+    initGraphics: function() {
+        var davidClothed = Assets.createSprite(Assets.Images.DAVID_SHORTS);
+        var davidNaked = Assets.createSprite(Assets.Images.DAVID_NO_SHORTS);
+        davidNaked.visible = false;
 
-    /**
-     * A view that represents a movable target model
-     */
-    var DavidView = PixiView.extend({
+        var width  = davidClothed.width;
+        var height = davidClothed.height;
+        var relativeBounds = Constants.David.BOUNDS_RELATIVE_TO_HEIGHT;
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        // Get the target x anchor in pixels and then divide by the actual width to get anchor percent
+        var xAnchorInPixels = (height * relativeBounds.x) + (height * relativeBounds.w) / 2;
 
-            this.initGraphics();
+        davidClothed.anchor.x = davidNaked.anchor.x = xAnchorInPixels / width;
+        davidClothed.anchor.y = davidNaked.anchor.y = 1;
 
-            this.listenTo(this.model, 'change:naked', this.updateClothedState);
-        },
+        this.displayObject.addChild(davidClothed);
+        this.displayObject.addChild(davidNaked);
 
-        initGraphics: function() {
-            var davidClothed = Assets.createSprite(Assets.Images.DAVID_SHORTS);
-            var davidNaked = Assets.createSprite(Assets.Images.DAVID_NO_SHORTS);
-            davidNaked.visible = false;
+        this.davidClothed = davidClothed;
+        this.davidNaked   = davidNaked;
 
-            var width  = davidClothed.width;
-            var height = davidClothed.height;
-            var relativeBounds = Constants.David.BOUNDS_RELATIVE_TO_HEIGHT;
+        this.updateMVT(this.mvt);
+    },
 
-            // Get the target x anchor in pixels and then divide by the actual width to get anchor percent
-            var xAnchorInPixels = (height * relativeBounds.x) + (height * relativeBounds.w) / 2;
+    updatePosition: function() {
+        this.displayObject.x = this.mvt.modelToViewX(this.model.get('x'));
+        this.displayObject.y = this.mvt.modelToViewY(this.model.get('y'));
+    },
 
-            davidClothed.anchor.x = davidNaked.anchor.x = xAnchorInPixels / width;
-            davidClothed.anchor.y = davidNaked.anchor.y = 1;
+    updateClothedState: function(model, naked) {
+        this.davidClothed.visible = !naked;
+        this.davidNaked.visible = naked;
+    },
 
-            this.displayObject.addChild(davidClothed);
-            this.displayObject.addChild(davidNaked);
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.davidClothed = davidClothed;
-            this.davidNaked   = davidNaked;
+        var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('height'))); // in pixels
+        var scale = targetSpriteHeight / this.davidClothed.height;
+        this.displayObject.scale.x = scale;
+        this.displayObject.scale.y = scale;
 
-            this.updateMVT(this.mvt);
-        },
+        this.updatePosition();
+    }
 
-        updatePosition: function() {
-            this.displayObject.x = this.mvt.modelToViewX(this.model.get('x'));
-            this.displayObject.y = this.mvt.modelToViewY(this.model.get('y'));
-        },
-
-        updateClothedState: function(model, naked) {
-            this.davidClothed.visible = !naked;
-            this.davidNaked.visible = naked;
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('height'))); // in pixels
-            var scale = targetSpriteHeight / this.davidClothed.height;
-            this.displayObject.scale.x = scale;
-            this.displayObject.scale.y = scale;
-
-            this.updatePosition();
-        }
-
-    });
-
-    return DavidView;
 });
+
+export default DavidView;

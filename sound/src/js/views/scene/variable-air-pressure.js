@@ -1,70 +1,65 @@
-define(function(require) {
+import SoundSceneView from 'views/scene';
+import ListenerView from 'views/listener';
+import BoxView from 'views/box';
 
-    'use strict';
+/**
+ *
+ */
+var VariableAirPressureSceneView = SoundSceneView.extend({
 
-    var SoundSceneView = require('views/scene');
-    var ListenerView   = require('views/listener');
-    var BoxView        = require('views/box');
+    initialize: function(options) {
+        SoundSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    /**
-     *
-     */
-    var VariableAirPressureSceneView = SoundSceneView.extend({
+    initGraphics: function() {
+        SoundSceneView.prototype.initGraphics.apply(this, arguments);
 
-        initialize: function(options) {
-            SoundSceneView.prototype.initialize.apply(this, arguments);
-        },
+        this.initListenerView();
+        this.initBoxView();
+    },
 
-        initGraphics: function() {
-            SoundSceneView.prototype.initGraphics.apply(this, arguments);
+    initListenerView: function() {
+        this.listenerView = new ListenerView({
+            model: this.simulation.personListener,
+            mvt: this.mvt,
+            disableMovement: true
+        });
 
-            this.initListenerView();
-            this.initBoxView();
-        },
+        this.stage.addChild(this.listenerView.displayObject);
+    },
 
-        initListenerView: function() {
-            this.listenerView = new ListenerView({
-                model: this.simulation.personListener,
-                mvt: this.mvt,
-                disableMovement: true
-            });
+    initBoxView: function() {
+        this.boxView = new BoxView({
+            model: this.simulation,
+            mvt: this.mvt
+        });
 
-            this.stage.addChild(this.listenerView.displayObject);
-        },
+        this.boxView.displayObject.x = this.speakerView.displayObject.x;
+        this.boxView.displayObject.y = this.speakerView.displayObject.y;
 
-        initBoxView: function() {
-            this.boxView = new BoxView({
-                model: this.simulation,
-                mvt: this.mvt
-            });
+        // Add it under the speaker view so the speaker renders on top
+        var speakerIndex = this.stage.getChildIndex(this.speakerView.displayObject);
+        this.stage.addChildAt(this.boxView.displayObject, speakerIndex);
+    },
 
-            this.boxView.displayObject.x = this.speakerView.displayObject.x;
-            this.boxView.displayObject.y = this.speakerView.displayObject.y;
+    _update: function(time, deltaTime, paused, timeScale) {
+        SoundSceneView.prototype._update.apply(this, arguments);
 
-            // Add it under the speaker view so the speaker renders on top
-            var speakerIndex = this.stage.getChildIndex(this.speakerView.displayObject);
-            this.stage.addChildAt(this.boxView.displayObject, speakerIndex);
-        },
+        this.boxView.update(time, deltaTime, paused);
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            SoundSceneView.prototype._update.apply(this, arguments);
+    removeAirFromBox: function() {
+        this.boxView.removeAir();
+    },
 
-            this.boxView.update(time, deltaTime, paused);
-        },
+    addAirToBox: function() {
+        this.boxView.addAir();
+    },
 
-        removeAirFromBox: function() {
-            this.boxView.removeAir();
-        },
+    resetBox: function() {
+        this.boxView.resetAir();
+    }
 
-        addAirToBox: function() {
-            this.boxView.addAir();
-        },
-
-        resetBox: function() {
-            this.boxView.resetAir();
-        }
-
-    });
-
-    return VariableAirPressureSceneView;
 });
+
+export default VariableAirPressureSceneView;

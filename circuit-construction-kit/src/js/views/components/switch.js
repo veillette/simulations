@@ -1,235 +1,226 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import RectangularComponentView from 'views/components/rectangular';
+import Constants from 'constants';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a resistor
+ */
+var SwitchView = RectangularComponentView.extend({
 
-    var _ = require('underscore');
+    imagePath:     Assets.Images.SWITCH_BASE,
+    maskImagePath: Assets.Images.SWITCH_MASK,
 
-    var PIXI = require('pixi');
+    schematicImagePath:     Assets.Images.SCHEMATIC_SWITCH_BASE,
+    schematicMaskImagePath: Assets.Images.SCHEMATIC_SWITCH_MASK,
 
-    var Vector2     = require('common/math/vector2');
+    anchorY: 0.68,
+    schematicAnchorY: 0.5,
+    schematicAngleOffset: 0.21,
 
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Constants = require('constants');
-    var Assets    = require('assets');
+    events: _.extend({}, RectangularComponentView.prototype.events, {
+        'touchstart      .handle': 'handleDragStart',
+        'mousedown       .handle': 'handleDragStart',
+        'touchmove       .handle': 'handleDrag',
+        'mousemove       .handle': 'handleDrag',
+        'touchend        .handle': 'handleDragEnd',
+        'mouseup         .handle': 'handleDragEnd',
+        'touchendoutside .handle': 'handleDragEnd',
+        'mouseupoutside  .handle': 'handleDragEnd',
+        'mouseover       .handle': 'handleHover',
+        'mouseout        .handle': 'handleUnhover'
+    }),
 
     /**
-     * A view that represents a resistor
+     * Initializes the new SwitchView.
      */
-    var SwitchView = RectangularComponentView.extend({
+    initialize: function(options) {
+        this._pivotToPointer = new Vector2();
 
-        imagePath:     Assets.Images.SWITCH_BASE,
-        maskImagePath: Assets.Images.SWITCH_MASK,
+        this.defaultAnchorY = this.anchorY;
 
-        schematicImagePath:     Assets.Images.SCHEMATIC_SWITCH_BASE,
-        schematicMaskImagePath: Assets.Images.SCHEMATIC_SWITCH_MASK,
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
 
-        anchorY: 0.68,
-        schematicAnchorY: 0.5,
-        schematicAngleOffset: 0.21,
+        this.listenTo(this.model, 'change:handleAngle', this.updateHandleAngle);
+        this.updateHandleAngle(this.model, this.model.get('handleAngle'));
+    },
 
-        events: _.extend({}, RectangularComponentView.prototype.events, {
-            'touchstart      .handle': 'handleDragStart',
-            'mousedown       .handle': 'handleDragStart',
-            'touchmove       .handle': 'handleDrag',
-            'mousemove       .handle': 'handleDrag',
-            'touchend        .handle': 'handleDragEnd',
-            'mouseup         .handle': 'handleDragEnd',
-            'touchendoutside .handle': 'handleDragEnd',
-            'mouseupoutside  .handle': 'handleDragEnd',
-            'mouseover       .handle': 'handleHover',
-            'mouseout        .handle': 'handleUnhover'
-        }),
+    initComponentGraphics: function() {
+        RectangularComponentView.prototype.initComponentGraphics.apply(this, arguments);
 
-        /**
-         * Initializes the new SwitchView.
-         */
-        initialize: function(options) {
-            this._pivotToPointer = new Vector2();
+        this.handleTexture          = Assets.Texture(Assets.Images.SWITCH_HANDLE);
+        this.schematicHandleTexture = Assets.Texture(Assets.Images.SCHEMATIC_SWITCH_HANDLE);
 
-            this.defaultAnchorY = this.anchorY;
+        this.handle = new PIXI.Sprite(this.handleTexture);
+        this.handle.buttonMode = true;
+        this.handle.defaultCursor = 'move';
 
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
+        this.handleWrapper = new PIXI.Container();
+        this.handleWrapper.addChild(this.handle);
 
-            this.listenTo(this.model, 'change:handleAngle', this.updateHandleAngle);
-            this.updateHandleAngle(this.model, this.model.get('handleAngle'));
-        },
+        this.pivot = Assets.createSprite(Assets.Images.SWITCH_BASE_PIVOT);
+        this.pivot.anchor.y = 1;
+        this.pivot.x = 290;
+        this.pivot.y = -31;
 
-        initComponentGraphics: function() {
-            RectangularComponentView.prototype.initComponentGraphics.apply(this, arguments);
+        this.sprite.addChild(this.handleWrapper);
+        this.sprite.addChild(this.pivot);
 
-            this.handleTexture          = Assets.Texture(Assets.Images.SWITCH_HANDLE);
-            this.schematicHandleTexture = Assets.Texture(Assets.Images.SCHEMATIC_SWITCH_HANDLE);
+        this.initHandleHoverGraphics();
+    },
 
-            this.handle = new PIXI.Sprite(this.handleTexture);
-            this.handle.buttonMode = true;
-            this.handle.defaultCursor = 'move';
+    initHandleHoverGraphics: function() {
+        var mask = Assets.createSprite(
+            this.circuit.get('schematic') ?
+                Assets.Images.SCHEMATIC_SWITCH_HANDLE_MASK :
+                Assets.Images.SWITCH_HANDLE_MASK
+        );
+        mask.anchor.x = this.handle.anchor.x;
+        mask.anchor.y = this.handle.anchor.y;
 
-            this.handleWrapper = new PIXI.Container();
-            this.handleWrapper.addChild(this.handle);
+        var bounds = mask.getLocalBounds();
+        var hoverGraphics = new PIXI.Graphics();
+        hoverGraphics.beginFill(this.selectionColor, 1);
+        hoverGraphics.drawRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8);
+        hoverGraphics.endFill();
+        hoverGraphics.mask = mask;
 
-            this.pivot = Assets.createSprite(Assets.Images.SWITCH_BASE_PIVOT);
-            this.pivot.anchor.y = 1;
-            this.pivot.x = 290;
-            this.pivot.y = -31;
+        this.handle.addChild(mask);
+        this.handle.addChild(hoverGraphics);
 
-            this.sprite.addChild(this.handleWrapper);
-            this.sprite.addChild(this.pivot);
+        this.handleHoverGraphics = hoverGraphics;
+        this.hideHandleHoverGraphics();
+    },
 
-            this.initHandleHoverGraphics();
-        },
+    updateHandleAngle: function(model, handleAngle) {
+        if (this.circuit.get('schematic'))
+            this.handle.rotation = handleAngle + this.schematicAngleOffset;
+        else
+            this.handle.rotation = handleAngle;
+    },
 
-        initHandleHoverGraphics: function() {
-            var mask = Assets.createSprite(
-                this.circuit.get('schematic') ?
-                    Assets.Images.SCHEMATIC_SWITCH_HANDLE_MASK :
-                    Assets.Images.SWITCH_HANDLE_MASK
-            );
-            mask.anchor.x = this.handle.anchor.x;
-            mask.anchor.y = this.handle.anchor.y;
+    getLabelText: function() {
+        if (!this.model.get('closed'))
+            return '∞ Ohms';
+        else
+            return RectangularComponentView.prototype.getLabelText.apply(this, arguments);
+    },
 
-            var bounds = mask.getLocalBounds();
-            var hoverGraphics = new PIXI.Graphics();
-            hoverGraphics.beginFill(this.selectionColor, 1);
-            hoverGraphics.drawRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8);
-            hoverGraphics.endFill();
-            hoverGraphics.mask = mask;
+    showHoverGraphics: function() {
+        RectangularComponentView.prototype.showHoverGraphics.apply(this, arguments);
 
-            this.handle.addChild(mask);
-            this.handle.addChild(hoverGraphics);
+        this.showHandleHoverGraphics();
+    },
 
-            this.handleHoverGraphics = hoverGraphics;
+    hideHoverGraphics: function() {
+        RectangularComponentView.prototype.hideHoverGraphics.apply(this, arguments);
+
+        if (!this.handleHovering)
             this.hideHandleHoverGraphics();
-        },
+    },
 
-        updateHandleAngle: function(model, handleAngle) {
+    handleDragStart: function(event) {
+        SwitchView.setSomeComponentDragging(true);
+        this.handleDragging = true;
+        event.stopPropagation();
+    },
+
+    handleDrag: function(event) {
+        if (this.handleDragging) {
+
+            var pivotToPointer = this.handleWrapper.toLocal(event.data.global);
+            var pivotToPointerAngle = this._pivotToPointer.set(pivotToPointer.x, pivotToPointer.y).angle();
+
+            var angle = pivotToPointerAngle - Math.PI;
+
             if (this.circuit.get('schematic'))
-                this.handle.rotation = handleAngle + this.schematicAngleOffset;
-            else
-                this.handle.rotation = handleAngle;
-        },
+                angle -= this.schematicAngleOffset;
 
-        getLabelText: function() {
-            if (!this.model.get('closed'))
-                return '∞ Ohms';
-            else
-                return RectangularComponentView.prototype.getLabelText.apply(this, arguments);
-        },
+            if (angle > Constants.Switch.MAX_HANDLE_ANGLE || angle < -Math.PI / 2)
+                angle = Constants.Switch.MAX_HANDLE_ANGLE;
+            else if (angle < 0)
+                angle = 0;
 
-        showHoverGraphics: function() {
-            RectangularComponentView.prototype.showHoverGraphics.apply(this, arguments);
+            this.model.set('handleAngle', angle);
+        }
+    },
 
-            this.showHandleHoverGraphics();
-        },
+    handleDragEnd: function(event) {
+        if (this.handleDragging) {
+            this.handleDragging = false;
 
-        hideHoverGraphics: function() {
-            RectangularComponentView.prototype.hideHoverGraphics.apply(this, arguments);
+            SwitchView.setSomeComponentDragging(false);
 
             if (!this.handleHovering)
                 this.hideHandleHoverGraphics();
-        },
+        }
+    },
 
-        handleDragStart: function(event) {
-            SwitchView.setSomeComponentDragging(true);
-            this.handleDragging = true;
-            event.stopPropagation();
-        },
+    hover: function() {
+        if (this.dragging || !SwitchView.someComponentIsDragging()) {
+            this.hovering = true;
+            if (!this.handleHovering)
+                this.showHoverGraphics();
+        }
+    },
 
-        handleDrag: function(event) {
-            if (this.handleDragging) {
+    handleHover: function(event) {
+        if (this.handleDragging || !SwitchView.someComponentIsDragging()) {
+            this.handleHovering = true;
+            this.hideHoverGraphics();
+            this.showHandleHoverGraphics();
+        }
+    },
 
-                var pivotToPointer = this.handleWrapper.toLocal(event.data.global);
-                var pivotToPointerAngle = this._pivotToPointer.set(pivotToPointer.x, pivotToPointer.y).angle();
+    handleUnhover: function(event) {
+        this.handleHovering = false;
+        if (!this.handleDragging && !this.model.get('selected')) {
+            if (!this.hovering && !this.dragging)
+                this.hideHandleHoverGraphics();
+            else
+                this.showHoverGraphics();
+        }
+    },
 
-                var angle = pivotToPointerAngle - Math.PI;
+    showHandleHoverGraphics: function() {
+        this.handleHoverGraphics.visible = true;
+    },
 
-                if (this.circuit.get('schematic'))
-                    angle -= this.schematicAngleOffset;
+    hideHandleHoverGraphics: function() {
+        this.handleHoverGraphics.visible = false;
+    },
 
-                if (angle > Constants.Switch.MAX_HANDLE_ANGLE || angle < -Math.PI / 2)
-                    angle = Constants.Switch.MAX_HANDLE_ANGLE;
-                else if (angle < 0)
-                    angle = 0;
+    schematicModeChanged: function(circuit, schematic) {
+        if (schematic) {
+            this.pivot.visible = false;
+            this.handleWrapper.x = 255;
+            this.handleWrapper.y = 0;
+            this.handle.texture = this.schematicHandleTexture;
+            this.handle.anchor.x = (164 / 190);
+            this.handle.anchor.y = (26 / 52);
+            this.anchorY = this.sprite.anchor.y = this.schematicAnchorY;
+        }
+        else {
+            this.pivot.visible = true;
+            this.handleWrapper.x = 305;
+            this.handleWrapper.y = -61;
+            this.handle.texture = this.handleTexture;
+            this.handle.anchor.x = 1;
+            this.handle.anchor.y = 0.5;
+            this.anchorY = this.sprite.anchor.y = this.defaultAnchorY;
+        }
 
-                this.model.set('handleAngle', angle);
-            }
-        },
+        this.handle.removeChild(this.handleHoverGraphics.mask);
+        this.handle.removeChild(this.handleHoverGraphics);
 
-        handleDragEnd: function(event) {
-            if (this.handleDragging) {
-                this.handleDragging = false;
+        RectangularComponentView.prototype.schematicModeChanged.apply(this, arguments);
 
-                SwitchView.setSomeComponentDragging(false);
+        this.initHandleHoverGraphics();
+        this.updateHandleAngle(this.model, this.model.get('handleAngle'));
+    },
 
-                if (!this.handleHovering)
-                    this.hideHandleHoverGraphics();
-            }
-        },
-
-        hover: function() {
-            if (this.dragging || !SwitchView.someComponentIsDragging()) {
-                this.hovering = true;
-                if (!this.handleHovering)
-                    this.showHoverGraphics();
-            }
-        },
-
-        handleHover: function(event) {
-            if (this.handleDragging || !SwitchView.someComponentIsDragging()) {
-                this.handleHovering = true;
-                this.hideHoverGraphics();
-                this.showHandleHoverGraphics();
-            }
-        },
-
-        handleUnhover: function(event) {
-            this.handleHovering = false;
-            if (!this.handleDragging && !this.model.get('selected')) {
-                if (!this.hovering && !this.dragging)
-                    this.hideHandleHoverGraphics();
-                else
-                    this.showHoverGraphics();
-            }
-        },
-
-        showHandleHoverGraphics: function() {
-            this.handleHoverGraphics.visible = true;
-        },
-
-        hideHandleHoverGraphics: function() {
-            this.handleHoverGraphics.visible = false;
-        },
-
-        schematicModeChanged: function(circuit, schematic) {
-            if (schematic) {
-                this.pivot.visible = false;
-                this.handleWrapper.x = 255;
-                this.handleWrapper.y = 0;
-                this.handle.texture = this.schematicHandleTexture;
-                this.handle.anchor.x = (164 / 190);
-                this.handle.anchor.y = (26 / 52);
-                this.anchorY = this.sprite.anchor.y = this.schematicAnchorY;
-            }
-            else {
-                this.pivot.visible = true;
-                this.handleWrapper.x = 305;
-                this.handleWrapper.y = -61;
-                this.handle.texture = this.handleTexture;
-                this.handle.anchor.x = 1;
-                this.handle.anchor.y = 0.5;
-                this.anchorY = this.sprite.anchor.y = this.defaultAnchorY;
-            }
-
-            this.handle.removeChild(this.handleHoverGraphics.mask);
-            this.handle.removeChild(this.handleHoverGraphics);
-
-            RectangularComponentView.prototype.schematicModeChanged.apply(this, arguments);
-
-            this.initHandleHoverGraphics();
-            this.updateHandleAngle(this.model, this.model.get('handleAngle'));
-        },
-
-    });
-
-    return SwitchView;
 });
+
+export default SwitchView;

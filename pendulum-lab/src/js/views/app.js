@@ -1,22 +1,15 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import PendulumLabSimView from 'views/sim';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var PendulumLabAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: [],
 
-    var PendulumLabSimView = require('views/sim');
+    simViewConstructors: [
+        PendulumLabSimView
+    ]
 
-    require('less!styles/font-awesome');
-
-    var PendulumLabAppView = PixiAppView.extend({
-
-        assets: [],
-
-        simViewConstructors: [
-            PendulumLabSimView
-        ]
-
-    });
-
-    return PendulumLabAppView;
 });
+
+export default PendulumLabAppView;

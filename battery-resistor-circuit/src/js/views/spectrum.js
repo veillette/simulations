@@ -1,129 +1,121 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Assets from 'assets';
+import Constants from 'constants';
+var MARKER_COLOR = Colors.parseHex(Constants.SpectrumView.MARKER_COLOR);
 
-    'use strict';
-
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-
-    var Assets = require('assets');
-
-    var Constants = require('constants');
-    var MARKER_COLOR = Colors.parseHex(Constants.SpectrumView.MARKER_COLOR);
+/**
+ * A view that represents an electron
+ */
+var SpectrumView = PixiView.extend({
 
     /**
-     * A view that represents an electron
+     * Initializes the new SpectrumView.
      */
-    var SpectrumView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.resistorView = options.resistorView;
 
-        /**
-         * Initializes the new SpectrumView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.resistorView = options.resistorView;
+        this.initGraphics();
 
-            this.initGraphics();
+        this.listenTo(this.resistorView, 'powerChanged', this.powerChanged);
+    },
 
-            this.listenTo(this.resistorView, 'powerChanged', this.powerChanged);
-        },
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.spectrum = Assets.createSprite(Assets.Images.SPECTRUM);
+        this.labels = new PIXI.Container();
+        this.marker = new PIXI.Graphics();
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.spectrum = Assets.createSprite(Assets.Images.SPECTRUM);
-            this.labels = new PIXI.Container();
-            this.marker = new PIXI.Graphics();
+        this.displayObject.addChild(this.spectrum);
+        this.displayObject.addChild(this.labels);
+        this.displayObject.addChild(this.marker);
 
-            this.displayObject.addChild(this.spectrum);
-            this.displayObject.addChild(this.labels);
-            this.displayObject.addChild(this.marker);
+        this.initLabels();
+        this.initMarker();
 
-            this.initLabels();
-            this.initMarker();
+        this.updateMVT(this.mvt);
+    },
 
-            this.updateMVT(this.mvt);
-        },
+    initLabels: function() {
+        var font = '12px Helvetica Neue';
 
-        initLabels: function() {
-            var font = '12px Helvetica Neue';
+        var cold = new PIXI.Text('cold', {
+            font: font,
+            fill: '#fff'
+        });
 
-            var cold = new PIXI.Text('cold', {
-                font: font,
-                fill: '#fff'
-            });
+        var hot = new PIXI.Text('hot', {
+            font: font,
+            fill: '#000'
+        });
 
-            var hot = new PIXI.Text('hot', {
-                font: font,
-                fill: '#000'
-            });
+        hot.resolution = cold.resolution = this.getResolution();
+        hot.anchor.x = 1;
+        hot.anchor.y = cold.anchor.y = 0.5;
 
-            hot.resolution = cold.resolution = this.getResolution();
-            hot.anchor.x = 1;
-            hot.anchor.y = cold.anchor.y = 0.5;
+        this.labels.addChild(cold);
+        this.labels.addChild(hot);
 
-            this.labels.addChild(cold);
-            this.labels.addChild(hot);
+        this.cold = cold;
+        this.hot = hot;
+    },
 
-            this.cold = cold;
-            this.hot = hot;
-        },
+    initMarker: function() {
+        var height = Math.floor(this.spectrum.height * 0.5);
+        var width = Math.floor(height * 1.2);
+        var graphics = this.marker;
 
-        initMarker: function() {
-            var height = Math.floor(this.spectrum.height * 0.5);
-            var width = Math.floor(height * 1.2);
-            var graphics = this.marker;
+        graphics.y = this.spectrum.height;
+        graphics.beginFill(MARKER_COLOR, 1);
+        graphics.moveTo(0, 0);
+        graphics.lineTo( width / 2, height);
+        graphics.lineTo(-width / 2, height);
+        graphics.endFill();
+    },
 
-            graphics.y = this.spectrum.height;
-            graphics.beginFill(MARKER_COLOR, 1);
-            graphics.moveTo(0, 0);
-            graphics.lineTo( width / 2, height);
-            graphics.lineTo(-width / 2, height);
-            graphics.endFill();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        var $bottomPanel = $('.sim-controls-wrapper').children().last();
+        var $sceneView   = $('.scene-view');
 
-            var $bottomPanel = $('.sim-controls-wrapper').children().last();
-            var $sceneView   = $('.scene-view');
+        var panelWidth  = $bottomPanel.innerWidth();
+        var panelHeight = $bottomPanel.innerHeight();
 
-            var panelWidth  = $bottomPanel.innerWidth();
-            var panelHeight = $bottomPanel.innerHeight();
+        var panelX = $bottomPanel.offset().left - $sceneView.offset().left;
+        var panelY = $bottomPanel.offset().top  - $sceneView.offset().top;
 
-            var panelX = $bottomPanel.offset().left - $sceneView.offset().left;
-            var panelY = $bottomPanel.offset().top  - $sceneView.offset().top;
+        var scale = panelWidth / this.spectrum.texture.width;
+        this.spectrum.scale.x = scale;
 
-            var scale = panelWidth / this.spectrum.texture.width;
-            this.spectrum.scale.x = scale;
+        this.displayObject.x = Math.floor(panelX);
+        this.displayObject.y = Math.floor(panelY + panelHeight + parseInt($bottomPanel.css('margin-bottom')));
 
-            this.displayObject.x = Math.floor(panelX);
-            this.displayObject.y = Math.floor(panelY + panelHeight + parseInt($bottomPanel.css('margin-bottom')));
+        var margin = 10;
+        this.cold.x = margin;
+        this.cold.y = this.hot.y = Math.round(this.spectrum.height / 2);
+        this.hot.x = this.spectrum.width - margin;
 
-            var margin = 10;
-            this.cold.x = margin;
-            this.cold.y = this.hot.y = Math.round(this.spectrum.height / 2);
-            this.hot.x = this.spectrum.width - margin;
+        this.update();
+    },
 
-            this.update();
-        },
+    update: function() {
 
-        update: function() {
+    },
 
-        },
+    powerChanged: function(powerPercent) {
+        this.marker.x = powerPercent * this.spectrum.width;
+    }
 
-        powerChanged: function(powerPercent) {
-            this.marker.x = powerPercent * this.spectrum.width;
-        }
-
-    }, Constants.SpectrumView);
+}, Constants.SpectrumView);
 
 
-    return SpectrumView;
-});
+export default SpectrumView;

@@ -1,75 +1,68 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
 
-    'use strict';
+var LINE_WIDTH = Constants.ChargeView.LINE_WIDTH;
+var SYMBOL_WIDTH = Constants.ChargeView.SYMBOL_WIDTH;
+var POSITIVE_COLOR = Colors.parseHex(Constants.ChargeView.POSITIVE_COLOR);
+var NEGATIVE_COLOR = Colors.parseHex(Constants.ChargeView.NEGATIVE_COLOR);
 
-    var PIXI = require('pixi');
+/**
+ * Base class for views that render charges
+ */
+var ChargeView = PixiView.extend({
 
-    var PixiView  = require('common/v3/pixi/view');
-    var Colors    = require('common/colors/colors');
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-    var Constants = require('constants');
+        // Initialize graphics
+        this.initGraphics();
+        this.updateMVT(this.mvt);
+    },
 
-    var LINE_WIDTH = Constants.ChargeView.LINE_WIDTH;
-    var SYMBOL_WIDTH = Constants.ChargeView.SYMBOL_WIDTH;
-    var POSITIVE_COLOR = Colors.parseHex(Constants.ChargeView.POSITIVE_COLOR);
-    var NEGATIVE_COLOR = Colors.parseHex(Constants.ChargeView.NEGATIVE_COLOR);
+    initGraphics: function() {
+        this.positiveCharges = new PIXI.Graphics();
+        this.negativeCharges = new PIXI.Graphics();
 
-    /**
-     * Base class for views that render charges
-     */
-    var ChargeView = PixiView.extend({
+        this.displayObject.addChild(this.positiveCharges);
+        this.displayObject.addChild(this.negativeCharges);
+    },
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
+    draw: function() {
+        this.positiveCharges.clear();
+        this.negativeCharges.clear();
 
-            // Initialize graphics
-            this.initGraphics();
-            this.updateMVT(this.mvt);
-        },
+        this.positiveCharges.lineStyle(LINE_WIDTH, POSITIVE_COLOR, 1);
+        this.negativeCharges.lineStyle(LINE_WIDTH, NEGATIVE_COLOR, 1);
+    },
 
-        initGraphics: function() {
-            this.positiveCharges = new PIXI.Graphics();
-            this.negativeCharges = new PIXI.Graphics();
+    drawNegativeSymbol: function(x, y, z) {
+        var viewPoint = this.mvt.modelToViewDelta(x, y, z);
+        this.negativeCharges.moveTo(viewPoint.x - SYMBOL_WIDTH / 2, viewPoint.y);
+        this.negativeCharges.lineTo(viewPoint.x + SYMBOL_WIDTH / 2, viewPoint.y);
+    },
 
-            this.displayObject.addChild(this.positiveCharges);
-            this.displayObject.addChild(this.negativeCharges);
-        },
+    drawPositiveSymbol: function(x, y, z) {
+        var viewPoint = this.mvt.modelToViewDelta(x, y, z);
+        this.positiveCharges.moveTo(viewPoint.x - SYMBOL_WIDTH / 2, viewPoint.y);
+        this.positiveCharges.lineTo(viewPoint.x + SYMBOL_WIDTH / 2, viewPoint.y);
+        this.positiveCharges.moveTo(viewPoint.x, viewPoint.y - SYMBOL_WIDTH / 2);
+        this.positiveCharges.lineTo(viewPoint.x, viewPoint.y + SYMBOL_WIDTH / 2);
+    },
 
-        draw: function() {
-            this.positiveCharges.clear();
-            this.negativeCharges.clear();
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+    },
 
-            this.positiveCharges.lineStyle(LINE_WIDTH, POSITIVE_COLOR, 1);
-            this.negativeCharges.lineStyle(LINE_WIDTH, NEGATIVE_COLOR, 1);
-        },
+    show: function() {
+        this.displayObject.visible = true;
+    },
 
-        drawNegativeSymbol: function(x, y, z) {
-            var viewPoint = this.mvt.modelToViewDelta(x, y, z);
-            this.negativeCharges.moveTo(viewPoint.x - SYMBOL_WIDTH / 2, viewPoint.y);
-            this.negativeCharges.lineTo(viewPoint.x + SYMBOL_WIDTH / 2, viewPoint.y);
-        },
+    hide: function() {
+        this.displayObject.visible = false;
+    }
 
-        drawPositiveSymbol: function(x, y, z) {
-            var viewPoint = this.mvt.modelToViewDelta(x, y, z);
-            this.positiveCharges.moveTo(viewPoint.x - SYMBOL_WIDTH / 2, viewPoint.y);
-            this.positiveCharges.lineTo(viewPoint.x + SYMBOL_WIDTH / 2, viewPoint.y);
-            this.positiveCharges.moveTo(viewPoint.x, viewPoint.y - SYMBOL_WIDTH / 2);
-            this.positiveCharges.lineTo(viewPoint.x, viewPoint.y + SYMBOL_WIDTH / 2);
-        },
+}, Constants.ChargeView);
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
-        }
-
-    }, Constants.ChargeView);
-
-    return ChargeView;
-});
+export default ChargeView;

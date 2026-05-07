@@ -1,162 +1,153 @@
-define(function (require) {
+import _ from 'underscore';
+import SAT from 'sat';
+import Draggable from 'common/tools/draggable';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
+import html from 'templates/ammeter.html?raw';
+import 'styles/ammeter.less';
 
-    'use strict';
+var dx,
+    dy,
+    translate;
 
-    var _   = require('underscore');
-    var SAT = require('sat');
+var AmmeterView = Draggable.extend({
 
-    var Draggable = require('common/tools/draggable');
-    var Vector2   = require('common/math/vector2');
+    template: _.template(html),
 
-    var Constants = require('constants');
+    tagName: 'div',
+    className: 'ammeter-view',
 
-    var html = require('text!templates/ammeter.html');
+    events: {
+        'mousedown' : 'dragStart',
+        'touchstart': 'dragStart'
+    },
 
-    require('less!styles/ammeter');
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-    var dx,
-        dy,
-        translate;
+        this.visible = true;
+        this.point = new SAT.Vector();
+        this.position = new Vector2();
+        this.lastFieldVector = new Vector2();
 
-    var AmmeterView = Draggable.extend({
+        Draggable.prototype.initialize.apply(this, [options]);
+    },
 
-        template: _.template(html),
+    render: function() {
+        this.renderFieldMeter();
+        this.bindDragEvents();
+        this.resize();
+        this.update();
+        this.hide();
 
-        tagName: 'div',
-        className: 'ammeter-view',
+        return this;
+    },
 
-        events: {
-            'mousedown' : 'dragStart',
-            'touchstart': 'dragStart'
-        },
+    renderFieldMeter: function() {
+        this.$el.html(this.template());
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+        this.$readout       = this.$('.ammeter-readout');
+        this.$hint          = this.$('.ammeter-hint');
+        this.$amperage      = this.$('.amperage');
+        this.$activeOverlay = this.$('.ammeter-active-overlay');
+    },
 
-            this.visible = true;
-            this.point = new SAT.Vector();
-            this.position = new Vector2();
-            this.lastFieldVector = new Vector2();
+    update: function(time, delta, paused, timeScale) {
+        translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
 
-            Draggable.prototype.initialize.apply(this, [options]);
-        },
+        this.$el.css({
+            '-webkit-transform': translate,
+            '-ms-transform': translate,
+            '-o-transform': translate,
+            'transform': translate,
+        });
 
-        render: function() {
-            this.renderFieldMeter();
-            this.bindDragEvents();
-            this.resize();
-            this.update();
-            this.hide();
+        this.updateValues();
+    },
 
-            return this;
-        },
+    updateValues: function() {
+        if (!this.visible)
+            return;
 
-        renderFieldMeter: function() {
-            this.$el.html(this.template());
+        // Calculate the current position in model space
+        var modelPoint = this.mvt.viewToModel(this.position).scale(Constants.SAT_SCALE);
+        this.point.x = modelPoint.x;
+        this.point.y = modelPoint.y;
 
-            this.$readout       = this.$('.ammeter-readout');
-            this.$hint          = this.$('.ammeter-hint');
-            this.$amperage      = this.$('.amperage');
-            this.$activeOverlay = this.$('.ammeter-active-overlay');
-        },
+        // Get the current from the circuit at this location
+        var branch = this.simulation.circuit.getIntersectingWire(this.point);
+        if (branch) {
+            var current = branch.get('current');
+            var amperage = Math.abs(current).toFixed(2);
 
-        update: function(time, delta, paused, timeScale) {
-            translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
+            this.$activeOverlay.show();
+            this.$readout.show();
+            this.$hint.hide();
+            this.$amperage.html(amperage);
+        }
+        else {
+            this.$activeOverlay.hide();
+            this.$readout.hide();
+            this.$hint.show();
+            this.$amperage.html();
+        }
+    },
 
-            this.$el.css({
-                '-webkit-transform': translate,
-                '-ms-transform': translate,
-                '-o-transform': translate,
-                'transform': translate,
-            });
+    dragStart: function(event) {
+        event.preventDefault();
 
-            this.updateValues();
-        },
+        this.$el.addClass('dragging');
 
-        updateValues: function() {
-            if (!this.visible)
-                return;
+        this.dragging = true;
 
-            // Calculate the current position in model space
-            var modelPoint = this.mvt.viewToModel(this.position).scale(Constants.SAT_SCALE);
-            this.point.x = modelPoint.x;
-            this.point.y = modelPoint.y;
+        this.fixTouchEvents(event);
 
-            // Get the current from the circuit at this location
-            var branch = this.simulation.circuit.getIntersectingWire(this.point);
-            if (branch) {
-                var current = branch.get('current');
-                var amperage = Math.abs(current).toFixed(2);
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
+    },
 
-                this.$activeOverlay.show();
-                this.$readout.show();
-                this.$hint.hide();
-                this.$amperage.html(amperage);
-            }
-            else {
-                this.$activeOverlay.hide();
-                this.$readout.hide();
-                this.$hint.show();
-                this.$amperage.html();
-            }
-        },
-
-        dragStart: function(event) {
-            event.preventDefault();
-
-            this.$el.addClass('dragging');
-
-            this.dragging = true;
-
+    drag: function(event) {
+        if (this.dragging) {
             this.fixTouchEvents(event);
+
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
+
+            this.position.add(dx, dy);
+            this.updateOnNextFrame = true;
 
             this.dragX = event.pageX;
             this.dragY = event.pageY;
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                this.fixTouchEvents(event);
-
-                dx = event.pageX - this.dragX;
-                dy = event.pageY - this.dragY;
-
-                this.position.add(dx, dy);
-                this.updateOnNextFrame = true;
-
-                this.dragX = event.pageX;
-                this.dragY = event.pageY;
-
-                this.updateOnNextFrame = true;
-            }
-        },
-
-        dragEnd: function(event) {
-            if (this.dragging) {
-                this.dragging = false;
-                this.$el.removeClass('dragging');
-            }
-        },
-
-        setPosition: function(x, y) {
-            this.position.set(x, y);
 
             this.updateOnNextFrame = true;
-        },
-
-        show: function() {
-            this.update();
-            this.$el.show();
-            this.visible = true;
-        },
-
-        hide: function() {
-            this.$el.hide();
-            this.visible = false;
         }
+    },
 
-    });
+    dragEnd: function(event) {
+        if (this.dragging) {
+            this.dragging = false;
+            this.$el.removeClass('dragging');
+        }
+    },
 
-    return AmmeterView;
+    setPosition: function(x, y) {
+        this.position.set(x, y);
+
+        this.updateOnNextFrame = true;
+    },
+
+    show: function() {
+        this.update();
+        this.$el.show();
+        this.visible = true;
+    },
+
+    hide: function() {
+        this.$el.hide();
+        this.visible = false;
+    }
+
 });
+
+export default AmmeterView;

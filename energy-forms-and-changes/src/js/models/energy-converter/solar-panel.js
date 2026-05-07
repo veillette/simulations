@@ -1,266 +1,259 @@
-define(function (require) {
-
-    'use strict';
-
-    var Vector2 = require('common/math/vector2');
-
-    var EnergyConverter       = require('models/energy-converter');
-    var EnergyChunkPathMover  = require('models/energy-chunk-path-mover');
-    var EnergyChunk           = require('models/energy-chunk');
-
-    var Constants = require('constants');
-    var EnergyTypes = Constants.EnergyTypes;
+import Vector2 from 'common/math/vector2';
+import EnergyConverter from 'models/energy-converter';
+import EnergyChunkPathMover from 'models/energy-chunk-path-mover';
+import EnergyChunk from 'models/energy-chunk';
+import Constants from 'constants';
+var EnergyTypes = Constants.EnergyTypes;
 
 
-    var SolarPanel = EnergyConverter.extend({
+var SolarPanel = EnergyConverter.extend({
 
-        initialize: function(attributes, options) {
-            EnergyConverter.prototype.initialize.apply(this, [attributes, options]);
+    initialize: function(attributes, options) {
+        EnergyConverter.prototype.initialize.apply(this, [attributes, options]);
 
-            this.latestChunkArrivalTime = 0; // Used to prevent clumping of chunks.
-            this.energyOutputRate = 0;
+        this.latestChunkArrivalTime = 0; // Used to prevent clumping of chunks.
+        this.energyOutputRate = 0;
 
-            this.energyChunkMovers = [];
+        this.energyChunkMovers = [];
 
-            this._initialChunkPosition = new Vector2();
-            this._convergencePoint = new Vector2();
-            this._lowerLeft = new Vector2();
-            this._upperRight = new Vector2();
-        },
+        this._initialChunkPosition = new Vector2();
+        this._convergencePoint = new Vector2();
+        this._lowerLeft = new Vector2();
+        this._upperRight = new Vector2();
+    },
 
-        update: function(time, deltaTime, incomingEnergy) {
-            if (this.active()) {
-                // Handle any incoming energy chunks
-                this.handleIncomingEnergyChunks(time);
+    update: function(time, deltaTime, incomingEnergy) {
+        if (this.active()) {
+            // Handle any incoming energy chunks
+            this.handleIncomingEnergyChunks(time);
 
-                // Move the energy chunks and update their state.
-                this.updateEnergyChunks(deltaTime);
-            }
+            // Move the energy chunks and update their state.
+            this.updateEnergyChunks(deltaTime);
+        }
 
-            // Produce the appropriate amount of energy.
-            var energyProduced = 0;
-            if (this.active() && incomingEnergy.type == EnergyTypes.LIGHT)
-                energyProduced = incomingEnergy.amount;
-            this.energyOutputRate = energyProduced / deltaTime;
+        // Produce the appropriate amount of energy.
+        var energyProduced = 0;
+        if (this.active() && incomingEnergy.type == EnergyTypes.LIGHT)
+            energyProduced = incomingEnergy.amount;
+        this.energyOutputRate = energyProduced / deltaTime;
 
-            return {
-                type: EnergyTypes.ELECTRICAL,
-                amount: energyProduced,
-                direction: 0
-            };
-        },
+        return {
+            type: EnergyTypes.ELECTRICAL,
+            amount: energyProduced,
+            direction: 0
+        };
+    },
 
-        updateEnergyChunks: function(deltaTime) {
-            // Calculate the convergence point where all the chunks are going
-            var convergencePoint = this.getConvergencePoint();
+    updateEnergyChunks: function(deltaTime) {
+        // Calculate the convergence point where all the chunks are going
+        var convergencePoint = this.getConvergencePoint();
 
-            var energyChunkMover;
-            for (var i = this.energyChunkMovers.length - 1; i >= 0; i--) {
-                energyChunkMover = this.energyChunkMovers[i];
-                energyChunkMover.moveAlongPath(deltaTime);
-                if (energyChunkMover.finished()) {
-                    this.energyChunkMovers.splice(i, 1);
-                    var chunk = energyChunkMover.energyChunk;
-                    if (chunk.get('position').equals(convergencePoint, 0.0001)) {
-                        this.energyChunkMovers.push(new EnergyChunkPathMover(
-                            chunk,
-                            this.createPathThroughConverter(this.get('position')),
-                            Constants.ENERGY_CHUNK_VELOCITY
-                        ));
-                    }
-                    else {
-                        // The energy chunk has traveled across the panel and through
-                        //   the converter, so pass it off to the next element in the system.
-                        this.outgoingEnergyChunks.add(chunk);
-                        this.energyChunks.remove(chunk);
-                    }
-                }
-            }
-        },
-
-        handleIncomingEnergyChunks: function(time) {
-            var chunk;
-            for (var i = this.incomingEnergyChunks.length - 1; i >= 0; i--) {
-                chunk = this.incomingEnergyChunks.models[i];
-                if (chunk.get('energyType') === EnergyTypes.LIGHT) {
-                    // Convert this chunk to electrical energy and add it to
-                    // the list of energy chunks being managed.
-                    chunk.set('energyType', EnergyTypes.ELECTRICAL);
-                    this.energyChunks.add(chunk);
-                    this.incomingEnergyChunks.remove(chunk);
-
-                    // And a "mover" that will move this energy chunk to
-                    //   to the bottom of the solar panel.
+        var energyChunkMover;
+        for (var i = this.energyChunkMovers.length - 1; i >= 0; i--) {
+            energyChunkMover = this.energyChunkMovers[i];
+            energyChunkMover.moveAlongPath(deltaTime);
+            if (energyChunkMover.finished()) {
+                this.energyChunkMovers.splice(i, 1);
+                var chunk = energyChunkMover.energyChunk;
+                if (chunk.get('position').equals(convergencePoint, 0.0001)) {
                     this.energyChunkMovers.push(new EnergyChunkPathMover(
                         chunk,
-                        this.createPathToPanelBottom(this.get('position')),
-                        this.chooseChunkVelocityOnPanel(time, chunk)
+                        this.createPathThroughConverter(this.get('position')),
+                        Constants.ENERGY_CHUNK_VELOCITY
                     ));
                 }
                 else {
-                    // By design, this shouldn't happen, so warn if it does.
-                    console.error('SolarPanel - Warning: Ignoring energy chunk with unexpected type, type = ' + chunk.get('energyType'));
+                    // The energy chunk has traveled across the panel and through
+                    //   the converter, so pass it off to the next element in the system.
+                    this.outgoingEnergyChunks.add(chunk);
+                    this.energyChunks.remove(chunk);
                 }
             }
-        },
+        }
+    },
 
-        preloadEnergyChunks: function(incomingEnergyRate) {
-            this.clearEnergyChunks();
-            if (incomingEnergyRate.amount === 0 || incomingEnergyRate.type !== EnergyTypes.LIGHT) {
-                // No energy chunk pre-loading needed
-                return;
+    handleIncomingEnergyChunks: function(time) {
+        var chunk;
+        for (var i = this.incomingEnergyChunks.length - 1; i >= 0; i--) {
+            chunk = this.incomingEnergyChunks.models[i];
+            if (chunk.get('energyType') === EnergyTypes.LIGHT) {
+                // Convert this chunk to electrical energy and add it to
+                // the list of energy chunks being managed.
+                chunk.set('energyType', EnergyTypes.ELECTRICAL);
+                this.energyChunks.add(chunk);
+                this.incomingEnergyChunks.remove(chunk);
+
+                // And a "mover" that will move this energy chunk to
+                //   to the bottom of the solar panel.
+                this.energyChunkMovers.push(new EnergyChunkPathMover(
+                    chunk,
+                    this.createPathToPanelBottom(this.get('position')),
+                    this.chooseChunkVelocityOnPanel(time, chunk)
+                ));
             }
+            else {
+                // By design, this shouldn't happen, so warn if it does.
+                console.error('SolarPanel - Warning: Ignoring energy chunk with unexpected type, type = ' + chunk.get('energyType'));
+            }
+        }
+    },
 
-            var bounds = this.getAbsorptionShape().getBounds();
-            var lowerLeftOfPanel = this._lowerLeft.set(bounds.left(), bounds.bottom());
-            var upperRightOfPanel = this._upperRight.set(bounds.right(), bounds.top());
+    preloadEnergyChunks: function(incomingEnergyRate) {
+        this.clearEnergyChunks();
+        if (incomingEnergyRate.amount === 0 || incomingEnergyRate.type !== EnergyTypes.LIGHT) {
+            // No energy chunk pre-loading needed
+            return;
+        }
 
-            var crossLineLength = lowerLeftOfPanel.distance(upperRightOfPanel);
-            var crossLineAngle = upperRightOfPanel.sub(lowerLeftOfPanel).angle(); // note: upperRightOfPanel is now toast, but we don't need it anymore
+        var bounds = this.getAbsorptionShape().getBounds();
+        var lowerLeftOfPanel = this._lowerLeft.set(bounds.left(), bounds.bottom());
+        var upperRightOfPanel = this._upperRight.set(bounds.right(), bounds.top());
 
-            var deltaTime = 1 / Constants.FRAMES_PER_SECOND;
-            var energySinceLastChunk = Constants.ENERGY_PER_CHUNK * 0.99;
+        var crossLineLength = lowerLeftOfPanel.distance(upperRightOfPanel);
+        var crossLineAngle = upperRightOfPanel.sub(lowerLeftOfPanel).angle(); // note: upperRightOfPanel is now toast, but we don't need it anymore
 
-            // Simulate energy chunks moving through the system
-            var preloadingComplete = false;
-            while (!preloadingComplete) {
-                energySinceLastChunk += incomingEnergyRate.amount * deltaTime;
+        var deltaTime = 1 / Constants.FRAMES_PER_SECOND;
+        var energySinceLastChunk = Constants.ENERGY_PER_CHUNK * 0.99;
 
-                // Determine if time to add a new chunk
-                if (energySinceLastChunk >= Constants.ENERGY_PER_CHUNK) {
-                    var initialPosition;
-                    if (this.energyChunks.length === 0) {
-                        // For predictability of the algorithm, add the first chunk to the center of the panel.
-                        initialPosition = this._initialChunkPosition
-                            .set(crossLineLength * 0.5, 0)
-                            .rotate(crossLineAngle)
-                            .add(lowerLeftOfPanel);
-                    }
-                    else {
-                        // Choose a random location along the center portion of the cross line.
-                        initialPosition = this._initialChunkPosition
-                            .set(crossLineLength * (0.5 * Math.random() + 0.25), 0)
-                            .rotate(crossLineAngle)
-                            .add(lowerLeftOfPanel);
-                    }
+        // Simulate energy chunks moving through the system
+        var preloadingComplete = false;
+        while (!preloadingComplete) {
+            energySinceLastChunk += incomingEnergyRate.amount * deltaTime;
 
-                    var newChunk = EnergyChunk.create({
-                        energyType: EnergyTypes.ELECTRICAL,
-                        position: initialPosition
-                    });
-
-                    // And a "mover" that will move this energy chunk
-                    //   to the bottom of the solar panel.
-                    this.energyChunkMovers.push(new EnergyChunkPathMover(
-                        newChunk,
-                        this.createPathToPanelBottom(this.get('position')),
-                        this.chooseChunkVelocityOnPanel(newChunk)
-                    ));
-
-                    // Update energy since last chunk
-                    energySinceLastChunk -= Constants.ENERGY_PER_CHUNK;
+            // Determine if time to add a new chunk
+            if (energySinceLastChunk >= Constants.ENERGY_PER_CHUNK) {
+                var initialPosition;
+                if (this.energyChunks.length === 0) {
+                    // For predictability of the algorithm, add the first chunk to the center of the panel.
+                    initialPosition = this._initialChunkPosition
+                        .set(crossLineLength * 0.5, 0)
+                        .rotate(crossLineAngle)
+                        .add(lowerLeftOfPanel);
+                }
+                else {
+                    // Choose a random location along the center portion of the cross line.
+                    initialPosition = this._initialChunkPosition
+                        .set(crossLineLength * (0.5 * Math.random() + 0.25), 0)
+                        .rotate(crossLineAngle)
+                        .add(lowerLeftOfPanel);
                 }
 
-                this.updateEnergyChunks(deltaTime);
+                var newChunk = EnergyChunk.create({
+                    energyType: EnergyTypes.ELECTRICAL,
+                    position: initialPosition
+                });
 
-                if (this.outgoingEnergyChunks.length > 0) {
-                    // An energy chunk has made it all the way through the system
-                    preloadingComplete = true;
-                }
-            }
-        },
+                // And a "mover" that will move this energy chunk
+                //   to the bottom of the solar panel.
+                this.energyChunkMovers.push(new EnergyChunkPathMover(
+                    newChunk,
+                    this.createPathToPanelBottom(this.get('position')),
+                    this.chooseChunkVelocityOnPanel(newChunk)
+                ));
 
-        createPathToPanelBottom: function(panelPosition) {
-            return [
-                panelPosition.clone().add(SolarPanel.OFFSET_TO_CONVERGENCE_POINT)
-            ];
-        },
-
-        createPathThroughConverter: function(panelPosition) {
-            return [
-                panelPosition.clone().add(SolarPanel.OFFSET_TO_FIRST_CURVE_POINT),
-                panelPosition.clone().add(SolarPanel.OFFSET_TO_SECOND_CURVE_POINT),
-                panelPosition.clone().add(SolarPanel.OFFSET_TO_THIRD_CURVE_POINT),
-                panelPosition.clone().add(SolarPanel.OFFSET_TO_CONNECTOR_CENTER)
-            ];
-        },
-
-        /**
-         * Pick a velocity for a newly arrived chunk that won't cause
-         *   it to bunch together with other chunks.  We want them to
-         *   march in a steady stream towards the exit.
-         */
-        chooseChunkVelocityOnPanel: function(time, incomingEnergyChunk) {
-            // Start with default velocity.
-            var chunkVelocity = Constants.ENERGY_CHUNK_VELOCITY;
-
-            // Calculate the convergence point where all the chunks are going
-            var convergencePoint = this.getConvergencePoint();
-
-            // Count the number of chunks currently on the panel.
-            var numChunksOnPanel = 0;
-            var energyChunkMover;
-            for (var i = this.energyChunkMovers.length - 1; i >= 0; i--) {
-                energyChunkMover = this.energyChunkMovers[i];
-                if (energyChunkMover.getFinalDestination().equals(convergencePoint, 0.0001))
-                    numChunksOnPanel++;
+                // Update energy since last chunk
+                energySinceLastChunk -= Constants.ENERGY_PER_CHUNK;
             }
 
-            // Compute the projected time of arrival at the convergence point.
-            var distanceToConvergencePoint = incomingEnergyChunk.get('position').distance(convergencePoint);
-            var travelTime = distanceToConvergencePoint / chunkVelocity;
-            var projectedArrivalTime = time + travelTime;
+            this.updateEnergyChunks(deltaTime);
 
-            // Calculate the minimum spacing based on the number of chunks on
-            //   the panel.
-            var minArrivalTimeSpacing = numChunksOnPanel <= 3 ? SolarPanel.MIN_INTER_CHUNK_TIME : SolarPanel.MIN_INTER_CHUNK_TIME / (numChunksOnPanel - 2);
-
-            // If the projected arrival time is too close to the current last
-            //   chunk, slow down so that the minimum spacing is maintained.
-            if (this.latestChunkArrivalTime + minArrivalTimeSpacing > projectedArrivalTime)
-                projectedArrivalTime = this.latestChunkArrivalTime + minArrivalTimeSpacing;
-
-            this.latestChunkArrivalTime = projectedArrivalTime;
-
-            return distanceToConvergencePoint / (projectedArrivalTime - time);
-        },
-
-        clearEnergyChunks: function() {
-            EnergyConverter.prototype.clearEnergyChunks.apply(this);
-
-            this.latestChunkArrivalTime = 0;
-            this.energyChunkMovers = [];
-        },
-
-        getAbsorptionShape: function() {
-            return this.getTranslatedAbsorptionShape(0, 0);
-        },
-
-        getTranslatedAbsorptionShape: function(x, y) {
-            if (x instanceof Vector2) {
-                y = x.y;
-                x = x.x;
+            if (this.outgoingEnergyChunks.length > 0) {
+                // An energy chunk has made it all the way through the system
+                preloadingComplete = true;
             }
-            return SolarPanel.ABSORPTION_SHAPE.clone().translate(
-                this.get('position').x + SolarPanel.SOLAR_PANEL_OFFSET.x + x,
-                this.get('position').y + SolarPanel.SOLAR_PANEL_OFFSET.y + y
-            );
-        },
+        }
+    },
 
-        getConvergencePoint: function() {
-            return this._convergencePoint
-                .set(this.get('position'))
-                .add(SolarPanel.OFFSET_TO_CONVERGENCE_POINT);
-        },
+    createPathToPanelBottom: function(panelPosition) {
+        return [
+            panelPosition.clone().add(SolarPanel.OFFSET_TO_CONVERGENCE_POINT)
+        ];
+    },
 
-        getEnergyOutputRate: function() {
-            return {
-                type: EnergyTypes.ELECTRICAL,
-                amount: this.energyOutputRate
-            };
-        },
+    createPathThroughConverter: function(panelPosition) {
+        return [
+            panelPosition.clone().add(SolarPanel.OFFSET_TO_FIRST_CURVE_POINT),
+            panelPosition.clone().add(SolarPanel.OFFSET_TO_SECOND_CURVE_POINT),
+            panelPosition.clone().add(SolarPanel.OFFSET_TO_THIRD_CURVE_POINT),
+            panelPosition.clone().add(SolarPanel.OFFSET_TO_CONNECTOR_CENTER)
+        ];
+    },
 
-    }, Constants.SolarPanel);
+    /**
+     * Pick a velocity for a newly arrived chunk that won't cause
+     *   it to bunch together with other chunks.  We want them to
+     *   march in a steady stream towards the exit.
+     */
+    chooseChunkVelocityOnPanel: function(time, incomingEnergyChunk) {
+        // Start with default velocity.
+        var chunkVelocity = Constants.ENERGY_CHUNK_VELOCITY;
 
-    return SolarPanel;
-});
+        // Calculate the convergence point where all the chunks are going
+        var convergencePoint = this.getConvergencePoint();
+
+        // Count the number of chunks currently on the panel.
+        var numChunksOnPanel = 0;
+        var energyChunkMover;
+        for (var i = this.energyChunkMovers.length - 1; i >= 0; i--) {
+            energyChunkMover = this.energyChunkMovers[i];
+            if (energyChunkMover.getFinalDestination().equals(convergencePoint, 0.0001))
+                numChunksOnPanel++;
+        }
+
+        // Compute the projected time of arrival at the convergence point.
+        var distanceToConvergencePoint = incomingEnergyChunk.get('position').distance(convergencePoint);
+        var travelTime = distanceToConvergencePoint / chunkVelocity;
+        var projectedArrivalTime = time + travelTime;
+
+        // Calculate the minimum spacing based on the number of chunks on
+        //   the panel.
+        var minArrivalTimeSpacing = numChunksOnPanel <= 3 ? SolarPanel.MIN_INTER_CHUNK_TIME : SolarPanel.MIN_INTER_CHUNK_TIME / (numChunksOnPanel - 2);
+
+        // If the projected arrival time is too close to the current last
+        //   chunk, slow down so that the minimum spacing is maintained.
+        if (this.latestChunkArrivalTime + minArrivalTimeSpacing > projectedArrivalTime)
+            projectedArrivalTime = this.latestChunkArrivalTime + minArrivalTimeSpacing;
+
+        this.latestChunkArrivalTime = projectedArrivalTime;
+
+        return distanceToConvergencePoint / (projectedArrivalTime - time);
+    },
+
+    clearEnergyChunks: function() {
+        EnergyConverter.prototype.clearEnergyChunks.apply(this);
+
+        this.latestChunkArrivalTime = 0;
+        this.energyChunkMovers = [];
+    },
+
+    getAbsorptionShape: function() {
+        return this.getTranslatedAbsorptionShape(0, 0);
+    },
+
+    getTranslatedAbsorptionShape: function(x, y) {
+        if (x instanceof Vector2) {
+            y = x.y;
+            x = x.x;
+        }
+        return SolarPanel.ABSORPTION_SHAPE.clone().translate(
+            this.get('position').x + SolarPanel.SOLAR_PANEL_OFFSET.x + x,
+            this.get('position').y + SolarPanel.SOLAR_PANEL_OFFSET.y + y
+        );
+    },
+
+    getConvergencePoint: function() {
+        return this._convergencePoint
+            .set(this.get('position'))
+            .add(SolarPanel.OFFSET_TO_CONVERGENCE_POINT);
+    },
+
+    getEnergyOutputRate: function() {
+        return {
+            type: EnergyTypes.ELECTRICAL,
+            amount: this.energyOutputRate
+        };
+    },
+
+}, Constants.SolarPanel);
+
+export default SolarPanel;

@@ -1,47 +1,42 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+/**
+ * This is a particle that is only used in the wire system part of the
+ *   simulation and doesn't have a direct representation in the scene.
+ */
+var WireParticle = function(attributes) {
+    attributes = _.extend({
+        mass:    1,
+        charge: -1,
 
-    var _ = require('underscore');
+        position: 0,
+        velocity: 0
+    }, attributes);
+
+    this.mass   = attributes.mass;
+    this.charge = attributes.charge;
+
+    this.position = attributes.position;
+    this.velocity = attributes.velocity;
+
+    this.propagator = attributes.propagator;
+    this.wirePatch = attributes.wirePatch;
+};
+
+/**
+ * Instance functions/properties
+ */
+_.extend(WireParticle.prototype, {
 
     /**
-     * This is a particle that is only used in the wire system part of the
-     *   simulation and doesn't have a direct representation in the scene.
+     * Updates the particle by calling its propagator
      */
-    var WireParticle = function(attributes) {
-        attributes = _.extend({
-            mass:    1,
-            charge: -1,
+    propagate: function(deltaTime) {
+        this.propagator.propagate(deltaTime, this);
+    }
 
-            position: 0,
-            velocity: 0
-        }, attributes);
-
-        this.mass   = attributes.mass;
-        this.charge = attributes.charge;
-
-        this.position = attributes.position;
-        this.velocity = attributes.velocity;
-
-        this.propagator = attributes.propagator;
-        this.wirePatch = attributes.wirePatch;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(WireParticle.prototype, {
-
-        /**
-         * Updates the particle by calling its propagator
-         */
-        propagate: function(deltaTime) {
-            this.propagator.propagate(deltaTime, this);
-        }
-
-    });
-
-
-
-    return WireParticle;
 });
+
+
+
+export default WireParticle;

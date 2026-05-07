@@ -1,64 +1,60 @@
-define(function(require) {
+import $ from 'jquery';
+import Backbone from 'backbone';
+Backbone.$ = $;
 
-    'use strict';
+/**
+ *
+ */
+var TimeScaleMessageView = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var Backbone = require('backbone'); Backbone.$ = $;
+    className: 'time-scale-message-view',
+
+    initialize: function(options) {
+        this.simulation = options.simulation;
+        this.electronsView = options.electronsView;
+
+        this.$el.hide();
+        this.visible = false;
+    },
 
     /**
-     *
+     * Renders content and canvas for heatmap
      */
-    var TimeScaleMessageView = Backbone.View.extend({
+    render: function() {
+        return this;
+    },
 
-        className: 'time-scale-message-view',
-
-        initialize: function(options) {
-            this.simulation = options.simulation;
-            this.electronsView = options.electronsView;
-
-            this.$el.hide();
-            this.visible = false;
-        },
-
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            return this;
-        },
-
-        update: function() {
-            var percent = this.simulation.particleSet.propagator.getTimeScalingPercentPercent();
-            if (percent < 95) {
-                if (this.electronsView.visible()) {
-                    var speed = (percent === 1) ? '< 1%' : percent + '%';
-                    this.$el.html('Animation speed limit reached! Simulation speed reduced to ' + speed + ' normal!');
-                    this.show();
-                }
-                else {
-                    this.hide();
-                }
+    update: function() {
+        var percent = this.simulation.particleSet.propagator.getTimeScalingPercentPercent();
+        if (percent < 95) {
+            if (this.electronsView.visible()) {
+                var speed = (percent === 1) ? '< 1%' : percent + '%';
+                this.$el.html('Animation speed limit reached! Simulation speed reduced to ' + speed + ' normal!');
+                this.show();
             }
             else {
                 this.hide();
             }
-        },
-
-        show: function() {
-            if (!this.visible) {
-                this.visible = true;
-                this.$el.show();
-            }
-        },
-
-        hide: function() {
-            if (this.visible) {
-                this.visible = false;
-                this.$el.hide();
-            }
         }
+        else {
+            this.hide();
+        }
+    },
 
-    });
+    show: function() {
+        if (!this.visible) {
+            this.visible = true;
+            this.$el.show();
+        }
+    },
 
-    return TimeScaleMessageView;
+    hide: function() {
+        if (this.visible) {
+            this.visible = false;
+            this.$el.hide();
+        }
+    }
+
 });
+
+export default TimeScaleMessageView;

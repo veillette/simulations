@@ -1,21 +1,9 @@
-(function () {
-    'use strict';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import $ from 'jquery';
+import AppView from 'views/app';
 
-    // Load the config
-    require(['config'], function () {
-        require(['jquery', 'views/app'], function($, TemplateAppView) {
-
-            $(function(){
-                var appView = new TemplateAppView();
-
-                // Append to body
-                $('body').append(appView.el);
-
-                // Render main app view
-                appView.load();
-            });
-
-        });
-    });
-
-})();
+$(function() {
+    var appView = new AppView();
+    $('body').append(appView.el);
+    appView.load();
+});

@@ -1,119 +1,111 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import NuclearReactorView from 'nuclear-fission/views/nuclear-reactor';
+import NuclearPhysicsSceneView from 'views/scene';
 
-    'use strict';
+/**
+ *
+ */
+var NuclearReactorSceneView = NuclearPhysicsSceneView.extend({
 
-    var _ = require('underscore');
-    var $ = require('jquery');
+    initialize: function(options) {
+        NuclearPhysicsSceneView.prototype.initialize.apply(this, arguments);
 
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+        this.listenTo(this.simulation, 'nucleus-change', this.nucleusChanged);
+        this.listenTo(this.simulation, 'reset',          this.simulationReset);
+    },
 
-    var NuclearReactorView = require('nuclear-fission/views/nuclear-reactor');
+    renderContent: function() {
+        var self = this;
+        this.$resetButton = $('<button class="btn btn-lg reset-nuclei-btn">Reset Nuclei</button>');
+        this.$resetButton.on('click', function() {
+            self.resetNuclei();
+        });
+        this.$resetButton.hide();
 
-    var NuclearPhysicsSceneView = require('views/scene');
+        var html = '<button class="btn btn-lg view-reactor-picture-btn"data-bs-toggle="modal" data-bs-target="#picture-dialog"><span class="fa fa-picture-o"></span> Picture of Reactor</button>';
+        this.$viewReactorPictureButton = $(html);
 
-    /**
-     *
-     */
-    var NuclearReactorSceneView = NuclearPhysicsSceneView.extend({
+        this.$ui.append(this.$resetButton);
+        this.$ui.append(this.$viewReactorPictureButton);
+    },
 
-        initialize: function(options) {
-            NuclearPhysicsSceneView.prototype.initialize.apply(this, arguments);
+    reset: function() {
 
-            this.listenTo(this.simulation, 'nucleus-change', this.nucleusChanged);
-            this.listenTo(this.simulation, 'reset',          this.simulationReset);
-        },
+    },
 
-        renderContent: function() {
-            var self = this;
-            this.$resetButton = $('<button class="btn btn-lg reset-nuclei-btn">Reset Nuclei</button>');
-            this.$resetButton.on('click', function() {
-                self.resetNuclei();
-            });
-            this.$resetButton.hide();
+    initMVT: function() {
+        this.viewOriginX = this.getLeftPadding() + this.getAvailableWidth() / 2 - 10;
+        this.viewOriginY = this.getTopPadding() + this.getAvailableHeight() / 2;
 
-            var html = '<button class="btn btn-lg view-reactor-picture-btn"data-bs-toggle="modal" data-bs-target="#picture-dialog"><span class="fa fa-picture-o"></span> Picture of Reactor</button>';
-            this.$viewReactorPictureButton = $(html);
+        var pixelsPerFemtometer = 1;
 
-            this.$ui.append(this.$resetButton);
-            this.$ui.append(this.$viewReactorPictureButton);
-        },
+        // The center of the screen is actually (5, 5) in the original
+        this.mvt = ModelViewTransform.createSinglePointScaleMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            pixelsPerFemtometer
+        );
+    },
 
-        reset: function() {
+    initGraphics: function() {
+        NuclearPhysicsSceneView.prototype.initGraphics.apply(this, arguments);
 
-        },
+        this.initMVT();
+        this.initNuclearReactor();
+    },
 
-        initMVT: function() {
-            this.viewOriginX = this.getLeftPadding() + this.getAvailableWidth() / 2 - 10;
-            this.viewOriginY = this.getTopPadding() + this.getAvailableHeight() / 2;
+    initNuclearReactor: function() {
+        this.nuclearReactorView = new NuclearReactorView({
+            simulation: this.simulation,
+            mvt: this.mvt,
+            renderer: this.renderer
+        });
 
-            var pixelsPerFemtometer = 1;
+        this.stage.addChild(this.nuclearReactorView.displayObject);
+    },
 
-            // The center of the screen is actually (5, 5) in the original
-            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                pixelsPerFemtometer
-            );
-        },
+    _update: function(time, deltaTime, paused, timeScale) {
+        NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
 
-        initGraphics: function() {
-            NuclearPhysicsSceneView.prototype.initGraphics.apply(this, arguments);
+        this.nuclearReactorView.update(time, deltaTime, paused);
+    },
 
-            this.initMVT();
-            this.initNuclearReactor();
-        },
+    resetNuclei: function() {
+        this.simulation.reset();
+        this.hideResetButton();
+    },
 
-        initNuclearReactor: function() {
-            this.nuclearReactorView = new NuclearReactorView({
-                simulation: this.simulation,
-                mvt: this.mvt,
-                renderer: this.renderer
-            });
+    showResetButtonWithDelay: function() {
+        // Don't start it over again
+        if (this.buttonTimeout)
+            return;
 
-            this.stage.addChild(this.nuclearReactorView.displayObject);
-        },
+        this.buttonTimeout = window.setTimeout(_.bind(function() {
+            this.$resetButton.show();
+            this.buttonTimeout = null;
+        }, this), 1500);
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
-
-            this.nuclearReactorView.update(time, deltaTime, paused);
-        },
-
-        resetNuclei: function() {
-            this.simulation.reset();
-            this.hideResetButton();
-        },
-
-        showResetButtonWithDelay: function() {
-            // Don't start it over again
-            if (this.buttonTimeout)
-                return;
-
-            this.buttonTimeout = window.setTimeout(_.bind(function() {
-                this.$resetButton.show();
-                this.buttonTimeout = null;
-            }, this), 1500);
-        },
-
-        hideResetButton: function() {
-            if (this.buttonTimeout) {
-                window.clearTimeout(this.buttonTimeout);
-                this.buttonTimeout = null;
-            }
-            this.$resetButton.hide();
-        },
-
-        nucleusChanged: function() {
-            if (this.simulation.getChangedNucleiExist())
-                this.showResetButtonWithDelay();
-        },
-
-        simulationReset: function() {
-            this.hideResetButton();
+    hideResetButton: function() {
+        if (this.buttonTimeout) {
+            window.clearTimeout(this.buttonTimeout);
+            this.buttonTimeout = null;
         }
+        this.$resetButton.hide();
+    },
 
-    });
+    nucleusChanged: function() {
+        if (this.simulation.getChangedNucleiExist())
+            this.showResetButtonWithDelay();
+    },
 
-    return NuclearReactorSceneView;
+    simulationReset: function() {
+        this.hideResetButton();
+    }
+
 });
+
+export default NuclearReactorSceneView;

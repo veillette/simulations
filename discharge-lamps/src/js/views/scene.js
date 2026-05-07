@@ -1,42 +1,31 @@
-define(function(require) {
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import 'styles/scene.less';
 
-    'use strict';
+/**
+ *
+ */
+var DischargeLampsSceneView = PixiSceneView.extend({
 
+    events: {
 
-    var PixiSceneView = require('common/v3/pixi/view/scene');
+    },
 
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    // Constants
+    renderContent: function() {
 
-    // CSS
-    require('less!styles/scene');
+    },
 
-    /**
-     *
-     */
-    var DischargeLampsSceneView = PixiSceneView.extend({
+    initGraphics: function() {
+        PixiSceneView.prototype.initGraphics.apply(this, arguments);
+    },
 
-        events: {
+    _update: function(time, deltaTime, paused, timeScale) {
 
-        },
+    },
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
-        },
-
-        renderContent: function() {
-
-        },
-
-        initGraphics: function() {
-            PixiSceneView.prototype.initGraphics.apply(this, arguments);
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-
-        },
-
-    });
-
-    return DischargeLampsSceneView;
 });
+
+export default DischargeLampsSceneView;

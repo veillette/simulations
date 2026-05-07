@@ -1,37 +1,31 @@
-define(function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var ReservoirObjectView = require('views/reservoir-object');
+import _ from 'underscore';
+import ReservoirObjectView from 'views/reservoir-object';
 
 
-    /**
-     *
-     */
-    var NegativeChargeView = ReservoirObjectView.extend({
+/**
+ *
+ */
+var NegativeChargeView = ReservoirObjectView.extend({
 
-        initialize: function(options) {
-            options = _.extend({
-                radius: 11,
+    initialize: function(options) {
+        options = _.extend({
+            radius: 11,
 
-                fillColor: '#0060FF',
-                fillAlpha: 1,
-                outlineColor: '#004FD8',
-                outlineWidth: 2,
-                outlineAlpha: 1
-            }, options);
+            fillColor: '#0060FF',
+            fillAlpha: 1,
+            outlineColor: '#004FD8',
+            outlineWidth: 2,
+            outlineAlpha: 1
+        }, options);
 
-            ReservoirObjectView.prototype.initialize.apply(this, [options]);
-        },
+        ReservoirObjectView.prototype.initialize.apply(this, [options]);
+    },
 
-        drawIcon: function(graphics, iconWidth) {
-            graphics.moveTo(-iconWidth / 2, 0);
-            graphics.lineTo( iconWidth / 2, 0);
-        }
+    drawIcon: function(graphics, iconWidth) {
+        graphics.moveTo(-iconWidth / 2, 0);
+        graphics.lineTo( iconWidth / 2, 0);
+    }
 
-    });
-
-    return NegativeChargeView;
 });
+
+export default NegativeChargeView;

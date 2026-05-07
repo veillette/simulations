@@ -1,54 +1,48 @@
-define(function (require) {
+import _ from 'underscore';
+import ReflectionStrategy from 'models/reflection-strategy';
 
-    'use strict';
+/**
+ * A ReflectionStrategy that reflects a specified fraction of photons
+ */
+var PartialReflectionStrategy = function(reflectivity) {
+    ReflectionStrategy.apply(this, arguments);
 
-    var _ = require('underscore');
+    this.reflectivity = reflectivity;
+};
 
-    var ReflectionStrategy = require('models/reflection-strategy');
+_.extend(PartialReflectionStrategy.prototype, ReflectionStrategy.prototype, {
+
+    reflects: function(photon) {
+        var result = false;
+        if (this.reflectivity === 0) {
+            result = false;
+        }
+        else if (this.reflectivity === 1) {
+            result = true;
+        }
+        else {
+            var r = Math.random();
+            if (r < this.reflectivity)
+                result = true;
+        }
+        return result;
+    },
+
+    getReflectivity: function() {
+        return this.reflectivity;
+    },
 
     /**
-     * A ReflectionStrategy that reflects a specified fraction of photons
+     * Sets the reflectivity. Valid values are 0 to 1.
      */
-    var PartialReflectionStrategy = function(reflectivity) {
-        ReflectionStrategy.apply(this, arguments);
+    setReflectivity: function(reflectivity) {
+        if (reflectivity < 0 || reflectivity > 1)
+            throw 'Reflectivity not between 0 and 1.0';
 
         this.reflectivity = reflectivity;
-    };
+    }
 
-    _.extend(PartialReflectionStrategy.prototype, ReflectionStrategy.prototype, {
-
-        reflects: function(photon) {
-            var result = false;
-            if (this.reflectivity === 0) {
-                result = false;
-            }
-            else if (this.reflectivity === 1) {
-                result = true;
-            }
-            else {
-                var r = Math.random();
-                if (r < this.reflectivity)
-                    result = true;
-            }
-            return result;
-        },
-
-        getReflectivity: function() {
-            return this.reflectivity;
-        },
-
-        /**
-         * Sets the reflectivity. Valid values are 0 to 1.
-         */
-        setReflectivity: function(reflectivity) {
-            if (reflectivity < 0 || reflectivity > 1)
-                throw 'Reflectivity not between 0 and 1.0';
-
-            this.reflectivity = reflectivity;
-        }
-
-    });
-
-
-    return PartialReflectionStrategy;
 });
+
+
+export default PartialReflectionStrategy;

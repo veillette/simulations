@@ -1,33 +1,27 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * A container for multiple propagators that runs its children in sequence.
+ */
+var CompositePropagator = function() {
+    this.propagators = [];
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(CompositePropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, particle) {
+        for (var i = 0; i < this.propagators.length; i++)
+            this.propagators[i].propagate(deltaTime, particle);
+    },
 
-    /**
-     * A container for multiple propagators that runs its children in sequence.
-     */
-    var CompositePropagator = function() {
-        this.propagators = [];
-    };
+    addPropagator: function(propagator) {
+        this.propagators.push(propagator);
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(CompositePropagator.prototype, Propagator.prototype, {
-
-        propagate: function(deltaTime, particle) {
-            for (var i = 0; i < this.propagators.length; i++)
-                this.propagators[i].propagate(deltaTime, particle);
-        },
-
-        addPropagator: function(propagator) {
-            this.propagators.push(propagator);
-        }
-
-    });
-
-    return CompositePropagator;
 });
+
+export default CompositePropagator;

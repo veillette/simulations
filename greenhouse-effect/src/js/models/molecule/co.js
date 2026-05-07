@@ -1,68 +1,62 @@
-define(function (require) {
+import PhotonAbsorptionStrategy from 'models/photon-absorption-strategy';
+import Molecule from 'models/molecule';
+import CarbonAtom from 'models/atom/carbon';
+import OxygenAtom from 'models/atom/oxygen';
+import AtomicBond from 'models/atomic-bond';
+import Constants from 'constants';
 
-    'use strict';
+var INITIAL_CARBON_OXYGEN_DISTANCE = 170; // In picometers
+var VIBRATION_MAGNITUDE = 20;             // In picometers
 
-    var PhotonAbsorptionStrategy = require('models/photon-absorption-strategy');
-    var Molecule                 = require('models/molecule');
-    var CarbonAtom               = require('models/atom/carbon');
-    var OxygenAtom               = require('models/atom/oxygen');
-    var AtomicBond               = require('models/atomic-bond');
+/**
+ * Represents a methane molecule.
+ */
+var CO = Molecule.extend({
 
-    var Constants = require('constants');
+    initialize: function(attributes, options) {
+        Molecule.prototype.initialize.apply(this, arguments);
 
-    var INITIAL_CARBON_OXYGEN_DISTANCE = 170; // In picometers
-    var VIBRATION_MAGNITUDE = 20;             // In picometers
+        // Create and add atoms
+        this.carbonAtom = this.addAtom(new CarbonAtom());
+        this.oxygenAtom = this.addAtom(new OxygenAtom());
+
+        // Create and add bonds
+        this.addAtomicBond(new AtomicBond(this.atoms[this.carbonAtom], this.atoms[this.oxygenAtom], 3));
+
+        // Set up the photon wavelengths to absorb.
+        this.addPhotonAbsorptionStrategy(Constants.MICRO_WAVELENGTH, new PhotonAbsorptionStrategy.RotationStrategy(this));
+        this.addPhotonAbsorptionStrategy(Constants.IR_WAVELENGTH,    new PhotonAbsorptionStrategy.VibrationStrategy(this));
+
+        // Set the initial offsets.
+        this.initAtomOffsets();
+    },
 
     /**
-     * Represents a methane molecule.
+     * Initialize sthe offsets from the center of gravity for each atom
+     *   within this molecule.  This should be in the "relaxed" (i.e.
+     *   non-vibrating) state.
      */
-    var CO = Molecule.extend({
+    initAtomOffsets: function() {
+        this.getInitialAtomCogOffset(this.carbonAtom).set(-INITIAL_CARBON_OXYGEN_DISTANCE / 2, 0);
+        this.getInitialAtomCogOffset(this.oxygenAtom).set( INITIAL_CARBON_OXYGEN_DISTANCE / 2, 0);
 
-        initialize: function(attributes, options) {
-            Molecule.prototype.initialize.apply(this, arguments);
+        this.updateAtomPositions();
+    },
 
-            // Create and add atoms
-            this.carbonAtom = this.addAtom(new CarbonAtom());
-            this.oxygenAtom = this.addAtom(new OxygenAtom());
+    /**
+     * Set the angle, in terms of radians from 0 to 2*PI, where this
+     *   molecule is in its vibration sequence.
+     */
+    vibrate: function(vibrationRadians) {
+        Molecule.prototype.vibrate.apply(this, arguments);
 
-            // Create and add bonds
-            this.addAtomicBond(new AtomicBond(this.atoms[this.carbonAtom], this.atoms[this.oxygenAtom], 3));
+        var multFactor = Math.sin(vibrationRadians);
+        this.getVibrationAtomOffset(this.carbonAtom).set( VIBRATION_MAGNITUDE * multFactor, 0);
+        this.getVibrationAtomOffset(this.oxygenAtom).set(-VIBRATION_MAGNITUDE * multFactor, 0);
 
-            // Set up the photon wavelengths to absorb.
-            this.addPhotonAbsorptionStrategy(Constants.MICRO_WAVELENGTH, new PhotonAbsorptionStrategy.RotationStrategy(this));
-            this.addPhotonAbsorptionStrategy(Constants.IR_WAVELENGTH,    new PhotonAbsorptionStrategy.VibrationStrategy(this));
+        this.updateAtomPositions();
+    }
 
-            // Set the initial offsets.
-            this.initAtomOffsets();
-        },
-
-        /**
-         * Initialize sthe offsets from the center of gravity for each atom
-         *   within this molecule.  This should be in the "relaxed" (i.e.
-         *   non-vibrating) state.
-         */
-        initAtomOffsets: function() {
-            this.getInitialAtomCogOffset(this.carbonAtom).set(-INITIAL_CARBON_OXYGEN_DISTANCE / 2, 0);
-            this.getInitialAtomCogOffset(this.oxygenAtom).set( INITIAL_CARBON_OXYGEN_DISTANCE / 2, 0);
-
-            this.updateAtomPositions();
-        },
-
-        /**
-         * Set the angle, in terms of radians from 0 to 2*PI, where this
-         *   molecule is in its vibration sequence.
-         */
-        vibrate: function(vibrationRadians) {
-            Molecule.prototype.vibrate.apply(this, arguments);
-
-            var multFactor = Math.sin(vibrationRadians);
-            this.getVibrationAtomOffset(this.carbonAtom).set( VIBRATION_MAGNITUDE * multFactor, 0);
-            this.getVibrationAtomOffset(this.oxygenAtom).set(-VIBRATION_MAGNITUDE * multFactor, 0);
-
-            this.updateAtomPositions();
-        }
-
-    });
-
-    return CO;
 });
+
+export default CO;

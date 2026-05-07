@@ -1,99 +1,92 @@
-define(function (require) {
+import _ from 'underscore';
+import Atom from 'common/quantum/models/atom';
 
-    'use strict';
+/**
+ * A spherical body with mass and momentum
+ */
+var DischargeLampAtom = Atom.extend({
 
-    var _ = require('underscore');
-
-
-    var Atom = require('common/quantum/models/atom');
+    defaults: _.extend({}, Atom.prototype.defaults, {
+        isStateLifetimeFixed: true,
+        energyEmissionStrategy: undefined,
+        energyAbsorptionStrategy: undefined
+    }),
 
     /**
-     * A spherical body with mass and momentum
+     * Required options: {
+     *   simulation: Simulation object,
+     *   elementProperties: ElementProperties object
+     *   OR
+     *   states: []
+     * }
      */
-    var DischargeLampAtom = Atom.extend({
+    initialize: function(attributes, options) {
+        if (options.elementProperties)
+            this.initWithElementProperties(options, options.elementProperties);
+        else
+            this.initWithStates(options, options.states);
+    },
 
-        defaults: _.extend({}, Atom.prototype.defaults, {
-            isStateLifetimeFixed: true,
-            energyEmissionStrategy: undefined,
-            energyAbsorptionStrategy: undefined
-        }),
+    initWithElementProperties: function(options, elementProperties) {
+        options = _.extend({
+            numStates: options.elementProperties.getStates().length
+        }, options);
 
-        /**
-         * Required options: {
-         *   simulation: Simulation object,
-         *   elementProperties: ElementProperties object
-         *   OR
-         *   states: []
-         * }
-         */
-        initialize: function(attributes, options) {
-            if (options.elementProperties)
-                this.initWithElementProperties(options, options.elementProperties);
-            else
-                this.initWithStates(options, options.states);
-        },
+        Atom.prototype.initialize.apply(this, [{}, options]);
 
-        initWithElementProperties: function(options, elementProperties) {
-            options = _.extend({
-                numStates: options.elementProperties.getStates().length
-            }, options);
+        if (options.elementProperties.getStates().length < 2)
+            throw 'Atom must have at least two states';
 
-            Atom.prototype.initialize.apply(this, [{}, options]);
+        // If we started with an energy emission strategy, save it and apply it later
+        var energyEmissionStrategy;
+        if (this.get('energyEmissionStrategy'))
+            energyEmissionStrategy = this.get('energyEmissionStrategy');
 
-            if (options.elementProperties.getStates().length < 2)
-                throw 'Atom must have at least two states';
+        this.setElementProperties(options.elementProperties);
+        this.setCurrentState(options.elementProperties.getStates()[0]);
 
-            // If we started with an energy emission strategy, save it and apply it later
-            var energyEmissionStrategy;
-            if (this.get('energyEmissionStrategy'))
-                energyEmissionStrategy = this.get('energyEmissionStrategy');
+        // Apply the saved starting energy emission strategy
+        if (energyEmissionStrategy)
+            this.set('energyEmissionStrategy', energyEmissionStrategy);
+    },
 
-            this.setElementProperties(options.elementProperties);
-            this.setCurrentState(options.elementProperties.getStates()[0]);
+    initWithStates: function(options, states) {
+        options = _.extend({
+            numStates: states.length
+        }, options);
 
-            // Apply the saved starting energy emission strategy
-            if (energyEmissionStrategy)
-                this.set('energyEmissionStrategy', energyEmissionStrategy);
-        },
+        Atom.prototype.initialize.apply(this, [{}, options]);
 
-        initWithStates: function(options, states) {
-            options = _.extend({
-                numStates: states.length
-            }, options);
+        if (states.length < 2)
+            throw 'Atom must have at least two states';
 
-            Atom.prototype.initialize.apply(this, [{}, options]);
+        this.setStates(states);
+        this.setCurrentState(states[0]);
+    },
 
-            if (states.length < 2)
-                throw 'Atom must have at least two states';
+    /**
+     * If the electron's energy is greater than the difference between the atom's current energy and one of
+     *   its higher energy states, the atom absorbs some of the electron's energy and goes to a state higher
+     *   in energy by the amount it absorbs. Exactly how much energy it absorbs is random.
+     */
+    collideWithElectron: function(electron) {
+        this.get('energyAbsorptionStrategy').collideWithElectron(this, electron);
+        this.trigger('electron-collision', this, electron);
+    },
 
-            this.setStates(states);
-            this.setCurrentState(states[0]);
-        },
+    /**
+     * Returns the state the atom will be in after it emits a photon. By default, this is the ground state
+     */
+    getEnergyStateAfterEmission: function() {
+        return this.get('energyEmissionStrategy').emitEnergy(this);
+    },
 
-        /**
-         * If the electron's energy is greater than the difference between the atom's current energy and one of
-         *   its higher energy states, the atom absorbs some of the electron's energy and goes to a state higher
-         *   in energy by the amount it absorbs. Exactly how much energy it absorbs is random.
-         */
-        collideWithElectron: function(electron) {
-            this.get('energyAbsorptionStrategy').collideWithElectron(this, electron);
-            this.trigger('electron-collision', this, electron);
-        },
+    setElementProperties: function(elementProperties) {
+        this.setStates(elementProperties.getStates());
+        this.set('energyAbsorptionStrategy', elementProperties.getEnergyAbsorptionStrategy());
+        this.set('energyEmissionStrategy', elementProperties.getEnergyEmissionStrategy());
+    }
 
-        /**
-         * Returns the state the atom will be in after it emits a photon. By default, this is the ground state
-         */
-        getEnergyStateAfterEmission: function() {
-            return this.get('energyEmissionStrategy').emitEnergy(this);
-        },
-
-        setElementProperties: function(elementProperties) {
-            this.setStates(elementProperties.getStates());
-            this.set('energyAbsorptionStrategy', elementProperties.getEnergyAbsorptionStrategy());
-            this.set('energyEmissionStrategy', elementProperties.getEnergyEmissionStrategy());
-        }
-
-    });
-
-    return DischargeLampAtom;
 });
+
+export default DischargeLampAtom;

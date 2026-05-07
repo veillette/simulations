@@ -1,75 +1,66 @@
-define(function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var PixiView  = require('common/v3/pixi/view');
-    var Colors    = require('common/colors/colors');
-    //var Vector2  = require('common/math/vector2');
-
-    var Constants = require('constants');
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
 
 
-    var BodyTraceView = PixiView.extend({
+var BodyTraceView = PixiView.extend({
 
-        initialize: function(options) {
-            options = _.extend({
-                color: '#ddd',
-            }, options);
+    initialize: function(options) {
+        options = _.extend({
+            color: '#ddd',
+        }, options);
 
-            this.color = Colors.parseHex(options.color);
-            this.mvt = options.mvt;
+        this.color = Colors.parseHex(options.color);
+        this.mvt = options.mvt;
 
-            this.previousPoint = new PIXI.Point();
-            this.previousPoint.x = this.mvt.modelToViewX(this.model.get('x'));
-            this.previousPoint.y = this.mvt.modelToViewY(this.model.get('y'));
+        this.previousPoint = new PIXI.Point();
+        this.previousPoint.x = this.mvt.modelToViewX(this.model.get('x'));
+        this.previousPoint.y = this.mvt.modelToViewY(this.model.get('y'));
 
-            this.initGraphics();
-        },
+        this.initGraphics();
+    },
 
-        initGraphics: function() {
-            this.trace = new PIXI.Graphics();
-            this.trace.lineStyle(BodyTraceView.LINE_WIDTH, this.color, 1);
+    initGraphics: function() {
+        this.trace = new PIXI.Graphics();
+        this.trace.lineStyle(BodyTraceView.LINE_WIDTH, this.color, 1);
 
-            this.displayObject.addChild(this.trace);
+        this.displayObject.addChild(this.trace);
 
-            this.updateMVT(this.mvt);
-        },
+        this.updateMVT(this.mvt);
+    },
 
-        appendTracePoint: function() {
-            var x = this.mvt.modelToViewX(this.model.get('x'));
-            var y = this.mvt.modelToViewY(this.model.get('y'));
+    appendTracePoint: function() {
+        var x = this.mvt.modelToViewX(this.model.get('x'));
+        var y = this.mvt.modelToViewY(this.model.get('y'));
 
-            this.trace.moveTo(this.previousPoint.x, this.previousPoint.y);
-            this.trace.lineTo(x, y);
+        this.trace.moveTo(this.previousPoint.x, this.previousPoint.y);
+        this.trace.lineTo(x, y);
 
-            this.previousPoint.x = x;
-            this.previousPoint.y = y;
-        },
+        this.previousPoint.x = x;
+        this.previousPoint.y = y;
+    },
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.clear();
-        },
+        this.clear();
+    },
 
-        update: function(time, deltaTime, simulationPaused) {
-            if (!simulationPaused && !this.model.get('destroyedInCollision'))
-                this.appendTracePoint();
-        },
+    update: function(time, deltaTime, simulationPaused) {
+        if (!simulationPaused && !this.model.get('destroyedInCollision'))
+            this.appendTracePoint();
+    },
 
-        clear: function() {
-            this.trace.clear();
-            this.trace.lineStyle(BodyTraceView.LINE_WIDTH, this.color, 1);
-            this.previousPoint.x = this.mvt.modelToViewX(this.model.get('x'));
-            this.previousPoint.y = this.mvt.modelToViewY(this.model.get('y'));
-        }
+    clear: function() {
+        this.trace.clear();
+        this.trace.lineStyle(BodyTraceView.LINE_WIDTH, this.color, 1);
+        this.previousPoint.x = this.mvt.modelToViewX(this.model.get('x'));
+        this.previousPoint.y = this.mvt.modelToViewY(this.model.get('y'));
+    }
 
-    }, Constants.BodyTraceView);
+}, Constants.BodyTraceView);
 
 
-    return BodyTraceView;
-});
+export default BodyTraceView;

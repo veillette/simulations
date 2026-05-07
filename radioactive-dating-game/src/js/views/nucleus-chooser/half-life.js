@@ -1,136 +1,128 @@
-define(function(require) {
+import _ from 'underscore';
+import AppView from 'common/v3/app/app';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import NucleusType from 'models/nucleus-type';
+import Uranium238Nucleus from 'models/nucleus/uranium-238';
+import Carbon14Nucleus from 'models/nucleus/carbon-14';
+import HeavyAdjustableHalfLifeNucleus from 'models/nucleus/heavy-adjustable-half-life';
+import NucleusChooser from 'views/nucleus-chooser';
+import NucleusView from 'views/nucleus';
 
-    'use strict';
 
-    var _ = require('underscore');
+/**
+ *
+ */
+var HalfLifeNucleusChooserView = NucleusChooser.extend({
 
-    var AppView            = require('common/v3/app/app');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+    initialize: function(options) {
+        options = _.extend({
+            scale: AppView.windowIsShort() ? 16 : 18,
+            spacingOffset: AppView.windowIsShort() ? -13 : 0
+        }, options);
 
-    var NucleusType                    = require('models/nucleus-type');
-    var Uranium238Nucleus              = require('models/nucleus/uranium-238');
-    var Carbon14Nucleus                = require('models/nucleus/carbon-14');
-    var HeavyAdjustableHalfLifeNucleus = require('models/nucleus/heavy-adjustable-half-life');
-
-    var NucleusChooser = require('views/nucleus-chooser');
-    var NucleusView    = require('views/nucleus');
-
+        NucleusChooser.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     *
+     * Creates the views and labels that will be used to render the list
      */
-    var HalfLifeNucleusChooserView = NucleusChooser.extend({
+    initItems: function() {
+        var items = [];
+        var symbolSize = 30;
 
-        initialize: function(options) {
-            options = _.extend({
-                scale: AppView.windowIsShort() ? 16 : 18,
-                spacingOffset: AppView.windowIsShort() ? -13 : 0
-            }, options);
+        // Carbon-14 to Nitrogen-14
+        var carbon14   = Carbon14Nucleus.create();
+        var nitrogen14 = Carbon14Nucleus.create();
+        nitrogen14.decay(); // Decay from Carbon-14 into Nitrogen-14
 
-            NucleusChooser.prototype.initialize.apply(this, [options]);
-        },
+        items.push({
+            isDefault: true,
+            nucleusType: NucleusType.CARBON_14,
+            start: {
+                label: 'Carbon-14',
+                displayObject: new NucleusView({
+                    model: carbon14,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize,
+                    hideNucleons: true
+                }).displayObject
+            },
+            end: {
+                label: 'Nitrogen-14',
+                displayObject: new NucleusView({
+                    model: nitrogen14,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize,
+                    hideNucleons: true
+                }).displayObject
+            }
+        });
 
-        /**
-         * Creates the views and labels that will be used to render the list
-         */
-        initItems: function() {
-            var items = [];
-            var symbolSize = 30;
+        var largeAtomMVT = new ModelViewTransform.createSinglePointScaleMapping(
+            new Vector2(0, 0),
+            new Vector2(0, 0),
+            this.scale * 0.4
+        );
+        var largeAtomSymbolSize = 26;
 
-            // Carbon-14 to Nitrogen-14
-            var carbon14   = Carbon14Nucleus.create();
-            var nitrogen14 = Carbon14Nucleus.create();
-            nitrogen14.decay(); // Decay from Carbon-14 into Nitrogen-14
+        // Uranium-238 to Lead-206
+        var uranium238 = Uranium238Nucleus.create();
+        var lead206    = Uranium238Nucleus.create();
+        lead206.decay(); // Uranium-238 to Lead-206
 
-            items.push({
-                isDefault: true,
-                nucleusType: NucleusType.CARBON_14,
-                start: {
-                    label: 'Carbon-14',
-                    displayObject: new NucleusView({
-                        model: carbon14,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                },
-                end: {
-                    label: 'Nitrogen-14',
-                    displayObject: new NucleusView({
-                        model: nitrogen14,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                }
-            });
+        items.push({
+            nucleusType: NucleusType.URANIUM_238,
+            start: {
+                label: 'Uranium-238',
+                displayObject: new NucleusView({
+                    model: uranium238,
+                    mvt: largeAtomMVT,
+                    symbolSize: largeAtomSymbolSize,
+                    hideNucleons: true
+                }).displayObject
+            },
+            end: {
+                label: 'Lead-206',
+                displayObject: new NucleusView({
+                    model: lead206,
+                    mvt: largeAtomMVT,
+                    symbolSize: largeAtomSymbolSize,
+                    hideNucleons: true
+                }).displayObject
+            }
+        });
 
-            var largeAtomMVT = new ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(0, 0),
-                this.scale * 0.4
-            );
-            var largeAtomSymbolSize = 26;
+        // Custom to custom decayed
+        var custom  = HeavyAdjustableHalfLifeNucleus.create();
+        var decayed = HeavyAdjustableHalfLifeNucleus.create();
+        decayed.decay();
 
-            // Uranium-238 to Lead-206
-            var uranium238 = Uranium238Nucleus.create();
-            var lead206    = Uranium238Nucleus.create();
-            lead206.decay(); // Uranium-238 to Lead-206
+        items.push({
+            nucleusType: NucleusType.HEAVY_CUSTOM,
+            start: {
+                label: 'Custom',
+                displayObject: new NucleusView({
+                    model: custom,
+                    mvt: largeAtomMVT,
+                    symbolSize: largeAtomSymbolSize,
+                    hideNucleons: true
+                }).displayObject
+            },
+            end: {
+                label: 'Custom<br>(Decayed)',
+                displayObject: new NucleusView({
+                    model: decayed,
+                    mvt: largeAtomMVT,
+                    symbolSize: largeAtomSymbolSize,
+                    hideNucleons: true
+                }).displayObject
+            }
+        });
 
-            items.push({
-                nucleusType: NucleusType.URANIUM_238,
-                start: {
-                    label: 'Uranium-238',
-                    displayObject: new NucleusView({
-                        model: uranium238,
-                        mvt: largeAtomMVT,
-                        symbolSize: largeAtomSymbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                },
-                end: {
-                    label: 'Lead-206',
-                    displayObject: new NucleusView({
-                        model: lead206,
-                        mvt: largeAtomMVT,
-                        symbolSize: largeAtomSymbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                }
-            });
+        this.items = items;
+    }
 
-            // Custom to custom decayed
-            var custom  = HeavyAdjustableHalfLifeNucleus.create();
-            var decayed = HeavyAdjustableHalfLifeNucleus.create();
-            decayed.decay();
-
-            items.push({
-                nucleusType: NucleusType.HEAVY_CUSTOM,
-                start: {
-                    label: 'Custom',
-                    displayObject: new NucleusView({
-                        model: custom,
-                        mvt: largeAtomMVT,
-                        symbolSize: largeAtomSymbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                },
-                end: {
-                    label: 'Custom<br>(Decayed)',
-                    displayObject: new NucleusView({
-                        model: decayed,
-                        mvt: largeAtomMVT,
-                        symbolSize: largeAtomSymbolSize,
-                        hideNucleons: true
-                    }).displayObject
-                }
-            });
-
-            this.items = items;
-        }
-
-    });
-
-    return HalfLifeNucleusChooserView;
 });
+
+export default HalfLifeNucleusChooserView;

@@ -1,28 +1,22 @@
-define(function (require) {
+import _ from 'underscore';
+import CircuitComponent from 'models/components/circuit-component';
 
-    'use strict';
+/**
+ * A resistor
+ */
+var Resistor = CircuitComponent.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, CircuitComponent.prototype.defaults, {
+        resistance: 10,
+        kirkhoffEnabled: true,
+        length: 1,
+        height: 1
+    }),
 
-    var CircuitComponent = require('models/components/circuit-component');
+    initialize: function(attributes, options) {
+        CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
+    }
 
-    /**
-     * A resistor
-     */
-    var Resistor = CircuitComponent.extend({
-
-        defaults: _.extend({}, CircuitComponent.prototype.defaults, {
-            resistance: 10,
-            kirkhoffEnabled: true,
-            length: 1,
-            height: 1
-        }),
-
-        initialize: function(attributes, options) {
-            CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
-        }
-
-    });
-
-    return Resistor;
 });
+
+export default Resistor;

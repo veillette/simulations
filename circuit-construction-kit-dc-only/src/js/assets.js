@@ -1,10 +1,5 @@
-define(function (require) {
+import Assets from 'circuit-construction-kit-assets';
 
-    'use strict';
+Assets.Path = '../../../circuit-construction-kit/src/img/';
 
-    var Assets = require('circuit-construction-kit-assets');
-
-    Assets.Path = '../../../circuit-construction-kit/src/img/';
-
-    return Assets;
-});
+export default Assets;

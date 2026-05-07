@@ -1,42 +1,36 @@
-define(function (require) {
+import _ from 'underscore';
+import PositionableObject from 'common/models/positionable-object';
+import Rectangle from 'common/math/rectangle';
 
-    'use strict';
+/**
+ * Class that represents an atom in the model.  This is used
+ *   in the microscopic view of photon abosorption.  This is
+ *   an abstract class, and it is expected that it be
+ *   extended by specific atoms.
+ */
+var Atom = PositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        radius: 0,
+        mass:   0,
+        color: ''
+    }),
 
-    var PositionableObject = require('common/models/positionable-object');
-    var Rectangle          = require('common/math/rectangle');
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, arguments);
 
-    /**
-     * Class that represents an atom in the model.  This is used
-     *   in the microscopic view of photon abosorption.  This is
-     *   an abstract class, and it is expected that it be
-     *   extended by specific atoms.
-     */
-    var Atom = PositionableObject.extend({
+        this._bounds = new Rectangle();
+    },
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            radius: 0,
-            mass:   0,
-            color: ''
-        }),
+    getBoundingRect: function() {
+        return this._bounds.set(
+            this.get('position').x - this.get('radius'),
+            this.get('position').y - this.get('radius'),
+            this.get('radius') * 2,
+            this.get('radius') * 2
+        );
+    }
 
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, arguments);
-
-            this._bounds = new Rectangle();
-        },
-
-        getBoundingRect: function() {
-            return this._bounds.set(
-                this.get('position').x - this.get('radius'),
-                this.get('position').y - this.get('radius'),
-                this.get('radius') * 2,
-                this.get('radius') * 2
-            );
-        }
-
-    });
-
-    return Atom;
 });
+
+export default Atom;

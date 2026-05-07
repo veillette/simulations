@@ -1,35 +1,29 @@
-define(function (require) {
+import _ from 'underscore';
+import Filter from 'models/filter';
 
-    'use strict';
+/**
+ *
+ */
+var BandPassFilter = function(low, high) {
+    Filter.apply(this, arguments);
 
-    var _ = require('underscore');
+    this.low  = low;
+    this.high = high;
+};
 
-    var Filter = require('models/filter');
+/**
+ * Instance functions/properties
+ */
+_.extend(BandPassFilter.prototype, Filter.prototype, {
 
     /**
-     *
+     * Returns whether or not a certain value passes
+     *   through the filter.
      */
-    var BandPassFilter = function(low, high) {
-        Filter.apply(this, arguments);
+    passes: function(value) {
+        return value >= this.low && value <= this.high;
+    }
 
-        this.low  = low;
-        this.high = high;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(BandPassFilter.prototype, Filter.prototype, {
-
-        /**
-         * Returns whether or not a certain value passes
-         *   through the filter.
-         */
-        passes: function(value) {
-            return value >= this.low && value <= this.high;
-        }
-
-    });
-
-    return BandPassFilter;
 });
+
+export default BandPassFilter;

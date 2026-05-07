@@ -1,92 +1,86 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
+var NORTH_COLOR = Colors.parseHex(Constants.NORTH_COLOR);
+var SOUTH_COLOR = Colors.parseHex(Constants.SOUTH_COLOR);
 
-    'use strict';
+var cache = {};
+var textureFromCanvas = function(canvas) {
+    if (PIXI.Texture.from)
+        return PIXI.Texture.from(canvas);
+    return PIXI.Texture.fromCanvas(canvas);
+};
+var hexIntegerToCss = function(value) {
+    var hex = value.toString(16);
+    while (hex.length < 6)
+        hex = '0' + hex;
+    return '#' + hex;
+};
 
-    var PIXI = require('pixi');
-    var Colors = require('common/colors/colors');
+var CompassNeedleTexture = {
 
-    var Constants = require('constants');
-    var NORTH_COLOR = Colors.parseHex(Constants.NORTH_COLOR);
-    var SOUTH_COLOR = Colors.parseHex(Constants.SOUTH_COLOR);
+    /**
+     * Creates a new compass needle texture with the specified width and returns it.
+     */
+    create: function(width) {
+        width = Math.round(width);
 
-    var cache = {};
-    var textureFromCanvas = function(canvas) {
-        if (PIXI.Texture.from)
-            return PIXI.Texture.from(canvas);
-        return PIXI.Texture.fromCanvas(canvas);
-    };
-    var hexIntegerToCss = function(value) {
-        var hex = value.toString(16);
-        while (hex.length < 6)
-            hex = '0' + hex;
-        return '#' + hex;
-    };
+        // If we've already drawn a texture this size, return that instead
+        if (cache[width] !== undefined)
+            return cache[width];
 
-    var CompassNeedleTexture = {
+        // Draw a new one
+        var height = Math.round((15 / 55) * width);
+        var halfHeight = height / 2;
+        var halfWidth = width / 2;
 
-        /**
-         * Creates a new compass needle texture with the specified width and returns it.
-         */
-        create: function(width) {
-            width = Math.round(width);
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
 
-            // If we've already drawn a texture this size, return that instead
-            if (cache[width] !== undefined)
-                return cache[width];
+        var centerX = halfWidth;
+        var centerY = halfHeight;
+        var northHex = hexIntegerToCss(NORTH_COLOR);
+        var southHex = hexIntegerToCss(SOUTH_COLOR);
 
-            // Draw a new one
-            var height = Math.round((15 / 55) * width);
-            var halfHeight = height / 2;
-            var halfWidth = width / 2;
+        ctx.fillStyle = northHex;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY + halfHeight);
+        ctx.lineTo(centerX + halfWidth, centerY);
+        ctx.lineTo(centerX, centerY - halfHeight);
+        ctx.closePath();
+        ctx.fill();
 
-            var canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            var ctx = canvas.getContext('2d');
+        ctx.fillStyle = southHex;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY + halfHeight);
+        ctx.lineTo(centerX - halfWidth, centerY);
+        ctx.lineTo(centerX, centerY - halfHeight);
+        ctx.closePath();
+        ctx.fill();
 
-            var centerX = halfWidth;
-            var centerY = halfHeight;
-            var northHex = hexIntegerToCss(NORTH_COLOR);
-            var southHex = hexIntegerToCss(SOUTH_COLOR);
+        var texture = textureFromCanvas(canvas);
+        cache[width] = texture;
 
-            ctx.fillStyle = northHex;
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY + halfHeight);
-            ctx.lineTo(centerX + halfWidth, centerY);
-            ctx.lineTo(centerX, centerY - halfHeight);
-            ctx.closePath();
-            ctx.fill();
+        return texture;
+    },
 
-            ctx.fillStyle = southHex;
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY + halfHeight);
-            ctx.lineTo(centerX - halfWidth, centerY);
-            ctx.lineTo(centerX, centerY - halfHeight);
-            ctx.closePath();
-            ctx.fill();
-
-            var texture = textureFromCanvas(canvas);
-            cache[width] = texture;
-
-            return texture;
-        },
-
-        /**
-         * Removes the specified texture from the texture cache.  Returns true
-         *   if the texture was found and removed from the cache.
-         */
-        remove: function(texture) {
-            for (var key in cache) {
-                if (cache[key] === texture) {
-                    delete cache[key];
-                    return true;
-                }
+    /**
+     * Removes the specified texture from the texture cache.  Returns true
+     *   if the texture was found and removed from the cache.
+     */
+    remove: function(texture) {
+        for (var key in cache) {
+            if (cache[key] === texture) {
+                delete cache[key];
+                return true;
             }
-
-            return false;
         }
 
-    };
+        return false;
+    }
 
-    return CompassNeedleTexture;
-});
+};
+
+export default CompassNeedleTexture;

@@ -1,55 +1,48 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import PhotonEmitter from 'models/photon-emitter';
+import Photon from 'models/photon-basic';
 
-    'use strict';
+/**
+ *
+ */
+var CircularPhotonEmitter = PhotonEmitter.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PhotonEmitter.prototype.defaults, {
+        center: null,
+        radius: 0,
+        wavelength: 0,
+        alpha: 0,
+        beta:  Math.PI * 2
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        PhotonEmitter.prototype.initialize.apply(this, [attributes, options]);
 
-    var PhotonEmitter = require('models/photon-emitter');
-    var Photon        = require('models/photon-basic');
+        this.set('center', new Vector2(this.get('center')));
+    },
 
     /**
-     *
+     * Returns a new photon.
      */
-    var CircularPhotonEmitter = PhotonEmitter.extend({
+    emitPhoton: function() {
+        var theta = Math.random() * (this.get('beta') - this.get('alpha')) + this.get('alpha');
 
-        defaults: _.extend({}, PhotonEmitter.prototype.defaults, {
-            center: null,
-            radius: 0,
-            wavelength: 0,
-            alpha: 0,
-            beta:  Math.PI * 2
-        }),
+        var photon = new Photon({
+            wavelength: this.get('wavelength'),
+            source: this
+        });
+        photon.setDirection(theta);
+        photon.setPosition(
+            this.get('center').x + (this.get('radius') + 0.01) * Math.cos(theta),
+            this.get('center').y + (this.get('radius') + 0.01) * Math.sin(theta)
+        );
 
-        initialize: function(attributes, options) {
-            PhotonEmitter.prototype.initialize.apply(this, [attributes, options]);
+        this.trigger('photon-emitted', photon);
 
-            this.set('center', new Vector2(this.get('center')));
-        },
+        return photon;
+    },
 
-        /**
-         * Returns a new photon.
-         */
-        emitPhoton: function() {
-            var theta = Math.random() * (this.get('beta') - this.get('alpha')) + this.get('alpha');
-
-            var photon = new Photon({
-                wavelength: this.get('wavelength'),
-                source: this
-            });
-            photon.setDirection(theta);
-            photon.setPosition(
-                this.get('center').x + (this.get('radius') + 0.01) * Math.cos(theta),
-                this.get('center').y + (this.get('radius') + 0.01) * Math.sin(theta)
-            );
-
-            this.trigger('photon-emitted', photon);
-
-            return photon;
-        },
-
-    });
-
-    return CircularPhotonEmitter;
 });
+
+export default CircularPhotonEmitter;

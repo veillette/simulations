@@ -1,30 +1,25 @@
-define(function(require) {
+import BasicPhotonView from 'views/photon-basic';
+/**
+ * A view that represents a photon
+ */
+var PhotonView = BasicPhotonView.extend({
 
-    'use strict';
 
-    var BasicPhotonView = require('views/photon-basic');
     /**
-     * A view that represents a photon
+     * Initializes the new PhotonView.
      */
-    var PhotonView = BasicPhotonView.extend({
+    initialize: function(options) {
+        BasicPhotonView.prototype.initialize.apply(this, arguments);
 
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+    },
 
-        /**
-         * Initializes the new PhotonView.
-         */
-        initialize: function(options) {
-            BasicPhotonView.prototype.initialize.apply(this, arguments);
+    /**
+     * This version doesn't need an update function because
+     *   it listens to changes in the model.
+     */
+    update: function() {}
 
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-        },
-
-        /**
-         * This version doesn't need an update function because
-         *   it listens to changes in the model.
-         */
-        update: function() {}
-
-    });
-
-    return PhotonView;
 });
+
+export default PhotonView;

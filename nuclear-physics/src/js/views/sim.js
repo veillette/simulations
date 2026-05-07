@@ -3,7 +3,6 @@ import SimView from 'common/v3/app/sim';
 import NuclearPhysicsSimulation from 'models/simulation';
 import NuclearPhysicsSceneView from 'views/scene';
 import Constants from 'constants';
-import 'bootstrap';
 import 'styles/sim.less';
 import 'common/styles/slider.less';
 import 'common/styles/radio.less';

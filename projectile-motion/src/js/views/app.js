@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import ProjectileMotionSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var ProjectileMotionAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var ProjectileMotionSimView = require('views/sim');
+    simViewConstructors: [
+        ProjectileMotionSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var ProjectileMotionAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            ProjectileMotionSimView
-        ]
-
-    });
-
-    return ProjectileMotionAppView;
 });
+
+export default ProjectileMotionAppView;

@@ -1,201 +1,193 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import HybridView from 'common/v3/pixi/view/hybrid';
+import DraggableArrowView from 'common/v3/pixi/view/arrow-draggable';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
+var PANEL_COLOR      = Colors.parseHex(Constants.ExternalFieldControlView.PANEL_COLOR);
+var ARROW_AREA_COLOR = Colors.parseHex(Constants.ExternalFieldControlView.ARROW_AREA_COLOR);
+// var ARROW_COLOR      = Colors.parseHex(Constants.ExternalFieldControlView.ARROW_COLOR);
 
-    'use strict';
+/**
+ * A tool that allows the user to change the direction and
+ *   magnitude of the external field by manipulating an arrow.
+ *
+ * Positioning is relative to its lower right corner.
+ */
+var ExternalFieldControlView = HybridView.extend({
 
-    var PIXI = require('pixi');
+    tagName: 'div',
+    className: 'external-field-control-view-header control-panel',
 
-    var defineInputUpdateLocks = require('common/locks/define-locks');
+    events: {
+        'touchstart      .controlArea': 'dragStart',
+        'mousedown       .controlArea': 'dragStart',
+        'touchend        .controlArea': 'dragEnd',
+        'mouseup         .controlArea': 'dragEnd',
+        'touchendoutside .controlArea': 'dragEnd',
+        'mouseupoutside  .controlArea': 'dragEnd'
+    },
 
-    var HybridView         = require('common/v3/pixi/view/hybrid');
-    var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
-    var Colors             = require('common/colors/colors');
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-    var Constants = require('constants');
-    var PANEL_COLOR      = Colors.parseHex(Constants.ExternalFieldControlView.PANEL_COLOR);
-    var ARROW_AREA_COLOR = Colors.parseHex(Constants.ExternalFieldControlView.ARROW_AREA_COLOR);
-    // var ARROW_COLOR      = Colors.parseHex(Constants.ExternalFieldControlView.ARROW_COLOR);
+        this._dragOffset = new PIXI.Point();
 
-    /**
-     * A tool that allows the user to change the direction and
-     *   magnitude of the external field by manipulating an arrow.
-     *
-     * Positioning is relative to its lower right corner.
-     */
-    var ExternalFieldControlView = HybridView.extend({
+        this.initGraphics();
 
-        tagName: 'div',
-        className: 'external-field-control-view-header control-panel',
+        this.$el.html('<h2>External Field</h2>');
+    },
 
-        events: {
-            'touchstart      .controlArea': 'dragStart',
-            'mousedown       .controlArea': 'dragStart',
-            'touchend        .controlArea': 'dragEnd',
-            'mouseup         .controlArea': 'dragEnd',
-            'touchendoutside .controlArea': 'dragEnd',
-            'mouseupoutside  .controlArea': 'dragEnd'
-        },
+    initGraphics: function() {
+        this.initPanel();
+        this.initArrows();
+        this.updateMVT(this.mvt);
+    },
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+    initPanel: function() {
+        var panel = new PIXI.Container();
 
-            this._dragOffset = new PIXI.Point();
+        var background = new PIXI.Graphics();
+        var controlArea = new PIXI.Graphics();
+        panel.addChild(background);
+        panel.addChild(controlArea);
 
-            this.initGraphics();
+        this.panel = panel;
+        this.controlArea = controlArea;
+        this.controlArea.buttonMode = true;
 
-            this.$el.html('<h2>External Field</h2>');
-        },
+        var pw = ExternalFieldControlView.PANEL_WIDTH;
+        var ph = ExternalFieldControlView.PANEL_HEIGHT;
+        var aw = ExternalFieldControlView.AREA_WIDTH;
+        var ah = ExternalFieldControlView.AREA_HEIGHT;
 
-        initGraphics: function() {
-            this.initPanel();
-            this.initArrows();
-            this.updateMVT(this.mvt);
-        },
+        background.clear();
+        background.beginFill(PANEL_COLOR, ExternalFieldControlView.PANEL_ALPHA);
+        background.drawRect(-pw, -ph, pw, ph);
+        background.endFill();
 
-        initPanel: function() {
-            var panel = new PIXI.Container();
+        controlArea.clear();
+        controlArea.x = -ExternalFieldControlView.AREA_WIDTH  - ExternalFieldControlView.PANEL_PADDING;
+        controlArea.y = -ExternalFieldControlView.AREA_HEIGHT - ExternalFieldControlView.PANEL_PADDING;
+        controlArea.beginFill(ARROW_AREA_COLOR, ExternalFieldControlView.ARROW_AREA_ALPHA);
+        controlArea.drawRect(0, 0, aw, ah);
+        controlArea.endFill();
 
-            var background = new PIXI.Graphics();
-            var controlArea = new PIXI.Graphics();
-            panel.addChild(background);
-            panel.addChild(controlArea);
+        this.areaMask = new PIXI.Graphics();
+        this.areaMask.x = -ExternalFieldControlView.AREA_WIDTH  - ExternalFieldControlView.PANEL_PADDING;
+        this.areaMask.y = -ExternalFieldControlView.AREA_HEIGHT - ExternalFieldControlView.PANEL_PADDING;
+        this.areaMask.beginFill(0, 1);
+        this.areaMask.drawRect(0, 0, aw, ah);
+        this.areaMask.endFill();
 
-            this.panel = panel;
-            this.controlArea = controlArea;
-            this.controlArea.buttonMode = true;
+        this.displayObject.addChild(panel);
+        this.displayObject.addChild(this.areaMask);
+    },
 
-            var pw = ExternalFieldControlView.PANEL_WIDTH;
-            var ph = ExternalFieldControlView.PANEL_HEIGHT;
-            var aw = ExternalFieldControlView.AREA_WIDTH;
-            var ah = ExternalFieldControlView.AREA_HEIGHT;
+    initArrows: function() {
+        var arrowModel = new DraggableArrowView.ArrowViewModel({
+            originX: 0,
+            originY: 0,
+            targetX: 0,
+            targetY: 0,
+            minLength: null
+        });
 
-            background.clear();
-            background.beginFill(PANEL_COLOR, ExternalFieldControlView.PANEL_ALPHA);
-            background.drawRect(-pw, -ph, pw, ph);
-            background.endFill();
+        var arrowView = new DraggableArrowView({
+            model: arrowModel,
+            fillColor: ExternalFieldControlView.ARROW_COLOR,
+            bodyDraggingEnabled: false,
+            useDotWhenSmall: true
+        });
+        arrowView.displayObject.mask = this.areaMask;
+        this.controlArea.addChild(arrowView.displayObject);
 
-            controlArea.clear();
-            controlArea.x = -ExternalFieldControlView.AREA_WIDTH  - ExternalFieldControlView.PANEL_PADDING;
-            controlArea.y = -ExternalFieldControlView.AREA_HEIGHT - ExternalFieldControlView.PANEL_PADDING;
-            controlArea.beginFill(ARROW_AREA_COLOR, ExternalFieldControlView.ARROW_AREA_ALPHA);
-            controlArea.drawRect(0, 0, aw, ah);
-            controlArea.endFill();
+        this.arrowModel = arrowModel;
+        this.arrowView = arrowView;
 
-            this.areaMask = new PIXI.Graphics();
-            this.areaMask.x = -ExternalFieldControlView.AREA_WIDTH  - ExternalFieldControlView.PANEL_PADDING;
-            this.areaMask.y = -ExternalFieldControlView.AREA_HEIGHT - ExternalFieldControlView.PANEL_PADDING;
-            this.areaMask.beginFill(0, 1);
-            this.areaMask.drawRect(0, 0, aw, ah);
-            this.areaMask.endFill();
+        this.repositionArrows();
 
-            this.displayObject.addChild(panel);
-            this.displayObject.addChild(this.areaMask);
-        },
+        // Listen for position changes
+        this.listenTo(arrowView, 'drag-head-start', this.arrowDragStart);
+        this.listenTo(arrowView, 'drag-head-end',   this.arrowDragEnd);
 
-        initArrows: function() {
-            var arrowModel = new DraggableArrowView.ArrowViewModel({
-                originX: 0,
-                originY: 0,
-                targetX: 0,
-                targetY: 0,
-                minLength: null
-            });
+        this.listenTo(arrowModel, 'change:targetX change:targetY', this.fieldChanged);
+    },
 
-            var arrowView = new DraggableArrowView({
-                model: arrowModel,
-                fillColor: ExternalFieldControlView.ARROW_COLOR,
-                bodyDraggingEnabled: false,
-                useDotWhenSmall: true
-            });
-            arrowView.displayObject.mask = this.areaMask;
-            this.controlArea.addChild(arrowView.displayObject);
+    repositionArrows: function(maintainTargetPosition) {
+        this.updateLock(function() {
+            // Make sure origin is at center
+            this.arrowModel.set('originX', ExternalFieldControlView.AREA_WIDTH  / 2);
+            this.arrowModel.set('originY', ExternalFieldControlView.AREA_HEIGHT / 2);
+        });
 
-            this.arrowModel = arrowModel;
-            this.arrowView = arrowView;
+        this.updateArrow();
+    },
 
-            this.repositionArrows();
+    updateArrow: function() {
+        if (this.dragging)
+            return;
 
-            // Listen for position changes
-            this.listenTo(arrowView, 'drag-head-start', this.arrowDragStart);
-            this.listenTo(arrowView, 'drag-head-end',   this.arrowDragEnd);
+        this.updateLock(function() {
+            var x = this.mvt.modelToViewDeltaX(this.model.field.x);
+            var y = this.mvt.modelToViewDeltaY(this.model.field.y);
+            this.arrowModel.set('targetX', this.arrowModel.get('originX') + x);
+            this.arrowModel.set('targetY', this.arrowModel.get('originY') + y);
+        });
+    },
 
-            this.listenTo(arrowModel, 'change:targetX change:targetY', this.fieldChanged);
-        },
+    reset: function() {
+        this.arrowModel.set('targetX', this.arrowModel.get('originX'));
+        this.arrowModel.set('targetY', this.arrowModel.get('originY'));
+    },
 
-        repositionArrows: function(maintainTargetPosition) {
-            this.updateLock(function() {
-                // Make sure origin is at center
-                this.arrowModel.set('originX', ExternalFieldControlView.AREA_WIDTH  / 2);
-                this.arrowModel.set('originY', ExternalFieldControlView.AREA_HEIGHT / 2);
-            });
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.updateArrow();
-        },
+        this.updateArrow();
+    },
 
-        updateArrow: function() {
-            if (this.dragging)
-                return;
+    dragStart: function(event) {
+        if (!this.arrowView.draggingHead) {
+            var localPoint = event.data.getLocalPosition(this.controlArea, this._dragOffset);
 
-            this.updateLock(function() {
-                var x = this.mvt.modelToViewDeltaX(this.model.field.x);
-                var y = this.mvt.modelToViewDeltaY(this.model.field.y);
-                this.arrowModel.set('targetX', this.arrowModel.get('originX') + x);
-                this.arrowModel.set('targetY', this.arrowModel.get('originY') + y);
-            });
-        },
+            this.arrowModel.set('targetX', localPoint.x);
+            this.arrowModel.set('targetY', localPoint.y);
 
-        reset: function() {
-            this.arrowModel.set('targetX', this.arrowModel.get('originX'));
-            this.arrowModel.set('targetY', this.arrowModel.get('originY'));
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.updateArrow();
-        },
-
-        dragStart: function(event) {
-            if (!this.arrowView.draggingHead) {
-                var localPoint = event.data.getLocalPosition(this.controlArea, this._dragOffset);
-
-                this.arrowModel.set('targetX', localPoint.x);
-                this.arrowModel.set('targetY', localPoint.y);
-
-                this.arrowView.dragHeadStart(event);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.arrowView.dragHeadEnd(event);
-        },
-
-        arrowDragStart: function() {
-            this.dragging = true;
-        },
-
-        arrowDragEnd: function() {
-            this.dragging = false;
-        },
-
-        fieldChanged: function(arrowModel) {
-            this.inputLock(function() {
-                var dx = arrowModel.get('targetX') - arrowModel.get('originX');
-                var dy = arrowModel.get('targetY') - arrowModel.get('originY');
-
-                var mdx = this.mvt.viewToModelDeltaX(dx);
-                var mdy = this.mvt.viewToModelDeltaY(dy);
-
-                this.model.field.set(mdx, mdy);
-            });
+            this.arrowView.dragHeadStart(event);
         }
+    },
 
-    }, Constants.ExternalFieldControlView);
+    dragEnd: function(event) {
+        this.arrowView.dragHeadEnd(event);
+    },
+
+    arrowDragStart: function() {
+        this.dragging = true;
+    },
+
+    arrowDragEnd: function() {
+        this.dragging = false;
+    },
+
+    fieldChanged: function(arrowModel) {
+        this.inputLock(function() {
+            var dx = arrowModel.get('targetX') - arrowModel.get('originX');
+            var dy = arrowModel.get('targetY') - arrowModel.get('originY');
+
+            var mdx = this.mvt.viewToModelDeltaX(dx);
+            var mdy = this.mvt.viewToModelDeltaY(dy);
+
+            this.model.field.set(mdx, mdy);
+        });
+    }
+
+}, Constants.ExternalFieldControlView);
 
 
-    // Give it input/update locks
-    defineInputUpdateLocks(ExternalFieldControlView);
+// Give it input/update locks
+defineInputUpdateLocks(ExternalFieldControlView);
 
 
-    return ExternalFieldControlView;
-});
+export default ExternalFieldControlView;

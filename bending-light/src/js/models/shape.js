@@ -1,65 +1,59 @@
-define(function (require) {
+import _ from 'underscore';
+import Rectangle from 'common/math/rectangle';
 
-    'use strict';
+/**
+ *
+ */
+var Shape = function() {
+    this._bounds = new Rectangle();
+};
 
-    var _ = require('underscore');
-
-    var Rectangle = require('common/math/rectangle');
+/**
+ * Instance functions/properties
+ */
+_.extend(Shape.prototype, {
 
     /**
-     *
+     * Translates the shape
      */
-    var Shape = function() {
-        this._bounds = new Rectangle();
-    };
+    translate: function(dx, dy) {},
 
     /**
-     * Instance functions/properties
+     * Rotates the shape
      */
-    _.extend(Shape.prototype, {
+    rotate: function(radians) {},
 
-        /**
-         * Translates the shape
-         */
-        translate: function(dx, dy) {},
+    /**
+     * Returns a piecewise curve approximation
+     */
+    toPiecewiseCurve: function() {},
 
-        /**
-         * Rotates the shape
-         */
-        rotate: function(radians) {},
+    /**
+     * Compute the intersections of the specified ray with this polygon's edges
+     */
+    getIntersections: function(tail, direction) {},
 
-        /**
-         * Returns a piecewise curve approximation
-         */
-        toPiecewiseCurve: function() {},
+    /**
+     * Returns a rectangle representing the bounds of the shape
+     */
+    getBounds: function() {},
 
-        /**
-         * Compute the intersections of the specified ray with this polygon's edges
-         */
-        getIntersections: function(tail, direction) {},
+    /**
+     * Returns the point that will be used to place the rotation drag handle (or null
+     *   if not rotatable, like for circles)
+     */
+    getReferencePoint: function() {},
 
-        /**
-         * Returns a rectangle representing the bounds of the shape
-         */
-        getBounds: function() {},
+    /**
+     * Returns whether the shape contains a given point
+     */
+    contains: function(point) {},
 
-        /**
-         * Returns the point that will be used to place the rotation drag handle (or null
-         *   if not rotatable, like for circles)
-         */
-        getReferencePoint: function() {},
+    /**
+     * Clones this shape instance and returns it
+     */
+    clone: function() {}
 
-        /**
-         * Returns whether the shape contains a given point
-         */
-        contains: function(point) {},
-
-        /**
-         * Clones this shape instance and returns it
-         */
-        clone: function() {}
-
-    });
-
-    return Shape;
 });
+
+export default Shape;

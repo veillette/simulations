@@ -1,48 +1,36 @@
-define(function(require) {
+import _ from 'underscore';
+import PixiAppView from 'common/v3/pixi/view/app';
+import HydrogenAtomSimView from 'hydrogen-atom/views/sim';
+import BohrModel from 'hydrogen-atom/models/atomic-model/bohr';
+import Assets from 'assets';
+import 'hydrogen-atom/styles/font-awesome.less';
+import 'hydrogen-atom/styles/app.less';
+import transitionsDialogHtml from 'hydrogen-atom/templates/transitions-dialog.html?raw';
 
-    'use strict';
+var HydrogenAtomAppView = PixiAppView.extend({
 
-    var _ = require('underscore');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        HydrogenAtomSimView
+    ],
 
-    var HydrogenAtomSimView  = require('hydrogen-atom/views/sim');
-    var BohrModel            = require('hydrogen-atom/models/atomic-model/bohr');
+    transitionsDialogTemplate: _.template(transitionsDialogHtml),
 
-    var Assets = require('assets');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    // Styles
-    require('less!hydrogen-atom/styles/font-awesome');
-    require('less!hydrogen-atom/styles/app');
+        var groundState = BohrModel.getGroundState();
+        var numberOfStates = BohrModel.getNumberOfStates();
+        var maxState = groundState + numberOfStates - 1;
 
-    // HTML
-    var transitionsDialogHtml = require('text!hydrogen-atom/templates/transitions-dialog.html');
+        this.$el.append(this.transitionsDialogTemplate({
+            groundState: groundState,
+            maxState: maxState,
+            BohrModel: BohrModel
+        }));
+    }
 
-    var HydrogenAtomAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            HydrogenAtomSimView
-        ],
-
-        transitionsDialogTemplate: _.template(transitionsDialogHtml),
-
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
-
-            var groundState = BohrModel.getGroundState();
-            var numberOfStates = BohrModel.getNumberOfStates();
-            var maxState = groundState + numberOfStates - 1;
-
-            this.$el.append(this.transitionsDialogTemplate({
-                groundState: groundState,
-                maxState: maxState,
-                BohrModel: BohrModel
-            }));
-        }
-
-    });
-
-    return HydrogenAtomAppView;
 });
+
+export default HydrogenAtomAppView;

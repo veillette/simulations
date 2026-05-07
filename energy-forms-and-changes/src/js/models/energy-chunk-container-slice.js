@@ -1,58 +1,52 @@
-define(function (require) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Rectangle from 'common/math/rectangle';
+import EnergyChunkCollection from 'models/energy-chunk-collection';
 
-    'use strict';
+/**
+ * The original
+ */
+var EnergyChunkContainerSlice = function(shape, zPosition) {
+    this.shape = shape;
+    this.zPosition = zPosition;
+    this.energyChunkList = new EnergyChunkCollection();
+};
 
-    var _         = require('underscore');
-    var Backbone  = require('backbone');
-    var Rectangle = require('common/math/rectangle');
+_.extend(EnergyChunkContainerSlice.prototype, Backbone.Events, {
 
-    var EnergyChunkCollection = require('models/energy-chunk-collection');
+    translate: function(translation) {
+        for (var i = 0; i < this.energyChunkList.length; i++)
+            this.energyChunkList[i].translate(translation);
+    },
 
-    /**
-     * The original
-     */
-    var EnergyChunkContainerSlice = function(shape, zPosition) {
-        this.shape = shape;
-        this.zPosition = zPosition;
-        this.energyChunkList = new EnergyChunkCollection();
-    };
+    addEnergyChunk: function(chunk) {
+        chunk.set('zPosition', this.zPosition);
+        this.energyChunkList.add(chunk);
+    },
 
-    _.extend(EnergyChunkContainerSlice.prototype, Backbone.Events, {
+    removeEnergyChunk: function(chunk) {
+        return this.energyChunkList.remove(chunk);
+    },
 
-        translate: function(translation) {
-            for (var i = 0; i < this.energyChunkList.length; i++)
-                this.energyChunkList[i].translate(translation);
-        },
+    containsEnergyChunk: function(chunk) {
+        return this.energyChunkList.get(chunk) ? true : false;
+    },
 
-        addEnergyChunk: function(chunk) {
-            chunk.set('zPosition', this.zPosition);
-            this.energyChunkList.add(chunk);
-        },
+    getNumEnergyChunks: function() {
+        return this.energyChunkList.length;
+    },
 
-        removeEnergyChunk: function(chunk) {
-            return this.energyChunkList.remove(chunk);
-        },
-
-        containsEnergyChunk: function(chunk) {
-            return this.energyChunkList.get(chunk) ? true : false;
-        },
-
-        getNumEnergyChunks: function() {
-            return this.energyChunkList.length;
-        },
-
-        getBounds: function() {
-            if (this.shape instanceof Rectangle)
-                return this.shape;
-            else
-                return this.shape.getBounds();
-        },
-
-        getShape: function() {
+    getBounds: function() {
+        if (this.shape instanceof Rectangle)
             return this.shape;
-        }
+        else
+            return this.shape.getBounds();
+    },
 
-    });
+    getShape: function() {
+        return this.shape;
+    }
 
-    return EnergyChunkContainerSlice;
 });
+
+export default EnergyChunkContainerSlice;

@@ -1,100 +1,92 @@
-define(function(require) {
-
-    'use strict';
-
-
-                             require('common/v3/pixi/dash-to');
-    var PixiToImage        = require('common/v3/pixi/pixi-to-image');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
-
-    var WaveSensor     = require('models/wave-sensor');
-    var VelocitySensor = require('models/velocity-sensor');
-
-    var IntroSceneView        = require('views/scene/intro');
-    var WaveSensorView        = require('views/wave-sensor');
-    var VelocitySensorView    = require('views/velocity-sensor');
+import 'common/v3/pixi/dash-to';
+import PixiToImage from 'common/v3/pixi/pixi-to-image';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import WaveSensor from 'models/wave-sensor';
+import VelocitySensor from 'models/velocity-sensor';
+import IntroSceneView from 'views/scene/intro';
+import WaveSensorView from 'views/wave-sensor';
+import VelocitySensorView from 'views/velocity-sensor';
 
 
-    // Constants
+// Constants
 
-    /**
-     *
-     */
-    var MoreToolsSceneView = IntroSceneView.extend({
+/**
+ *
+ */
+var MoreToolsSceneView = IntroSceneView.extend({
 
-        initialize: function(options) {
-            IntroSceneView.prototype.initialize.apply(this, arguments);
-        },
+    initialize: function(options) {
+        IntroSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-        initGraphics: function() {
-            IntroSceneView.prototype.initGraphics.apply(this, arguments);
+    initGraphics: function() {
+        IntroSceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.initWaveSensorView();
-            this.initVelocitySensorView();
-        },
+        this.initWaveSensorView();
+        this.initVelocitySensorView();
+    },
 
-        initWaveSensorView: function() {
-            this.waveSensorView = new WaveSensorView({
-                model: this.simulation.waveSensor,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-            this.waveSensorView.hide();
+    initWaveSensorView: function() {
+        this.waveSensorView = new WaveSensorView({
+            model: this.simulation.waveSensor,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
+        this.waveSensorView.hide();
 
-            this.topLayer.addChild(this.waveSensorView.displayObject);
-        },
+        this.topLayer.addChild(this.waveSensorView.displayObject);
+    },
 
-        initVelocitySensorView: function() {
-            this.velocitySensorView = new VelocitySensorView({
-                model: this.simulation.velocitySensor,
-                mvt: this.mvt
-            });
-            this.velocitySensorView.hide();
+    initVelocitySensorView: function() {
+        this.velocitySensorView = new VelocitySensorView({
+            model: this.simulation.velocitySensor,
+            mvt: this.mvt
+        });
+        this.velocitySensorView.hide();
 
-            this.topLayer.addChild(this.velocitySensorView.displayObject);
-        },
+        this.topLayer.addChild(this.velocitySensorView.displayObject);
+    },
 
-        getWaveSensorIcon: function() {
-            var mvt = new ModelViewTransform.createSinglePointScaleMapping(new Vector2(0, 0), new Vector2(0, 0), 1);
+    getWaveSensorIcon: function() {
+        var mvt = new ModelViewTransform.createSinglePointScaleMapping(new Vector2(0, 0), new Vector2(0, 0), 1);
 
-            var waveSensor = new WaveSensor({
-                probe1Position: new Vector2(-25, 0),
-                probe2Position: new Vector2(-25, 40),
-                bodyPosition:   new Vector2(25, 0)
-            });
+        var waveSensor = new WaveSensor({
+            probe1Position: new Vector2(-25, 0),
+            probe2Position: new Vector2(-25, 40),
+            bodyPosition:   new Vector2(25, 0)
+        });
 
-            var waveSensorView = new WaveSensorView({
-                model: waveSensor,
-                mvt: mvt
-            });
+        var waveSensorView = new WaveSensorView({
+            model: waveSensor,
+            mvt: mvt
+        });
 
-            return PixiToImage.displayObjectToDataURI(waveSensorView.displayObject);
-        },
+        return PixiToImage.displayObjectToDataURI(waveSensorView.displayObject);
+    },
 
-        getVelocitySensorIcon: function() {
-            var mvt = new ModelViewTransform.createSinglePointScaleMapping(new Vector2(0, 0), new Vector2(0, 0), 1);
+    getVelocitySensorIcon: function() {
+        var mvt = new ModelViewTransform.createSinglePointScaleMapping(new Vector2(0, 0), new Vector2(0, 0), 1);
 
-            var velocitySensor = new VelocitySensor();
+        var velocitySensor = new VelocitySensor();
 
-            var velocitySensorView = new VelocitySensorView({
-                model: velocitySensor,
-                mvt: mvt
-            });
+        var velocitySensorView = new VelocitySensorView({
+            model: velocitySensor,
+            mvt: mvt
+        });
 
-            return PixiToImage.displayObjectToDataURI(velocitySensorView.displayObject);
-        },
+        return PixiToImage.displayObjectToDataURI(velocitySensorView.displayObject);
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            IntroSceneView.prototype._update.apply(this, arguments);
+    _update: function(time, deltaTime, paused, timeScale) {
+        IntroSceneView.prototype._update.apply(this, arguments);
 
-            if (!paused) {
-                this.velocitySensorView.update(time, deltaTime);
-                this.waveSensorView.update();
-            }
-        },
+        if (!paused) {
+            this.velocitySensorView.update(time, deltaTime);
+            this.waveSensorView.update();
+        }
+    },
 
-    });
-
-    return MoreToolsSceneView;
 });
+
+export default MoreToolsSceneView;

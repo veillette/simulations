@@ -1,61 +1,55 @@
+import Backbone from 'backbone';
+import _ from 'underscore';
+import VanillaCollection from 'common/collections/vanilla';
 
-define(function (require) {
+import Rectangle from 'common/math/rectangle';
+import AlphaParticleModel from 'rutherford-scattering/models/alpha-particle';
 
-    'use strict';
+var AlphaParticlesCollection = Backbone.Model.extend({
+    model: AlphaParticleModel,
 
-    var Backbone = require('backbone');
-    var _ = require('underscore');
-    var VanillaCollection = require('common/collections/vanilla');
+    initialize: function(attributes, options) {
+        this._bounds = this.makeCullBounds(options.bounds);
+        this.boundWidth = options.bounds.w;
 
-    var Rectangle = require('common/math/rectangle');
-    var AlphaParticleModel = require('rutherford-scattering/models/alpha-particle');
+        this.models = new VanillaCollection();
+    },
 
-    var AlphaParticlesCollection = Backbone.Model.extend({
-        model: AlphaParticleModel,
+    makeCullBounds: function(bounds){
+        var boundTolerance = 10;
+        var boundOffset = boundTolerance/2;
+        var boundX = bounds.x - boundOffset;
+        var boundY = bounds.y - boundOffset;
+        var boundWidth = bounds.w + boundTolerance;
+        var boundHeight = bounds.h + boundTolerance;
 
-        initialize: function(attributes, options) {
-            this._bounds = this.makeCullBounds(options.bounds);
-            this.boundWidth = options.bounds.w;
+        return new Rectangle(boundX, boundY, boundWidth, boundHeight);
+    },
 
-            this.models = new VanillaCollection();
-        },
+    isParticleActive: function(particle){
+        return !particle.get('remove') && this._bounds.contains(particle.getPosition());
+    },
 
-        makeCullBounds: function(bounds){
-            var boundTolerance = 10;
-            var boundOffset = boundTolerance/2;
-            var boundX = bounds.x - boundOffset;
-            var boundY = bounds.y - boundOffset;
-            var boundWidth = bounds.w + boundTolerance;
-            var boundHeight = bounds.h + boundTolerance;
+    cullParticles: function() {
+        var inactiveParticles = this.models.reject(this.isParticleActive, this);
+        _.each(inactiveParticles, _.partial(this.models.remove, _, {silent: true}), this.models);
+        return this;
+    },
 
-            return new Rectangle(boundX, boundY, boundWidth, boundHeight);
-        },
+    add: function(particle) {
+        this.models.add(new this.model(particle), {silent: true});
+    },
 
-        isParticleActive: function(particle){
-            return !particle.get('remove') && this._bounds.contains(particle.getPosition());
-        },
+    reset: function() {
+        this.models.reset([]);
+        this.trigger('reset');
+    },
 
-        cullParticles: function() {
-            var inactiveParticles = this.models.reject(this.isParticleActive, this);
-            _.each(inactiveParticles, _.partial(this.models.remove, _, {silent: true}), this.models);
-            return this;
-        },
-
-        add: function(particle) {
-            this.models.add(new this.model(particle), {silent: true});
-        },
-
-        reset: function() {
-            this.models.reset([]);
-            this.trigger('reset');
-        },
-
-        moveParticles: function(deltaTime, protonCount) {
-            this.models.each(function(alphaParticle){
-                alphaParticle.move(deltaTime, this.boundWidth, protonCount);
-            }, this);
-        }
-    });
-
-    return AlphaParticlesCollection;
+    moveParticles: function(deltaTime, protonCount) {
+        this.models.each(function(alphaParticle){
+            alphaParticle.move(deltaTime, this.boundWidth, protonCount);
+        }, this);
+    }
 });
+
+export default AlphaParticlesCollection;

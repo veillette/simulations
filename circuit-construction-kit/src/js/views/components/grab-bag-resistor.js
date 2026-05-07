@@ -1,40 +1,32 @@
-define(function(require) {
+import RectangularComponentView from 'views/components/rectangular';
+import Constants from 'constants';
+import Assets from 'assets';
 
-    'use strict';
-
-
-
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Constants = require('constants');
-    var Assets    = require('assets');
-
+/**
+ * A view that represents a resistor
+ */
+var GrabBagResistorView = RectangularComponentView.extend({
+    schematicImagePath:     undefined,
+    schematicMaskImagePath: undefined,
     /**
-     * A view that represents a resistor
+     * Initializes the new GrabBagResistorView.
      */
-    var GrabBagResistorView = RectangularComponentView.extend({
-        schematicImagePath:     undefined,
-        schematicMaskImagePath: undefined,
-        /**
-         * Initializes the new GrabBagResistorView.
-         */
-        initialize: function(options) {
-            this.imagePath     = this.model.get('grabBagItem').imagePath;
-            this.maskImagePath = this.model.get('grabBagItem').imageMaskPath;
+    initialize: function(options) {
+        this.imagePath     = this.model.get('grabBagItem').imagePath;
+        this.maskImagePath = this.model.get('grabBagItem').imageMaskPath;
 
-            if (this.model.get('length') > 1.6) {
-                this.schematicImagePath     = Assets.Images.SCHEMATIC_LARGE_RESISTOR;
-                this.schematicMaskImagePath = Assets.Images.SCHEMATIC_LARGE_RESISTOR_MASK;
-            }
-            else {
-                this.schematicImagePath     = Assets.Images.SCHEMATIC_RESISTOR;
-                this.schematicMaskImagePath = Assets.Images.SCHEMATIC_RESISTOR_MASK;
-            }
-
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
+        if (this.model.get('length') > 1.6) {
+            this.schematicImagePath     = Assets.Images.SCHEMATIC_LARGE_RESISTOR;
+            this.schematicMaskImagePath = Assets.Images.SCHEMATIC_LARGE_RESISTOR_MASK;
+        }
+        else {
+            this.schematicImagePath     = Assets.Images.SCHEMATIC_RESISTOR;
+            this.schematicMaskImagePath = Assets.Images.SCHEMATIC_RESISTOR_MASK;
         }
 
-    }, Constants.GrabBagResistorView);
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
+    }
 
-    return GrabBagResistorView;
-});
+}, Constants.GrabBagResistorView);
+
+export default GrabBagResistorView;

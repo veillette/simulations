@@ -1,392 +1,378 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimView from 'common/v3/app/sim';
+import GOSimulation from 'models/simulation';
+import GOSceneView from 'views/scene';
+import BodySettingsView from 'views/body-settings';
+import Constants from 'constants';
+import Scenarios from 'scenarios';
+import 'nouislider';
+import 'styles/sim.less';
+import 'styles/playback-controls.less';
+import 'common/styles/slider.less';
+import 'common/styles/radio.less';
+import simHtml from 'templates/sim.html?raw';
+import controlsHtml from 'templates/playback-controls.html?raw';
+import propertiesHtml from 'templates/properties-panel.html?raw';
 
-    'use strict';
-
-    var $ = require('jquery');
-    var _ = require('underscore');
-
-    var SimView = require('common/v3/app/sim');
-
-    var GOSimulation     = require('models/simulation');
-    var GOSceneView      = require('views/scene');
-    var BodySettingsView = require('views/body-settings');
-
-    var Constants = require('constants');
-    var Scenarios = require('scenarios');
-
-    require('nouislider');
-    require('bootstrap');
-
-    // CSS
-    require('less!styles/sim');
-    require('less!styles/playback-controls');
-    require('less!common/styles/slider');
-    require('less!common/styles/radio');
-
-    // HTML
-    var simHtml        = require('text!templates/sim.html');
-    var controlsHtml   = require('text!templates/playback-controls.html');
-    var propertiesHtml = require('text!templates/properties-panel.html');
+/**
+ * This is the umbrella view for everything in a simulation tab.
+ *   It will be extended by both the Intro module and the Charts
+ *   and contains all the common functionality between the two.
+ */
+var GOSimView = SimView.extend({
 
     /**
-     * This is the umbrella view for everything in a simulation tab.
-     *   It will be extended by both the Intro module and the Charts
-     *   and contains all the common functionality between the two.
+     * Root element properties
      */
-    var GOSimView = SimView.extend({
+    tagName:   'section',
+    className: 'sim-view',
 
-        /**
-         * Root element properties
-         */
-        tagName:   'section',
-        className: 'sim-view',
+    /**
+     * Template for rendering the basic scaffolding
+     */
+    template:                _.template(simHtml),
+    propertiesPanelTemplate: _.template(propertiesHtml),
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template:                _.template(simHtml),
-        propertiesPanelTemplate: _.template(propertiesHtml),
+    /**
+     * Dom event listeners
+     */
+    events: {
+        // Playback controls
+        'click .play-btn'   : 'play',
+        'click .pause-btn'  : 'pause',
+        'click .step-btn'   : 'step',
+        'click .rewind-btn' : 'rewind',
+        'click .reset-btn'  : 'reset',
+        'click .clear-btn'  : 'clearSecondCounter',
 
-        /**
-         * Dom event listeners
-         */
-        events: {
-            // Playback controls
-            'click .play-btn'   : 'play',
-            'click .pause-btn'  : 'pause',
-            'click .step-btn'   : 'step',
-            'click .rewind-btn' : 'rewind',
-            'click .reset-btn'  : 'reset',
-            'click .clear-btn'  : 'clearSecondCounter',
+        'slide .playback-speed' : 'changeSpeed',
 
-            'slide .playback-speed' : 'changeSpeed',
+        'change .scenario-select' : 'changeScenario',
 
-            'change .scenario-select' : 'changeScenario',
+        'click .gravity-check' : 'toggleGravity',
 
-            'click .gravity-check' : 'toggleGravity',
+        'click .gravity-vector-check'  : 'toggleGravityArrows',
+        'click .velocity-vector-check' : 'toggleVelocityArrows',
+        'click .grid-check'            : 'toggleGrid',
+        'click .path-check'            : 'togglePaths',
 
-            'click .gravity-vector-check'  : 'toggleGravityArrows',
-            'click .velocity-vector-check' : 'toggleVelocityArrows',
-            'click .grid-check'            : 'toggleGrid',
-            'click .path-check'            : 'togglePaths',
+        'click .btn-zoom-in':  'zoomIn',
+        'click .btn-zoom-out': 'zoomOut',
 
-            'click .btn-zoom-in':  'zoomIn',
-            'click .btn-zoom-out': 'zoomOut',
+        'click .return-bodies' : 'returnBodies'
+    },
 
-            'click .return-bodies' : 'returnBodies'
-        },
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            link: 'gravity-and-orbits'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'gravity-and-orbits'
-            }, options);
+        this.bodySettingViews = [];
 
-            this.bodySettingViews = [];
+        SimView.prototype.initialize.apply(this, [options]);
 
-            SimView.prototype.initialize.apply(this, [options]);
+        this.initSceneView();
 
-            this.initSceneView();
+        this.listenTo(this.simulation, 'change:paused',        this.pausedChanged);
+        this.listenTo(this.simulation, 'change:secondCounter', this.secondCounterChanged);
+        this.listenTo(this.simulation, 'change:scenario',      this.scenarioChanged);
+        this.listenTo(this.simulation, 'body-out-of-bounds',   this.bodyOutOfBounds);
 
-            this.listenTo(this.simulation, 'change:paused',        this.pausedChanged);
-            this.listenTo(this.simulation, 'change:secondCounter', this.secondCounterChanged);
-            this.listenTo(this.simulation, 'change:scenario',      this.scenarioChanged);
-            this.listenTo(this.simulation, 'body-out-of-bounds',   this.bodyOutOfBounds);
+        this.listenTo(this.simulation.bodies, 'reset',  this.bodiesReset);
+        this.listenTo(this.simulation.bodies, 'add',    this.bodyAdded);
+        this.listenTo(this.simulation.bodies, 'remove', this.bodyRemoved);
+    },
 
-            this.listenTo(this.simulation.bodies, 'reset',  this.bodiesReset);
-            this.listenTo(this.simulation.bodies, 'add',    this.bodyAdded);
-            this.listenTo(this.simulation.bodies, 'remove', this.bodyRemoved);
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new GOSimulation();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new GOSimulation();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new GOSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new GOSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders everything
+     */
+    render: function() {
+        this.$el.empty();
 
-        /**
-         * Renders everything
-         */
-        render: function() {
-            this.$el.empty();
+        this.renderScaffolding();
+        this.renderSceneView();
+        this.renderPlaybackControls();
+        this.renderPropertiesPanel();
 
-            this.renderScaffolding();
-            this.renderSceneView();
-            this.renderPlaybackControls();
-            this.renderPropertiesPanel();
+        this.scenarioChanged(this.simulation, this.simulation.get('scenario'));
 
-            this.scenarioChanged(this.simulation, this.simulation.get('scenario'));
+        return this;
+    },
 
-            return this;
-        },
+    /**
+     * Renders page content. Should be overriden by child classes
+     */
+    renderScaffolding: function() {
+        var data = {
+            Constants: Constants,
+            name: this.name,
+            scenarioNames: this.getScenarioNames()
+        };
+        this.$el.html(this.template(data));
+        this.$('select');
 
-        /**
-         * Renders page content. Should be overriden by child classes
-         */
-        renderScaffolding: function() {
-            var data = {
-                Constants: Constants,
-                name: this.name,
-                scenarioNames: this.getScenarioNames()
-            };
-            this.$el.html(this.template(data));
-            this.$('select');
+        this.$bodySettingViews = this.$('.body-settings-container');
+        this.bodiesReset(this.simulation.bodies);
 
-            this.$bodySettingViews = this.$('.body-settings-container');
-            this.bodiesReset(this.simulation.bodies);
+        this.$returnBodiesButton = this.$('.return-bodies');
+    },
 
-            this.$returnBodiesButton = this.$('.return-bodies');
-        },
+    /**
+     * Renders the scene view
+     */
+    renderSceneView: function() {
+        this.sceneView.render();
+        this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
+    },
 
-        /**
-         * Renders the scene view
-         */
-        renderSceneView: function() {
-            this.sceneView.render();
-            this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-        },
+    /**
+     * Renders the playback controls at the bottom of the screen
+     */
+    renderPlaybackControls: function() {
+        this.$controls = $(controlsHtml);
 
-        /**
-         * Renders the playback controls at the bottom of the screen
-         */
-        renderPlaybackControls: function() {
-            this.$controls = $(controlsHtml);
-
-            // Initialize speed slider
-            this.$controls.find('.playback-speed').noUiSlider({
-                start: this.simulation.get('speedScale'),
-                range: {
-                    'min': [ Constants.MIN_SPEED_SCALE ],
-                    //'50%': [ 1 ],
-                    'max': [ Constants.MAX_SPEED_SCALE ]
-                }
-            });
-
-            this.$('.playback-controls-placeholder').replaceWith(this.$controls);
-
-            this.$time = this.$controls.find('.time-counter');
-        },
-
-        /**
-         * Renders the playback controls at the bottom of the screen
-         */
-        renderPropertiesPanel: function() {
-            this.$propertiesPanel = $(this.propertiesPanelTemplate({
-                unique: this.cid
-            }));
-            this.$('.properties-panel-placeholder').replaceWith(this.$propertiesPanel);
-        },
-
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.sceneView.postRender();
-        },
-
-        /**
-         * Resets the sim and options
-         */
-        reset: function() {
-            this.simulation.reset();
-            this.sceneView.reset();
-            this.$('.gravity-vector-check').prop('checked', false);
-            this.$('.velocity-vector-check').prop('checked', false);
-            this.$('.grid-check').prop('checked', false);
-            this.$('.path-check').prop('checked', false);
-            this.$returnBodiesButton.hide();
-        },
-
-        /**
-         * Overrides step to make sure we calculate the right step time.
-         */
-        step: function() {
-            this.play();
-            setTimeout(this._stepFinished, this.simulation.frameDuration * 1000 / this.simulation.get('timeScale'));
-        },
-
-        /**
-         * Rewinds the sim to the last time it was paused and changed
-         */
-        rewind: function() {
-            this.simulation.rewind();
-            this.sceneView.clearTraces();
-            this.$returnBodiesButton.hide();
-        },
-
-        /**
-         * This is run every tick of the updater.  It updates the wave
-         *   simulation and the views.
-         */
-        update: function(time, deltaTime) {
-            // Update the model
-            this.simulation.update(time, deltaTime);
-
-            var timeSeconds = time / 1000;
-            var dtSeconds   = deltaTime / 1000;
-
-            // Update the scene
-            this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
-        },
-
-        /**
-         * The simulation changed its paused state.
-         */
-        pausedChanged: function() {
-            if (this.simulation.get('paused'))
-                this.$el.removeClass('playing');
-            else
-                this.$el.addClass('playing');
-        },
-
-        /**
-         * Returns a new body settings view
-         */
-        createBodySettingsView: function(body) {
-            return new BodySettingsView({
-                model: body,
-                simulation: this.simulation
-            });
-        },
-
-        appendBodySettingsView: function(bodySettingsView) {
-            this.$bodySettingViews.append(bodySettingsView.el);
-            bodySettingsView.render();
-            this.bodySettingViews.push(bodySettingsView);
-        },
-
-        bodiesReset: function(bodies) {
-            // Remove old body views
-            for (var i = this.bodySettingViews.length - 1; i >= 0; i--) {
-                this.bodySettingViews[i].remove();
-                this.bodySettingViews.splice(i, 1);
+        // Initialize speed slider
+        this.$controls.find('.playback-speed').noUiSlider({
+            start: this.simulation.get('speedScale'),
+            range: {
+                'min': [ Constants.MIN_SPEED_SCALE ],
+                //'50%': [ 1 ],
+                'max': [ Constants.MAX_SPEED_SCALE ]
             }
+        });
 
-            // Add new ball views
-            bodies.each(function(body) {
-                this.appendBodySettingsView(this.createBodySettingsView(body));
-            }, this);
-        },
+        this.$('.playback-controls-placeholder').replaceWith(this.$controls);
 
-        bodyAdded: function(body, bodies) {
-            this.appendBodySettingsView(this.createBodySettingsView(body));
-        },
+        this.$time = this.$controls.find('.time-counter');
+    },
 
-        bodyRemoved: function(body, bodies) {
-            for (var i = this.bodySettingViews.length - 1; i >= 0; i--) {
-                if (this.bodySettingViews[i].model === body) {
-                    this.bodySettingViews[i].remove();
-                    this.bodySettingViews.splice(i, 1);
-                    break;
-                }
-            }
+    /**
+     * Renders the playback controls at the bottom of the screen
+     */
+    renderPropertiesPanel: function() {
+        this.$propertiesPanel = $(this.propertiesPanelTemplate({
+            unique: this.cid
+        }));
+        this.$('.properties-panel-placeholder').replaceWith(this.$propertiesPanel);
+    },
 
-            this.updateBallButtons();
-        },
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.sceneView.postRender();
+    },
 
-        getScenarios: function() {
-            return Scenarios.Friendly;
-        },
+    /**
+     * Resets the sim and options
+     */
+    reset: function() {
+        this.simulation.reset();
+        this.sceneView.reset();
+        this.$('.gravity-vector-check').prop('checked', false);
+        this.$('.velocity-vector-check').prop('checked', false);
+        this.$('.grid-check').prop('checked', false);
+        this.$('.path-check').prop('checked', false);
+        this.$returnBodiesButton.hide();
+    },
 
-        getScenarioNames: function() {
-            return _.pluck(this.getScenarios(), 'name');
-        },
+    /**
+     * Overrides step to make sure we calculate the right step time.
+     */
+    step: function() {
+        this.play();
+        setTimeout(this._stepFinished, this.simulation.frameDuration * 1000 / this.simulation.get('timeScale'));
+    },
 
-        changeScenario: function(event) {
-            var index = parseInt($(event.target).val());
-            var scenario = this.getScenarios()[index];
-            this.simulation.set('scenario', scenario);
-        },
+    /**
+     * Rewinds the sim to the last time it was paused and changed
+     */
+    rewind: function() {
+        this.simulation.rewind();
+        this.sceneView.clearTraces();
+        this.$returnBodiesButton.hide();
+    },
 
-        scenarioChanged: function(simulation, scenario) {
-            this.timeReadoutFunction = scenario.viewSettings.timeReadoutFunction;
-            this.secondCounterChanged(simulation, simulation.get('secondCounter'));
-            this.$returnBodiesButton.hide();
-        },
+    /**
+     * This is run every tick of the updater.  It updates the wave
+     *   simulation and the views.
+     */
+    update: function(time, deltaTime) {
+        // Update the model
+        this.simulation.update(time, deltaTime);
 
-        secondCounterChanged: function(simulation, secondCounter) {
-            this.$time.text(this.timeReadoutFunction(simulation, secondCounter));
-        },
+        var timeSeconds = time / 1000;
+        var dtSeconds   = deltaTime / 1000;
 
-        clearSecondCounter: function() {
-            this.simulation.clearSecondCounter();
-        },
+        // Update the scene
+        this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
+    },
 
-        toggleGravity: function(event) {
-            if ($(event.target).is(':checked'))
-                this.simulation.set('gravityEnabled', true);
-            else
-                this.simulation.set('gravityEnabled', false);
-        },
+    /**
+     * The simulation changed its paused state.
+     */
+    pausedChanged: function() {
+        if (this.simulation.get('paused'))
+            this.$el.removeClass('playing');
+        else
+            this.$el.addClass('playing');
+    },
 
-        changeSpeed: function(event) {
-            var speedScale = $(event.target).val();
-            this.inputLock(function() {
-                this.simulation.set('speedScale', speedScale);
-            });
-        },
+    /**
+     * Returns a new body settings view
+     */
+    createBodySettingsView: function(body) {
+        return new BodySettingsView({
+            model: body,
+            simulation: this.simulation
+        });
+    },
 
-        toggleGravityArrows: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showGravityArrows();
-            else
-                this.sceneView.hideGravityArrows();
-        },
+    appendBodySettingsView: function(bodySettingsView) {
+        this.$bodySettingViews.append(bodySettingsView.el);
+        bodySettingsView.render();
+        this.bodySettingViews.push(bodySettingsView);
+    },
 
-        toggleVelocityArrows: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showVelocityArrows();
-            else
-                this.sceneView.hideVelocityArrows();
-        },
-
-        toggleGrid: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showGrid();
-            else
-                this.sceneView.hideGrid();
-        },
-
-        togglePaths: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showTraces();
-            else
-                this.sceneView.hideTraces();
-        },
-
-        zoomIn: function() {
-            this.sceneView.zoomIn();
-        },
-
-        zoomOut: function() {
-            this.sceneView.zoomOut();
-        },
-
-        bodyOutOfBounds: function() {
-            this.$returnBodiesButton.show();
-        },
-
-        returnBodies: function() {
-            this.simulation.returnAllOutOfBoundsBodies();
-            this.$returnBodiesButton.hide();
+    bodiesReset: function(bodies) {
+        // Remove old body views
+        for (var i = this.bodySettingViews.length - 1; i >= 0; i--) {
+            this.bodySettingViews[i].remove();
+            this.bodySettingViews.splice(i, 1);
         }
 
-    });
+        // Add new ball views
+        bodies.each(function(body) {
+            this.appendBodySettingsView(this.createBodySettingsView(body));
+        }, this);
+    },
 
-    return GOSimView;
+    bodyAdded: function(body, bodies) {
+        this.appendBodySettingsView(this.createBodySettingsView(body));
+    },
+
+    bodyRemoved: function(body, bodies) {
+        for (var i = this.bodySettingViews.length - 1; i >= 0; i--) {
+            if (this.bodySettingViews[i].model === body) {
+                this.bodySettingViews[i].remove();
+                this.bodySettingViews.splice(i, 1);
+                break;
+            }
+        }
+
+        this.updateBallButtons();
+    },
+
+    getScenarios: function() {
+        return Scenarios.Friendly;
+    },
+
+    getScenarioNames: function() {
+        return _.pluck(this.getScenarios(), 'name');
+    },
+
+    changeScenario: function(event) {
+        var index = parseInt($(event.target).val());
+        var scenario = this.getScenarios()[index];
+        this.simulation.set('scenario', scenario);
+    },
+
+    scenarioChanged: function(simulation, scenario) {
+        this.timeReadoutFunction = scenario.viewSettings.timeReadoutFunction;
+        this.secondCounterChanged(simulation, simulation.get('secondCounter'));
+        this.$returnBodiesButton.hide();
+    },
+
+    secondCounterChanged: function(simulation, secondCounter) {
+        this.$time.text(this.timeReadoutFunction(simulation, secondCounter));
+    },
+
+    clearSecondCounter: function() {
+        this.simulation.clearSecondCounter();
+    },
+
+    toggleGravity: function(event) {
+        if ($(event.target).is(':checked'))
+            this.simulation.set('gravityEnabled', true);
+        else
+            this.simulation.set('gravityEnabled', false);
+    },
+
+    changeSpeed: function(event) {
+        var speedScale = $(event.target).val();
+        this.inputLock(function() {
+            this.simulation.set('speedScale', speedScale);
+        });
+    },
+
+    toggleGravityArrows: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showGravityArrows();
+        else
+            this.sceneView.hideGravityArrows();
+    },
+
+    toggleVelocityArrows: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showVelocityArrows();
+        else
+            this.sceneView.hideVelocityArrows();
+    },
+
+    toggleGrid: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showGrid();
+        else
+            this.sceneView.hideGrid();
+    },
+
+    togglePaths: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showTraces();
+        else
+            this.sceneView.hideTraces();
+    },
+
+    zoomIn: function() {
+        this.sceneView.zoomIn();
+    },
+
+    zoomOut: function() {
+        this.sceneView.zoomOut();
+    },
+
+    bodyOutOfBounds: function() {
+        this.$returnBodiesButton.show();
+    },
+
+    returnBodies: function() {
+        this.simulation.returnAllOutOfBoundsBodies();
+        this.$returnBodiesButton.hide();
+    }
+
 });
+
+export default GOSimView;

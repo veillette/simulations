@@ -1,84 +1,78 @@
-define(function (require) {
+import _ from 'underscore';
+import WaveSimulation from '../wave-sim';
+import DarkWaveSimulation from '../wave-sim/dark';
 
-	'use strict';
+/**
+ *
+ */
+var LightSimulation = WaveSimulation.extend({
 
-	var _ = require('underscore');
+    defaults: _.extend({}, WaveSimulation.prototype.defaults, {
 
-	var WaveSimulation     = require('../wave-sim');
-	var DarkWaveSimulation = require('../wave-sim/dark');
+        // Values from PhET's LightModule class
 
-	/**
-	 *
-	 */
-	var LightSimulation = WaveSimulation.extend({
+        damping: {
+            x: 10,
+            y: 40
+        },
+        dimensions: {
+            width: 4200,
+            height: 4200
+        },
+        units: {
+            distance: 'nm',
+            time: 'femtoseconds'
+        },
+        timeScale: 3.6,
 
-		defaults: _.extend({}, WaveSimulation.prototype.defaults, {
+        oscillatorName: 'Light',
+        oscillatorNamePlural: 'Lights',
+    }),
 
-			// Values from PhET's LightModule class
+    /*
+     *
+     */
+    initialize: function(options) {
+        WaveSimulation.prototype.initialize.apply(this, [options]);
 
-			damping: {
-				x: 10,
-				y: 40
-			},
-			dimensions: {
-				width: 4200,
-				height: 4200
-			},
-			units: {
-				distance: 'nm',
-				time: 'femtoseconds'
-			},
-			timeScale: 3.6,
+        this.initDarkWaveSimulation();
+    },
 
-			oscillatorName: 'Light',
-			oscillatorNamePlural: 'Lights',
-		}),
+    initDarkWaveSimulation: function() {
+        var options = this.toJSON();
+        options.realWaveSimulation = this;
+        this.darkWaveSimulation = new DarkWaveSimulation(options);
 
-		/*
-		 *
-		 */
-		initialize: function(options) {
-			WaveSimulation.prototype.initialize.apply(this, [options]);
+        this.off('change', this.setDarkWaveProperties);
+        this.on( 'change', this.setDarkWaveProperties);
+    },
 
-			this.initDarkWaveSimulation();
-		},
+    setDarkWaveProperties: function(model) {
+        this.darkWaveSimulation.set(model.changed);
+    },
 
-		initDarkWaveSimulation: function() {
-			var options = this.toJSON();
-			options.realWaveSimulation = this;
-			this.darkWaveSimulation = new DarkWaveSimulation(options);
+    /**
+     * For when we change the color
+     */
+    resetWave: function() {
+        this.time = 0;
 
-			this.off('change', this.setDarkWaveProperties);
-			this.on( 'change', this.setDarkWaveProperties);
-		},
+        this.lattice.reset(0);
+        this.propagator.reset();
+        this.darkWaveSimulation.lattice.reset(0);
 
-		setDarkWaveProperties: function(model) {
-			this.darkWaveSimulation.set(model.changed);
-		},
+        this.trigger('reset');
+    },
 
-		/**
-		 * For when we change the color
-		 */
-		resetWave: function() {
-			this.time = 0;
+    /**
+     * Inside the fixed-interval loop
+     */
+    _update: function() {
+        WaveSimulation.prototype._update.apply(this);
 
-			this.lattice.reset(0);
-			this.propagator.reset();
-			this.darkWaveSimulation.lattice.reset(0);
-
-			this.trigger('reset');
-		},
-
-		/**
-		 * Inside the fixed-interval loop
-		 */
-		_update: function() {
-			WaveSimulation.prototype._update.apply(this);
-
-			this.darkWaveSimulation.time = this.time;
-			this.darkWaveSimulation._update();
-		},
-	});
-
-	return LightSimulation;
+        this.darkWaveSimulation.time = this.time;
+        this.darkWaveSimulation._update();
+    },
 });
+
+export default LightSimulation;

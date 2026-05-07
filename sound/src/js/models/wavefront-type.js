@@ -1,21 +1,16 @@
-define(function (require) {
+var WavefrontType = {};
 
-    'use strict';
+WavefrontType.Spherical = {};
+WavefrontType.Spherical.computeAmplitudeAtDistance = function(wavefront, amplitude, distance) {
+    var amplitudes = wavefront.getAmplitude();
+    var factor = 1 - (0.05 * distance / amplitudes.length);
 
-    var WavefrontType = {};
+    return amplitude * factor;
+};
 
-    WavefrontType.Spherical = {};
-    WavefrontType.Spherical.computeAmplitudeAtDistance = function(wavefront, amplitude, distance) {
-        var amplitudes = wavefront.getAmplitude();
-        var factor = 1 - (0.05 * distance / amplitudes.length);
+WavefrontType.Plane = {};
+WavefrontType.Plane.computeAmplitudeAtDistance = function(wavefront, amplitude, distance) {
+    return amplitude;
+};
 
-        return amplitude * factor;
-    };
-
-    WavefrontType.Plane = {};
-    WavefrontType.Plane.computeAmplitudeAtDistance = function(wavefront, amplitude, distance) {
-        return amplitude;
-    };
-
-    return WavefrontType;
-});
+export default WavefrontType;

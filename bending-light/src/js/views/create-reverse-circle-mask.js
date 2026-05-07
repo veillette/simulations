@@ -1,40 +1,35 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
 
-    'use strict';
+/**
+ * Clears a circle on a canvas context.
+ *
+ * From https://gist.github.com/getify/2926699
+ */
+function clearCircle(ctx, x, y, radius) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
+    ctx.clip();
+    ctx.clearRect(x-radius, y-radius, radius * 2, radius * 2);
+    ctx.restore();
+}
 
-    var PIXI = require('pixi');
+var createReverseCircleMask = function(radius, width, height) {
+    var canvas = document.createElement('canvas');
+    canvas.width  = width;
+    canvas.height = height;
 
-    /**
-     * Clears a circle on a canvas context.
-     *
-     * From https://gist.github.com/getify/2926699
-     */
-    function clearCircle(ctx, x, y, radius) {
-    	ctx.save();
-    	ctx.beginPath();
-    	ctx.arc(x, y, radius, 0, 2 * Math.PI, true);
-    	ctx.clip();
-    	ctx.clearRect(x-radius, y-radius, radius * 2, radius * 2);
-    	ctx.restore();
-    }
+    var ctx = canvas.getContext('2d');
 
-    var createReverseCircleMask = function(radius, width, height) {
-    	var canvas = document.createElement('canvas');
-    	canvas.width  = width;
-    	canvas.height = height;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    clearCircle(ctx, width / 2, height / 2, radius);
 
-    	var ctx = canvas.getContext('2d');
+    var texture = PIXI.Texture.fromCanvas(canvas);
+    var sprite = new PIXI.Sprite(texture);
+    sprite.anchor.x = sprite.anchor.y = 0.5;
 
-    	ctx.fillStyle = '#ffffff';
-    	ctx.fillRect(0, 0, width, height);
-    	clearCircle(ctx, width / 2, height / 2, radius);
+    return sprite;
+};
 
-    	var texture = PIXI.Texture.fromCanvas(canvas);
-    	var sprite = new PIXI.Sprite(texture);
-    	sprite.anchor.x = sprite.anchor.y = 0.5;
-
-    	return sprite;
-    };
-
-    return createReverseCircleMask;
-});
+export default createReverseCircleMask;

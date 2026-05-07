@@ -1,166 +1,156 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import MovingManView from 'views/moving-man';
+import 'styles/scene.css';
+import template from 'templates/scene.html?raw';
 
-    'use strict';
+/**
+ * The SceneView renders all the scene objects, including
+ *   the MovingManView.
+ */
+var SceneView = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+    template: _.template(template),
+    tagName: 'div',
+    className: 'scene-view',
 
-    var MovingManView = require('views/moving-man');
+    events: {
+        'click .wall-hide' : 'hideWalls',
+        'click .wall-show' : 'showWalls',
 
-    // CSS
-    require('css!styles/scene');
+        // Just an Easter Egg
+        'click .cloud' : 'cloudClicked'
+    },
 
-    // HTML
-    var template = require('text!templates/scene.html');
+    initialize: function(options) {
+
+        // Default values
+        options = _.extend({
+            compact: false
+        }, options);
+
+        this.compact = options.compact;
+
+        // Save options
+        if (options.simulation)
+            this.simulation = options.simulation;
+        else
+            throw 'SceneView requires a simulation model to render.';
+
+        // Bind DOM events
+        $(window).bind('resize', $.proxy(this.windowResized, this));
+
+        // Listen to simulation events
+        this.listenTo(this.simulation, 'change:wallsEnabled', this.wallsEnabledChanged);
+        this.listenTo(this.simulation, 'change:time',         this.timeChanged);
+    },
 
     /**
-     * The SceneView renders all the scene objects, including
-     *   the MovingManView.
+     * Renders content and canvas for heatmap
      */
-    var SceneView = Backbone.View.extend({
+    render: function() {
+        this.$el.html(this.template());
 
-        template: _.template(template),
-        tagName: 'div',
-        className: 'scene-view',
+        if (this.compact)
+            this.$el.addClass('compact');
 
-        events: {
-            'click .wall-hide' : 'hideWalls',
-            'click .wall-show' : 'showWalls',
+        this.$walls = this.$('.wall');
+        this.$time  = this.$('.clock > .time');
 
-            // Just an Easter Egg
-            'click .cloud' : 'cloudClicked'
-        },
+        this.renderMovingManView();
 
-        initialize: function(options) {
+        return this;
+    },
 
-            // Default values
-            options = _.extend({
-                compact: false
-            }, options);
+    /**
+     * Renders html container
+     */
+    renderMovingManView: function() {
+        var $manContainer = this.$('.man-container');
+        this.movingManView = new MovingManView({
+            simulation: this.simulation,
+            dragFrame: $manContainer[0]
+        });
+        this.movingManView.render();
+        $manContainer.html(this.movingManView.el);
+    },
 
-            this.compact = options.compact;
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.movingManView.postRender();
+    },
 
-            // Save options
-            if (options.simulation)
-                this.simulation = options.simulation;
-            else
-                throw 'SceneView requires a simulation model to render.';
+    /**
+     * Responds to resize events.
+     */
+    resize: function() {},
 
-            // Bind DOM events
-            $(window).bind('resize', $.proxy(this.windowResized, this));
+    /**
+     * Called on a window resize to resize the canvas
+     */
+    windowResized: function(event) {
+        this.resizeOnNextUpdate = true;
+    },
 
-            // Listen to simulation events
-            this.listenTo(this.simulation, 'change:wallsEnabled', this.wallsEnabledChanged);
-            this.listenTo(this.simulation, 'change:time',         this.timeChanged);
-        },
+    /**
+     * Responds to resize events and draws everything.
+     */
+    update: function(time, delta) {
+        if (this.resizeOnNextUpdate)
+            this.resize();
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            this.$el.html(this.template());
+        this.movingManView.update(time, delta);
+    },
 
-            if (this.compact)
-                this.$el.addClass('compact');
+    /**
+     * Hides the walls and updates the sim
+     */
+    hideWalls: function() {
+        this.simulation.set('wallsEnabled', false);
+    },
 
-            this.$walls = this.$('.wall');
-            this.$time  = this.$('.clock > .time');
+    /**
+     * Hides the walls and updates the sim
+     */
+    showWalls: function() {
+        this.simulation.set('wallsEnabled', true);
+    },
 
-            this.renderMovingManView();
+    /**
+     * Updates the visual state of the walls when the simulation
+     *   changes.
+     */
+    wallsEnabledChanged: function(model, wallsEnabled, options) {
+        if (wallsEnabled)
+            this.$walls.removeClass('disabled');
+        else
+            this.$walls.addClass('disabled');
+    },
 
-            return this;
-        },
+    /**
+     * Updates the time counter when it changes in the sim.
+     */
+    timeChanged: function(model, time, options) {
+        this.$time.text(time.toFixed(1));
+    },
 
-        /**
-         * Renders html container
-         */
-        renderMovingManView: function() {
-            var $manContainer = this.$('.man-container');
-            this.movingManView = new MovingManView({
-                simulation: this.simulation,
-                dragFrame: $manContainer[0]
-            });
-            this.movingManView.render();
-            $manContainer.html(this.movingManView.el);
-        },
+    /**
+     * Just a little Easter Egg to start the cloud animation.
+     *   The user has to click each cloud to activate it.
+     */
+    cloudClicked: function(event) {
+        if (!this.cloudsClicked)
+            this.cloudsClicked = {};
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.movingManView.postRender();
-        },
+        this.cloudsClicked[$(event.target).attr('class')] = true;
 
-        /**
-         * Responds to resize events.
-         */
-        resize: function() {},
-
-        /**
-         * Called on a window resize to resize the canvas
-         */
-        windowResized: function(event) {
-            this.resizeOnNextUpdate = true;
-        },
-
-        /**
-         * Responds to resize events and draws everything.
-         */
-        update: function(time, delta) {
-            if (this.resizeOnNextUpdate)
-                this.resize();
-
-            this.movingManView.update(time, delta);
-        },
-
-        /**
-         * Hides the walls and updates the sim
-         */
-        hideWalls: function() {
-            this.simulation.set('wallsEnabled', false);
-        },
-
-        /**
-         * Hides the walls and updates the sim
-         */
-        showWalls: function() {
-            this.simulation.set('wallsEnabled', true);
-        },
-
-        /**
-         * Updates the visual state of the walls when the simulation
-         *   changes.
-         */
-        wallsEnabledChanged: function(model, wallsEnabled, options) {
-            if (wallsEnabled)
-                this.$walls.removeClass('disabled');
-            else
-                this.$walls.addClass('disabled');
-        },
-
-        /**
-         * Updates the time counter when it changes in the sim.
-         */
-        timeChanged: function(model, time, options) {
-            this.$time.text(time.toFixed(1));
-        },
-
-        /**
-         * Just a little Easter Egg to start the cloud animation.
-         *   The user has to click each cloud to activate it.
-         */
-        cloudClicked: function(event) {
-            if (!this.cloudsClicked)
-                this.cloudsClicked = {};
-
-            this.cloudsClicked[$(event.target).attr('class')] = true;
-
-            if (_.size(this.cloudsClicked) >= 5)
-                this.$('.clouds').addClass('moving');
-        }
-    });
-
-    return SceneView;
+        if (_.size(this.cloudsClicked) >= 5)
+            this.$('.clouds').addClass('moving');
+    }
 });
+
+export default SceneView;

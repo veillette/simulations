@@ -1,26 +1,21 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var Propagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(Propagator.prototype, {
 
-    var Propagator = function() {};
+    update: function(deltaTime, system) {
+        for (var i = 0; i < system.particles.length; i++)
+            this.propagate(deltaTime, system.particles.at(i));
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Propagator.prototype, {
+    propagate: function(deltaTime, particle) {
+        throw 'Propagate function not yet implemented.';
+    }
 
-        update: function(deltaTime, system) {
-            for (var i = 0; i < system.particles.length; i++)
-                this.propagate(deltaTime, system.particles.at(i));
-        },
-
-        propagate: function(deltaTime, particle) {
-            throw 'Propagate function not yet implemented.';
-        }
-
-    });
-
-    return Propagator;
 });
+
+export default Propagator;

@@ -1,25 +1,19 @@
-define(function (require) {
+import _ from 'underscore';
+import Resistor from 'models/components/resistor';
 
-    'use strict';
+/**
+ * A resistor
+ */
+var GrabBagResistor = Resistor.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Resistor.prototype.defaults, {
+        grabBagItem: undefined
+    }),
 
-    var Resistor = require('models/components/resistor');
+    initialize: function(attributes, options) {
+        Resistor.prototype.initialize.apply(this, [attributes, options]);
+    }
 
-    /**
-     * A resistor
-     */
-    var GrabBagResistor = Resistor.extend({
-
-        defaults: _.extend({}, Resistor.prototype.defaults, {
-            grabBagItem: undefined
-        }),
-
-        initialize: function(attributes, options) {
-            Resistor.prototype.initialize.apply(this, [attributes, options]);
-        }
-
-    });
-
-    return GrabBagResistor;
 });
+
+export default GrabBagResistor;

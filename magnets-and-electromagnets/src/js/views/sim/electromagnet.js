@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import ElectromagnetSimView from 'views/sim/electromagnet';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var ElectromagnetSimView = require('views/sim/electromagnet');
+/**
+ * "Magnets and Electromagnets" version of the original
+ */
+var MEElectromagnetSimView = ElectromagnetSimView.extend({
 
     /**
-     * "Magnets and Electromagnets" version of the original
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var MEElectromagnetSimView = ElectromagnetSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            link: 'magnets-and-electromagnets'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'magnets-and-electromagnets'
-            }, options);
+        ElectromagnetSimView.prototype.initialize.apply(this, [options]);
+    }
 
-            ElectromagnetSimView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return MEElectromagnetSimView;
 });
+
+export default MEElectromagnetSimView;

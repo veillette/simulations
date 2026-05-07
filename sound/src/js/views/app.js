@@ -1,63 +1,54 @@
-define(function(require) {
+import _ from 'underscore';
+import PixiAppView from 'common/v3/pixi/view/app';
+import SingleSourceSimView from 'views/sim/single-source';
+import MeasureSimView from 'views/sim/measure';
+import TwoSourceInterferenceSimView from 'views/sim/two-source-interference';
+import ReflectionInterferenceSimView from 'views/sim/reflection-interference';
+import VariableAirPressureSimView from 'views/sim/variable-air-pressure';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
 
-    'use strict';
+var SoundAppView = PixiAppView.extend({
 
-    var _ = require('underscore');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        SingleSourceSimView,
+        MeasureSimView,
+        TwoSourceInterferenceSimView,
+        ReflectionInterferenceSimView,
+        VariableAirPressureSimView
+    ],
 
-    var SingleSourceSimView           = require('views/sim/single-source');
-    var MeasureSimView                = require('views/sim/measure');
-    var TwoSourceInterferenceSimView  = require('views/sim/two-source-interference');
-    var ReflectionInterferenceSimView = require('views/sim/reflection-interference');
-    var VariableAirPressureSimView    = require('views/sim/variable-air-pressure');
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click .sound-btn-mute'   : 'mute',
+        'click .sound-btn-unmute' : 'unmute'
+    }),
 
-    var Assets = require('assets');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+        this.$mute   = this.$('.sound-btn-mute');
+        this.$unmute = this.$('.sound-btn-unmute');
+    },
 
-    var SoundAppView = PixiAppView.extend({
+    mute: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.mute();
+        });
+        this.$mute.hide();
+        this.$unmute.show();
+    },
 
-        assets: Assets.getAssetList(),
+    unmute: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.unmute();
+        });
+        this.$unmute.hide();
+        this.$mute.show();
+    }
 
-        simViewConstructors: [
-            SingleSourceSimView,
-            MeasureSimView,
-            TwoSourceInterferenceSimView,
-            ReflectionInterferenceSimView,
-            VariableAirPressureSimView
-        ],
-
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click .sound-btn-mute'   : 'mute',
-            'click .sound-btn-unmute' : 'unmute'
-        }),
-
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
-
-            this.$mute   = this.$('.sound-btn-mute');
-            this.$unmute = this.$('.sound-btn-unmute');
-        },
-
-        mute: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.mute();
-            });
-            this.$mute.hide();
-            this.$unmute.show();
-        },
-
-        unmute: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.unmute();
-            });
-            this.$unmute.hide();
-            this.$mute.show();
-        }
-
-    });
-
-    return SoundAppView;
 });
+
+export default SoundAppView;

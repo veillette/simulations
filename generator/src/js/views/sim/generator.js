@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import GeneratorSimView from 'views/sim/generator';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var GeneratorSimView = require('views/sim/generator');
+/**
+ * "Generator" version of the original
+ */
+var GeneratorGeneratorSimView = GeneratorSimView.extend({
 
     /**
-     * "Generator" version of the original
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var GeneratorGeneratorSimView = GeneratorSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            link: 'generator'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'generator'
-            }, options);
+        GeneratorSimView.prototype.initialize.apply(this, [options]);
+    }
 
-            GeneratorSimView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return GeneratorGeneratorSimView;
 });
+
+export default GeneratorGeneratorSimView;

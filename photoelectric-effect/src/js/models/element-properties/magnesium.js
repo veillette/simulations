@@ -1,34 +1,22 @@
-define(function (require) {
+import _ from 'underscore';
+import DischargeLampElementProperties from 'discharge-lamps/models/element-properties';
+import DefaultEnergyEmissionStrategy from 'discharge-lamps/models/default-energy-emission-strategy';
+import MetalEnergyAbsorptionStrategy from 'models/metal-energy-absorption-strategy';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Magnesium
+ */
+var Magnesium = DischargeLampElementProperties.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, DischargeLampElementProperties.prototype.defaults, {
+        name: Constants.Magnesium.NAME,
+        energyAbsorptionStrategy: new MetalEnergyAbsorptionStrategy(Constants.Magnesium.WORK_FUNCTION),
+        energyEmissionStrategy: new DefaultEnergyEmissionStrategy(),
+        workFunction: Constants.Magnesium.WORK_FUNCTION,
+        energyLevels: Constants.Magnesium.ENERGY_LEVELS
+    })
 
-    var DischargeLampElementProperties = require('discharge-lamps/models/element-properties');
-    var DefaultEnergyEmissionStrategy  = require('discharge-lamps/models/default-energy-emission-strategy');
+}, Constants.Magnesium);
 
-    var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');
-
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-
-    /**
-     * Magnesium
-     */
-    var Magnesium = DischargeLampElementProperties.extend({
-
-        defaults: _.extend({}, DischargeLampElementProperties.prototype.defaults, {
-            name: Constants.Magnesium.NAME,
-            energyAbsorptionStrategy: new MetalEnergyAbsorptionStrategy(Constants.Magnesium.WORK_FUNCTION),
-            energyEmissionStrategy: new DefaultEnergyEmissionStrategy(),
-            workFunction: Constants.Magnesium.WORK_FUNCTION,
-            energyLevels: Constants.Magnesium.ENERGY_LEVELS
-        })
-
-    }, Constants.Magnesium);
-
-    return Magnesium;
-
-});
+export default Magnesium;

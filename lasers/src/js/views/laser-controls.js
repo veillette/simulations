@@ -1,133 +1,126 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import WavelengthSliderView from 'common/controls/wavelength-slider';
+import QuantumConfig from 'common/quantum/config';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import html from 'templates/laser-controls.html?raw';
+import 'styles/laser-controls.less';
+Backbone.$ = $;
 
-    'use strict';
+/**
+ *
+ */
+var LaserControlsView = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone'); Backbone.$ = $;
+    className: 'sim-controls beam-controls',
 
-    var WavelengthSliderView   = require('common/controls/wavelength-slider');
-    var QuantumConfig          = require('common/quantum/config');
-    var defineInputUpdateLocks = require('common/locks/define-locks');
+    template: _.template(html),
 
-    var html = require('text!templates/laser-controls.html');
+    events: {
+        'slide .wavelength-slider' : 'changeWavelength',
+        'slide .intensity-slider'  : 'changeIntensity'
+    },
 
-    require('less!styles/laser-controls');
+    initialize: function(options) {
+        options = _.extend({
+            number: ''
+        }, options);
+
+        this.number = options.number;
+
+        this.wavelengthSliderView = new WavelengthSliderView({
+            defaultWavelength: this.model.get('wavelength'),
+            minWavelength: QuantumConfig.MIN_WAVELENGTH,
+            maxWavelength: QuantumConfig.MAX_WAVELENGTH
+        });
+    },
+
+    reset: function() {
+        this.updateLock(function() {
+            this.wavelengthSliderView.val(this.model.get('wavelength'));
+            this.$wavelengthValue.text(this.model.get('wavelength') + 'nm');
+            this.$('.intensity-slider').val(this.model.get('photonsPerSecond'));
+            this.updateIntensityLabel(this.model.get('photonsPerSecond'));
+        });
+    },
 
     /**
-     *
+     * Renders content and canvas for heatmap
      */
-    var LaserControlsView = Backbone.View.extend({
+    render: function() {
+        // Render the base template
+        this.$el.append(this.template({
+            unique: this.cid,
+            number: this.number
+        }));
 
-        className: 'sim-controls beam-controls',
+        // Add a class to help position it
+        if (this.number)
+            this.$el.addClass('laser-' + this.number);
 
-        template: _.template(html),
+        // Create the intensity slider
+        this.$('.intensity-slider').noUiSlider({
+            start: this.model.get('photonsPerSecond'),
+            range: {
+                min: 0,
+                max: this.model.get('maxPhotonsPerSecond')
+            },
+            connect: 'lower'
+        });
 
-        events: {
-            'slide .wavelength-slider' : 'changeWavelength',
-            'slide .intensity-slider'  : 'changeIntensity'
-        },
+        // Create the wavelength slider
+        this.wavelengthSliderView.render();
+        this.$('.wavelength-slider-wrapper').prepend(this.wavelengthSliderView.el);
 
-        initialize: function(options) {
-            options = _.extend({
-                number: ''
-            }, options);
+        // Save the label elements for each slider header
+        this.$intensityValue = this.$('.intensity-value');
+        this.$wavelengthValue = this.$('.wavelength-value');
 
-            this.number = options.number;
+        // Set default values
+        this.updateIntensityLabel(this.model.get('photonsPerSecond'));
 
-            this.wavelengthSliderView = new WavelengthSliderView({
-                defaultWavelength: this.model.get('wavelength'),
-                minWavelength: QuantumConfig.MIN_WAVELENGTH,
-                maxWavelength: QuantumConfig.MAX_WAVELENGTH
-            });
-        },
+        return this;
+    },
 
-        reset: function() {
-            this.updateLock(function() {
-                this.wavelengthSliderView.val(this.model.get('wavelength'));
-                this.$wavelengthValue.text(this.model.get('wavelength') + 'nm');
-                this.$('.intensity-slider').val(this.model.get('photonsPerSecond'));
-                this.updateIntensityLabel(this.model.get('photonsPerSecond'));
-            });
-        },
+    postRender: function() {
+        this.wavelengthSliderView.postRender();
+    },
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            // Render the base template
-            this.$el.append(this.template({
-                unique: this.cid,
-                number: this.number
-            }));
+    changeWavelength: function(event) {
+        this.inputLock(function() {
+            var wavelength = parseInt($(event.target).val());
+            this.$wavelengthValue.text(wavelength + 'nm');
+            this.model.set('wavelength', wavelength);
+        });
+    },
 
-            // Add a class to help position it
-            if (this.number)
-                this.$el.addClass('laser-' + this.number);
+    changeIntensity: function(event) {
+        this.inputLock(function() {
+            var photonsPerSecond = parseInt(this.$('.intensity-slider').val());
+            this.updateIntensityLabel(photonsPerSecond);
+            this.model.set('photonsPerSecond', photonsPerSecond);
+        });
+    },
 
-            // Create the intensity slider
-            this.$('.intensity-slider').noUiSlider({
-                start: this.model.get('photonsPerSecond'),
-                range: {
-                    min: 0,
-                    max: this.model.get('maxPhotonsPerSecond')
-                },
-                connect: 'lower'
-            });
+    updateIntensityLabel: function(photonsPerSecond) {
+        var percent = Math.round((photonsPerSecond / this.model.get('maxPhotonsPerSecond')) * 100);
+        this.$intensityValue.text(percent + '%');
+    },
 
-            // Create the wavelength slider
-            this.wavelengthSliderView.render();
-            this.$('.wavelength-slider-wrapper').prepend(this.wavelengthSliderView.el);
+    show: function() {
+        this.$el.show();
+    },
 
-            // Save the label elements for each slider header
-            this.$intensityValue = this.$('.intensity-value');
-            this.$wavelengthValue = this.$('.wavelength-value');
+    hide: function() {
+        this.$el.hide();
+    }
 
-            // Set default values
-            this.updateIntensityLabel(this.model.get('photonsPerSecond'));
-
-            return this;
-        },
-
-        postRender: function() {
-            this.wavelengthSliderView.postRender();
-        },
-
-        changeWavelength: function(event) {
-            this.inputLock(function() {
-                var wavelength = parseInt($(event.target).val());
-                this.$wavelengthValue.text(wavelength + 'nm');
-                this.model.set('wavelength', wavelength);
-            });
-        },
-
-        changeIntensity: function(event) {
-            this.inputLock(function() {
-                var photonsPerSecond = parseInt(this.$('.intensity-slider').val());
-                this.updateIntensityLabel(photonsPerSecond);
-                this.model.set('photonsPerSecond', photonsPerSecond);
-            });
-        },
-
-        updateIntensityLabel: function(photonsPerSecond) {
-            var percent = Math.round((photonsPerSecond / this.model.get('maxPhotonsPerSecond')) * 100);
-            this.$intensityValue.text(percent + '%');
-        },
-
-        show: function() {
-            this.$el.show();
-        },
-
-        hide: function() {
-            this.$el.hide();
-        }
-
-    });
-
-
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(LaserControlsView);
-
-
-    return LaserControlsView;
 });
+
+
+// Add input/update locking functionality to the prototype
+defineInputUpdateLocks(LaserControlsView);
+
+
+export default LaserControlsView;

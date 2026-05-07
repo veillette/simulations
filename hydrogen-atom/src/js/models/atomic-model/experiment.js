@@ -1,10 +1,5 @@
-define(function (require) {
+import SchroedingerModel from 'hydrogen-atom/models/atomic-model/schroedinger';
 
-    'use strict';
+var ExperimentModel = SchroedingerModel.extend();
 
-    var SchroedingerModel = require('hydrogen-atom/models/atomic-model/schroedinger');
-
-    var ExperimentModel = SchroedingerModel.extend();
-
-    return ExperimentModel;
-});
+export default ExperimentModel;

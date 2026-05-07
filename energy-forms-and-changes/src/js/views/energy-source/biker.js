@@ -1,263 +1,255 @@
-define(function(require) {
+import $ from 'jquery';
+import * as PIXI from 'pixi.js';
+import Colors from 'common/colors/colors';
+import SliderView from 'common/v3/pixi/view/slider';
+import Vector2 from 'common/math/vector2';
+import EnergySourceView from 'views/energy-source';
+import Constants from 'constants';
+import Assets from 'assets';
+var Biker = Constants.Biker;
 
-    'use strict';
+var AnimatedSpriteCtor = (PIXI.extras && (PIXI.extras.MovieClip || PIXI.extras.AnimatedSprite)) ||
+                         PIXI.AnimatedSprite ||
+                         PIXI.MovieClip;
 
-    var $ = require('jquery');
-    var PIXI = require('pixi');
+var backLegTextures = [
+    Assets.Images.BACK_LEG_01,
+    Assets.Images.BACK_LEG_02,
+    Assets.Images.BACK_LEG_03,
+    Assets.Images.BACK_LEG_04,
+    Assets.Images.BACK_LEG_05,
+    Assets.Images.BACK_LEG_06,
+    Assets.Images.BACK_LEG_07,
+    Assets.Images.BACK_LEG_08,
+    Assets.Images.BACK_LEG_09,
+    Assets.Images.BACK_LEG_10,
+    Assets.Images.BACK_LEG_11,
+    Assets.Images.BACK_LEG_12,
+    Assets.Images.BACK_LEG_13,
+    Assets.Images.BACK_LEG_14,
+    Assets.Images.BACK_LEG_15,
+    Assets.Images.BACK_LEG_16,
+    Assets.Images.BACK_LEG_17,
+    Assets.Images.BACK_LEG_18,
+    Assets.Images.BACK_LEG_19,
+    Assets.Images.BACK_LEG_20,
+    Assets.Images.BACK_LEG_21,
+    Assets.Images.BACK_LEG_22,
+    Assets.Images.BACK_LEG_23,
+    Assets.Images.BACK_LEG_24
+];
 
-    var Colors     = require('common/colors/colors');
-    var SliderView = require('common/v3/pixi/view/slider');
-    var Vector2    = require('common/math/vector2');
+var frontLegTextures = [
+    Assets.Images.FRONT_LEG_01,
+    Assets.Images.FRONT_LEG_02,
+    Assets.Images.FRONT_LEG_03,
+    Assets.Images.FRONT_LEG_04,
+    Assets.Images.FRONT_LEG_05,
+    Assets.Images.FRONT_LEG_06,
+    Assets.Images.FRONT_LEG_07,
+    Assets.Images.FRONT_LEG_08,
+    Assets.Images.FRONT_LEG_09,
+    Assets.Images.FRONT_LEG_10,
+    Assets.Images.FRONT_LEG_11,
+    Assets.Images.FRONT_LEG_12,
+    Assets.Images.FRONT_LEG_13,
+    Assets.Images.FRONT_LEG_14,
+    Assets.Images.FRONT_LEG_15,
+    Assets.Images.FRONT_LEG_16,
+    Assets.Images.FRONT_LEG_17,
+    Assets.Images.FRONT_LEG_18,
+    Assets.Images.FRONT_LEG_19,
+    Assets.Images.FRONT_LEG_20,
+    Assets.Images.FRONT_LEG_21,
+    Assets.Images.FRONT_LEG_22,
+    Assets.Images.FRONT_LEG_23,
+    Assets.Images.FRONT_LEG_24
+];
 
-    var EnergySourceView = require('views/energy-source');
+var texturesInitialized = false;
+var initTextures = function() {
+    var i;
+    for (i = 0; i < backLegTextures.length; i++)
+        backLegTextures[i] = Assets.Texture(backLegTextures[i]);
+    for (i = 0; i < frontLegTextures.length; i++)
+        frontLegTextures[i] = Assets.Texture(frontLegTextures[i]);
+    texturesInitialized = true;
+};
 
-    var Constants = require('constants');
-    var Biker = Constants.Biker;
+var BikerView = EnergySourceView.extend({
 
-    var Assets = require('assets');
-    var AnimatedSpriteCtor = (PIXI.extras && (PIXI.extras.MovieClip || PIXI.extras.AnimatedSprite)) ||
-                             PIXI.AnimatedSprite ||
-                             PIXI.MovieClip;
+    initialize: function(options) {
+        // This is a hybrid PIXI/HTML view
+        this.el = document.createElement('div');
+        this.$el = $(this.el);
 
-    var backLegTextures = [
-        Assets.Images.BACK_LEG_01,
-        Assets.Images.BACK_LEG_02,
-        Assets.Images.BACK_LEG_03,
-        Assets.Images.BACK_LEG_04,
-        Assets.Images.BACK_LEG_05,
-        Assets.Images.BACK_LEG_06,
-        Assets.Images.BACK_LEG_07,
-        Assets.Images.BACK_LEG_08,
-        Assets.Images.BACK_LEG_09,
-        Assets.Images.BACK_LEG_10,
-        Assets.Images.BACK_LEG_11,
-        Assets.Images.BACK_LEG_12,
-        Assets.Images.BACK_LEG_13,
-        Assets.Images.BACK_LEG_14,
-        Assets.Images.BACK_LEG_15,
-        Assets.Images.BACK_LEG_16,
-        Assets.Images.BACK_LEG_17,
-        Assets.Images.BACK_LEG_18,
-        Assets.Images.BACK_LEG_19,
-        Assets.Images.BACK_LEG_20,
-        Assets.Images.BACK_LEG_21,
-        Assets.Images.BACK_LEG_22,
-        Assets.Images.BACK_LEG_23,
-        Assets.Images.BACK_LEG_24
-    ];
+        EnergySourceView.prototype.initialize.apply(this, [options]);
 
-    var frontLegTextures = [
-        Assets.Images.FRONT_LEG_01,
-        Assets.Images.FRONT_LEG_02,
-        Assets.Images.FRONT_LEG_03,
-        Assets.Images.FRONT_LEG_04,
-        Assets.Images.FRONT_LEG_05,
-        Assets.Images.FRONT_LEG_06,
-        Assets.Images.FRONT_LEG_07,
-        Assets.Images.FRONT_LEG_08,
-        Assets.Images.FRONT_LEG_09,
-        Assets.Images.FRONT_LEG_10,
-        Assets.Images.FRONT_LEG_11,
-        Assets.Images.FRONT_LEG_12,
-        Assets.Images.FRONT_LEG_13,
-        Assets.Images.FRONT_LEG_14,
-        Assets.Images.FRONT_LEG_15,
-        Assets.Images.FRONT_LEG_16,
-        Assets.Images.FRONT_LEG_17,
-        Assets.Images.FRONT_LEG_18,
-        Assets.Images.FRONT_LEG_19,
-        Assets.Images.FRONT_LEG_20,
-        Assets.Images.FRONT_LEG_21,
-        Assets.Images.FRONT_LEG_22,
-        Assets.Images.FRONT_LEG_23,
-        Assets.Images.FRONT_LEG_24
-    ];
+        this.listenTo(this.model, 'change:bikerHasEnergy', this.bikerStateChanged);
+        this.listenTo(this.model, 'change:rearWheelAngle', this.updateRearWheelAngle);
+        this.listenTo(this.model, 'change:crankAngle',     this.updateCrankAngle);
+        this.listenTo(this.model, 'change:active',         this.updateFeedMeButton);
 
-    var texturesInitialized = false;
-    var initTextures = function() {
-        var i;
-        for (i = 0; i < backLegTextures.length; i++)
-            backLegTextures[i] = Assets.Texture(backLegTextures[i]);
-        for (i = 0; i < frontLegTextures.length; i++)
-            frontLegTextures[i] = Assets.Texture(frontLegTextures[i]);
-        texturesInitialized = true;
-    };
+        this.bikerStateChanged(this.model, this.model.get('bikerHasEnergy'));
+    },
 
-    var BikerView = EnergySourceView.extend({
+    initGraphics: function() {
+        EnergySourceView.prototype.initGraphics.apply(this);
 
-        initialize: function(options) {
-            // This is a hybrid PIXI/HTML view
-            this.el = document.createElement('div');
-            this.$el = $(this.el);
+        this.initImages();
+        this.initControls();
+    },
 
-            EnergySourceView.prototype.initialize.apply(this, [options]);
+    initImages: function() {
+        if (!texturesInitialized)
+            initTextures();
 
-            this.listenTo(this.model, 'change:bikerHasEnergy', this.bikerStateChanged);
-            this.listenTo(this.model, 'change:rearWheelAngle', this.updateRearWheelAngle);
-            this.listenTo(this.model, 'change:crankAngle',     this.updateCrankAngle);
-            this.listenTo(this.model, 'change:active',         this.updateFeedMeButton);
+        var legImageOffset = this.mvt.modelToViewDelta(new Vector2(0.009, 0.002).add(Biker.FRAME_CENTER_OFFSET));
 
-            this.bikerStateChanged(this.model, this.model.get('bikerHasEnergy'));
-        },
+        var backLeg  = new AnimatedSpriteCtor(backLegTextures);
+        var frontLeg = new AnimatedSpriteCtor(frontLegTextures);
 
-        initGraphics: function() {
-            EnergySourceView.prototype.initGraphics.apply(this);
+        backLeg.x = frontLeg.x = legImageOffset.x;
+        backLeg.y = frontLeg.y = legImageOffset.y;
 
-            this.initImages();
-            this.initControls();
-        },
+        backLeg.anchor.x = frontLeg.anchor.x = 0.5;
+        backLeg.anchor.y = frontLeg.anchor.y = 0.5;
 
-        initImages: function() {
-            if (!texturesInitialized)
-                initTextures();
+        backLeg.scale.x = frontLeg.scale.x = this.getImageScale();
+        backLeg.scale.y = frontLeg.scale.y = this.getImageScale();
 
-            var legImageOffset = this.mvt.modelToViewDelta(new Vector2(0.009, 0.002).add(Biker.FRAME_CENTER_OFFSET));
+        var frame      = this.createSpriteWithOffset(Assets.Images.BICYCLE_FRAME_3,     Biker.FRAME_CENTER_OFFSET);
+        var spokes     = this.createSpriteWithOffset(Assets.Images.BICYCLE_SPOKES,      new Vector2( 0.035, -0.020 ).add(Biker.FRAME_CENTER_OFFSET), 0.5);
+        var rider      = this.createSpriteWithOffset(Assets.Images.BICYCLE_RIDER,       new Vector2(-0.0025, 0.0620).add(Biker.FRAME_CENTER_OFFSET));
+        var riderTired = this.createSpriteWithOffset(Assets.Images.BICYCLE_RIDER_TIRED, new Vector2(-0.0032, 0.056 ).add(Biker.FRAME_CENTER_OFFSET));
 
-            var backLeg  = new AnimatedSpriteCtor(backLegTextures);
-            var frontLeg = new AnimatedSpriteCtor(frontLegTextures);
+        this.riderNormal = rider;
+        this.riderTired  = riderTired;
+        this.spokes      = spokes;
+        this.backLeg     = backLeg;
+        this.frontLeg    = frontLeg;
 
-            backLeg.x = frontLeg.x = legImageOffset.x;
-            backLeg.y = frontLeg.y = legImageOffset.y;
+        this.displayObject.addChild(backLeg);
+        this.displayObject.addChild(spokes);
+        this.displayObject.addChild(frame);
+        this.displayObject.addChild(rider);
+        this.displayObject.addChild(riderTired);
+        this.displayObject.addChild(frontLeg);
+    },
 
-            backLeg.anchor.x = frontLeg.anchor.x = 0.5;
-            backLeg.anchor.y = frontLeg.anchor.y = 0.5;
+    initControls: function() {
+        // Create a panel
+        var panel = new PIXI.Container();
+        var panelOffset =  this.mvt.modelToViewDelta(BikerView.PANEL_OFFSET).clone();
+        var panelWidth  =  this.mvt.modelToViewDeltaX(BikerView.PANEL_WIDTH);
+        var panelHeight = -this.mvt.modelToViewDeltaY(BikerView.PANEL_HEIGHT);
 
-            backLeg.scale.x = frontLeg.scale.x = this.getImageScale();
-            backLeg.scale.y = frontLeg.scale.y = this.getImageScale();
+        // Paint it
+        var panelRgba = Colors.toRgba($('.energy-system-elements-panel').css('background-color'), true);
+        var panelColor = Colors.rgbToHexInteger(panelRgba.r, panelRgba.g, panelRgba.b);
+        var panelAlpha = panelRgba.a;
 
-            var frame      = this.createSpriteWithOffset(Assets.Images.BICYCLE_FRAME_3,     Biker.FRAME_CENTER_OFFSET);
-            var spokes     = this.createSpriteWithOffset(Assets.Images.BICYCLE_SPOKES,      new Vector2( 0.035, -0.020 ).add(Biker.FRAME_CENTER_OFFSET), 0.5);
-            var rider      = this.createSpriteWithOffset(Assets.Images.BICYCLE_RIDER,       new Vector2(-0.0025, 0.0620).add(Biker.FRAME_CENTER_OFFSET));
-            var riderTired = this.createSpriteWithOffset(Assets.Images.BICYCLE_RIDER_TIRED, new Vector2(-0.0032, 0.056 ).add(Biker.FRAME_CENTER_OFFSET));
+        var panelBackground = new PIXI.Graphics();
+        panelBackground.beginFill(panelColor, panelAlpha);
+        panelBackground.drawRect(0, 0, panelWidth, panelHeight);
+        panelBackground.endFill();
+        panel.addChild(panelBackground);
 
-            this.riderNormal = rider;
-            this.riderTired  = riderTired;
-            this.spokes      = spokes;
-            this.backLeg     = backLeg;
-            this.frontLeg    = frontLeg;
+        // Move it
+        panel.x = panelOffset.x;
+        panel.y = panelOffset.y;
 
-            this.displayObject.addChild(backLeg);
-            this.displayObject.addChild(spokes);
-            this.displayObject.addChild(frame);
-            this.displayObject.addChild(rider);
-            this.displayObject.addChild(riderTired);
-            this.displayObject.addChild(frontLeg);
-        },
+        // Add it
+        this.displayObject.addChild(panel);
 
-        initControls: function() {
-            // Create a panel
-            var panel = new PIXI.Container();
-            var panelOffset =  this.mvt.modelToViewDelta(BikerView.PANEL_OFFSET).clone();
-            var panelWidth  =  this.mvt.modelToViewDeltaX(BikerView.PANEL_WIDTH);
-            var panelHeight = -this.mvt.modelToViewDeltaY(BikerView.PANEL_HEIGHT);
+        // Create slider
+        var sliderView = new SliderView({
+            start: 0,
+            range: {
+                min: 0,
+                max: Constants.Biker.MAX_ANGULAR_VELOCITY_OF_CRANK
+            },
 
-            // Paint it
-            var panelRgba = Colors.toRgba($('.energy-system-elements-panel').css('background-color'), true);
-            var panelColor = Colors.rgbToHexInteger(panelRgba.r, panelRgba.g, panelRgba.b);
-            var panelAlpha = panelRgba.a;
+            width: panelWidth * 0.39,
+            backgroundHeight: 3,
+            backgroundAlpha: 0.5,
+            handleSize: 12,
+        });
 
-            var panelBackground = new PIXI.Graphics();
-            panelBackground.beginFill(panelColor, panelAlpha);
-            panelBackground.drawRect(0, 0, panelWidth, panelHeight);
-            panelBackground.endFill();
-            panel.addChild(panelBackground);
+        // Position it
+        sliderView.displayObject.x = (panelWidth - sliderView.background.width) / 2;
+        sliderView.displayObject.y = panelHeight / 2;
 
-            // Move it
-            panel.x = panelOffset.x;
-            panel.y = panelOffset.y;
+        // Bind events for it
+        this.listenTo(sliderView, 'slide', function(value, prev) {
+            this.model.set('targetCrankAngularVelocity', value);
+        });
+        this.listenTo(this.model, 'change:active', function(model, active) {
+            if (!active)
+                sliderView.val(0);
+        });
 
-            // Add it
-            this.displayObject.addChild(panel);
+        // Add it
+        panel.addChild(sliderView.displayObject);
 
-            // Create slider
-            var sliderView = new SliderView({
-                start: 0,
-                range: {
-                    min: 0,
-                    max: Constants.Biker.MAX_ANGULAR_VELOCITY_OF_CRANK
-                },
+        // Create labels
+        var textStyle = {
+            font: Math.round(BikerView.LABEL_FONT_SIZE * this.getImageScale()) + 'px ' + BikerView.LABEL_FONT_FAMILY,
+            fill: BikerView.LABEL_COLOR
+        };
 
-                width: panelWidth * 0.39,
-                backgroundHeight: 3,
-                backgroundAlpha: 0.5,
-                handleSize: 12,
-            });
+        var slow = new PIXI.Text('Slow', textStyle);
+        slow.anchor.y = 0.5;
+        slow.x = 15 * this.getImageScale();
+        slow.y = panelHeight * 0.5;
+        panel.addChild(slow);
 
-            // Position it
-            sliderView.displayObject.x = (panelWidth - sliderView.background.width) / 2;
-            sliderView.displayObject.y = panelHeight / 2;
+        var fast = new PIXI.Text('Fast', textStyle);
+        fast.anchor.x = 1;
+        fast.anchor.y = 0.5;
+        fast.x = panelWidth - 15 * this.getImageScale();
+        fast.y = panelHeight * 0.5;
+        panel.addChild(fast);
 
-            // Bind events for it
-            this.listenTo(sliderView, 'slide', function(value, prev) {
-                this.model.set('targetCrankAngularVelocity', value);
-            });
-            this.listenTo(this.model, 'change:active', function(model, active) {
-                if (!active)
-                    sliderView.val(0);
-            });
+        // Create button
+        var self = this;
+        this.$button = $('<button class="btn feed-me-btn">Feed Me</button>');
+        this.$button.on('click', function() {
+            self.feedMeClicked();
+        });
 
-            // Add it
-            panel.addChild(sliderView.displayObject);
+        // Add button
+        this.$el.append(this.$button);
+    },
 
-            // Create labels
-            var textStyle = {
-                font: Math.round(BikerView.LABEL_FONT_SIZE * this.getImageScale()) + 'px ' + BikerView.LABEL_FONT_FAMILY,
-                fill: BikerView.LABEL_COLOR
-            };
+    bikerStateChanged: function(model, bikerHasEnergy) {
+        this.riderNormal.visible =  bikerHasEnergy;
+        this.riderTired.visible  = !bikerHasEnergy;
 
-            var slow = new PIXI.Text('Slow', textStyle);
-            slow.anchor.y = 0.5;
-            slow.x = 15 * this.getImageScale();
-            slow.y = panelHeight * 0.5;
-            panel.addChild(slow);
+        this.updateFeedMeButton();
+    },
 
-            var fast = new PIXI.Text('Fast', textStyle);
-            fast.anchor.x = 1;
-            fast.anchor.y = 0.5;
-            fast.x = panelWidth - 15 * this.getImageScale();
-            fast.y = panelHeight * 0.5;
-            panel.addChild(fast);
+    updateRearWheelAngle: function(model, rearWheelAngle) {
+        this.spokes.rotation = -rearWheelAngle;
+    },
 
-            // Create button
-            var self = this;
-            this.$button = $('<button class="btn feed-me-btn">Feed Me</button>');
-            this.$button.on('click', function() {
-                self.feedMeClicked();
-            });
+    updateCrankAngle: function(model, crankAngle) {
+        var index = model.mapAngleToImageIndex(crankAngle);
+        this.backLeg.gotoAndStop(index);
+        this.frontLeg.gotoAndStop(index);
+    },
 
-            // Add button
-            this.$el.append(this.$button);
-        },
+    updateFeedMeButton: function() {
+        if (this.model.active() && !this.model.get('bikerHasEnergy'))
+            this.$button.show();
+        else
+            this.$button.hide();
+    },
 
-        bikerStateChanged: function(model, bikerHasEnergy) {
-            this.riderNormal.visible =  bikerHasEnergy;
-            this.riderTired.visible  = !bikerHasEnergy;
+    feedMeClicked: function() {
+        this.model.replenishEnergyChunks();
+    }
 
-            this.updateFeedMeButton();
-        },
+}, Constants.BikerView);
 
-        updateRearWheelAngle: function(model, rearWheelAngle) {
-            this.spokes.rotation = -rearWheelAngle;
-        },
-
-        updateCrankAngle: function(model, crankAngle) {
-            var index = model.mapAngleToImageIndex(crankAngle);
-            this.backLeg.gotoAndStop(index);
-            this.frontLeg.gotoAndStop(index);
-        },
-
-        updateFeedMeButton: function() {
-            if (this.model.active() && !this.model.get('bikerHasEnergy'))
-                this.$button.show();
-            else
-                this.$button.hide();
-        },
-
-        feedMeClicked: function() {
-            this.model.replenishEnergyChunks();
-        }
-
-    }, Constants.BikerView);
-
-    return BikerView;
-});
+export default BikerView;

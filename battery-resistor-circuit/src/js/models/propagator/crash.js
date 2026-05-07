@@ -1,29 +1,23 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * Resets particles that have collided.
+ */
+var CrashPropagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(CrashPropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
-
-    /**
-     * Resets particles that have collided.
-     */
-    var CrashPropagator = function() {};
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(CrashPropagator.prototype, Propagator.prototype, {
-
-        propagate: function(deltaTime, particle) {
-            if (particle.hasCollided()) {
-                particle.velocity = 0;
-                particle.collided = false;
-            }
+    propagate: function(deltaTime, particle) {
+        if (particle.hasCollided()) {
+            particle.velocity = 0;
+            particle.collided = false;
         }
+    }
 
-    });
-
-    return CrashPropagator;
 });
+
+export default CrashPropagator;

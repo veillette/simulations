@@ -1,288 +1,281 @@
-define(function(require) {
+import _ from 'underscore';
+import Utils from '../../utils/utils';
+import GraphView from '../graph';
+import StaticGraphView from './static';
+import IntensityGraphView from './intensity';
+import html from '../../../templates/screen-graph.html?raw';
 
-	'use strict';
+/**
+ * ScreenGraphView shows the values of a certain row of the
+ *   lattice in real time in the form of a curve.
+ */
+var ScreenGraphView = StaticGraphView.extend({
 
-	var _     = require('underscore');
-	var Utils = require('../../utils/utils');
+    template: _.template(html),
+    className: 'screen-graph-view',
 
-	var GraphView          = require('../graph');
-	var StaticGraphView    = require('./static');
-	var IntensityGraphView = require('./intensity');
+    events: {
+        'click .screen-graph-show-button' : 'show',
+        'click .screen-graph-hide-button' : 'hide'
+    },
 
-	var html = require('text!../../../templates/screen-graph.html');
+    initialize: function(options) {
+        // Default values
+        options = _.extend({
+            title: 'Screen',
+            x: null,
+            y: null,
+            latitudinalGridLines: 0,
+            longitudinalGridLines: 0
+        }, options);
 
-	/**
-	 * ScreenGraphView shows the values of a certain row of the
-	 *   lattice in real time in the form of a curve.
-	 */
-	var ScreenGraphView = StaticGraphView.extend({
+        StaticGraphView.prototype.initialize.apply(this, [options]);
 
-		template: _.template(html),
-		className: 'screen-graph-view',
+        if (options.heatmapView)
+            this.heatmapView = options.heatmapView;
+        else
+            throw 'ScreenGraphView requires a HeatmapView instance to render.';
 
-		events: {
-			'click .screen-graph-show-button' : 'show',
-			'click .screen-graph-hide-button' : 'hide'
-		},
+        // Ratio between pixels and cell width
+        this.xSpacing = 1;
 
-		initialize: function(options) {
-			// Default values
-			options = _.extend({
-				title: 'Screen',
-				x: null,
-				y: null,
-				latitudinalGridLines: 0,
-				longitudinalGridLines: 0
-			}, options);
+        // History of colors along the edge of the heatmap
+        this.colorHistory = [];
+        this.colorHistoryIndex = 0;
+        this.colorHistoryLength = 120;
 
-			StaticGraphView.prototype.initialize.apply(this, [options]);
+        var j, h;
 
-			if (options.heatmapView)
-				this.heatmapView = options.heatmapView;
-			else
-				throw 'ScreenGraphView requires a HeatmapView instance to render.';
+        // Initialize each record in the color history as an array of points
+        for (h = 0; h < this.colorHistoryLength; h++) {
+            this.colorHistory[h] = [];
+            for (j = 0; j < this.waveSimulation.lattice.height; j++) {
+                this.colorHistory[h].push({
+                    r: 0,
+                    g: 0,
+                    b: 0,
+                    a: 0
+                });
+            }
+        }
 
-			// Ratio between pixels and cell width
-			this.xSpacing = 1;
+        // A magic number from PhET's IntensityColorMap
+        this.intensityScale = 7;
 
-			// History of colors along the edge of the heatmap
-			this.colorHistory = [];
-			this.colorHistoryIndex = 0;
-			this.colorHistoryLength = 120;
+        // Initialize values for our colors array
+        this.colors = [];
+        for (j = 0; j < this.waveSimulation.lattice.height; j++) {
+            this.colors[j] = {
+                r: 0,
+                g: 0,
+                b: 0
+            };
+        }
 
-			var j, h;
+        // For syncronizing with the simulation
+        this.accumulator = 0;
+        this.time = 0;
+        this.timestep = this.waveSimulation.timestep;
 
-			// Initialize each record in the color history as an array of points
-			for (h = 0; h < this.colorHistoryLength; h++) {
-				this.colorHistory[h] = [];
-				for (j = 0; j < this.waveSimulation.lattice.height; j++) {
-					this.colorHistory[h].push({
-						r: 0,
-						g: 0,
-						b: 0,
-						a: 0
-					});
-				}
-			}
+        this.intensityGraphView = new IntensityGraphView({
+            waveSimulation: this.waveSimulation,
+            heatmapView: this.heatmapView,
+            screenGraphView: this
+        });
+    },
 
-			// A magic number from PhET's IntensityColorMap
-			this.intensityScale = 7;
+    /**
+     * Renders html container
+     */
+    renderContainer: function() {
+        this.$el.html(this.template(this.graphInfo));
 
-			// Initialize values for our colors array
-			this.colors = [];
-			for (j = 0; j < this.waveSimulation.lattice.height; j++) {
-				this.colors[j] = {
-					r: 0,
-					g: 0,
-					b: 0
-				};
-			}
+        this.$showButton = this.$('.screen-graph-show-button');
+        this.$hideButton = this.$('.screen-graph-hide-button');
 
-			// For syncronizing with the simulation
-			this.accumulator = 0;
-			this.time = 0;
-			this.timestep = this.waveSimulation.timestep;
+        this.$showChartButton = this.$('.screen-graph-show-chart-button');
 
-			this.intensityGraphView = new IntensityGraphView({
-				waveSimulation: this.waveSimulation,
-				heatmapView: this.heatmapView,
-				screenGraphView: this
-			});
-		},
+        this.intensityGraphView.render();
+        this.$('.intensity-graph-placeholder').replaceWith(this.intensityGraphView.el);
+    },
 
-		/**
-		 * Renders html container
-		 */
-		renderContainer: function() {
-			this.$el.html(this.template(this.graphInfo));
+    /**
+     * Does the actual resizing of the canvas. We need to also update
+     *  our cached xSpacing whenever the canvas size changes.
+     */
+    resize: function() {
+        GraphView.prototype.resize.apply(this);
+        this.xSpacing = this.width / (this.waveSimulation.lattice.width - 1);
+    },
 
-			this.$showButton = this.$('.screen-graph-show-button');
-			this.$hideButton = this.$('.screen-graph-hide-button');
+    /**
+     * Gets called after everything has been added to the DOM so
+     *   calculations can be made about element dimensions.
+     */
+    postRender: function() {
+        this.intensityGraphView.postRender();
 
-			this.$showChartButton = this.$('.screen-graph-show-chart-button');
+        StaticGraphView.prototype.postRender.apply(this);
+    },
 
-			this.intensityGraphView.render();
-			this.$('.intensity-graph-placeholder').replaceWith(this.intensityGraphView.el);
-		},
+    /**
+     * Draws the colors in this.colors all the way down the canvas,
+     *   interpolating between colors.
+     */
+    drawColors: function() {
+        /*
+         * Get the ratio of lattice cells to pixels so we can figure
+         *   out which colors (directly correlating to lattice cell)
+         *   we're between at any given pixel (y).
+         */
+        var ratio = this.height / this.waveSimulation.lattice.height;
+        var width = this.width;
 
-		/**
-		 * Does the actual resizing of the canvas. We need to also update
-		 *  our cached xSpacing whenever the canvas size changes.
-		 */
-		resize: function() {
-			GraphView.prototype.resize.apply(this);
-			this.xSpacing = this.width / (this.waveSimulation.lattice.width - 1);
-		},
+        var maxColorIndex = this.colors.length - 1;
 
-		/**
-		 * Gets called after everything has been added to the DOM so
-		 *   calculations can be made about element dimensions.
-		 */
-		postRender: function() {
-			this.intensityGraphView.postRender();
+        var a, // The starting color's index
+            b, // The ending color's index
+            progress, // Progress from the starting to ending color
+            colors  = this.colors,
+            context = this.context;
 
-			StaticGraphView.prototype.postRender.apply(this);
-		},
+        for (var y = 0; y < this.height; y++) {
+            a = Math.floor(y / ratio);
+            b = a + 1;
 
-		/**
-		 * Draws the colors in this.colors all the way down the canvas,
-		 *   interpolating between colors.
-		 */
-		drawColors: function() {
-			/*
-			 * Get the ratio of lattice cells to pixels so we can figure
-			 *   out which colors (directly correlating to lattice cell)
-			 *   we're between at any given pixel (y).
-			 */
-			var ratio = this.height / this.waveSimulation.lattice.height;
-			var width = this.width;
+            // Catch rounding errors with floats
+            if (b > maxColorIndex) {
+                b--;
+                a--;
+            }
 
-			var maxColorIndex = this.colors.length - 1;
+            // The unrounded index minus the start index
+            progress = (y / ratio) - a;
 
-			var a, // The starting color's index
-			    b, // The ending color's index
-			    progress, // Progress from the starting to ending color
-			    colors  = this.colors,
-			    context = this.context;
+            /*
+             * Using our two colors and our progress between colors,
+             *   find the linearly interpolated color between them.
+             */
+            context.fillStyle = Utils.rgbToHex(
+                parseInt(Utils.lerp(colors[a].r, colors[b].r, progress)),
+                parseInt(Utils.lerp(colors[a].g, colors[b].g, progress)),
+                parseInt(Utils.lerp(colors[a].b, colors[b].b, progress))
+            );
+            context.fillRect(0, y, width, 1);
+        }
+    },
 
-			for (var y = 0; y < this.height; y++) {
-				a = Math.floor(y / ratio);
-				b = a + 1;
+    /**
+     * Adds the latest colors from the edge of the heatmap to the
+     *   history array.
+     */
+    updateColorHistory: function() {
+        this.heatmapView.getAvgEdgeColors(this.colorHistory[this.colorHistoryIndex++]);
 
-				// Catch rounding errors with floats
-				if (b > maxColorIndex) {
-					b--;
-					a--;
-				}
+        if (this.colorHistoryIndex == this.colorHistoryLength) {
+            this.colorHistoryIndex = 0;
+            this.colorHistoryFilled = true;
+        }
+    },
 
-				// The unrounded index minus the start index
-				progress = (y / ratio) - a;
+    /**
+     * Adds up the rgb values of the colors in the color history
+     *   (mitigated by their alpha values) and scales down these
+     *   sums according to magic numbers from PhET and stores the
+     *   resulting colors in an array to be used for painting to
+     *   the screen graphic and manipulating the intensity graph.
+     */
+    calculateColors: function() {
+        var scalar;
+        if (!this.colorHistoryFilled)
+            scalar = this.intensityScale / (this.colorHistoryIndex + 1);
+        else
+            scalar = this.intensityScale / this.colorHistoryLength;
 
-				/*
-				 * Using our two colors and our progress between colors,
-				 *   find the linearly interpolated color between them.
-				 */
-				context.fillStyle = Utils.rgbToHex(
-					parseInt(Utils.lerp(colors[a].r, colors[b].r, progress)),
-					parseInt(Utils.lerp(colors[a].g, colors[b].g, progress)),
-					parseInt(Utils.lerp(colors[a].b, colors[b].b, progress))
-				);
-				context.fillRect(0, y, width, 1);
-			}
-		},
+        var colors = this.colors,
+            color;
 
-		/**
-		 * Adds the latest colors from the edge of the heatmap to the
-		 *   history array.
-		 */
-		updateColorHistory: function() {
-			this.heatmapView.getAvgEdgeColors(this.colorHistory[this.colorHistoryIndex++]);
+        var height = this.waveSimulation.lattice.height;
+        for (var j = 0; j < height; j++) {
+            color = colors[j];
+            color.r = 0;
+            color.g = 0;
+            color.b = 0;
+            for (var h = 0; h < this.colorHistoryLength; h++) {
+                color.r += this.colorHistory[h][j].r * this.colorHistory[h][j].a;
+                color.g += this.colorHistory[h][j].g * this.colorHistory[h][j].a;
+                color.b += this.colorHistory[h][j].b * this.colorHistory[h][j].a;
+            }
+            color.r *= scalar;
+            color.g *= scalar;
+            color.b *= scalar;
+            color.r = Math.min(color.r, 255);
+            color.g = Math.min(color.g, 255);
+            color.b = Math.min(color.b, 255);
+        }
+    },
 
-			if (this.colorHistoryIndex == this.colorHistoryLength) {
-				this.colorHistoryIndex = 0;
-				this.colorHistoryFilled = true;
-			}
-		},
+    /**
+     * Updates things.  Contains an inner _update loop that is
+     *   synchronized with the simulation steps.
+     */
+    update: function(time, delta) {
+        if (this.resizeOnNextUpdate)
+            this.resize();
 
-		/**
-		 * Adds up the rgb values of the colors in the color history
-		 *   (mitigated by their alpha values) and scales down these
-		 *   sums according to magic numbers from PhET and stores the
-		 *   resulting colors in an array to be used for painting to
-		 *   the screen graphic and manipulating the intensity graph.
-		 */
-		calculateColors: function() {
-			var scalar;
-			if (!this.colorHistoryFilled)
-				scalar = this.intensityScale / (this.colorHistoryIndex + 1);
-			else
-				scalar = this.intensityScale / this.colorHistoryLength;
+        if (!this.paused) {
+            this.accumulator += delta;
 
-			var colors = this.colors,
-			    color;
+            while (this.accumulator >= this.timestep) {
+                this.time += this.timestep;
 
-			var height = this.waveSimulation.lattice.height;
-			for (var j = 0; j < height; j++) {
-				color = colors[j];
-				color.r = 0;
-				color.g = 0;
-				color.b = 0;
-				for (var h = 0; h < this.colorHistoryLength; h++) {
-					color.r += this.colorHistory[h][j].r * this.colorHistory[h][j].a;
-					color.g += this.colorHistory[h][j].g * this.colorHistory[h][j].a;
-					color.b += this.colorHistory[h][j].b * this.colorHistory[h][j].a;
-				}
-				color.r *= scalar;
-				color.g *= scalar;
-				color.b *= scalar;
-				color.r = Math.min(color.r, 255);
-				color.g = Math.min(color.g, 255);
-				color.b = Math.min(color.b, 255);
-			}
-		},
+                this._update(time, delta);
 
-		/**
-		 * Updates things.  Contains an inner _update loop that is
-		 *   synchronized with the simulation steps.
-		 */
-		update: function(time, delta) {
-			if (this.resizeOnNextUpdate)
-				this.resize();
+                this.accumulator -= this.timestep;
+            }
+        }
+    },
 
-			if (!this.paused) {
-				this.accumulator += delta;
+    /**
+     * The inner loop of things that should run synchronized with
+     *   the simulation steps.
+     */
+    _update: function(time, delta) {
+        this.updateColorHistory();
+        this.calculateColors();
+        this.drawColors();
+        this.intensityGraphView.update(time, delta);
+    },
 
-				while (this.accumulator >= this.timestep) {
-					this.time += this.timestep;
+    show: function(event) {
+        if (this.toggling)
+            return;
 
-					this._update(time, delta);
+        StaticGraphView.prototype.show.apply(this, [event]);
 
-					this.accumulator -= this.timestep;
-				}
-			}
-		},
+        this.heatmapView.enableScreenMode();
+        this.intensityGraphView.$el.addClass('visible');
+    },
 
-		/**
-		 * The inner loop of things that should run synchronized with
-		 *   the simulation steps.
-		 */
-		_update: function(time, delta) {
-			this.updateColorHistory();
-			this.calculateColors();
-			this.drawColors();
-			this.intensityGraphView.update(time, delta);
-		},
+    _afterShow: function() {
+        StaticGraphView.prototype._afterShow.apply(this, [event]);
 
-		show: function(event) {
-			if (this.toggling)
-				return;
+        this.intensityGraphView.resize();
+    },
 
-			StaticGraphView.prototype.show.apply(this, [event]);
+    hide: function(event) {
+        if (this.toggling)
+            return;
 
-			this.heatmapView.enableScreenMode();
-			this.intensityGraphView.$el.addClass('visible');
-		},
+        StaticGraphView.prototype.hide.apply(this, [event]);
 
-		_afterShow: function() {
-			StaticGraphView.prototype._afterShow.apply(this, [event]);
+        this.heatmapView.disableScreenMode();
+        this.intensityGraphView.$el.removeClass('visible');
+    },
 
-			this.intensityGraphView.resize();
-		},
-
-		hide: function(event) {
-			if (this.toggling)
-				return;
-
-			StaticGraphView.prototype.hide.apply(this, [event]);
-
-			this.heatmapView.disableScreenMode();
-			this.intensityGraphView.$el.removeClass('visible');
-		},
-
-		animationDuration: function() {
-			return 400;
-		}
-	});
-
-	return ScreenGraphView;
+    animationDuration: function() {
+        return 400;
+    }
 });
+
+export default ScreenGraphView;

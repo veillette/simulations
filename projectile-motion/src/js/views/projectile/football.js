@@ -1,41 +1,34 @@
-define(function(require) {
+import Football from 'models/projectile/football';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var FootballView = ProjectileView.extend({
 
-    var Football = require('models/projectile/football');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.FOOTBALL);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        return this.createProjectileSprite();
+    },
 
-    var Assets = require('assets');
+    updateRotation: function(model, rotation) {
+        this.projectileSprite.rotation = rotation;
+        this.restingProjectileSprite.rotation = rotation;
+    },
 
-    var FootballView = ProjectileView.extend({
+    calculateScale: function() {
+        var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('diameter'))); // in pixels
+        return targetSpriteHeight / this.projectileSprite.height;
+    }
 
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.FOOTBALL);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            return this.createProjectileSprite();
-        },
-
-        updateRotation: function(model, rotation) {
-            this.projectileSprite.rotation = rotation;
-            this.restingProjectileSprite.rotation = rotation;
-        },
-
-        calculateScale: function() {
-            var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('diameter'))); // in pixels
-            return targetSpriteHeight / this.projectileSprite.height;
-        }
-
-    }, {
-        getModelClass: function() {
-            return Football;
-        }
-    });
-
-    return FootballView;
+}, {
+    getModelClass: function() {
+        return Football;
+    }
 });
+
+export default FootballView;

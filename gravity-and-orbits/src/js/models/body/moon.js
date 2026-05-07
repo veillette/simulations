@@ -1,25 +1,18 @@
-define(function (require) {
+import _ from 'underscore';
+import Body from 'models/body';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var Moon = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        name: 'moon',
+        referenceMassLabel: 'our moon',
+        color: Constants.MOON_COLOR
+    })
 
-    var Body = require('models/body');
-
-    var Constants = require('constants');
-
-    /**
-     *
-     */
-    var Moon = Body.extend({
-
-        defaults: _.extend({}, Body.prototype.defaults, {
-            name: 'moon',
-            referenceMassLabel: 'our moon',
-            color: Constants.MOON_COLOR
-        })
-
-    });
-
-    return Moon;
 });
+
+export default Moon;

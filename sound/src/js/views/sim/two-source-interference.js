@@ -1,59 +1,52 @@
-define(function (require) {
+import _ from 'underscore';
+import TwoSourceInterferenceSimulation from 'models/simulation/two-source-interference';
+import SoundSimView from 'views/sim';
+import TwoSourceInterferenceSceneView from 'views/scene/two-source-interference';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var TwoSourceInterferenceSimulation = require('models/simulation/two-source-interference');
-
-    var SoundSimView                   = require('views/sim');
-    var TwoSourceInterferenceSceneView = require('views/scene/two-source-interference');
+/**
+ *
+ */
+var TwoSourceInterferenceSimView = SoundSimView.extend({
 
     /**
+     * Inits simulation, views, and variables.
      *
+     * @params options
      */
-    var TwoSourceInterferenceSimView = SoundSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Two Source Interference',
+            name: 'two-source-interference',
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Two Source Interference',
-                name: 'two-source-interference',
-            }, options);
+        SoundSimView.prototype.initialize.apply(this, [options]);
+    },
 
-            SoundSimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new TwoSourceInterferenceSimulation();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new TwoSourceInterferenceSimulation();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new TwoSourceInterferenceSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new TwoSourceInterferenceSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders page content
+     */
+    renderScaffolding: function() {
+        SoundSimView.prototype.renderScaffolding.apply(this, arguments);
 
-        /**
-         * Renders page content
-         */
-        renderScaffolding: function() {
-            SoundSimView.prototype.renderScaffolding.apply(this, arguments);
+        this.renderSimpleAudioControls();
+    },
 
-            this.renderSimpleAudioControls();
-        },
-
-    });
-
-    return TwoSourceInterferenceSimView;
 });
+
+export default TwoSourceInterferenceSimView;

@@ -1,29 +1,23 @@
-define(function (require) {
+import _ from 'underscore';
+import FaradayObject from 'models/faraday-object';
 
-    'use strict';
+/**
+ *
+ */
+var AbstractCurrentSource = FaradayObject.extend({
 
-    var _ = require('underscore');
-
-    var FaradayObject = require('models/faraday-object');
+    defaults: _.extend({}, FaradayObject.prototype.defaults, {
+        maxVoltage: Number.POSITIVE_INFINITY,
+        amplitude: 1 // Full strength
+    }),
 
     /**
-     *
+     * Gets the voltage.
      */
-    var AbstractCurrentSource = FaradayObject.extend({
+    getVoltage: function() {
+        return this.get('amplitude') * this.get('maxVoltage');
+    }
 
-        defaults: _.extend({}, FaradayObject.prototype.defaults, {
-            maxVoltage: Number.POSITIVE_INFINITY,
-            amplitude: 1 // Full strength
-        }),
-
-        /**
-         * Gets the voltage.
-         */
-        getVoltage: function() {
-            return this.get('amplitude') * this.get('maxVoltage');
-        }
-
-    });
-
-    return AbstractCurrentSource;
 });
+
+export default AbstractCurrentSource;

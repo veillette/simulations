@@ -1,25 +1,18 @@
-define(function (require) {
+import _ from 'underscore';
+import Atom from 'models/atom';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Class that represents a carbon atom.
+ */
+var HydrogenAtom = Atom.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Atom.prototype.defaults, {
+        radius: Constants.HydrogenAtom.RADIUS,
+        mass:   Constants.HydrogenAtom.MASS,
+        color:  Constants.HydrogenAtom.COLOR
+    })
 
-    var Atom = require('models/atom');
+}, Constants.HydrogenAtom);
 
-    var Constants = require('constants');
-
-    /**
-     * Class that represents a carbon atom.
-     */
-    var HydrogenAtom = Atom.extend({
-
-        defaults: _.extend({}, Atom.prototype.defaults, {
-            radius: Constants.HydrogenAtom.RADIUS,
-            mass:   Constants.HydrogenAtom.MASS,
-            color:  Constants.HydrogenAtom.COLOR
-        })
-
-    }, Constants.HydrogenAtom);
-
-    return HydrogenAtom;
-});
+export default HydrogenAtom;

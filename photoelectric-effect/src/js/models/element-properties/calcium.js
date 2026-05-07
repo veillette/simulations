@@ -1,35 +1,23 @@
-define(function (require) {
+import _ from 'underscore';
+import DischargeLampElementProperties from 'discharge-lamps/models/element-properties';
+import DefaultEnergyEmissionStrategy from 'discharge-lamps/models/default-energy-emission-strategy';
+import MetalEnergyAbsorptionStrategy from 'models/metal-energy-absorption-strategy';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Calcium
+ */
+var Calcium = DischargeLampElementProperties.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, DischargeLampElementProperties.prototype.defaults, {
+        name: Constants.Calcium.NAME,
+        energyAbsorptionStrategy: new MetalEnergyAbsorptionStrategy(Constants.Calcium.WORK_FUNCTION),
+        energyEmissionStrategy: new DefaultEnergyEmissionStrategy(),
+        workFunction: Constants.Calcium.WORK_FUNCTION,
+        energyLevels: Constants.Calcium.ENERGY_LEVELS
+    })
 
-    var DischargeLampElementProperties = require('discharge-lamps/models/element-properties');
-    var DefaultEnergyEmissionStrategy  = require('discharge-lamps/models/default-energy-emission-strategy');
-
-    var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');
-
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-
-    /**
-     * Calcium
-     */
-    var Calcium = DischargeLampElementProperties.extend({
-
-        defaults: _.extend({}, DischargeLampElementProperties.prototype.defaults, {
-            name: Constants.Calcium.NAME,
-            energyAbsorptionStrategy: new MetalEnergyAbsorptionStrategy(Constants.Calcium.WORK_FUNCTION),
-            energyEmissionStrategy: new DefaultEnergyEmissionStrategy(),
-            workFunction: Constants.Calcium.WORK_FUNCTION,
-            energyLevels: Constants.Calcium.ENERGY_LEVELS
-        })
-
-    }, Constants.Calcium);
+}, Constants.Calcium);
 
 
-    return Calcium;
-
-});
+export default Calcium;

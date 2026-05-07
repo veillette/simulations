@@ -1,71 +1,64 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * There would be too much overhead to make each atom a Backbone
+ *   model that gets updated individually, so we're going to
+ *   keep it pretty simple here.
+ */
+var Atom = function(x, y, radius, mass) {
+    this.position = new Vector2(x, y);
+    this.velocity = new Vector2();
+    this.acceleration = new Vector2();
+    this.radius = radius;
+    this.mass = mass;
 
-    var _ = require('underscore');
+    if (mass < 0)
+        throw 'Mass is out of range.';
+    if (radius < 0)
+        throw 'Radius is out of range.';
+};
 
-    var Vector2 = require('common/math/vector2');
+/**
+ * Instance functions/properties
+ */
+_.extend(Atom.prototype, {
 
-    var Constants = require('constants');
+    clone: function() {
+        return _.clone(this);
+    }
 
-    /**
-     * There would be too much overhead to make each atom a Backbone
-     *   model that gets updated individually, so we're going to
-     *   keep it pretty simple here.
-     */
-    var Atom = function(x, y, radius, mass) {
-        this.position = new Vector2(x, y);
-        this.velocity = new Vector2();
-        this.acceleration = new Vector2();
-        this.radius = radius;
-        this.mass = mass;
+    // The original atom model had listeners, but it's only
+    //   necessary in the advanced and developer modes.
 
-        if (mass < 0)
-            throw 'Mass is out of range.';
-        if (radius < 0)
-            throw 'Radius is out of range.';
+});
+
+
+/*************************************************************************
+ **                                                                     **
+ **                       GENERATE ATOM SUB-CLASSES                     **
+ **                                                                     **
+ *************************************************************************/
+
+/**
+ * Generates sub-classes that take the form Atom.OxygenAtom. To create a
+ *   new instance of one of these specific atoms, just do something like
+ *
+ *   var atom = new Atom.OxygenAtom(0, 2);
+ */
+_.each(Constants.Atoms, function(AtomConstants, key) {
+    // Define a generic constructor that uses constants for radius and mass
+    Atom[key] = function(x, y) {
+        Atom.apply(this, [x, y, AtomConstants.RADIUS, AtomConstants.MASS]);
     };
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Atom.prototype, {
+    // Apply instance functions/properties
+    _.extend(Atom[key].prototype, Atom.prototype);
 
-        clone: function() {
-            return _.clone(this);
-        }
-
-        // The original atom model had listeners, but it's only
-        //   necessary in the advanced and developer modes.
-
-    });
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                       GENERATE ATOM SUB-CLASSES                     **
-     **                                                                     **
-     *************************************************************************/
-
-    /**
-     * Generates sub-classes that take the form Atom.OxygenAtom. To create a
-     *   new instance of one of these specific atoms, just do something like
-     *
-     *   var atom = new Atom.OxygenAtom(0, 2);
-     */
-    _.each(Constants.Atoms, function(AtomConstants, key) {
-        // Define a generic constructor that uses constants for radius and mass
-        Atom[key] = function(x, y) {
-            Atom.apply(this, [x, y, AtomConstants.RADIUS, AtomConstants.MASS]);
-        };
-
-        // Apply instance functions/properties
-        _.extend(Atom[key].prototype, Atom.prototype);
-
-        // Apply static functions/properties
-        _.extend(Atom[key], AtomConstants);
-    });
-
-
-    return Atom;
+    // Apply static functions/properties
+    _.extend(Atom[key], AtomConstants);
 });
+
+
+export default Atom;

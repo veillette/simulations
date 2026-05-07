@@ -1,91 +1,85 @@
-define(function (require) {
+import _ from 'underscore';
+import Level from 'models/level';
 
-    'use strict';
+// Character values to make mapping easier
+var charsToTileValues = {
+    ' ': Level.TILE_FLOOR,
+    'W': Level.TILE_WALL,
+    'S': Level.TILE_START,
+    'F': Level.TILE_FINISH
+};
 
-    var _ = require('underscore');
+var levels = {
+    'Practice': [
+        '                                ',
+        '                           S    ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '                                ',
+        '   F                            ',
+        '                                ',
+        '                                ',
+        '                                '
+    ],
+    'Level 1': [
+        '                                ',
+        '                           S    ',
+        '                                ',
+        '       W                        ',
+        '       W                        ',
+        '       WWWWWWWWWWWWWWWWWW       ',
+        '                        W       ',
+        '                        W       ',
+        '                                ',
+        '                                ',
+        '   F                            ',
+        '                                ',
+        '                                ',
+        '                                '
+    ],
+    'Level 2': [
+        'W                              W',
+        'W      WWWWWWWWWWWWWWWW    S   W',
+        'W      W                       W',
+        'W      W                       W',
+        'W      W   WWWWWWWWWWWWWWWWW   W',
+        'W      W   W                   W',
+        'W      W   W                   W',
+        'W          W                   W',
+        'W          W                   W',
+        'W          W                   W',
+        'W  F       WWWWWWWWWWWWWWWWW   W',
+        'W                              W',
+        'W                              W',
+        'W                              W'
+    ],
+    'Certain Death': [
+        '       WWWWWWWWWWWWWWWWW       W',
+        '  W W  W     W     W   W   S   W',
+        '       W     W     W   W       W',
+        '  WWW  W  W     W              W',
+        ' W   W W  W     W          WWWWW',
+        '       W  WWWWWWW  W  W W      W',
+        'WWWWWWWW  W     W  W           W',
+        'W         W     W  W W   W     W',
+        'W            W     W  WWW  W  WW',
+        'W      W     W     W       W   W',
+        'W  F   WWWWWWWWWWWWWWWWWWWWW   W',
+        'W        W     W     W     W  WW',
+        'W           W     W     W      W',
+        'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
+    ]
+};
 
-    var Level = require('models/level');
-
-    // Character values to make mapping easier
-    var charsToTileValues = {
-        ' ': Level.TILE_FLOOR,
-        'W': Level.TILE_WALL,
-        'S': Level.TILE_START,
-        'F': Level.TILE_FINISH
-    };
-
-    var levels = {
-        'Practice': [
-            '                                ',
-            '                           S    ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '                                ',
-            '   F                            ',
-            '                                ',
-            '                                ',
-            '                                '
-        ],
-        'Level 1': [
-            '                                ',
-            '                           S    ',
-            '                                ',
-            '       W                        ',
-            '       W                        ',
-            '       WWWWWWWWWWWWWWWWWW       ',
-            '                        W       ',
-            '                        W       ',
-            '                                ',
-            '                                ',
-            '   F                            ',
-            '                                ',
-            '                                ',
-            '                                '
-        ],
-        'Level 2': [
-            'W                              W',
-            'W      WWWWWWWWWWWWWWWW    S   W',
-            'W      W                       W',
-            'W      W                       W',
-            'W      W   WWWWWWWWWWWWWWWWW   W',
-            'W      W   W                   W',
-            'W      W   W                   W',
-            'W          W                   W',
-            'W          W                   W',
-            'W          W                   W',
-            'W  F       WWWWWWWWWWWWWWWWW   W',
-            'W                              W',
-            'W                              W',
-            'W                              W'
-        ],
-        'Certain Death': [
-            '       WWWWWWWWWWWWWWWWW       W',
-            '  W W  W     W     W   W   S   W',
-            '       W     W     W   W       W',
-            '  WWW  W  W     W              W',
-            ' W   W W  W     W          WWWWW',
-            '       W  WWWWWWW  W  W W      W',
-            'WWWWWWWW  W     W  W           W',
-            'W         W     W  W W   W     W',
-            'W            W     W  WWW  W  WW',
-            'W      W     W     W       W   W',
-            'W  F   WWWWWWWWWWWWWWWWWWWWW   W',
-            'W        W     W     W     W  WW',
-            'W           W     W     W      W',
-            'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
-        ]
-    };
-
-    // Convert the level source strings into the tile values
-    var Levels = {};
-    _.each(levels, function(levelSource, key) {
-        Levels[key] = Level.fromStringArray(levelSource, charsToTileValues);
-    });
-
-    return Levels;
+// Convert the level source strings into the tile values
+var Levels = {};
+_.each(levels, function(levelSource, key) {
+    Levels[key] = Level.fromStringArray(levelSource, charsToTileValues);
 });
+
+export default Levels;

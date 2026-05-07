@@ -1,59 +1,53 @@
-define(function (require) {
+import Vector2 from 'common/math/vector2';
+import VanillaPositionableObject from 'common/models/positionable-object-vanilla';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Basic building block model for all the elements in the intro tab scene
+ */
+var WaterDrop = VanillaPositionableObject.extend({
 
-    var Vector2                   = require('common/math/vector2');
-    var VanillaPositionableObject = require('common/models/positionable-object-vanilla');
+    defaults: {
+        width: 1,
+        height: 1
+    },
 
-    var Constants = require('constants');
+    init: function() {
+        VanillaPositionableObject.prototype.init.apply(this, arguments);
+
+        this.velocity = new Vector2();
+        this.acceleration = new Vector2();
+        this.translation = new Vector2();
+    },
 
     /**
-     * Basic building block model for all the elements in the intro tab scene
+     * Called on the instance after 'create' is called to set initial values
      */
-    var WaterDrop = VanillaPositionableObject.extend({
+    onCreate: function(attributes, options) {
+        VanillaPositionableObject.prototype.onCreate.apply(this, [attributes, options]);
 
-        defaults: {
-            width: 1,
-            height: 1
-        },
+        this.velocity.set(0, 0);
+        this.acceleration.set(0, 0);
+        this.translation.set(0, 0);
+    },
 
-        init: function() {
-            VanillaPositionableObject.prototype.init.apply(this, arguments);
+    update: function(time, deltaTime) {
+        // Determine interpolated acceleration
+        this.acceleration.set(WaterDrop.ACCELERATION_DUE_TO_GRAVITY).scale(deltaTime);
 
-            this.velocity = new Vector2();
-            this.acceleration = new Vector2();
-            this.translation = new Vector2();
-        },
+        // Update velocity from the interpolated acceleration
+        this.velocity.add(this.acceleration);
 
-        /**
-         * Called on the instance after 'create' is called to set initial values
-         */
-        onCreate: function(attributes, options) {
-            VanillaPositionableObject.prototype.onCreate.apply(this, [attributes, options]);
+        // Get the translation from velocity and deltaTime
+        this.translation.set(this.velocity).scale(deltaTime);
 
-            this.velocity.set(0, 0);
-            this.acceleration.set(0, 0);
-            this.translation.set(0, 0);
-        },
+        // Translate the water droplet
+        this.translate(this.translation);
 
-        update: function(time, deltaTime) {
-            // Determine interpolated acceleration
-            this.acceleration.set(WaterDrop.ACCELERATION_DUE_TO_GRAVITY).scale(deltaTime);
+        // Remove drops that have gone out of view
+        return (this.get('position').length() > WaterDrop.MAX_DISTANCE_FROM_FAUCET_TO_BOTTOM_OF_WATER);
+    },
 
-            // Update velocity from the interpolated acceleration
-            this.velocity.add(this.acceleration);
+}, Constants.WaterDrop);
 
-            // Get the translation from velocity and deltaTime
-            this.translation.set(this.velocity).scale(deltaTime);
-
-            // Translate the water droplet
-            this.translate(this.translation);
-
-            // Remove drops that have gone out of view
-            return (this.get('position').length() > WaterDrop.MAX_DISTANCE_FROM_FAUCET_TO_BOTTOM_OF_WATER);
-        },
-
-    }, Constants.WaterDrop);
-
-    return WaterDrop;
-});
+export default WaterDrop;

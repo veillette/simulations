@@ -1,302 +1,288 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimView from 'common/v3/app/sim';
+import AppView from 'common/v3/app/app';
+import EnergySystemsSimulation from 'models/simulation/energy-systems';
+import EnergySystemsSceneView from 'views/scene/energy-systems';
+import Assets from 'assets';
+import 'styles/sim.less';
+import 'styles/playback-controls.less';
+import 'styles/energy-systems.less';
+import 'common/styles/radio.less';
+import simHtml from 'templates/sim/energy-systems.html?raw';
+import controlsHtml from 'templates/energy-systems-controls.html?raw';
+window.Assets = Assets;
 
-    'use strict';
+/**
+ *
+ */
+var EnergySystemsSimView = SimView.extend({
 
-    var $ = require('jquery');
-    var _ = require('underscore');
+    /**
+     * Root element properties
+     */
+    tagName:   'section',
+    className: 'sim-view',
 
-    var SimView = require('common/v3/app/sim');
-    var AppView = require('common/v3/app/app');
+    /**
+     * Template for rendering the basic scaffolding
+     */
+    template: _.template(simHtml),
+    controlsTemplate: _.template(controlsHtml),
 
-    var EnergySystemsSimulation = require('models/simulation/energy-systems');
+    /**
+     * Dom event listeners
+     */
+    events: {
+        // Playback controls
+        'click .play-btn'   : 'play',
+        'click .pause-btn'  : 'pause',
+        'click .step-btn'   : 'step',
+        'click .reset-btn'  : 'reset',
 
-    var EnergySystemsSceneView = require('views/scene/energy-systems');
+        'click .energy-symbols-checkbox': 'toggleEnergySymbols',
 
-    var Assets = require('assets'); window.Assets = Assets;
+        'click .element-icon': 'elementIconClicked'
+    },
 
-    require('bootstrap');
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Energy Systems',
+            name: 'energy-systems',
+            link: 'energy-forms-and-changes',
+        }, options);
 
-    // CSS
-    require('less!styles/sim');
-    require('less!styles/playback-controls');
-    require('less!styles/energy-systems');
-    require('less!common/styles/radio');
+        SimView.prototype.initialize.apply(this, [options]);
 
-    // HTML
-    var simHtml = require('text!templates/sim/energy-systems.html');
-    var controlsHtml = require('text!templates/energy-systems-controls.html');
+        // Initialize the scene view
+        this.initSceneView();
+
+        this.listenTo(this.simulation, 'change:paused', this.pausedChanged);
+        this.pausedChanged(this.simulation, this.simulation.get('paused'));
+
+        this.listenTo(this.simulation, 'change:source change:converter change:user', this.elementSelected);
+    },
+
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new EnergySystemsSimulation();
+    },
+
+    /**
+     * Initializes the Simulation.
+     */
+    initSceneView: function() {
+        this.sceneView = new EnergySystemsSceneView({
+            simulation: this.simulation
+        });
+    },
+
+    /**
+     * Renders everything
+     */
+    render: function() {
+        this.$el.empty();
+
+        this.renderScaffolding();
+        this.renderSceneView();
+        this.renderPlaybackControls();
+
+        return this;
+    },
 
     /**
      *
      */
-    var EnergySystemsSimView = SimView.extend({
+    renderSceneView: function() {
+        this.sceneView.render();
+        this.$('.scene-view-placeholder').replaceWith(this.sceneView.$el);
+        this.$el.append(this.sceneView.$ui);
+    },
 
-        /**
-         * Root element properties
-         */
-        tagName:   'section',
-        className: 'sim-view',
+    /**
+     * Renders page content. Should be overriden by child classes
+     */
+    renderScaffolding: function() {
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
-        controlsTemplate: _.template(controlsHtml),
-
-        /**
-         * Dom event listeners
-         */
-        events: {
-            // Playback controls
-            'click .play-btn'   : 'play',
-            'click .pause-btn'  : 'pause',
-            'click .step-btn'   : 'step',
-            'click .reset-btn'  : 'reset',
-
-            'click .energy-symbols-checkbox': 'toggleEnergySymbols',
-
-            'click .element-icon': 'elementIconClicked'
-        },
-
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Energy Systems',
-                name: 'energy-systems',
-                link: 'energy-forms-and-changes',
-            }, options);
-
-            SimView.prototype.initialize.apply(this, [options]);
-
-            // Initialize the scene view
-            this.initSceneView();
-
-            this.listenTo(this.simulation, 'change:paused', this.pausedChanged);
-            this.pausedChanged(this.simulation, this.simulation.get('paused'));
-
-            this.listenTo(this.simulation, 'change:source change:converter change:user', this.elementSelected);
-        },
-
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new EnergySystemsSimulation();
-        },
-
-        /**
-         * Initializes the Simulation.
-         */
-        initSceneView: function() {
-            this.sceneView = new EnergySystemsSceneView({
-                simulation: this.simulation
-            });
-        },
-
-        /**
-         * Renders everything
-         */
-        render: function() {
-            this.$el.empty();
-
-            this.renderScaffolding();
-            this.renderSceneView();
-            this.renderPlaybackControls();
-
-            return this;
-        },
-
-        /**
-         *
-         */
-        renderSceneView: function() {
-            this.sceneView.render();
-            this.$('.scene-view-placeholder').replaceWith(this.sceneView.$el);
-            this.$el.append(this.sceneView.$ui);
-        },
-
-        /**
-         * Renders page content. Should be overriden by child classes
-         */
-        renderScaffolding: function() {
-
-            var elements = {
-                sources: [
-                    {
-                        cid: this.simulation.sources[0].cid,
-                        src: Assets.Images.FAUCET_ICON,
-                        type: 'source'
-                    },{
-                        cid: this.simulation.sources[1].cid,
-                        src: Assets.Images.SUN_ICON,
-                        type: 'source'
-                    },{
-                        cid: this.simulation.sources[2].cid,
-                        src: Assets.Images.TEAPOT_ICON,
-                        type: 'source'
-                    },{
-                        cid: this.simulation.sources[3].cid,
-                        src: Assets.Images.BICYCLE_ICON,
-                        type: 'source'
-                    }
-                ],
-                converters: [
-                    {
-                        cid: this.simulation.converters[0].cid,
-                        src: Assets.Images.GENERATOR_ICON,
-                        type: 'converter'
-                    },{
-                        cid: this.simulation.converters[1].cid,
-                        src: Assets.Images.SOLAR_PANEL_ICON,
-                        type: 'converter'
-                    }
-                ],
-                users: [
-                    {
-                        cid: this.simulation.users[0].cid,
-                        src: Assets.Images.WATER_ICON,
-                        type: 'user'
-                    },{
-                        cid: this.simulation.users[1].cid,
-                        src: Assets.Images.INCANDESCENT_ICON,
-                        type: 'user'
-                    },{
-                        cid: this.simulation.users[2].cid,
-                        src: Assets.Images.FLUORESCENT_ICON,
-                        type: 'user'
-                    }
-                ]
-            };
-
-            var energySymbols = [
+        var elements = {
+            sources: [
                 {
-                    label: 'Mechanical',
-                    src: Assets.Images.E_MECH_BLANK
+                    cid: this.simulation.sources[0].cid,
+                    src: Assets.Images.FAUCET_ICON,
+                    type: 'source'
                 },{
-                    label: 'Electrical',
-                    src: Assets.Images.E_ELECTRIC_BLANK
+                    cid: this.simulation.sources[1].cid,
+                    src: Assets.Images.SUN_ICON,
+                    type: 'source'
                 },{
-                    label: 'Thermal',
-                    src: Assets.Images.E_THERM_BLANK_ORANGE
+                    cid: this.simulation.sources[2].cid,
+                    src: Assets.Images.TEAPOT_ICON,
+                    type: 'source'
                 },{
-                    label: 'Light',
-                    src: Assets.Images.E_LIGHT_BLANK
-                },{
-                    label: 'Chemical',
-                    src: Assets.Images.E_CHEM_BLANK_LIGHT
+                    cid: this.simulation.sources[3].cid,
+                    src: Assets.Images.BICYCLE_ICON,
+                    type: 'source'
                 }
-            ];
+            ],
+            converters: [
+                {
+                    cid: this.simulation.converters[0].cid,
+                    src: Assets.Images.GENERATOR_ICON,
+                    type: 'converter'
+                },{
+                    cid: this.simulation.converters[1].cid,
+                    src: Assets.Images.SOLAR_PANEL_ICON,
+                    type: 'converter'
+                }
+            ],
+            users: [
+                {
+                    cid: this.simulation.users[0].cid,
+                    src: Assets.Images.WATER_ICON,
+                    type: 'user'
+                },{
+                    cid: this.simulation.users[1].cid,
+                    src: Assets.Images.INCANDESCENT_ICON,
+                    type: 'user'
+                },{
+                    cid: this.simulation.users[2].cid,
+                    src: Assets.Images.FLUORESCENT_ICON,
+                    type: 'user'
+                }
+            ]
+        };
 
-            this.$el.html(this.template({
-                elementGroups: elements,
-                elementIconSize: !AppView.windowIsShort() ? 36 : 24,
-                energySymbols: energySymbols,
-                energySymbolsSize: !AppView.windowIsShort() ? 23 : 18
-            }));
-
-            this.elementSelected(null, this.simulation.get('source'));
-            this.elementSelected(null, this.simulation.get('converter'));
-            this.elementSelected(null, this.simulation.get('user'));
-
-            this.$energySymbolsLegend = this.$('.energy-symbols-legend');
-        },
-
-        /**
-         * Renders the playback controls at the bottom of the screen
-         */
-        renderPlaybackControls: function() {
-            this.$controls = $(this.controlsTemplate({
-                unique: this.cid
-            }));
-
-            this.$('.playback-controls-placeholder').replaceWith(this.$controls);
-        },
-
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.sceneView.postRender();
-        },
-
-        /**
-         * Tells the scene view to set everything back to defaults when
-         *   the user initiates a reset.
-         */
-        rerender: function() {
-            this.sceneView.reset();
-            this.$('#energy-systems-energy-symbols-checkbox').prop('checked', false);
-            this.sceneView.hideEnergyChunks();
-        },
-
-        /**
-         * This is run every tick of the updater.  It updates the wave
-         *   simulation and the views.
-         */
-        update: function(time, deltaTime) {
-            // Update the model
-            this.simulation.update(time, deltaTime);
-
-            // Update the scene
-            this.sceneView.update(time / 1000, deltaTime / 1000, this.simulation.get('paused'), this.simulation.get('timeScale'));
-        },
-
-        elementIconClicked: function(event) {
-            var $element = $(event.target).closest('.element-icon');
-            var element;
-            switch ($element.data('type')) {
-                case 'source':
-                    element = _.findWhere(this.simulation.sources, { cid: $element.data('cid') });
-                    this.simulation.set('source', element);
-                    break;
-                case 'converter':
-                    element = _.findWhere(this.simulation.converters, { cid: $element.data('cid') });
-                    this.simulation.set('converter', element);
-                    break;
-                case 'user':
-                    element = _.findWhere(this.simulation.users, { cid: $element.data('cid') });
-                    this.simulation.set('user', element);
-                    break;
+        var energySymbols = [
+            {
+                label: 'Mechanical',
+                src: Assets.Images.E_MECH_BLANK
+            },{
+                label: 'Electrical',
+                src: Assets.Images.E_ELECTRIC_BLANK
+            },{
+                label: 'Thermal',
+                src: Assets.Images.E_THERM_BLANK_ORANGE
+            },{
+                label: 'Light',
+                src: Assets.Images.E_LIGHT_BLANK
+            },{
+                label: 'Chemical',
+                src: Assets.Images.E_CHEM_BLANK_LIGHT
             }
+        ];
 
-        },
+        this.$el.html(this.template({
+            elementGroups: elements,
+            elementIconSize: !AppView.windowIsShort() ? 36 : 24,
+            energySymbols: energySymbols,
+            energySymbolsSize: !AppView.windowIsShort() ? 23 : 18
+        }));
 
-        elementSelected: function(model, element) {
-            if (!element)
-                return;
-            this.$('.element-icon[data-cid="' + element.cid + '"]')
-                .addClass('active')
-                .siblings()
-                    .removeClass('active');
-        },
+        this.elementSelected(null, this.simulation.get('source'));
+        this.elementSelected(null, this.simulation.get('converter'));
+        this.elementSelected(null, this.simulation.get('user'));
 
-        /**
-         * The simulation changed its paused state.
-         */
-        pausedChanged: function() {
-            if (this.simulation.get('paused'))
-                this.$el.removeClass('playing');
-            else
-                this.$el.addClass('playing');
-        },
+        this.$energySymbolsLegend = this.$('.energy-symbols-legend');
+    },
 
-        toggleEnergySymbols: function(event) {
-            if ($(event.target).is(':checked')) {
-                this.sceneView.showEnergyChunks();
-                this.$energySymbolsLegend.addClass('visible');
-            }
-            else {
-                this.sceneView.hideEnergyChunks();
-                this.$energySymbolsLegend.removeClass('visible');
-            }
+    /**
+     * Renders the playback controls at the bottom of the screen
+     */
+    renderPlaybackControls: function() {
+        this.$controls = $(this.controlsTemplate({
+            unique: this.cid
+        }));
+
+        this.$('.playback-controls-placeholder').replaceWith(this.$controls);
+    },
+
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.sceneView.postRender();
+    },
+
+    /**
+     * Tells the scene view to set everything back to defaults when
+     *   the user initiates a reset.
+     */
+    rerender: function() {
+        this.sceneView.reset();
+        this.$('#energy-systems-energy-symbols-checkbox').prop('checked', false);
+        this.sceneView.hideEnergyChunks();
+    },
+
+    /**
+     * This is run every tick of the updater.  It updates the wave
+     *   simulation and the views.
+     */
+    update: function(time, deltaTime) {
+        // Update the model
+        this.simulation.update(time, deltaTime);
+
+        // Update the scene
+        this.sceneView.update(time / 1000, deltaTime / 1000, this.simulation.get('paused'), this.simulation.get('timeScale'));
+    },
+
+    elementIconClicked: function(event) {
+        var $element = $(event.target).closest('.element-icon');
+        var element;
+        switch ($element.data('type')) {
+            case 'source':
+                element = _.findWhere(this.simulation.sources, { cid: $element.data('cid') });
+                this.simulation.set('source', element);
+                break;
+            case 'converter':
+                element = _.findWhere(this.simulation.converters, { cid: $element.data('cid') });
+                this.simulation.set('converter', element);
+                break;
+            case 'user':
+                element = _.findWhere(this.simulation.users, { cid: $element.data('cid') });
+                this.simulation.set('user', element);
+                break;
         }
 
-    });
+    },
 
-    return EnergySystemsSimView;
+    elementSelected: function(model, element) {
+        if (!element)
+            return;
+        this.$('.element-icon[data-cid="' + element.cid + '"]')
+            .addClass('active')
+            .siblings()
+                .removeClass('active');
+    },
+
+    /**
+     * The simulation changed its paused state.
+     */
+    pausedChanged: function() {
+        if (this.simulation.get('paused'))
+            this.$el.removeClass('playing');
+        else
+            this.$el.addClass('playing');
+    },
+
+    toggleEnergySymbols: function(event) {
+        if ($(event.target).is(':checked')) {
+            this.sceneView.showEnergyChunks();
+            this.$energySymbolsLegend.addClass('visible');
+        }
+        else {
+            this.sceneView.hideEnergyChunks();
+            this.$energySymbolsLegend.removeClass('visible');
+        }
+    }
+
 });
+
+export default EnergySystemsSimView;

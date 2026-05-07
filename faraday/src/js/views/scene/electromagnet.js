@@ -1,66 +1,60 @@
-define(function(require) {
-
-    'use strict';
-
-
-    var FaradaySceneView  = require('views/scene');
-    var ElectromagnetView = require('views/electromagnet');
+import FaradaySceneView from 'views/scene';
+import ElectromagnetView from 'views/electromagnet';
 
 
 
-    // Constants
+// Constants
 
-    /**
-     *
-     */
-    var ElectromagnetSceneView = FaradaySceneView.extend({
+/**
+ *
+ */
+var ElectromagnetSceneView = FaradaySceneView.extend({
 
-        initialize: function(options) {
-            FaradaySceneView.prototype.initialize.apply(this, arguments);
+    initialize: function(options) {
+        FaradaySceneView.prototype.initialize.apply(this, arguments);
 
-            this.magnetModel = this.simulation.electromagnet;
-        },
+        this.magnetModel = this.simulation.electromagnet;
+    },
 
-        reset: function() {
-            FaradaySceneView.prototype.reset.apply(this, arguments);
+    reset: function() {
+        FaradaySceneView.prototype.reset.apply(this, arguments);
 
-            this.electromagnetView.reset();
-        },
+        this.electromagnetView.reset();
+    },
 
-        initGraphics: function() {
-            FaradaySceneView.prototype.initGraphics.apply(this, arguments);
+    initGraphics: function() {
+        FaradaySceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.initCompass();
-            this.initFieldMeter();
-            this.initElectromagnet();
-        },
+        this.initCompass();
+        this.initFieldMeter();
+        this.initElectromagnet();
+    },
 
-        initElectromagnet: function() {
-            this.electromagnetView = new ElectromagnetView({
-                mvt: this.mvt,
-                model: this.simulation.electromagnet,
-                simulation: this.simulation
-            });
+    initElectromagnet: function() {
+        this.electromagnetView = new ElectromagnetView({
+            mvt: this.mvt,
+            model: this.simulation.electromagnet,
+            simulation: this.simulation
+        });
 
-            this.bottomLayer.addChild(this.electromagnetView.backgroundLayer);
-            this.topLayer.addChild(this.electromagnetView.foregroundLayer);
-        },
+        this.bottomLayer.addChild(this.electromagnetView.backgroundLayer);
+        this.topLayer.addChild(this.electromagnetView.foregroundLayer);
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            FaradaySceneView.prototype._update.apply(this, arguments);
+    _update: function(time, deltaTime, paused, timeScale) {
+        FaradaySceneView.prototype._update.apply(this, arguments);
 
-            this.electromagnetView.update(time, deltaTime, paused);
-        },
+        this.electromagnetView.update(time, deltaTime, paused);
+    },
 
-        showElectromagnetElectrons: function() {
-            this.electromagnetView.showElectrons();
-        },
+    showElectromagnetElectrons: function() {
+        this.electromagnetView.showElectrons();
+    },
 
-        hideElectromagnetElectrons: function() {
-            this.electromagnetView.hideElectrons();
-        }
+    hideElectromagnetElectrons: function() {
+        this.electromagnetView.hideElectrons();
+    }
 
-    });
-
-    return ElectromagnetSceneView;
 });
+
+export default ElectromagnetSceneView;

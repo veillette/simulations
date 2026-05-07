@@ -1,21 +1,15 @@
-define(function (require) {
+import _ from 'underscore';
+import LightBulb from 'models/energy-user/light-bulb';
 
-    'use strict';
+/**
+ * Basic building block model for all the elements in the intro tab scene
+ */
+var IncandescentLightBulb = LightBulb.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, LightBulb.prototype.defaults, {
+        hasFilament: true
+    }),
 
-    var LightBulb = require('models/energy-user/light-bulb');
-
-    /**
-     * Basic building block model for all the elements in the intro tab scene
-     */
-    var IncandescentLightBulb = LightBulb.extend({
-
-        defaults: _.extend({}, LightBulb.prototype.defaults, {
-            hasFilament: true
-        }),
-
-    });
-
-    return IncandescentLightBulb;
 });
+
+export default IncandescentLightBulb;

@@ -1,73 +1,66 @@
-define(function (require) {
+import _ from 'underscore';
+import SAT from 'sat';
+import PositionableObject from 'common/models/positionable-object';
+import Constants from 'constants';
 
-    'use strict';
+var silent = { silent: true };
 
-    var _   = require('underscore');
-    var SAT = require('sat');
+/**
+ * A junction in the circuit connecting two branches (like the nodes in a graph).
+ */
+var Junction = PositionableObject.extend({
 
-    var PositionableObject = require('common/models/positionable-object');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        selected: false,
+        // Voltage relative to reference node. To be used in computing
+        //   potential drops, to avoid graph traversal.
+        voltage: 0
+    }),
 
-    var Constants = require('constants');
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, arguments);
 
-    var silent = { silent: true };
+        this.initShape();
+    },
 
-    /**
-     * A junction in the circuit connecting two branches (like the nodes in a graph).
-     */
-    var Junction = PositionableObject.extend({
+    initShape: function() {
+        this.shape = new SAT.Circle(new SAT.Vector(0, 0), this.getRadius() * Constants.SAT_SCALE);
+    },
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            selected: false,
-            // Voltage relative to reference node. To be used in computing
-            //   potential drops, to avoid graph traversal.
-            voltage: 0
-        }),
+    updateShape: function() {
+        this.shape.pos.x = this.get('position').x * Constants.SAT_SCALE;
+        this.shape.pos.y = this.get('position').y * Constants.SAT_SCALE;
+    },
 
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, arguments);
+    getShape: function() {
+        this.updateShape();
+        return this.shape;
+    },
 
-            this.initShape();
-        },
+    getRadius: function() {
+        return Constants.JUNCTION_RADIUS * 1.1;
+    },
 
-        initShape: function() {
-            this.shape = new SAT.Circle(new SAT.Vector(0, 0), this.getRadius() * Constants.SAT_SCALE);
-        },
+    intersectsPolygon: function(polygon) {
+        return SAT.testPolygonCircle(polygon, this.getShape());
+    },
 
-        updateShape: function() {
-            this.shape.pos.x = this.get('position').x * Constants.SAT_SCALE;
-            this.shape.pos.y = this.get('position').y * Constants.SAT_SCALE;
-        },
+    translateSilent: function(x, y) {
+        this.translate(x, y, silent);
+    },
 
-        getShape: function() {
-            this.updateShape();
-            return this.shape;
-        },
+    getDistance: function(junction) {
+        return this.get('position').distance(junction.get('position'));
+    },
 
-        getRadius: function() {
-            return Constants.JUNCTION_RADIUS * 1.1;
-        },
+    select: function() {
+        this.set('selected', true);
+    },
 
-        intersectsPolygon: function(polygon) {
-            return SAT.testPolygonCircle(polygon, this.getShape());
-        },
+    deselect: function() {
+        this.set('selected', false);
+    }
 
-        translateSilent: function(x, y) {
-            this.translate(x, y, silent);
-        },
-
-        getDistance: function(junction) {
-            return this.get('position').distance(junction.get('position'));
-        },
-
-        select: function() {
-            this.set('selected', true);
-        },
-
-        deselect: function() {
-            this.set('selected', false);
-        }
-
-    });
-
-    return Junction;
 });
+
+export default Junction;

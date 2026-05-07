@@ -1,89 +1,79 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import 'file-saver';
+import PixiAppView from 'common/v3/pixi/view/app';
+import CCKSimView from 'views/sim';
+import Assets from 'assets';
+import Persistence from 'persistence';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
+import settingsDialogHtml from 'templates/app-buttons.html?raw';
 
-    'use strict';
+var CCKAppView = PixiAppView.extend({
 
-    var $ = require('jquery');
-    var _ = require('underscore');
-    require('file-saver');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        CCKSimView
+    ],
 
-    var CCKSimView = require('views/sim');
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click .help-btn' : 'toggleHelp',
+        'click .load-btn' : 'loadBtnClicked',
+        'click .save-btn' : 'saveBtnClicked',
+        'change #file' : 'fileSelected'
+    }),
 
-    var Assets      = require('assets');
-    var Persistence = require('persistence');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+        this.$el.append(settingsDialogHtml);
+    },
 
-    var settingsDialogHtml = require('text!templates/app-buttons.html');
+    toggleHelp: function() {
+        this.$('.help-btn').toggleClass('active');
 
-    var CCKAppView = PixiAppView.extend({
+        if (this.$('.help-btn').hasClass('active'))
+            this.simViews[0].showHelp();
+        else
+            this.simViews[0].hideHelp();
+    },
 
-        assets: Assets.getAssetList(),
+    loadBtnClicked: function(event) {
+        $('#file').click();
+    },
 
-        simViewConstructors: [
-            CCKSimView
-        ],
+    saveBtnClicked: function(event) {
+        this.saveXML();
+    },
 
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click .help-btn' : 'toggleHelp',
-            'click .load-btn' : 'loadBtnClicked',
-            'click .save-btn' : 'saveBtnClicked',
-            'change #file' : 'fileSelected'
-        }),
+    fileSelected: function(event) {
+        var files = event.target.files;
+        var reader = new FileReader();
+        if (files.length > 0) {
+            var file = files[0];
+            var self = this;
 
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
+            reader.onload = function(event) {
+                self.loadXML(event.target.result);
+            };
+            reader.readAsText(file);
 
-            this.$el.append(settingsDialogHtml);
-        },
-
-        toggleHelp: function() {
-            this.$('.help-btn').toggleClass('active');
-
-            if (this.$('.help-btn').hasClass('active'))
-                this.simViews[0].showHelp();
-            else
-                this.simViews[0].hideHelp();
-        },
-
-        loadBtnClicked: function(event) {
-            $('#file').click();
-        },
-
-        saveBtnClicked: function(event) {
-            this.saveXML();
-        },
-
-        fileSelected: function(event) {
-            var files = event.target.files;
-            var reader = new FileReader();
-            if (files.length > 0) {
-                var file = files[0];
-                var self = this;
-
-                reader.onload = function(event) {
-                    self.loadXML(event.target.result);
-                };
-                reader.readAsText(file);
-
-                $('#file').val('');
-            }
-        },
-
-        loadXML: function(contents) {
-            var circuit = Persistence.parseXML(contents);
-            this.simViews[0].simulation.setCircuit(circuit);
-        },
-
-        saveXML: function() {
-            var xml = Persistence.toXML(this.simViews[0].simulation.circuit);
-            var blob = new Blob([xml], {type: 'text/xml;charset=utf-8'});
-            window.saveAs(blob, 'circuit.cck');
+            $('#file').val('');
         }
+    },
 
-    });
+    loadXML: function(contents) {
+        var circuit = Persistence.parseXML(contents);
+        this.simViews[0].simulation.setCircuit(circuit);
+    },
 
-    return CCKAppView;
+    saveXML: function() {
+        var xml = Persistence.toXML(this.simViews[0].simulation.circuit);
+        var blob = new Blob([xml], {type: 'text/xml;charset=utf-8'});
+        window.saveAs(blob, 'circuit.cck');
+    }
+
 });
+
+export default CCKAppView;

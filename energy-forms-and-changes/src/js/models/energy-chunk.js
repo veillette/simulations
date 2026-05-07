@@ -1,33 +1,27 @@
-define(function (require) {
+import _ from 'underscore';
+import VanillaMotionObject from 'common/models/motion-object-vanilla';
 
-    'use strict';
+var EnergyTypes = require('constants').EnergyTypes;
 
-    var _ = require('underscore');
+/**
+ *
+ */
+var EnergyChunk = VanillaMotionObject.extend({
 
-    var VanillaMotionObject = require('common/models/motion-object-vanilla');
+    defaults: _.extend({}, VanillaMotionObject.prototype.defaults, {
+        // Used for some simple 3D layering effects.
+        zPosition: 0,
+        // Property that controls visibility in view.
+        visible: true,
+        // Energy type.  This can change during the life of the energy chunk.
+        energyType: EnergyTypes.THERMAL
+    }),
 
-    var EnergyTypes = require('constants').EnergyTypes;
+    translateBasedOnVelocity: function(deltaTime, options) {
+        this._vec2.set(this.get('velocity'));
+        this.translate(this._vec2.scale(deltaTime), options);
+    }
 
-    /**
-     *
-     */
-    var EnergyChunk = VanillaMotionObject.extend({
+}, EnergyTypes);
 
-        defaults: _.extend({}, VanillaMotionObject.prototype.defaults, {
-            // Used for some simple 3D layering effects.
-            zPosition: 0,
-            // Property that controls visibility in view.
-            visible: true,
-            // Energy type.  This can change during the life of the energy chunk.
-            energyType: EnergyTypes.THERMAL
-        }),
-
-        translateBasedOnVelocity: function(deltaTime, options) {
-            this._vec2.set(this.get('velocity'));
-            this.translate(this._vec2.scale(deltaTime), options);
-        }
-
-    }, EnergyTypes);
-
-    return EnergyChunk;
-});
+export default EnergyChunk;

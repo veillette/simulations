@@ -1,58 +1,51 @@
-define(function (require) {
+import _ from 'underscore';
+import CircuitComponent from 'models/components/circuit-component';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A capacitor
+ */
+var Capacitor = CircuitComponent.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, CircuitComponent.prototype.defaults, {
+        capacitance: Constants.Capacitor.DEFAULT_CAPACITANCE,
+        length: 1,
+        height: 1
+    }),
 
-    var CircuitComponent = require('models/components/circuit-component');
-
-    var Constants = require('constants');
+    initialize: function(attributes, options) {
+        CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
+    },
 
     /**
-     * A capacitor
+     * Set the capacitance and keep the charge constant.  That means that
+     * the voltage will need to be changed accordingly.
      */
-    var Capacitor = CircuitComponent.extend({
+    setCapacitanceConstantCharge: function(capacitance) {
+        var q = this.getCharge();
+        this.set('capacitance', capacitance);
+        this.set('voltageDrop', q / capacitance);
+    },
 
-        defaults: _.extend({}, CircuitComponent.prototype.defaults, {
-            capacitance: Constants.Capacitor.DEFAULT_CAPACITANCE,
-            length: 1,
-            height: 1
-        }),
+    getCharge: function() {
+        return this.get('capacitance') * this.getVoltageDrop();
+    },
 
-        initialize: function(attributes, options) {
-            CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
-        },
+    resetDynamics: function() {
+        this.set('kirkhoffEnabled', false);
+        this.set({
+            voltageDrop: 0,
+            current: 0,
+            mnaCurrent: 0,
+            mnaVoltageDrop: 0
+        });
+        this.set('kirkhoffEnabled', true);
+    },
 
-        /**
-         * Set the capacitance and keep the charge constant.  That means that
-         * the voltage will need to be changed accordingly.
-         */
-        setCapacitanceConstantCharge: function(capacitance) {
-            var q = this.getCharge();
-            this.set('capacitance', capacitance);
-            this.set('voltageDrop', q / capacitance);
-        },
+    discharge: function() {
+        this.resetDynamics();
+    }
 
-        getCharge: function() {
-            return this.get('capacitance') * this.getVoltageDrop();
-        },
+}, Constants.Capacitor);
 
-        resetDynamics: function() {
-            this.set('kirkhoffEnabled', false);
-            this.set({
-                voltageDrop: 0,
-                current: 0,
-                mnaCurrent: 0,
-                mnaVoltageDrop: 0
-            });
-            this.set('kirkhoffEnabled', true);
-        },
-
-        discharge: function() {
-            this.resetDynamics();
-        }
-
-    }, Constants.Capacitor);
-
-    return Capacitor;
-});
+export default Capacitor;

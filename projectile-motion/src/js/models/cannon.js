@@ -1,51 +1,41 @@
-define(function (require) {
+import Backbone from 'backbone';
+import Constants from 'constants';
 
-    'use strict';
+var DEGREES_TO_RADIANS = Math.PI / 180;
 
-    //var _        = require('underscore');
-    var Backbone = require('backbone');
+/**
+ *
+ */
+var Cannon = Backbone.Model.extend({
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+    defaults: {
+        x: 0,
+        y: 0,
+        angle: 0,
+        width: Constants.Cannon.WIDTH,
+        heightOffGround: Constants.Cannon.HEIGHT_OFF_GROUND
+    },
 
-    var DEGREES_TO_RADIANS = Math.PI / 180;
+    initialize: function(attributes, options) {
 
-    /**
-     *
-     */
-    var Cannon = Backbone.Model.extend({
+    },
 
-        defaults: {
-            x: 0,
-            y: 0,
-            angle: 0,
-            width: Constants.Cannon.WIDTH,
-            heightOffGround: Constants.Cannon.HEIGHT_OFF_GROUND
-        },
+    firingX: function() {
+        return this.get('x');
+    },
 
-        initialize: function(attributes, options) {
+    firingY: function() {
+        return this.get('y');
+    },
 
-        },
+    firingAngle: function() {
+        return -this.get('angle') * DEGREES_TO_RADIANS;
+    },
 
-        firingX: function() {
-            return this.get('x');
-        },
+    fire: function() {
+        this.trigger('fire');
+    }
 
-        firingY: function() {
-            return this.get('y');
-        },
+}, Constants.Cannon);
 
-        firingAngle: function() {
-            return -this.get('angle') * DEGREES_TO_RADIANS;
-        },
-
-        fire: function() {
-            this.trigger('fire');
-        }
-
-    }, Constants.Cannon);
-
-    return Cannon;
-});
+export default Cannon;

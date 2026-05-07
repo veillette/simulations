@@ -1,28 +1,19 @@
-define(function (require) {
+import BatteryToCapacitorsWire from 'models/wire/battery-to-capacitors';
+import Constants from 'constants';
+var ConnectionPoint = Constants.ConnectionPoint;
 
-    'use strict';
+/**
+ * Connects the top of the battery (B) to the tops of N capacitors (C1...Cn).
+ *   Constructor args are described in superclass constructor.
+ */
+var BatteryToCapacitorsTopWire = BatteryToCapacitorsWire.extend({
 
-    var BatteryToCapacitorsWire = require('models/wire/battery-to-capacitors');
+    initialize: function(attributes, options) {
+        options.connectionPoint = ConnectionPoint.TOP;
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-    var ConnectionPoint = Constants.ConnectionPoint;
+        BatteryToCapacitorsWire.prototype.initialize.apply(this, [attributes, options]);
+    }
 
-    /**
-     * Connects the top of the battery (B) to the tops of N capacitors (C1...Cn).
-     *   Constructor args are described in superclass constructor.
-     */
-    var BatteryToCapacitorsTopWire = BatteryToCapacitorsWire.extend({
-
-        initialize: function(attributes, options) {
-            options.connectionPoint = ConnectionPoint.TOP;
-
-        	BatteryToCapacitorsWire.prototype.initialize.apply(this, [attributes, options]);
-        }
-
-    });
-
-    return BatteryToCapacitorsTopWire;
 });
+
+export default BatteryToCapacitorsTopWire;

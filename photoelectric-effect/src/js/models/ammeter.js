@@ -1,38 +1,32 @@
-define(function (require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var ScalarDataRecorder = require('models/scalar-data-recorder');
+import _ from 'underscore';
+import ScalarDataRecorder from 'models/scalar-data-recorder';
 
 
-    /**
-     * Calculates the current from number of electrons per span of time
-     */
-    var Ammeter = function() {
-        ScalarDataRecorder.apply(this, arguments);
-    };
+/**
+ * Calculates the current from number of electrons per span of time
+ */
+var Ammeter = function() {
+    ScalarDataRecorder.apply(this, arguments);
+};
 
-    _.extend(Ammeter.prototype, ScalarDataRecorder.prototype, {
+_.extend(Ammeter.prototype, ScalarDataRecorder.prototype, {
 
-        recordElectron: function(time) {
-            this.recordElectrons(time, 1);
-        },
+    recordElectron: function(time) {
+        this.recordElectrons(time, 1);
+    },
 
-        recordElectrons: function(time, numElectrons) {
-            this.addDataRecord(time, numElectrons);
-        },
+    recordElectrons: function(time, numElectrons) {
+        this.addDataRecord(time, numElectrons);
+    },
 
-        getCurrent: function() {
-            var current = this.total / this.timeSpanOfEntries;
-            if (Number.isNaN(current) || !Number.isFinite(current))
-                current = 0;
-            return current;
-        }
+    getCurrent: function() {
+        var current = this.total / this.timeSpanOfEntries;
+        if (Number.isNaN(current) || !Number.isFinite(current))
+            current = 0;
+        return current;
+    }
 
-    });
-
-
-    return Ammeter;
 });
+
+
+export default Ammeter;

@@ -1,42 +1,37 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var CoulombForceParameters = function(k, power, minDist) {
+    this.k = k;
+    this.power = power;
+    this.maxDist = Number.POSITIVE_INFINITY;
+    this.minDist = (minDist !== undefined) ? minDist : 0;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(CoulombForceParameters.prototype, {
 
-    var CoulombForceParameters = function(k, power, minDist) {
-        this.k = k;
-        this.power = power;
-        this.maxDist = Number.POSITIVE_INFINITY;
-        this.minDist = (minDist !== undefined) ? minDist : 0;
-    };
+    getForce: function(sourceX, sourceQ, testX, testQ) {
+        var dx = sourceX - testX;
+        var r = Math.abs(dx);
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(CoulombForceParameters.prototype, {
+        if (r < this.minDist)
+            r = this.minDist;
+        else if (r > this.maxDist)
+            r = this.maxDist;
 
-        getForce: function(sourceX, sourceQ, testX, testQ) {
-            var dx = sourceX - testX;
-            var r = Math.abs(dx);
+        var term = this.k * Math.pow(r, this.power) * sourceQ * testQ;
+        if (dx > 0)
+            term *= -1;
 
-            if (r < this.minDist)
-                r = this.minDist;
-            else if (r > this.maxDist)
-                r = this.maxDist;
+        return term;
+    },
 
-            var term = this.k * Math.pow(r, this.power) * sourceQ * testQ;
-            if (dx > 0)
-                term *= -1;
+    setMinDistance: function(distance) {
+        this.minDist = distance;
+    }
 
-            return term;
-        },
-
-        setMinDistance: function(distance) {
-            this.minDist = distance;
-        }
-
-    });
-
-    return CoulombForceParameters;
 });
+
+export default CoulombForceParameters;

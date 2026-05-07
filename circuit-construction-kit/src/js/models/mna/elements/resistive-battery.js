@@ -1,34 +1,29 @@
-define(function (require) {
+import MNAElement from 'models/mna/elements/element';
 
-    'use strict';
-
-    var MNAElement = require('models/mna/elements/element');
+/**
+ * Battery model for the MNA circuit
+ */
+var MNAResistiveBattery = MNAElement.extend({
 
     /**
-     * Battery model for the MNA circuit
+     * Initializes the MNAResistiveBattery's properties with provided initial values
      */
-    var MNAResistiveBattery = MNAElement.extend({
+    init: function(originalComponent, node0, node1) {
+        MNAElement.prototype.init.apply(this, arguments);
 
-        /**
-         * Initializes the MNAResistiveBattery's properties with provided initial values
-         */
-        init: function(originalComponent, node0, node1) {
-            MNAElement.prototype.init.apply(this, arguments);
+        this.resistance = originalComponent.get('resistance');
+        this.voltage    = originalComponent.getVoltageDrop();
+    },
 
-            this.resistance = originalComponent.get('resistance');
-            this.voltage    = originalComponent.getVoltageDrop();
-        },
+    /**
+     * Applies the solution back to the original component.
+     */
+    applySolution: function(solution) {
+        this.originalComponent.set('mnaCurrent', solution.getInstantaneousCurrent(this));
+        this.originalComponent.set('current',    solution.getTimeAverageCurrent(this));
+    }
 
-        /**
-         * Applies the solution back to the original component.
-         */
-        applySolution: function(solution) {
-            this.originalComponent.set('mnaCurrent', solution.getInstantaneousCurrent(this));
-            this.originalComponent.set('current',    solution.getTimeAverageCurrent(this));
-        }
-
-    });
-
-
-    return MNAResistiveBattery;
 });
+
+
+export default MNAResistiveBattery;

@@ -1,25 +1,18 @@
-define(function (require) {
+import _ from 'underscore';
+import Atom from 'models/atom';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Class that represents a carbon atom.
+ */
+var CarbonAtom = Atom.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Atom.prototype.defaults, {
+        radius: Constants.CarbonAtom.RADIUS,
+        mass:   Constants.CarbonAtom.MASS,
+        color:  Constants.CarbonAtom.COLOR
+    })
 
-    var Atom = require('models/atom');
+}, Constants.CarbonAtom);
 
-    var Constants = require('constants');
-
-    /**
-     * Class that represents a carbon atom.
-     */
-    var CarbonAtom = Atom.extend({
-
-        defaults: _.extend({}, Atom.prototype.defaults, {
-            radius: Constants.CarbonAtom.RADIUS,
-            mass:   Constants.CarbonAtom.MASS,
-            color:  Constants.CarbonAtom.COLOR
-        })
-
-    }, Constants.CarbonAtom);
-
-    return CarbonAtom;
-});
+export default CarbonAtom;

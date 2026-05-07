@@ -1,47 +1,37 @@
-define(function (require, exports, module) {
+import RutherfordScatteringSimulation from 'rutherford-scattering/models/simulation';
+import RutherfordParticles from 'rutherford-scattering/collections/rutherford-particles';
+import Atom from '../atom';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var RutherfordAtomSimulation = RutherfordScatteringSimulation.extend({
 
-    var RutherfordScatteringSimulation = require('rutherford-scattering/models/simulation');
-    var RutherfordParticles  = require('rutherford-scattering/collections/rutherford-particles');
+    initialize: function(attributes, options) {
+        this.boundWidth = Constants.RUTHERFORD_ACTUAL;
+        RutherfordScatteringSimulation.prototype.initialize.apply(this, arguments);
 
-    var Atom = require('../atom');
+        this.on('change:protonCount change:neutronCount', this.atomNode.updateRadius.bind(this.atomNode))
+    },
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+    initComponents: function(){
+        RutherfordScatteringSimulation.prototype.initComponents.apply(this, arguments);
+        this.atomNode = new Atom(null, {simulation: this});
+    },
 
-    /**
-     * Wraps the update function in
-     */
-    var RutherfordAtomSimulation = RutherfordScatteringSimulation.extend({
+    initParticles: function() {
+        this.alphaParticles = new RutherfordParticles(null, {bounds: this.bounds});
+    },
 
-        initialize: function(attributes, options) {
-            this.boundWidth = Constants.RUTHERFORD_ACTUAL;
-            RutherfordScatteringSimulation.prototype.initialize.apply(this, arguments);
+    pauseAtomDraw: function() {
+        this.atomNode.set('hold', true);
+    },
 
-            this.on('change:protonCount change:neutronCount', this.atomNode.updateRadius.bind(this.atomNode))
-        },
+    restartAtomDraw: function() {
+        this.atomNode.set('hold', false);
+    }
 
-        initComponents: function(){
-            RutherfordScatteringSimulation.prototype.initComponents.apply(this, arguments);
-            this.atomNode = new Atom(null, {simulation: this});
-        },
-
-        initParticles: function() {
-            this.alphaParticles = new RutherfordParticles(null, {bounds: this.bounds});
-        },
-
-        pauseAtomDraw: function() {
-            this.atomNode.set('hold', true);
-        },
-
-        restartAtomDraw: function() {
-            this.atomNode.set('hold', false);
-        }
-
-    });
-
-    return RutherfordAtomSimulation;
 });
+
+export default RutherfordAtomSimulation;

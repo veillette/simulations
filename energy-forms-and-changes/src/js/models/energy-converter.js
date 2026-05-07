@@ -1,58 +1,53 @@
-define(function (require) {
+import EnergySystemsElement from 'models/energy-systems-element';
+import EnergyChunkCollection from 'models/energy-chunk-collection';
 
-    'use strict';
+/**
+ * Basic building block model for all the elements in the intro tab scene
+ */
+var EnergyConverter = EnergySystemsElement.extend({
 
-    var EnergySystemsElement   = require('models/energy-systems-element');
-    var EnergyChunkCollection = require('models/energy-chunk-collection');
+    initialize: function(attributes, options) {
+        EnergySystemsElement.prototype.initialize.apply(this, [attributes, options]);
 
-    /**
-     * Basic building block model for all the elements in the intro tab scene
-     */
-    var EnergyConverter = EnergySystemsElement.extend({
+        this.incomingEnergyChunks = new EnergyChunkCollection();
+        this.outgoingEnergyChunks = new EnergyChunkCollection();
+    },
 
-        initialize: function(attributes, options) {
-            EnergySystemsElement.prototype.initialize.apply(this, [attributes, options]);
+    update: function(time, deltaTime, incomingEnergy) {},
 
-            this.incomingEnergyChunks = new EnergyChunkCollection();
-            this.outgoingEnergyChunks = new EnergyChunkCollection();
-        },
+    preloadEnergyChunks: function(incomingEnergyRate) {},
 
-        update: function(time, deltaTime, incomingEnergy) {},
+    getEnergyOutputRate: function() {},
 
-        preloadEnergyChunks: function(incomingEnergyRate) {},
+    extractOutgoingEnergyChunks: function() {
+        var models = this.outgoingEnergyChunks.slice(0, this.outgoingEnergyChunks.length);
+        this.outgoingEnergyChunks.remove(models);
+        this.energyChunks.remove(models);
+        return models;
+    },
 
-        getEnergyOutputRate: function() {},
+    injectEnergyChunks: function(energyChunks) {
+        this.incomingEnergyChunks.add(energyChunks);
+    },
 
-        extractOutgoingEnergyChunks: function() {
-            var models = this.outgoingEnergyChunks.slice(0, this.outgoingEnergyChunks.length);
-            this.outgoingEnergyChunks.remove(models);
-            this.energyChunks.remove(models);
-            return models;
-        },
+    clearEnergyChunks: function() {
+        EnergySystemsElement.prototype.clearEnergyChunks.apply(this);
 
-        injectEnergyChunks: function(energyChunks) {
-            this.incomingEnergyChunks.add(energyChunks);
-        },
-
-        clearEnergyChunks: function() {
-            EnergySystemsElement.prototype.clearEnergyChunks.apply(this);
-
-            // Remove and destroy the models
-            var chunk;
-            var i;
-            for (i = this.incomingEnergyChunks.models.length - 1; i >= 0; i--) {
-                chunk = this.incomingEnergyChunks.models[i];
-                this.incomingEnergyChunks.remove(chunk);
-                chunk.destroy();
-            }
-            for (i = this.outgoingEnergyChunks.models.length - 1; i >= 0; i--) {
-                chunk = this.outgoingEnergyChunks.models[i];
-                this.outgoingEnergyChunks.remove(chunk);
-                chunk.destroy();
-            }
+        // Remove and destroy the models
+        var chunk;
+        var i;
+        for (i = this.incomingEnergyChunks.models.length - 1; i >= 0; i--) {
+            chunk = this.incomingEnergyChunks.models[i];
+            this.incomingEnergyChunks.remove(chunk);
+            chunk.destroy();
         }
+        for (i = this.outgoingEnergyChunks.models.length - 1; i >= 0; i--) {
+            chunk = this.outgoingEnergyChunks.models[i];
+            this.outgoingEnergyChunks.remove(chunk);
+            chunk.destroy();
+        }
+    }
 
-    });
-
-    return EnergyConverter;
 });
+
+export default EnergyConverter;

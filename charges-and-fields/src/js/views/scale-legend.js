@@ -1,107 +1,99 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import ArrowView from 'common/v3/pixi/view/arrow';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Double-arrow that shows how big a meter is.
+ */
+var ScaleLegend = PixiView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            arrowLength: 1,
+            units: 'meter'
+        }, options);
 
-    var PIXI = require('pixi');
+        this.mvt = options.mvt;
+        this.arrowLength = options.arrowLength;
+        this.units = options.units;
 
-    var PixiView  = require('common/v3/pixi/view');
-    var ArrowView = require('common/v3/pixi/view/arrow');
+        this.initGraphics();
 
-    var Constants = require('constants');
+        this.updateMVT(options.mvt);
+    },
 
-    /**
-     * Double-arrow that shows how big a meter is.
-     */
-    var ScaleLegend = PixiView.extend({
+    initGraphics: function() {
+        var arrowWidth      = 6;
+        var arrowHeadWidth  = 14;
+        var arrowHeadLength = 12;
+        var fillColor = '#000';
+        var fillAlpha = 0.6;
 
-        initialize: function(options) {
-            options = _.extend({
-                arrowLength: 1,
-                units: 'meter'
-            }, options);
+        this.leftArrowViewModel = new ArrowView.ArrowViewModel();
+        this.rightArrowViewModel = new ArrowView.ArrowViewModel();
 
-            this.mvt = options.mvt;
-            this.arrowLength = options.arrowLength;
-            this.units = options.units;
+        var leftArrowView = new ArrowView({
+            model:      this.leftArrowViewModel,
+            fillColor:  fillColor,
+            fillAlpha:  fillAlpha,
+            tailWidth:  arrowWidth,
+            headWidth:  arrowHeadWidth,
+            headLength: arrowHeadLength
+        });
 
-            this.initGraphics();
+        var rightArrowView = new ArrowView({
+            model:      this.rightArrowViewModel,
+            fillColor:  fillColor,
+            fillAlpha:  fillAlpha,
+            tailWidth:  arrowWidth,
+            headWidth:  arrowHeadWidth,
+            headLength: arrowHeadLength
+        });
 
-            this.updateMVT(options.mvt);
-        },
+        this.displayObject.addChild(leftArrowView.displayObject);
+        this.displayObject.addChild(rightArrowView.displayObject);
 
-        initGraphics: function() {
-            var arrowWidth      = 6;
-            var arrowHeadWidth  = 14;
-            var arrowHeadLength = 12;
-            var fillColor = '#000';
-            var fillAlpha = 0.6;
+        var text = new PIXI.Text(this.arrowLength + ' ' + this.units, {
+            font: '14px Helvetica Neue',
+            fill: '#000',
+            stroke: '#fff',
+            strokeThickness: 2
+        });
+        text.resolution = this.getResolution();
+        text.anchor.x = 0.5;
+        text.anchor.y = -0.2;
+        this.displayObject.addChild(text);
 
-            this.leftArrowViewModel = new ArrowView.ArrowViewModel();
-            this.rightArrowViewModel = new ArrowView.ArrowViewModel();
+        this.hide();
+    },
 
-            var leftArrowView = new ArrowView({
-                model:      this.leftArrowViewModel,
-                fillColor:  fillColor,
-                fillAlpha:  fillAlpha,
-                tailWidth:  arrowWidth,
-                headWidth:  arrowHeadWidth,
-                headLength: arrowHeadLength
-            });
+    resizeArrows: function() {
+        var halfLength = this.mvt.modelToViewDeltaX(this.arrowLength) / 2;
+        this.leftArrowViewModel.set('targetX', -halfLength);
+        this.rightArrowViewModel.set('targetX', halfLength);
+    },
 
-            var rightArrowView = new ArrowView({
-                model:      this.rightArrowViewModel,
-                fillColor:  fillColor,
-                fillAlpha:  fillAlpha,
-                tailWidth:  arrowWidth,
-                headWidth:  arrowHeadWidth,
-                headLength: arrowHeadLength
-            });
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.displayObject.addChild(leftArrowView.displayObject);
-            this.displayObject.addChild(rightArrowView.displayObject);
+        this.resizeArrows();
+    },
 
-            var text = new PIXI.Text(this.arrowLength + ' ' + this.units, {
-                font: '14px Helvetica Neue',
-                fill: '#000',
-                stroke: '#fff',
-                strokeThickness: 2
-            });
-            text.resolution = this.getResolution();
-            text.anchor.x = 0.5;
-            text.anchor.y = -0.2;
-            this.displayObject.addChild(text);
+    setPosition: function(x, y) {
+        this.displayObject.x = x;
+        this.displayObject.y = y;
+    },
 
-            this.hide();
-        },
+    show: function() {
+        this.displayObject.visible = true;
+    },
 
-        resizeArrows: function() {
-            var halfLength = this.mvt.modelToViewDeltaX(this.arrowLength) / 2;
-            this.leftArrowViewModel.set('targetX', -halfLength);
-            this.rightArrowViewModel.set('targetX', halfLength);
-        },
+    hide: function() {
+        this.displayObject.visible = false;
+    }
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+}, Constants.ScaleLegend);
 
-            this.resizeArrows();
-        },
-
-        setPosition: function(x, y) {
-            this.displayObject.x = x;
-            this.displayObject.y = y;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
-        }
-
-    }, Constants.ScaleLegend);
-
-    return ScaleLegend;
-});
+export default ScaleLegend;

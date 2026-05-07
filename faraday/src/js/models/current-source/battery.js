@@ -1,13 +1,8 @@
-define(function (require) {
+import AbstractCurrentSource from 'models/current-source';
 
-    'use strict';
+/**
+ * Battery is the model of a DC battery.
+ */
+var Battery = AbstractCurrentSource.extend();
 
-    var AbstractCurrentSource = require('models/current-source');
-
-    /**
-     * Battery is the model of a DC battery.
-     */
-    var Battery = AbstractCurrentSource.extend();
-
-    return Battery;
-});
+export default Battery;

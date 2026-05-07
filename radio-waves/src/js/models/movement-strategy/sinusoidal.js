@@ -1,117 +1,109 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import MovementStrategy from 'models/movement-strategy';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * This movement strategy does nothing automatically.  It is
+ *   intended for use when the object in the model to which it
+ *   applies is to be moved with the mouse.
+ */
+var SinusoidalMovementStrategy = function(electron, frequency, amplitude) {
+    this.electron = electron;
 
-    var _ = require('underscore');
+    this.frequency = frequency;
+    this.amplitude = amplitude;
+    this.nextPosition = new Vector2();
+    this.omega = this.computeOmega();
+    this.runningTime = 0;
+    this.velocity = new Vector2();
+};
 
-    var Vector2 = require('common/math/vector2');
+/**
+ * Instance functions/properties
+ */
+_.extend(SinusoidalMovementStrategy.prototype, MovementStrategy.prototype, {
 
-    var MovementStrategy = require('models/movement-strategy');
+    update: function(deltaTime) {
+        this.runningTime += deltaTime;
+        var position = this.electron.startPosition;
+        var nextPosition = this.getNextPosition(position, this.runningTime);
+        this.electron.setPosition(nextPosition);
+    },
 
-    var Constants = require('constants');
+    computeOmega: function() {
+        return this.frequency * Math.PI * 2;
+    },
+
+    getVelocity: function() {
+        this.velocity.y = this.omega * Math.cos(this.omega * this.runningTime);
+        return this.velocity;
+    },
+
+    getAcceleration: function() {
+        return -this.amplitude * this.omega * this.omega * Math.sin(this.omega * this.runningTime);
+    },
+
+    getMaxAcceleration: function() {
+        return -this.amplitude * this.omega * this.omega;
+    },
 
     /**
-     * This movement strategy does nothing automatically.  It is
-     *   intended for use when the object in the model to which it
-     *   applies is to be moved with the mouse.
+     * Computes the next position dictated by the movement. Note that
+     *   this method does not modify the position parameter, and that
+     *   this method is not reentrant.
      */
-    var SinusoidalMovementStrategy = function(electron, frequency, amplitude) {
-        this.electron = electron;
+    getNextPosition: function(position, t) {
+        var newY = this.valueAtTime(this.frequency, this.amplitude, t);
+        this.nextPosition.set(
+            position.x,
+            position.y + newY
+        );
+        return this.nextPosition;
+    },
 
+    getWaveValue: function(x) {
+        var k = this.omega / Constants.SPEED_OF_LIGHT;
+        var s = Math.sin(k * x - this.omega * this.runningTime);
+        return -this.amplitude * this.omega * this.omega * s;
+    },
+
+    getRunningTime: function() {
+        return this.runningTime;
+    },
+
+    getFrequency: function() {
+        return this.frequency;
+    },
+
+    getAmplitude: function() {
+        return this.amplitude;
+    },
+
+    valueAtTime: function(frequency, maxAmplitude, time) {
+        var amplitude;
+
+        if (frequency !== 0)
+            amplitude = Math.sin(frequency * time * Math.PI * 2) * maxAmplitude;
+        else
+            amplitude = 0;
+
+        return amplitude;
+    },
+
+    setFrequency: function(frequency) {
         this.frequency = frequency;
-        this.amplitude = amplitude;
-        this.nextPosition = new Vector2();
         this.omega = this.computeOmega();
-        this.runningTime = 0;
-        this.velocity = new Vector2();
-    };
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(SinusoidalMovementStrategy.prototype, MovementStrategy.prototype, {
+    setAmplitude: function(amplitude) {
+        this.amplitude = amplitude;
+    },
 
-    	update: function(deltaTime) {
-            this.runningTime += deltaTime;
-            var position = this.electron.startPosition;
-            var nextPosition = this.getNextPosition(position, this.runningTime);
-            this.electron.setPosition(nextPosition);
-        },
+    setRunningTime: function(runningTime) {
+        this.runningTime = runningTime;
+    }
 
-        computeOmega: function() {
-            return this.frequency * Math.PI * 2;
-        },
-
-        getVelocity: function() {
-            this.velocity.y = this.omega * Math.cos(this.omega * this.runningTime);
-            return this.velocity;
-        },
-
-        getAcceleration: function() {
-            return -this.amplitude * this.omega * this.omega * Math.sin(this.omega * this.runningTime);
-        },
-
-        getMaxAcceleration: function() {
-            return -this.amplitude * this.omega * this.omega;
-        },
-
-        /**
-         * Computes the next position dictated by the movement. Note that
-         *   this method does not modify the position parameter, and that
-         *   this method is not reentrant.
-         */
-        getNextPosition: function(position, t) {
-            var newY = this.valueAtTime(this.frequency, this.amplitude, t);
-            this.nextPosition.set(
-                position.x,
-                position.y + newY
-            );
-            return this.nextPosition;
-        },
-
-        getWaveValue: function(x) {
-            var k = this.omega / Constants.SPEED_OF_LIGHT;
-            var s = Math.sin(k * x - this.omega * this.runningTime);
-            return -this.amplitude * this.omega * this.omega * s;
-        },
-
-        getRunningTime: function() {
-            return this.runningTime;
-        },
-
-        getFrequency: function() {
-            return this.frequency;
-        },
-
-        getAmplitude: function() {
-            return this.amplitude;
-        },
-
-        valueAtTime: function(frequency, maxAmplitude, time) {
-            var amplitude;
-
-            if (frequency !== 0)
-                amplitude = Math.sin(frequency * time * Math.PI * 2) * maxAmplitude;
-            else
-                amplitude = 0;
-
-            return amplitude;
-        },
-
-        setFrequency: function(frequency) {
-            this.frequency = frequency;
-            this.omega = this.computeOmega();
-        },
-
-        setAmplitude: function(amplitude) {
-            this.amplitude = amplitude;
-        },
-
-        setRunningTime: function(runningTime) {
-            this.runningTime = runningTime;
-        }
-
-    });
-
-    return SinusoidalMovementStrategy;
 });
+
+export default SinusoidalMovementStrategy;

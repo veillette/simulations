@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import Law from 'models/law';
 
-    'use strict';
+/**
+ *
+ */
+var ParticleLaw = function(propagator) {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(ParticleLaw.prototype, Law.prototype, {
 
-    var Law = require('models/law');
-
-    /**
-     *
-     */
-    var ParticleLaw = function(propagator) {};
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(ParticleLaw.prototype, Law.prototype, {
-
-        update: function(deltaTime, system) {
-            for (var i = 0; i < system.particles.length; i++) {
-                var particle = system.particles[i];
-                if (particle.get('propagator'))
-                    particle.get('propagator').propagate(deltaTime, particle);
-            }
+    update: function(deltaTime, system) {
+        for (var i = 0; i < system.particles.length; i++) {
+            var particle = system.particles[i];
+            if (particle.get('propagator'))
+                particle.get('propagator').propagate(deltaTime, particle);
         }
+    }
 
-    });
-
-    return ParticleLaw;
 });
+
+export default ParticleLaw;

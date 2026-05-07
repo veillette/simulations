@@ -1,29 +1,18 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import IntroSimView from 'views/sim/intro';
+import EnergySystemsSimView from 'views/sim/energy-systems';
+import 'styles/font-awesome.less';
+import Assets from 'assets';
 
-    'use strict';
+var EFCAppView = PixiAppView.extend({
 
-    var PIXI = require('pixi');
-    PIXI.AUTO_PREVENT_DEFAULT = false;
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        IntroSimView,
+        EnergySystemsSimView
+    ]
 
-    var IntroSimView         = require('views/sim/intro');
-    var EnergySystemsSimView = require('views/sim/energy-systems');
-
-    require('less!styles/font-awesome');
-
-    var Assets = require('assets');
-
-    var EFCAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            IntroSimView,
-            EnergySystemsSimView
-        ]
-
-    });
-
-    return EFCAppView;
 });
+
+export default EFCAppView;

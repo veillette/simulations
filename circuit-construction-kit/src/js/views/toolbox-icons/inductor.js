@@ -1,78 +1,69 @@
-define(function(require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Inductor from 'models/components/inductor';
+import Junction from 'models/junction';
+import InductorView from 'views/components/inductor';
+import ComponentToolboxIcon from 'views/component-toolbox-icon';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A visual representation of some kind of object supply.  The
+ *   user creates new objects with this view.  Dragging from
+ *   the view creates a new object and places it in the scene,
+ *   while dragging an existing object back onto this view
+ *   destroys it.
+ */
+var InductorToolboxIcon = ComponentToolboxIcon.extend({
 
-    var _    = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            labelText: 'Inductor'
+        }, options);
 
-    var Vector2 = require('common/math/vector2');
-
-    var Inductor = require('models/components/inductor');
-    var Junction = require('models/junction');
-
-    var InductorView         = require('views/components/inductor');
-    var ComponentToolboxIcon = require('views/component-toolbox-icon');
-
-    var Assets    = require('assets');
+        ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from
-     *   the view creates a new object and places it in the scene,
-     *   while dragging an existing object back onto this view
-     *   destroys it.
+     * This should be overwritten by child classes to use perhaps the
+     *   actual kind of view for the model type with maybe a static
+     *   MVT that isn't bound to the scene's MVT.
      */
-    var InductorToolboxIcon = ComponentToolboxIcon.extend({
+    createIconSprite: function() {
+        return Assets.createSprite(Assets.Images.INDUCTOR);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                labelText: 'Inductor'
-            }, options);
+    /**
+     * Returns the schematic-mode icon sprite
+     */
+    createSchematicIconSprite: function() {
+        return Assets.createSprite(Assets.Images.SCHEMATIC_INDUCTOR);
+    },
 
-            ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Creates a new object of whatever this icon represents
+     */
+    createComponentView: function(x, y) {
+        var L = 1.2;
+        var H = 0.4;
 
-        /**
-         * This should be overwritten by child classes to use perhaps the
-         *   actual kind of view for the model type with maybe a static
-         *   MVT that isn't bound to the scene's MVT.
-         */
-        createIconSprite: function() {
-            return Assets.createSprite(Assets.Images.INDUCTOR);
-        },
+        var model = new Inductor({
+            startJunction: new Junction({ position: new Vector2(0, 0) }),
+            endJunction:   new Junction({ position: new Vector2(L, 0) }),
+            length: L,
+            height: H
+        });
+        this.setJunctionPositions(model, x, y);
 
-        /**
-         * Returns the schematic-mode icon sprite
-         */
-        createSchematicIconSprite: function() {
-            return Assets.createSprite(Assets.Images.SCHEMATIC_INDUCTOR);
-        },
+        var view = new InductorView({
+            mvt: this.mvt,
+            simulation: this.simulation,
+            circuit: this.simulation.circuit,
+            model: model
+        });
+        return view;
+    }
 
-        /**
-         * Creates a new object of whatever this icon represents
-         */
-        createComponentView: function(x, y) {
-            var L = 1.2;
-            var H = 0.4;
-
-            var model = new Inductor({
-                startJunction: new Junction({ position: new Vector2(0, 0) }),
-                endJunction:   new Junction({ position: new Vector2(L, 0) }),
-                length: L,
-                height: H
-            });
-            this.setJunctionPositions(model, x, y);
-
-            var view = new InductorView({
-                mvt: this.mvt,
-                simulation: this.simulation,
-                circuit: this.simulation.circuit,
-                model: model
-            });
-            return view;
-        }
-
-    });
-
-
-    return InductorToolboxIcon;
 });
+
+
+export default InductorToolboxIcon;

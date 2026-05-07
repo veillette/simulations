@@ -1,22 +1,16 @@
-define(function (require) {
+import _ from 'underscore';
+import PositionableObject from 'common/models/positionable-object';
 
-    'use strict';
+/**
+ *
+ */
+var VelocitySensor = PositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        velocity: null,
+        enabled: false
+    })
 
-    var PositionableObject = require('common/models/positionable-object');
-
-    /**
-     *
-     */
-    var VelocitySensor = PositionableObject.extend({
-
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            velocity: null,
-            enabled: false
-        })
-
-    });
-
-    return VelocitySensor;
 });
+
+export default VelocitySensor;

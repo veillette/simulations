@@ -1,113 +1,107 @@
-define(function(require) {
+import DielectricSimulation from 'models/simulation/dielectric';
+import CapacitorLabSceneView from 'views/scene';
+import CircuitView from 'views/circuit';
 
-    'use strict';
+/**
+ *
+ */
+var MultipleCapacitorsSceneView = CapacitorLabSceneView.extend({
 
-    var DielectricSimulation = require('models/simulation/dielectric');
+    events: {
 
-    var CapacitorLabSceneView = require('views/scene');
-    var CircuitView           = require('views/circuit');
+    },
+
+    initialize: function(options) {
+        CapacitorLabSceneView.prototype.initialize.apply(this, arguments);
+
+        this.listenTo(this.simulation, 'change:circuit', this.circuitChanged);
+    },
+
+    initGraphics: function() {
+        CapacitorLabSceneView.prototype.initGraphics.apply(this, arguments);
+
+        this.initCircuitViews();
+    },
+
+    initCircuitViews: function() {
+        this.circuitViews = [];
+
+        for (var i = 0; i < this.simulation.circuits.length; i++) {
+            var circuitView = new CircuitView({
+                mvt:                            this.mvt,
+                model:                          this.simulation.circuits[i],
+                maxDielectricEField:            DielectricSimulation.getMaxDielectricEField(),
+                maxPlateCharge:                 DielectricSimulation.getMaxPlateCharge(),
+                maxExcessDielectricPlateCharge: DielectricSimulation.getMaxExcessDielectricPlateCharge(),
+                maxEffectiveEField:             DielectricSimulation.getMaxEffectiveEField()
+            });
+
+            // Hide it and add it to the stage
+            circuitView.hide();
+            this.circuitLayer.addChild(circuitView.displayObject);
+
+            this.circuitViews.push(circuitView);
+        }
+
+        this.circuitChanged(this.simulation);
+    },
+
+    reset: function() {
+        CapacitorLabSceneView.prototype.reset.apply(this, arguments);
+
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].reset();
+    },
+
+    _update: function(time, deltaTime, paused, timeScale) {
+        CapacitorLabSceneView.prototype._update.apply(this, arguments);
+
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].update(time, deltaTime);
+    },
+
+    /**
+     * Returns the view of the circuit component that intersects with the
+     *   given polygon in view space.
+     */
+    getIntersectingComponentView: function(polygon) {
+        return this.circuitViews[this.simulation.get('currentCircuitIndex')].getIntersectingComponentView(polygon);
+    },
 
     /**
      *
      */
-    var MultipleCapacitorsSceneView = CapacitorLabSceneView.extend({
+    getIntersectingCapacitorView: function(point) {
+        return this.circuitViews[this.simulation.get('currentCircuitIndex')].getIntersectingCapacitorView(point);
+    },
 
-        events: {
+    circuitChanged: function(simulation, circuit) {
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].hide();
 
-        },
+        this.circuitViews[simulation.get('currentCircuitIndex')].show();
+    },
 
-        initialize: function(options) {
-            CapacitorLabSceneView.prototype.initialize.apply(this, arguments);
+    showPlateCharges: function() {
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].showPlateCharges();
+    },
 
-            this.listenTo(this.simulation, 'change:circuit', this.circuitChanged);
-        },
+    hidePlateCharges: function() {
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].hidePlateCharges();
+    },
 
-        initGraphics: function() {
-            CapacitorLabSceneView.prototype.initGraphics.apply(this, arguments);
+    showEFieldLines: function() {
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].showEFieldLines();
+    },
 
-            this.initCircuitViews();
-        },
+    hideEFieldLines: function() {
+        for (var i = 0; i < this.circuitViews.length; i++)
+            this.circuitViews[i].hideEFieldLines();
+    }
 
-        initCircuitViews: function() {
-            this.circuitViews = [];
-
-            for (var i = 0; i < this.simulation.circuits.length; i++) {
-                var circuitView = new CircuitView({
-                    mvt:                            this.mvt,
-                    model:                          this.simulation.circuits[i],
-                    maxDielectricEField:            DielectricSimulation.getMaxDielectricEField(),
-                    maxPlateCharge:                 DielectricSimulation.getMaxPlateCharge(),
-                    maxExcessDielectricPlateCharge: DielectricSimulation.getMaxExcessDielectricPlateCharge(),
-                    maxEffectiveEField:             DielectricSimulation.getMaxEffectiveEField()
-                });
-
-                // Hide it and add it to the stage
-                circuitView.hide();
-                this.circuitLayer.addChild(circuitView.displayObject);
-
-                this.circuitViews.push(circuitView);
-            }
-
-            this.circuitChanged(this.simulation);
-        },
-
-        reset: function() {
-            CapacitorLabSceneView.prototype.reset.apply(this, arguments);
-
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].reset();
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            CapacitorLabSceneView.prototype._update.apply(this, arguments);
-
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].update(time, deltaTime);
-        },
-
-        /**
-         * Returns the view of the circuit component that intersects with the
-         *   given polygon in view space.
-         */
-        getIntersectingComponentView: function(polygon) {
-            return this.circuitViews[this.simulation.get('currentCircuitIndex')].getIntersectingComponentView(polygon);
-        },
-
-        /**
-         *
-         */
-        getIntersectingCapacitorView: function(point) {
-            return this.circuitViews[this.simulation.get('currentCircuitIndex')].getIntersectingCapacitorView(point);
-        },
-
-        circuitChanged: function(simulation, circuit) {
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].hide();
-
-            this.circuitViews[simulation.get('currentCircuitIndex')].show();
-        },
-
-        showPlateCharges: function() {
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].showPlateCharges();
-        },
-
-        hidePlateCharges: function() {
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].hidePlateCharges();
-        },
-
-        showEFieldLines: function() {
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].showEFieldLines();
-        },
-
-        hideEFieldLines: function() {
-            for (var i = 0; i < this.circuitViews.length; i++)
-                this.circuitViews[i].hideEFieldLines();
-        }
-
-    });
-
-    return MultipleCapacitorsSceneView;
 });
+
+export default MultipleCapacitorsSceneView;

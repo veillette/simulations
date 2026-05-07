@@ -1,145 +1,136 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import WavelengthSliderView from 'common/controls/wavelength-slider';
+import Constants from 'constants';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import html from '../../templates/prism-break-controls.html?raw';
+import 'styles/prism-break-controls.less';
+Backbone.$ = $;
 
-    'use strict';
+/**
+ *
+ */
+var PrismBreakControls = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone'); Backbone.$ = $;
+    template: _.template(html),
 
-    var WavelengthSliderView = require('common/controls/wavelength-slider');
+    events: {
+        'click #color-type-one'   : 'colorOneClicked',
+        'click #color-type-white' : 'colorWhiteClicked',
 
-    var Constants = require('constants');
+        'slide .slider' : 'changeWavelength',
 
-    var defineInputUpdateLocks = require('common/locks/define-locks');
+        'click #ray-count-single'   : 'rayCountSingleClicked',
+        'click #ray-count-multiple' : 'rayCountMultipleClicked',
 
-    var html = require('text!../../templates/prism-break-controls.html');
+        'click #show-reflections-check' : 'toggleReflections',
+        'click #show-normals-check'     : 'toggleNormals',
+        'click #show-protractor-check'  : 'toggleProtractor'
+    },
 
-    require('less!styles/prism-break-controls');
+    initialize: function(options) {
+        this.simulation = options.simulation;
+        this.laser = this.simulation.laser;
+        this.sceneView = options.sceneView;
+
+        this.initWavelengthSliderView();
+    },
+
+    initWavelengthSliderView: function() {
+        this.wavelengthSliderView = new WavelengthSliderView({
+            defaultWavelength: this.laser.get('wavelength') * 1E9, // Convert between SI and nanometers
+            minWavelength: Constants.MIN_WAVELENGTH,
+            maxWavelength: Constants.MAX_WAVELENGTH
+        });
+    },
+
+    reset: function() {
+        this.$('#color-type-one').click();
+        this.$('#ray-count-single').click();
+        this.$('input[type="checkbox"]').removeAttr('checked');
+    },
 
     /**
-     *
+     * Renders content and canvas for heatmap
      */
-    var PrismBreakControls = Backbone.View.extend({
+    render: function() {
+        var data = {
 
-        template: _.template(html),
+        };
 
-        events: {
-            'click #color-type-one'   : 'colorOneClicked',
-            'click #color-type-white' : 'colorWhiteClicked',
+        this.setElement($(this.template(data)));
 
-            'slide .slider' : 'changeWavelength',
+        this.wavelengthSliderView.render();
+        this.$('.wavelength-slider-wrapper').append(this.wavelengthSliderView.el);
 
-            'click #ray-count-single'   : 'rayCountSingleClicked',
-            'click #ray-count-multiple' : 'rayCountMultipleClicked',
+        this.$value = this.$('.wavelength-value');
 
-            'click #show-reflections-check' : 'toggleReflections',
-            'click #show-normals-check'     : 'toggleNormals',
-            'click #show-protractor-check'  : 'toggleProtractor'
-        },
+        return this;
+    },
 
-        initialize: function(options) {
-            this.simulation = options.simulation;
-            this.laser = this.simulation.laser;
-            this.sceneView = options.sceneView;
+    postRender: function() {
+        this.wavelengthSliderView.postRender();
+    },
 
-            this.initWavelengthSliderView();
-        },
+    changeWavelength: function(event) {
+        this.inputLock(function() {
+            var wavelength = parseInt($(event.target).val());
+            this.$value.text(wavelength + 'nm');
+            this.setSimulationWavelength(wavelength);
+        });
+    },
 
-        initWavelengthSliderView: function() {
-            this.wavelengthSliderView = new WavelengthSliderView({
-                defaultWavelength: this.laser.get('wavelength') * 1E9, // Convert between SI and nanometers
-                minWavelength: Constants.MIN_WAVELENGTH,
-                maxWavelength: Constants.MAX_WAVELENGTH
-            });
-        },
+    colorOneClicked: function(event) {
+        this.wavelengthSliderView.enable();
+        this.$('.wavelength-selection-wrapper').removeClass('disabled');
+        this.setSimulationWavelength(this.$('.slider').val());
+    },
 
-        reset: function() {
-            this.$('#color-type-one').click();
-            this.$('#ray-count-single').click();
-            this.$('input[type="checkbox"]').removeAttr('checked');
-        },
+    colorWhiteClicked: function(event) {
+        this.wavelengthSliderView.disable();
+        this.$('.wavelength-selection-wrapper').addClass('disabled');
+        this.simulation.set('wavelength', Constants.WHITE_LIGHT);
+    },
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            var data = {
+    setSimulationWavelength: function(sliderWavelength) {
+        this.simulation.set('wavelength', sliderWavelength / Constants.METERS_TO_NANOMETERS);
+    },
 
-            };
+    rayCountSingleClicked: function(event) {
+        this.simulation.set('manyRays', false);
+    },
 
-            this.setElement($(this.template(data)));
+    rayCountMultipleClicked: function(event) {
+        this.simulation.set('manyRays', true);
+    },
 
-            this.wavelengthSliderView.render();
-            this.$('.wavelength-slider-wrapper').append(this.wavelengthSliderView.el);
+    toggleReflections: function(event) {
+        if ($(event.target).is(':checked'))
+            this.simulation.set('showReflections', true);
+        else
+            this.simulation.set('showReflections', false);
+    },
 
-            this.$value = this.$('.wavelength-value');
+    toggleNormals: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showIntersectionNormals();
+        else
+            this.sceneView.hideIntersectionNormals();
+    },
 
-            return this;
-        },
+    toggleProtractor: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showProtractor();
+        else
+            this.sceneView.hideProtractor();
+    }
 
-        postRender: function() {
-            this.wavelengthSliderView.postRender();
-        },
-
-        changeWavelength: function(event) {
-            this.inputLock(function() {
-                var wavelength = parseInt($(event.target).val());
-                this.$value.text(wavelength + 'nm');
-                this.setSimulationWavelength(wavelength);
-            });
-        },
-
-        colorOneClicked: function(event) {
-            this.wavelengthSliderView.enable();
-            this.$('.wavelength-selection-wrapper').removeClass('disabled');
-            this.setSimulationWavelength(this.$('.slider').val());
-        },
-
-        colorWhiteClicked: function(event) {
-            this.wavelengthSliderView.disable();
-            this.$('.wavelength-selection-wrapper').addClass('disabled');
-            this.simulation.set('wavelength', Constants.WHITE_LIGHT);
-        },
-
-        setSimulationWavelength: function(sliderWavelength) {
-            this.simulation.set('wavelength', sliderWavelength / Constants.METERS_TO_NANOMETERS);
-        },
-
-        rayCountSingleClicked: function(event) {
-            this.simulation.set('manyRays', false);
-        },
-
-        rayCountMultipleClicked: function(event) {
-            this.simulation.set('manyRays', true);
-        },
-
-        toggleReflections: function(event) {
-            if ($(event.target).is(':checked'))
-                this.simulation.set('showReflections', true);
-            else
-                this.simulation.set('showReflections', false);
-        },
-
-        toggleNormals: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showIntersectionNormals();
-            else
-                this.sceneView.hideIntersectionNormals();
-        },
-
-        toggleProtractor: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showProtractor();
-            else
-                this.sceneView.hideProtractor();
-        }
-
-    });
-
-
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(PrismBreakControls);
-
-
-    return PrismBreakControls;
 });
+
+
+// Add input/update locking functionality to the prototype
+defineInputUpdateLocks(PrismBreakControls);
+
+
+export default PrismBreakControls;

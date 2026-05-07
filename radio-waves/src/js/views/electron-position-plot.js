@@ -1,292 +1,286 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/extensions';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import PiecewiseCurve from 'common/math/piecewise-curve';
 
-    'use strict';
 
-    var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
+/**
+ * A view that represents an electron-position plot. Its update
+ *   function assumes a constant deltaTime because the spacing
+ *   between data points is the same.
+ */
+var ElectronPositionPlot = PixiView.extend({
 
-    var PixiView       = require('common/v3/pixi/view');
-    var Colors         = require('common/colors/colors');
-    var PiecewiseCurve = require('common/math/piecewise-curve');
+    width: 260,
+    height: 160,
+    margin: 15,
 
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd'
+    },
 
     /**
-     * A view that represents an electron-position plot. Its update
-     *   function assumes a constant deltaTime because the spacing
-     *   between data points is the same.
+     * Initializes the new ElectronPositionPlot.
      */
-    var ElectronPositionPlot = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
+        this.electron = options.electron;
+        this.titleText = options.title;
+        this.minY = options.minY;
+        this.maxY = options.maxY;
 
-        width: 260,
-        height: 160,
-        margin: 15,
+        this.panelColor = Colors.parseHex('#fff');
+        this.gridColor  = Colors.parseHex('#ccc');
+        this.lineColor  = Colors.parseHex('#2575BA');
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd'
-        },
+        this.lineWidth  = 1;
+        this.gridLineWidth = 1;
 
-        /**
-         * Initializes the new ElectronPositionPlot.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
-            this.electron = options.electron;
-            this.titleText = options.title;
-            this.minY = options.minY;
-            this.maxY = options.maxY;
+        // Cached objects
+        this._dragOffset = new PIXI.Point();
 
-            this.panelColor = Colors.parseHex('#fff');
-            this.gridColor  = Colors.parseHex('#ccc');
-            this.lineColor  = Colors.parseHex('#2575BA');
+        this.initGraphics();
+    },
 
-            this.lineWidth  = 1;
-            this.gridLineWidth = 1;
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.initPanel();
+        this.initTitle();
+        this.initAxisLabel();
+        this.initPlot();
 
-            // Cached objects
-            this._dragOffset = new PIXI.Point();
+        this.displayObject.buttonMode = true;
 
-            this.initGraphics();
-        },
+        this.updateMVT(this.mvt);
+    },
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.initPanel();
-            this.initTitle();
-            this.initAxisLabel();
-            this.initPlot();
+    initPanel: function() {
 
-            this.displayObject.buttonMode = true;
+        // Draw the shadow
+        var outline = new PiecewiseCurve();
 
-            this.updateMVT(this.mvt);
-        },
+        outline
+            .moveTo(0, 0)
+            .lineTo(this.width, 0)
+            .lineTo(this.width, this.height)
+            .lineTo(0, this.height)
+            .close();
 
-        initPanel: function() {
+        var drawStyle = {
+            lineWidth: 11,
+            strokeStyle: 'rgba(0,0,0,0)',
+            shadowBlur: 11,
+            fillStyle: 'rgba(0,0,0,1)'
+        };
 
-            // Draw the shadow
-            var outline = new PiecewiseCurve();
+        var shadow = PIXI.Sprite.fromPiecewiseCurve(outline, drawStyle);
+        shadow.alpha = 0.13;
+        this.displayObject.addChild(shadow);
 
-            outline
-                .moveTo(0, 0)
-                .lineTo(this.width, 0)
-                .lineTo(this.width, this.height)
-                .lineTo(0, this.height)
-                .close();
+        // Draw the panel
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(this.panelColor, 0.78);
+        graphics.drawRect(0, 0, this.width, this.height);
+        graphics.endFill();
 
-            var drawStyle = {
-                lineWidth: 11,
-                strokeStyle: 'rgba(0,0,0,0)',
-                shadowBlur: 11,
-                fillStyle: 'rgba(0,0,0,1)'
-            };
+        this.displayObject.addChild(graphics);
+    },
 
-            var shadow = PIXI.Sprite.fromPiecewiseCurve(outline, drawStyle);
-            shadow.alpha = 0.13;
-            this.displayObject.addChild(shadow);
+    initTitle: function() {
+        var m = this.margin;
 
-            // Draw the panel
-            var graphics = new PIXI.Graphics();
-            graphics.beginFill(this.panelColor, 0.78);
-            graphics.drawRect(0, 0, this.width, this.height);
-            graphics.endFill();
+        var settings = {
+            font: '14px Helvetica Neue',
+            fill: '#888'
+        };
 
-            this.displayObject.addChild(graphics);
-        },
+        var title = new PIXI.Text(this.titleText, settings);
+        title.resolution = this.getResolution();
+        title.x = Math.round((this.width - title.width) / 2);
+        title.y = 8;
 
-        initTitle: function() {
-            var m = this.margin;
+        this.displayObject.addChild(title);
 
-            var settings = {
-                font: '14px Helvetica Neue',
-                fill: '#888'
-            };
+        // Y-Offsets for lines
+        var y1 = 6;
+        var y2 = 10;
+        // Padding between words and line
+        var p = m / 2;
 
-            var title = new PIXI.Text(this.titleText, settings);
-            title.resolution = this.getResolution();
-            title.x = Math.round((this.width - title.width) / 2);
-            title.y = 8;
+        var graphics = new PIXI.Graphics();
+        graphics.lineStyle(1, 0xC1C1C1, 1);
 
-            this.displayObject.addChild(title);
+        // Lines on left side
+        graphics.moveTo(title.x - p, title.y + y1);
+        graphics.lineTo(m,           title.y + y1);
+        graphics.moveTo(title.x - p, title.y + y2);
+        graphics.lineTo(m,           title.y + y2);
 
-            // Y-Offsets for lines
-            var y1 = 6;
-            var y2 = 10;
-            // Padding between words and line
-            var p = m / 2;
+        // Lines on right side
+        graphics.moveTo(title.x + title.width + p, title.y + y1);
+        graphics.lineTo(this.width - m,            title.y + y1);
+        graphics.moveTo(title.x + title.width + p, title.y + y2);
+        graphics.lineTo(this.width - m,            title.y + y2);
 
-            var graphics = new PIXI.Graphics();
-            graphics.lineStyle(1, 0xC1C1C1, 1);
+        this.displayObject.addChild(graphics);
+    },
 
-            // Lines on left side
-            graphics.moveTo(title.x - p, title.y + y1);
-            graphics.lineTo(m,           title.y + y1);
-            graphics.moveTo(title.x - p, title.y + y2);
-            graphics.lineTo(m,           title.y + y2);
+    initAxisLabel: function() {
 
-            // Lines on right side
-            graphics.moveTo(title.x + title.width + p, title.y + y1);
-            graphics.lineTo(this.width - m,            title.y + y1);
-            graphics.moveTo(title.x + title.width + p, title.y + y2);
-            graphics.lineTo(this.width - m,            title.y + y2);
+        var settings = {
+            font: '11px Helvetica Neue',
+            fill: '#888'
+        };
 
-            this.displayObject.addChild(graphics);
-        },
+        var label = new PIXI.Text('Time', settings);
+        label.resolution = this.getResolution();
+        label.x = Math.round((this.width - label.width) / 2);
+        label.y = this.height - 20;
 
-        initAxisLabel: function() {
+        this.displayObject.addChild(label);
+    },
 
-            var settings = {
-                font: '11px Helvetica Neue',
-                fill: '#888'
-            };
+    initPlot: function() {
+        var plotX = this.margin;
+        var plotY = this.margin + 19;
+        var plotWidth  = this.width  - (plotX * 2);
+        var plotHeight = this.height - (plotY + 26);
 
-            var label = new PIXI.Text('Time', settings);
-            label.resolution = this.getResolution();
-            label.x = Math.round((this.width - label.width) / 2);
-            label.y = this.height - 20;
+        var plotBg = new PIXI.Graphics();
+        // Draw border
+        plotBg.beginFill(0xCCCCCC, 1);
+        plotBg.drawRect(plotX - 1, plotY - 1, plotWidth + 2, plotHeight + 2);
+        plotBg.endFill();
+        // Draw fill color
+        plotBg.beginFill(0xFFFFFF, 1);
+        plotBg.drawRect(plotX, plotY, plotWidth, plotHeight);
+        plotBg.endFill();
 
-            this.displayObject.addChild(label);
-        },
+        var plotGraphics = new PIXI.Graphics();
+        plotGraphics.x = plotX;
+        plotGraphics.y = plotY;
 
-        initPlot: function() {
-            var plotX = this.margin;
-            var plotY = this.margin + 19;
-            var plotWidth  = this.width  - (plotX * 2);
-            var plotHeight = this.height - (plotY + 26);
+        this.displayObject.addChild(plotBg);
+        this.displayObject.addChild(plotGraphics);
 
-            var plotBg = new PIXI.Graphics();
-            // Draw border
-            plotBg.beginFill(0xCCCCCC, 1);
-            plotBg.drawRect(plotX - 1, plotY - 1, plotWidth + 2, plotHeight + 2);
-            plotBg.endFill();
-            // Draw fill color
-            plotBg.beginFill(0xFFFFFF, 1);
-            plotBg.drawRect(plotX, plotY, plotWidth, plotHeight);
-            plotBg.endFill();
+        this.plotX = plotX;
+        this.plotY = plotY;
+        this.plotWidth = plotWidth;
+        this.plotHeight = plotHeight;
+        this.plotGraphics = plotGraphics;
 
-            var plotGraphics = new PIXI.Graphics();
-            plotGraphics.x = plotX;
-            plotGraphics.y = plotY;
+        this.plotDataLength = plotWidth;
+        this.plotData = [];
 
-            this.displayObject.addChild(plotBg);
-            this.displayObject.addChild(plotGraphics);
+        this.tickX = 0;
+        this.tickSpace = 20;
 
-            this.plotX = plotX;
-            this.plotY = plotY;
-            this.plotWidth = plotWidth;
-            this.plotHeight = plotHeight;
-            this.plotGraphics = plotGraphics;
+        this.yScale = plotHeight / (this.maxY - this.minY);
+        this.yOffset = Math.floor(this.minY * this.yScale);
+    },
 
-            this.plotDataLength = plotWidth;
-            this.plotData = [];
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+    },
 
-            this.tickX = 0;
-            this.tickSpace = 20;
+    /**
+     * This function assumes a constant deltaTime, so only call it
+     *   in that context.
+     */
+    update: function() {
+        // Add the current electron position to the dataset
+        this.addDatum(this.electron.get('position').y);
 
-            this.yScale = plotHeight / (this.maxY - this.minY);
-            this.yOffset = Math.floor(this.minY * this.yScale);
-        },
+        var data       = this.plotData;
+        var plotWidth  = this.plotWidth;
+        var plotHeight = this.plotHeight;
+        var graphics   = this.plotGraphics;
+        var yScale     = this.yScale;
+        var yOffset    = this.yOffset;
+        var tickX      = this.tickX;
+        var tickSpace  = this.tickSpace;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-        },
+        graphics.clear();
 
-        /**
-         * This function assumes a constant deltaTime, so only call it
-         *   in that context.
-         */
-        update: function() {
-            // Add the current electron position to the dataset
-            this.addDatum(this.electron.get('position').y);
+        // Draw horizontal lines
+        graphics.lineStyle(this.gridLineWidth, this.gridColor, 1);
+        graphics.moveTo(0,         plotHeight / 2);
+        graphics.lineTo(plotWidth, plotHeight / 2);
 
-            var data       = this.plotData;
-            var plotWidth  = this.plotWidth;
-            var plotHeight = this.plotHeight;
-            var graphics   = this.plotGraphics;
-            var yScale     = this.yScale;
-            var yOffset    = this.yOffset;
-            var tickX      = this.tickX;
-            var tickSpace  = this.tickSpace;
-
-            graphics.clear();
-
-            // Draw horizontal lines
-            graphics.lineStyle(this.gridLineWidth, this.gridColor, 1);
-            graphics.moveTo(0,         plotHeight / 2);
-            graphics.lineTo(plotWidth, plotHeight / 2);
-
-            // Draw vertical lines
-            for (var x = 0; x < plotWidth; x++) {
-                if ((x % tickSpace) === tickX) {
-                    graphics.moveTo(x, 0);
-                    graphics.lineTo(x, plotHeight);
-                }
+        // Draw vertical lines
+        for (var x = 0; x < plotWidth; x++) {
+            if ((x % tickSpace) === tickX) {
+                graphics.moveTo(x, 0);
+                graphics.lineTo(x, plotHeight);
             }
-
-            // Draw data points
-            graphics.lineStyle(this.lineWidth, this.lineColor, 1);
-            for (var i = 1; i < data.length; i++) {
-                var d0 = data[i - 1] * yScale;
-                var d1 = data[i] * yScale;
-
-                graphics.moveTo(i - 1, d0 - yOffset);
-                graphics.lineTo(i,     d1 - yOffset);
-            }
-        },
-
-        addDatum: function(datum) {
-            // Move the vertical tick location
-            this.tickX = (this.tickX + 1) % this.tickSpace;
-
-            // Move all data one spot to the right
-            var data = this.plotData;
-            for (var i = this.plotDataLength - 1; i > 0; i--)
-                data[i] = data[i - 1];
-
-            data[0] = datum;
-        },
-
-        dragStart: function(data) {
-            this.dragOffset = data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
-
-        drag: function(data) {
-            if (this.dragging) {
-                var dx = data.global.x - this.displayObject.x - this.dragOffset.x;
-                var dy = data.global.y - this.displayObject.y - this.dragOffset.y;
-
-                this.displayObject.x += dx;
-                this.displayObject.y += dy;
-            }
-        },
-
-        dragEnd: function(data) {
-            this.dragging = false;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
         }
 
-    });
+        // Draw data points
+        graphics.lineStyle(this.lineWidth, this.lineColor, 1);
+        for (var i = 1; i < data.length; i++) {
+            var d0 = data[i - 1] * yScale;
+            var d1 = data[i] * yScale;
 
+            graphics.moveTo(i - 1, d0 - yOffset);
+            graphics.lineTo(i,     d1 - yOffset);
+        }
+    },
 
-    return ElectronPositionPlot;
+    addDatum: function(datum) {
+        // Move the vertical tick location
+        this.tickX = (this.tickX + 1) % this.tickSpace;
+
+        // Move all data one spot to the right
+        var data = this.plotData;
+        for (var i = this.plotDataLength - 1; i > 0; i--)
+            data[i] = data[i - 1];
+
+        data[0] = datum;
+    },
+
+    dragStart: function(data) {
+        this.dragOffset = data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
+    },
+
+    drag: function(data) {
+        if (this.dragging) {
+            var dx = data.global.x - this.displayObject.x - this.dragOffset.x;
+            var dy = data.global.y - this.displayObject.y - this.dragOffset.y;
+
+            this.displayObject.x += dx;
+            this.displayObject.y += dy;
+        }
+    },
+
+    dragEnd: function(data) {
+        this.dragging = false;
+    },
+
+    show: function() {
+        this.displayObject.visible = true;
+    },
+
+    hide: function() {
+        this.displayObject.visible = false;
+    }
+
 });
+
+
+export default ElectronPositionPlot;

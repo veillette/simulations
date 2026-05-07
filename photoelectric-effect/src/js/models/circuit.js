@@ -1,25 +1,15 @@
-define(function (require) {
+import Backbone from 'backbone';
+import Constants from 'constants';
 
-    'use strict';
+var Circuit = Backbone.Model.extend({
+    defaults: {
+        voltage: 0,
+        circuitIsPositive: true
+    },
 
-    var Backbone = require('backbone');
+    initialize: function(attributes, options) {
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+    }
+}, Constants.Circuit);
 
-    var Circuit = Backbone.Model.extend({
-        defaults: {
-            voltage: 0,
-            circuitIsPositive: true
-        },
-
-        initialize: function(attributes, options) {
-
-        }
-    }, Constants.Circuit);
-
-    return Circuit;
-
-});
+export default Circuit;

@@ -1,125 +1,117 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import 'common/v3/pixi/extensions';
+import WavelengthColors from 'common/colors/wavelength';
+import Colors from 'common/colors/colors';
+import PEffectSimulation from 'models/simulation';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+var BeamView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-    var PixiView         = require('common/v3/pixi/view');
-                           require('common/v3/pixi/extensions');
-    var WavelengthColors = require('common/colors/wavelength');
-    var Colors           = require('common/colors/colors');
+        this.initGraphics();
 
-    var PEffectSimulation = require('models/simulation');
+        this.listenTo(this.model, 'change:wavelength',       this.drawLight);
+        this.listenTo(this.model, 'change:photonsPerSecond', this.drawLight);
 
-    var Assets    = require('assets');
-    var Constants = require('constants');
+        this.listenTo(this.simulation, 'change:viewMode', this.drawLight);
+    },
 
-    var BeamView = PixiView.extend({
+    initGraphics: function() {
+        this.beamLightGraphics = new PIXI.Graphics();
+        this.lampLightGraphics = new PIXI.Graphics();
+        this.mask = new PIXI.Graphics();
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+        this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
+        this.flashlight.anchor.x = 1;
+        this.flashlight.anchor.y = 0.5;
 
-            this.initGraphics();
+        this.flashlightLayer = new PIXI.Container();
+        this.flashlightLayer.addChild(this.lampLightGraphics);
+        this.flashlightLayer.addChild(this.flashlight);
 
-            this.listenTo(this.model, 'change:wavelength',       this.drawLight);
-            this.listenTo(this.model, 'change:photonsPerSecond', this.drawLight);
+        this.displayObject.addChild(this.beamLightGraphics);
+        this.displayObject.addChild(this.flashlightLayer);
+        this.displayObject.addChild(this.mask);
 
-            this.listenTo(this.simulation, 'change:viewMode', this.drawLight);
-        },
+        this.displayObject.mask = this.mask;
 
-        initGraphics: function() {
-            this.beamLightGraphics = new PIXI.Graphics();
-            this.lampLightGraphics = new PIXI.Graphics();
-            this.mask = new PIXI.Graphics();
+        this.updateMVT(this.mvt);
+    },
 
-            this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
-            this.flashlight.anchor.x = 1;
-            this.flashlight.anchor.y = 0.5;
+    /**
+     * Updates the model-view-transform and anything that relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.flashlightLayer = new PIXI.Container();
-            this.flashlightLayer.addChild(this.lampLightGraphics);
-            this.flashlightLayer.addChild(this.flashlight);
+        // Update mask
+        this.mask.clear();
+        this.mask.beginFill();
+        this.mask.drawRect(this.mvt.modelToViewX(this.simulation.leftHandPlate.getX()), 0, 2000, 2000);
+        this.mask.endFill();
 
-            this.displayObject.addChild(this.beamLightGraphics);
-            this.displayObject.addChild(this.flashlightLayer);
-            this.displayObject.addChild(this.mask);
+        // Position and rotation of the flashlight layer
+        this.updatePosition(this.model, this.model.get('position'));
+        this.updateRotation();
 
-            this.displayObject.mask = this.mask;
+        // Update the flashlight position and scale relative to the flashlight layer
+        var targetWidth = this.mvt.modelToViewDeltaX(161);
+        var scale = targetWidth / this.flashlight.width;
+        this.flashlight.scale.x = scale;
+        this.flashlight.scale.y = scale;
+        this.flashlight.x = this.getLampRadiusA();
 
-            this.updateMVT(this.mvt);
-        },
+        // Transform the light-beam piecewise curve into view space and save it
+        this.lightCurve = mvt.modelToView(this.model.getBounds());
 
-        /**
-         * Updates the model-view-transform and anything that relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.drawLight();
+    },
 
-            // Update mask
-            this.mask.clear();
-            this.mask.beginFill();
-            this.mask.drawRect(this.mvt.modelToViewX(this.simulation.leftHandPlate.getX()), 0, 2000, 2000);
-            this.mask.endFill();
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        this.flashlightLayer.x = viewPosition.x;
+        this.flashlightLayer.y = viewPosition.y;
+    },
 
-            // Position and rotation of the flashlight layer
-            this.updatePosition(this.model, this.model.get('position'));
-            this.updateRotation();
+    updateRotation: function() {
+        this.flashlightLayer.rotation = this.model.getDirection();
+    },
 
-            // Update the flashlight position and scale relative to the flashlight layer
-            var targetWidth = this.mvt.modelToViewDeltaX(161);
-            var scale = targetWidth / this.flashlight.width;
-            this.flashlight.scale.x = scale;
-            this.flashlight.scale.y = scale;
-            this.flashlight.x = this.getLampRadiusA();
+    drawLight: function() {
+        var beam = this.model;
+        var color = Colors.parseHex(WavelengthColors.nmToHex(beam.get('wavelength')));
+        var minLevel = 200;
+        var colorMax = 255;
+        // The power function here controls the ramp-up of actualColor intensity
+        var level = Math.max(minLevel, colorMax - Math.floor((colorMax - minLevel) * Math.pow((beam.get('photonsPerSecond') / beam.get('maxPhotonsPerSecond')), 0.3)));
+        var alpha = (colorMax - level) / colorMax;
 
-            // Transform the light-beam piecewise curve into view space and save it
-            this.lightCurve = mvt.modelToView(this.model.getBounds());
+        this.beamLightGraphics.clear();
+        this.lampLightGraphics.clear();
 
-            this.drawLight();
-        },
-
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            this.flashlightLayer.x = viewPosition.x;
-            this.flashlightLayer.y = viewPosition.y;
-        },
-
-        updateRotation: function() {
-            this.flashlightLayer.rotation = this.model.getDirection();
-        },
-
-        drawLight: function() {
-            var beam = this.model;
-            var color = Colors.parseHex(WavelengthColors.nmToHex(beam.get('wavelength')));
-            var minLevel = 200;
-            var colorMax = 255;
-            // The power function here controls the ramp-up of actualColor intensity
-            var level = Math.max(minLevel, colorMax - Math.floor((colorMax - minLevel) * Math.pow((beam.get('photonsPerSecond') / beam.get('maxPhotonsPerSecond')), 0.3)));
-            var alpha = (colorMax - level) / colorMax;
-
-            this.beamLightGraphics.clear();
-            this.lampLightGraphics.clear();
-
-            if (this.simulation.get('viewMode') === PEffectSimulation.BEAM_VIEW) {
-                // Draw light beam
-                this.beamLightGraphics.beginFill(color, alpha);
-                this.beamLightGraphics.drawPiecewiseCurve(this.lightCurve);
-                this.beamLightGraphics.endFill();
-            }
-
-            // Draw the ellipse filling the flashlight with full saturation.
-            var radiusA = this.getLampRadiusA();
-            this.lampLightGraphics.beginFill(color, 1);
-            this.lampLightGraphics.drawEllipse(0, 0, radiusA, this.flashlight.height / 2);
-            this.lampLightGraphics.endFill();
-        },
-
-        getLampRadiusA: function() {
-            return this.flashlight.width * (6 / 161);
+        if (this.simulation.get('viewMode') === PEffectSimulation.BEAM_VIEW) {
+            // Draw light beam
+            this.beamLightGraphics.beginFill(color, alpha);
+            this.beamLightGraphics.drawPiecewiseCurve(this.lightCurve);
+            this.beamLightGraphics.endFill();
         }
 
-    }, Constants.BeamView);
+        // Draw the ellipse filling the flashlight with full saturation.
+        var radiusA = this.getLampRadiusA();
+        this.lampLightGraphics.beginFill(color, 1);
+        this.lampLightGraphics.drawEllipse(0, 0, radiusA, this.flashlight.height / 2);
+        this.lampLightGraphics.endFill();
+    },
 
-    return BeamView;
-});
+    getLampRadiusA: function() {
+        return this.flashlight.width * (6 / 161);
+    }
+
+}, Constants.BeamView);
+
+export default BeamView;

@@ -1,45 +1,38 @@
-define(function (require) {
+import _ from 'underscore';
+import DispersionFunction from 'models/dispersion-function';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Holds information for a medium
+ */
+var MediumProperties = function(name, indexForRed, mystery, custom) {
+    this.name = name;
+    this.mystery = mystery;
+    this.custom = custom;
 
-    var _ = require('underscore');
+    if (typeof indexForRed === 'function')
+        this.dispersionFunction = indexForRed;
+    else
+        this.dispersionFunction = new DispersionFunction(indexForRed);
+};
 
-    var DispersionFunction = require('models/dispersion-function');
+/**
+ * Instance functions/properties
+ */
+_.extend(MediumProperties.prototype, {
 
-    var Constants = require('constants');
+    getIndexOfRefractionForRedLight: function() {
+        return this.dispersionFunction.getIndexOfRefraction(Constants.WAVELENGTH_RED);
+    },
 
-    /**
-     * Holds information for a medium
-     */
-    var MediumProperties = function(name, indexForRed, mystery, custom) {
-        this.name = name;
-        this.mystery = mystery;
-        this.custom = custom;
+    setIndexOfRefraction: function(indexOfRefraction) {
+        this.dispersionFunction.setIndexOfRefraction(indexOfRefraction);
+    },
 
-        if (typeof indexForRed === 'function')
-            this.dispersionFunction = indexForRed;
-        else
-            this.dispersionFunction = new DispersionFunction(indexForRed);
-    };
+    setReferenceWavelength: function(wavelength) {
+        this.dispersionFunction.setReferenceWavelength(wavelength);
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(MediumProperties.prototype, {
-
-        getIndexOfRefractionForRedLight: function() {
-            return this.dispersionFunction.getIndexOfRefraction(Constants.WAVELENGTH_RED);
-        },
-
-        setIndexOfRefraction: function(indexOfRefraction) {
-            this.dispersionFunction.setIndexOfRefraction(indexOfRefraction);
-        },
-
-        setReferenceWavelength: function(wavelength) {
-            this.dispersionFunction.setReferenceWavelength(wavelength);
-        }
-
-    });
-
-    return MediumProperties;
 });
+
+export default MediumProperties;

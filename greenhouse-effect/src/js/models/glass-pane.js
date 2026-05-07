@@ -1,57 +1,51 @@
-define(function (require) {
+import Backbone from 'backbone';
+import Rectangle from 'common/math/rectangle';
 
-    'use strict';
+/**
+ *
+ */
+var GlassPane = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
+    paneThickness: 0.6,
 
-    var Rectangle = require('common/math/rectangle');
+    defaults: {
+        productionRate: 0,
+        bounds: null
+    },
 
-    /**
-     *
-     */
-    var GlassPane = Backbone.Model.extend({
+    initialize: function(attributes, options) {
+        var bounds = new Rectangle(0, 0, 0, this.paneThickness);
 
-        paneThickness: 0.6,
+        if (this.get('bounds'))
+            bounds.set(this.get('bounds'));
+        if (options.x !== undefined)
+            bounds.x = options.x;
+        if (options.altitude !== undefined)
+            bounds.y = options.altitude;
+        if (options.width !== undefined)
+            bounds.w = options.width;
+        if (options.height !== undefined)
+            bounds.h = options.height;
 
-        defaults: {
-            productionRate: 0,
-            bounds: null
-        },
+        this.set('bounds', bounds);
+    },
 
-        initialize: function(attributes, options) {
-            var bounds = new Rectangle(0, 0, 0, this.paneThickness);
+    width: function() {
+        return this.get('bounds').w;
+    },
 
-            if (this.get('bounds'))
-                bounds.set(this.get('bounds'));
-            if (options.x !== undefined)
-                bounds.x = options.x;
-            if (options.altitude !== undefined)
-                bounds.y = options.altitude;
-            if (options.width !== undefined)
-                bounds.w = options.width;
-            if (options.height !== undefined)
-                bounds.h = options.height;
+    height: function() {
+        return this.get('bounds').h;
+    },
 
-            this.set('bounds', bounds);
-        },
+    emitPhoton: function(photon) {
+        this.trigger('photon-emitted', photon);
+    },
 
-        width: function() {
-            return this.get('bounds').w;
-        },
+    absorbPhoton: function(photon) {
+        this.trigger('photon-absorbed', photon);
+    }
 
-        height: function() {
-            return this.get('bounds').h;
-        },
-
-        emitPhoton: function(photon) {
-            this.trigger('photon-emitted', photon);
-        },
-
-        absorbPhoton: function(photon) {
-            this.trigger('photon-absorbed', photon);
-        }
-
-    });
-
-    return GlassPane;
 });
+
+export default GlassPane;

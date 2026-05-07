@@ -1,28 +1,22 @@
-define(function (require) {
+import _ from 'underscore';
+import Law from 'models/law';
 
-    'use strict';
+/**
+ *
+ */
+var PropagatorLawAdapter = function(propagator) {
+    this.propagator = propagator;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(PropagatorLawAdapter.prototype, Law.prototype, {
 
-    var Law = require('models/law');
+    update: function(deltaTime, system) {
+        this.propagator.update(deltaTime, system);
+    }
 
-    /**
-     *
-     */
-    var PropagatorLawAdapter = function(propagator) {
-        this.propagator = propagator;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(PropagatorLawAdapter.prototype, Law.prototype, {
-
-        update: function(deltaTime, system) {
-            this.propagator.update(deltaTime, system);
-        }
-
-    });
-
-    return PropagatorLawAdapter;
 });
+
+export default PropagatorLawAdapter;

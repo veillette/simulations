@@ -1,77 +1,67 @@
-define(function (require) {
+import _ from 'underscore';
+import CollisionLabSimulation from 'models/simulation';
+import CollisionLabSimView from 'views/sim';
+import CollisionLabSceneView from 'views/scene';
+import BallSettingsView from 'views/ball-settings';
+import Constants from 'constants';
+import ballSettingsHtml from 'templates/ball-settings-1d.html?raw';
 
-    'use strict';
 
-    var _ = require('underscore');
+/**
+ * Intro tab
+ */
+var IntroSimView = CollisionLabSimView.extend({
 
-    var CollisionLabSimulation = require('models/simulation');
-
-    var CollisionLabSimView   = require('views/sim');
-    var CollisionLabSceneView = require('views/scene');
-    var BallSettingsView      = require('views/ball-settings');
-
-    var Constants = require('constants');
-
-    // HTML
-    var ballSettingsHtml = require('text!templates/ball-settings-1d.html');
-
+    ballSettingsHtml: ballSettingsHtml,
 
     /**
-     * Intro tab
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var IntroSimView = CollisionLabSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Introduction',
+            name: 'intro-sim',
+            userCanAddRemoveBalls: false
+        }, options);
 
-        ballSettingsHtml: ballSettingsHtml,
+        CollisionLabSimView.prototype.initialize.apply(this, [options]);
+    },
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Introduction',
-                name: 'intro-sim',
-                userCanAddRemoveBalls: false
-            }, options);
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new CollisionLabSimulation({
+            defaultBallSettings: Constants.Simulation.INTRO_DEFAULT_BALL_SETTINGS,
+            oneDimensional: true,
+            borderOn: false
+        });
+    },
 
-            CollisionLabSimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new CollisionLabSceneView({
+            simulation: this.simulation,
+            oneDimensional: true
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new CollisionLabSimulation({
-                defaultBallSettings: Constants.Simulation.INTRO_DEFAULT_BALL_SETTINGS,
-                oneDimensional: true,
-                borderOn: false
-            });
-        },
+    /**
+     * Returns a new ball settings view
+     */
+    createBallSettingsView: function(ball) {
+        return new BallSettingsView({
+            model: ball,
+            simulation: this.simulation,
+            oneDimensional: true,
+            showMoreData: this.moreDataMode
+        });
+    }
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new CollisionLabSceneView({
-                simulation: this.simulation,
-                oneDimensional: true
-            });
-        },
-
-        /**
-         * Returns a new ball settings view
-         */
-        createBallSettingsView: function(ball) {
-            return new BallSettingsView({
-                model: ball,
-                simulation: this.simulation,
-                oneDimensional: true,
-                showMoreData: this.moreDataMode
-            });
-        }
-
-    });
-
-    return IntroSimView;
 });
+
+export default IntroSimView;

@@ -1,30 +1,20 @@
-define(function (require) {
+import _ from 'underscore';
+import Block from 'models/element/block';
+import Constants from 'constants';
+var EnergyContainerCategory = Constants.EnergyContainerCategory;
 
-    'use strict';
+/**
+ *
+ */
+var IronBlock = Block.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Block.prototype.defaults, {
+        energyContainerCategory: EnergyContainerCategory.IRON,
 
-    var Block = require('models/element/block');
+        density:      Constants.Iron.DENSITY,
+        specificHeat: Constants.Iron.SPECIFIC_HEAT
+    })
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-    var EnergyContainerCategory = Constants.EnergyContainerCategory;
+}, Constants.Iron);
 
-    /**
-     *
-     */
-    var IronBlock = Block.extend({
-
-        defaults: _.extend({}, Block.prototype.defaults, {
-            energyContainerCategory: EnergyContainerCategory.IRON,
-
-            density:      Constants.Iron.DENSITY,
-            specificHeat: Constants.Iron.SPECIFIC_HEAT
-        })
-
-    }, Constants.Iron);
-
-    return IronBlock;
-});
+export default IronBlock;

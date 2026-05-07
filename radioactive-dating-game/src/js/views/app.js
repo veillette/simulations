@@ -1,77 +1,67 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import NuclearPhysicsAppView from 'views/app';
+import HalfLifeSimView from 'radioactive-dating-game/views/sim/half-life';
+import DecayRatesSimView from 'radioactive-dating-game/views/sim/decay-rates';
+import MeasurementSimView from 'radioactive-dating-game/views/sim/measurement';
+import DatingGameSimView from 'radioactive-dating-game/views/sim/dating-game';
+import Assets from 'assets';
+import universalControlsHtml from 'radioactive-dating-game/templates/universal-controls.html?raw';
+import 'radioactive-dating-game/styles/app.less';
 
-    'use strict';
+var RadioactiveDatingGameAppView = NuclearPhysicsAppView.extend({
 
-    var _ = require('underscore');
-    var $ = require('jquery');
+    assets: Assets.getAssetList(),
 
-    var NuclearPhysicsAppView = require('views/app');
+    simViewConstructors: [
+        HalfLifeSimView,
+        DecayRatesSimView,
+        MeasurementSimView,
+        DatingGameSimView
+    ],
 
-    var HalfLifeSimView    = require('radioactive-dating-game/views/sim/half-life');
-    var DecayRatesSimView  = require('radioactive-dating-game/views/sim/decay-rates');
-    var MeasurementSimView = require('radioactive-dating-game/views/sim/measurement');
-    var DatingGameSimView  = require('radioactive-dating-game/views/sim/dating-game');
+    events: _.extend({}, NuclearPhysicsAppView.prototype.events, {
+        'click .sound-btn' : 'changeVolume'
+    }),
 
-    var Assets = require('assets');
+    /**
+     * Override render function to add universal controls
+     */
+    render: function() {
+        NuclearPhysicsAppView.prototype.render.apply(this);
 
-    var universalControlsHtml = require('text!radioactive-dating-game/templates/universal-controls.html');
+        this.$el.append(universalControlsHtml);
+    },
 
-    require('less!radioactive-dating-game/styles/app');
+    /**
+     * Steps between the different discrete volume values and updates
+     *   the button's icon.
+     */
+    changeVolume: function(event) {
+        var $btn = $(event.target).closest('.sound-btn');
 
-    var RadioactiveDatingGameAppView = NuclearPhysicsAppView.extend({
+        $btn.hide();
 
-        assets: Assets.getAssetList(),
+        if ($btn.hasClass('sound-btn-mute')) {
+            this.$('.sound-btn-low').show();
+            _.each(this.simViews, function(simView) {
+                simView.setSoundVolumeLow();
+            });
+        }
+        else if ($btn.hasClass('sound-btn-low')) {
+            this.$('.sound-btn-high').show();
+            _.each(this.simViews, function(simView) {
+                simView.setSoundVolumeHigh();
+            });
+        }
+        else if ($btn.hasClass('sound-btn-high')) {
+            this.$('.sound-btn-mute').show();
+            _.each(this.simViews, function(simView) {
+                simView.setSoundVolumeMute();
+            });
+        }
+    },
 
-        simViewConstructors: [
-            HalfLifeSimView,
-            DecayRatesSimView,
-            MeasurementSimView,
-            DatingGameSimView
-        ],
-
-        events: _.extend({}, NuclearPhysicsAppView.prototype.events, {
-            'click .sound-btn' : 'changeVolume'
-        }),
-
-        /**
-         * Override render function to add universal controls
-         */
-        render: function() {
-            NuclearPhysicsAppView.prototype.render.apply(this);
-
-            this.$el.append(universalControlsHtml);
-        },
-
-        /**
-         * Steps between the different discrete volume values and updates
-         *   the button's icon.
-         */
-        changeVolume: function(event) {
-            var $btn = $(event.target).closest('.sound-btn');
-
-            $btn.hide();
-
-            if ($btn.hasClass('sound-btn-mute')) {
-                this.$('.sound-btn-low').show();
-                _.each(this.simViews, function(simView) {
-                    simView.setSoundVolumeLow();
-                });
-            }
-            else if ($btn.hasClass('sound-btn-low')) {
-                this.$('.sound-btn-high').show();
-                _.each(this.simViews, function(simView) {
-                    simView.setSoundVolumeHigh();
-                });
-            }
-            else if ($btn.hasClass('sound-btn-high')) {
-                this.$('.sound-btn-mute').show();
-                _.each(this.simViews, function(simView) {
-                    simView.setSoundVolumeMute();
-                });
-            }
-        },
-
-    });
-
-    return RadioactiveDatingGameAppView;
 });
+
+export default RadioactiveDatingGameAppView;

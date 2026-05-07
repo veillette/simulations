@@ -1,162 +1,153 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Utils from '../../utils/utils';
+import LightSimulation from '../../models/wave-sim/light';
+import LightHeatmapView from '../heatmap/light';
+import SimView from '../sim';
+import LightCrossSectionGraphView from '../graph/light-cross-section';
+import 'styles/light.less';
 
-	'use strict';
+/*
+ * Constants
+ */
+var SPEED_OF_LIGHT = 1000;
 
-	var $ = require('jquery');
-	var _ = require('underscore');
+/**
+ *
+ */
+var LightSimView = SimView.extend({
 
-	var Utils = require('../../utils/utils');
+    events: _.extend({
+        'slide  .wavelength' : 'changeWavelength'
+    }, SimView.prototype.events),
 
-	var LightSimulation  = require('../../models/wave-sim/light');
-	var LightHeatmapView = require('../heatmap/light');
-	var SimView          = require('../sim');
-	var LightCrossSectionGraphView = require('../graph/light-cross-section');
+    initialize: function(options) {
+        options = _.extend({
+            heatmapBrightness: 0.5,
+            title: 'Light',
+            name: 'light',
+            link: 'wave-interference',
+            segmentPotentialName: 'Mirror',
+            detectorYLabel: 'E-Field'
+        }, options);
 
-	// CSS
-	require('less!styles/light');
+        SimView.prototype.initialize.apply(this, [ options ]);
+    },
 
-	/*
-	 * Constants
-	 */
-	var SPEED_OF_LIGHT = 1000;
+    /**
+     * Initializes the WaveSimulation.
+     */
+    initWaveSimulation: function() {
+        this.waveSimulation = new LightSimulation();
+    },
 
-	/**
-	 *
-	 */
-	var LightSimView = SimView.extend({
+    /**
+     * Initializes the HeatmapView.
+     */
+    initHeatmapView: function() {
+        this.heatmapView = new LightHeatmapView(this.getHeatmapViewOptions());
+    },
 
-		events: _.extend({
-			'slide  .wavelength' : 'changeWavelength'
-		}, SimView.prototype.events),
+    /**
+     * Uses the sim view's WaveSimulation instance to determine
+     *   appropriate options for initializing the GraphView and
+     *   returns them as an object.
+     */
+    getGraphViewOptions: function() {
+        return {
+            title: 'Electric Field Across X-Axis',
+            x: {
+                start: 0,
+                end: this.waveSimulation.get('dimensions').width,
+                step: this.waveSimulation.get('dimensions').width / 10,
+                label: 'x-Position (' + this.waveSimulation.get('units').distance + ')',
+                showNumbers: true
+            },
+            y: {
+                start: -1,
+                end: 1,
+                step: 0.5,
+                label: 'Electric Field',
+                showNumbers: false
+            },
+            waveSimulation: this.waveSimulation,
+            heatmapView: this.heatmapView
+        };
+    },
 
-		initialize: function(options) {
-			options = _.extend({
-				heatmapBrightness: 0.5,
-				title: 'Light',
-				name: 'light',
-				link: 'wave-interference',
-				segmentPotentialName: 'Mirror',
-				detectorYLabel: 'E-Field'
-			}, options);
+    /**
+     * Initializes the CrossSectionGraphView.
+     */
+    initCrossSectionGraphView: function() {
+        this.crossSectionGraphView = new LightCrossSectionGraphView(this.getGraphViewOptions());
+    },
 
-			SimView.prototype.initialize.apply(this, [ options ]);
-		},
+    /**
+     * Renders the control panel and all its controls.
+     */
+    renderControlPanel: function() {
+        SimView.prototype.renderControlPanel.apply(this);
 
-		/**
-		 * Initializes the WaveSimulation.
-		 */
-		initWaveSimulation: function() {
-			this.waveSimulation = new LightSimulation();
-		},
+        // Create a wavelength slider
+        var $wavelengthSlider = $('<div class="slider wavelength" id="wavelength">');
+        $wavelengthSlider.noUiSlider({
+            start: 700,
+            range: {
+                min: Math.MIN_WAVELENGTH,
+                max: Math.MAX_WAVELENGTH
+            }
+        });
 
-		/**
-		 * Initializes the HeatmapView.
-		 */
-		initHeatmapView: function() {
-			this.heatmapView = new LightHeatmapView(this.getHeatmapViewOptions());
-		},
+        // Create a canvas background for the wavelength slider
+        this.$wavelengthSliderCanvas = $('<canvas class="wavelength-slider-canvas">').prependTo($wavelengthSlider);
 
-		/**
-		 * Uses the sim view's WaveSimulation instance to determine
-		 *   appropriate options for initializing the GraphView and
-		 *   returns them as an object.
-		 */
-		getGraphViewOptions: function() {
-			return {
-				title: 'Electric Field Across X-Axis',
-				x: {
-					start: 0,
-					end: this.waveSimulation.get('dimensions').width,
-					step: this.waveSimulation.get('dimensions').width / 10,
-					label: 'x-Position (' + this.waveSimulation.get('units').distance + ')',
-					showNumbers: true
-				},
-				y: {
-					start: -1,
-					end: 1,
-					step: 0.5,
-					label: 'Electric Field',
-					showNumbers: false
-				},
-				waveSimulation: this.waveSimulation,
-				heatmapView: this.heatmapView
-			};
-		},
+        // Need to add an element to the handle because it's difficult to modify the css for a pseudo-element.
+        this.$wavelengthSliderHandle = $('<div class="handle-content">').appendTo($wavelengthSlider.find('.noUi-handle'));
 
-		/**
-		 * Initializes the CrossSectionGraphView.
-		 */
-		initCrossSectionGraphView: function() {
-			this.crossSectionGraphView = new LightCrossSectionGraphView(this.getGraphViewOptions());
-		},
+        // Replace the frequency slider and change the label
+        var $frequencySlider = this.$('.frequency');
+        $frequencySlider.prev('label').attr('for', $wavelengthSlider.attr('id')).html('Wavelength');
+        $frequencySlider.replaceWith($wavelengthSlider);
+    },
 
-		/**
-		 * Renders the control panel and all its controls.
-		 */
-		renderControlPanel: function() {
-			SimView.prototype.renderControlPanel.apply(this);
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        SimView.prototype.postRender.apply(this);
 
-			// Create a wavelength slider
-			var $wavelengthSlider = $('<div class="slider wavelength" id="wavelength">');
-			$wavelengthSlider.noUiSlider({
-				start: 700,
-				range: {
-					min: Math.MIN_WAVELENGTH,
-					max: Math.MAX_WAVELENGTH
-				}
-			});
+        // Resize the wavelength slider canvas and paint the colors
+        var $slider = this.$wavelengthSliderCanvas.parent();
+        var height = 16;
+        var width  = $slider.width() + height;
+        this.$wavelengthSliderCanvas[0].width  = width;
+        this.$wavelengthSliderCanvas[0].height = height;
+        this.$wavelengthSliderCanvas.width(width);
+        this.$wavelengthSliderCanvas.paintVisibleLightSpectrum();
 
-			// Create a canvas background for the wavelength slider
-			this.$wavelengthSliderCanvas = $('<canvas class="wavelength-slider-canvas">').prependTo($wavelengthSlider);
+        // Set the starting color
+        $slider.trigger('slide');
+    },
 
-			// Need to add an element to the handle because it's difficult to modify the css for a pseudo-element.
-			this.$wavelengthSliderHandle = $('<div class="handle-content">').appendTo($wavelengthSlider.find('.noUi-handle'));
+    /**
+     * Handles wavelength slider slide events
+     */
+    changeWavelength: function(event) {
+        var wavelength = parseInt($(event.target).val());
+        var rgb = Math.nmToRGB(wavelength);
+        var hex = Utils.rgbToHex(rgb.red, rgb.green, rgb.blue);
 
-			// Replace the frequency slider and change the label
-			var $frequencySlider = this.$('.frequency');
-			$frequencySlider.prev('label').attr('for', $wavelengthSlider.attr('id')).html('Wavelength');
-			$frequencySlider.replaceWith($wavelengthSlider);
-		},
+        this.$wavelengthSliderHandle.css('background-color', hex);
 
-		/**
-		 * Called after every component on the page has rendered to make sure
-		 *   things like widths and heights and offsets are correct.
-		 */
-		postRender: function() {
-			SimView.prototype.postRender.apply(this);
+        this.heatmapView.color = hex;
+        this.crossSectionGraphView.lineColor = hex;
 
-			// Resize the wavelength slider canvas and paint the colors
-			var $slider = this.$wavelengthSliderCanvas.parent();
-			var height = 16;
-			var width  = $slider.width() + height;
-			this.$wavelengthSliderCanvas[0].width  = width;
-			this.$wavelengthSliderCanvas[0].height = height;
-			this.$wavelengthSliderCanvas.width(width);
-			this.$wavelengthSliderCanvas.paintVisibleLightSpectrum();
+        this.waveSimulation.set('wavelength', wavelength);
+        this.waveSimulation.set('frequency', SPEED_OF_LIGHT / wavelength);
+        this.waveSimulation.resetWave();
+    },
 
-			// Set the starting color
-			$slider.trigger('slide');
-		},
-
-		/**
-		 * Handles wavelength slider slide events
-		 */
-		changeWavelength: function(event) {
-			var wavelength = parseInt($(event.target).val());
-			var rgb = Math.nmToRGB(wavelength);
-			var hex = Utils.rgbToHex(rgb.red, rgb.green, rgb.blue);
-
-			this.$wavelengthSliderHandle.css('background-color', hex);
-
-			this.heatmapView.color = hex;
-			this.crossSectionGraphView.lineColor = hex;
-
-			this.waveSimulation.set('wavelength', wavelength);
-			this.waveSimulation.set('frequency', SPEED_OF_LIGHT / wavelength);
-			this.waveSimulation.resetWave();
-		},
-
-	});
-
-	return LightSimView;
 });
+
+export default LightSimView;

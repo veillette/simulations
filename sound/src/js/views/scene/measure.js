@@ -1,136 +1,129 @@
-define(function(require) {
+import _ from 'underscore';
+import RulerView from 'common/v3/pixi/view/ruler';
+import HelpLabelView from 'common/v3/help-label/index';
+import SoundSceneView from 'views/scene';
+import ReferenceLineView from 'views/reference-line';
 
-    'use strict';
+/**
+ * Scene view for the measure tab
+ */
+var MeasureSceneView = SoundSceneView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        SoundSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    var RulerView     = require('common/v3/pixi/view/ruler');
-    var HelpLabelView = require('common/v3/help-label/index');
+    initGraphics: function() {
+        SoundSceneView.prototype.initGraphics.apply(this, arguments);
 
-    var SoundSceneView    = require('views/scene');
-    var ReferenceLineView = require('views/reference-line');
+        this.initRuler();
+        this.initReferenceLines();
+        this.initHelpLabels();
+    },
 
-    /**
-     * Scene view for the measure tab
-     */
-    var MeasureSceneView = SoundSceneView.extend({
+    initRuler: function() {
+        this.rulerView = new RulerView({
+            orientation : 'horizontal',
+            pxPerUnit: this.mvt.modelToViewDeltaX(1),
+            rulerWidth: 1,
+            rulerMeasureUnits : 10,
+            units: 'meters',
 
-        initialize: function(options) {
-            SoundSceneView.prototype.initialize.apply(this, arguments);
-        },
+            ticks : [{
+                size: 10,
+                at: 1,
+                color: '#5A3D01'
+            },{
+                size: 6,
+                at: 0.5,
+                color: '#5A3D01'
+            },{
+                size: 4,
+                at: 0.1,
+                color: '#5A3D01'
+            }],
 
-        initGraphics: function() {
-            SoundSceneView.prototype.initGraphics.apply(this, arguments);
+            labels: [{
+                font: '16px Arial',
+                at: 1,
+                endAt: 8
+            }]
+        });
 
-            this.initRuler();
-            this.initReferenceLines();
-            this.initHelpLabels();
-        },
+        this.stage.addChild(this.rulerView.displayObject);
 
-        initRuler: function() {
-            this.rulerView = new RulerView({
-                orientation : 'horizontal',
-                pxPerUnit: this.mvt.modelToViewDeltaX(1),
-                rulerWidth: 1,
-                rulerMeasureUnits : 10,
-                units: 'meters',
+        this.rulerView.setPosition(124, 60);
+    },
 
-                ticks : [{
-                    size: 10,
-                    at: 1,
-                    color: '#5A3D01'
-                },{
-                    size: 6,
-                    at: 0.5,
-                    color: '#5A3D01'
-                },{
-                    size: 4,
-                    at: 0.1,
-                    color: '#5A3D01'
-                }],
+    initReferenceLines: function() {
+        this.referenceLine1 = new ReferenceLineView({
+            position: {
+                x: 44,
+                y: 0
+            },
+            height: this.height
+        });
 
-                labels: [{
-                    font: '16px Arial',
-                    at: 1,
-                    endAt: 8
-                }]
-            });
+        this.referenceLine2 = new ReferenceLineView({
+            position: {
+                x: 84,
+                y: 0
+            },
+            height: this.height
+        });
 
-            this.stage.addChild(this.rulerView.displayObject);
+        this.stage.addChild(this.referenceLine1.displayObject);
+        this.stage.addChild(this.referenceLine2.displayObject);
+    },
 
-            this.rulerView.setPosition(124, 60);
-        },
+    initHelpLabels: function() {
+        this.helpLabels = [];
 
-        initReferenceLines: function() {
-            this.referenceLine1 = new ReferenceLineView({
-                position: {
-                    x: 44,
-                    y: 0
-                },
-                height: this.height
-            });
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.rulerView,
+            title: 'Use meter stick to measure waves',
+            color: '#222',
+            font: '12pt Helvetica Neue',
+            position: {
+                x: 0,
+                y: 64
+            }
+        }));
 
-            this.referenceLine2 = new ReferenceLineView({
-                position: {
-                    x: 84,
-                    y: 0
-                },
-                height: this.height
-            });
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.stage,
+            title: 'Dotted lines can be moved left and right to\nhelp mark measurement points on waves',
+            color: '#222',
+            font: '12pt Helvetica Neue',
+            position : {
+                x: 100,
+                y: this.height - 120
+            }
+        }));
 
-            this.stage.addChild(this.referenceLine1.displayObject);
-            this.stage.addChild(this.referenceLine2.displayObject);
-        },
+        _.each(this.helpLabels, function(helpLabel){
+            helpLabel.render();
+        }, this);
+    },
 
-        initHelpLabels: function() {
-            this.helpLabels = [];
+    _update: function(time, deltaTime, paused, timeScale) {
+        SoundSceneView.prototype._update.apply(this, arguments);
+    },
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.rulerView,
-                title: 'Use meter stick to measure waves',
-                color: '#222',
-                font: '12pt Helvetica Neue',
-                position: {
-                    x: 0,
-                    y: 64
-                }
-            }));
+    showHelpLabels: function() {
+        for (var i = 0; i < this.helpLabels.length; i++)
+            this.helpLabels[i].show();
+    },
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.stage,
-                title: 'Dotted lines can be moved left and right to\nhelp mark measurement points on waves',
-                color: '#222',
-                font: '12pt Helvetica Neue',
-                position : {
-                    x: 100,
-                    y: this.height - 120
-                }
-            }));
+    hideHelpLabels: function() {
+        for (var i = 0; i < this.helpLabels.length; i++)
+            this.helpLabels[i].hide();
+    },
 
-            _.each(this.helpLabels, function(helpLabel){
-                helpLabel.render();
-            }, this);
-        },
+    clearWave: function() {
+        this.waveMediumView.clear();
+    }
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            SoundSceneView.prototype._update.apply(this, arguments);
-        },
-
-        showHelpLabels: function() {
-            for (var i = 0; i < this.helpLabels.length; i++)
-                this.helpLabels[i].show();
-        },
-
-        hideHelpLabels: function() {
-            for (var i = 0; i < this.helpLabels.length; i++)
-                this.helpLabels[i].hide();
-        },
-
-        clearWave: function() {
-            this.waveMediumView.clear();
-        }
-
-    });
-
-    return MeasureSceneView;
 });
+
+export default MeasureSceneView;

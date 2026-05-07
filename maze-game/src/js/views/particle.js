@@ -1,65 +1,58 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A view that represents the player particle
+ */
+var ParticleView = PixiView.extend({
 
-    var PixiView  = require('common/v3/pixi/view');
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-    var Assets = require('assets');
+        this.initGraphics();
 
-    var Constants = require('constants');
+        this.listenTo(this.model, 'change:x', this.updateX);
+        this.listenTo(this.model, 'change:y', this.updateY);
+    },
 
-    /**
-     * A view that represents the player particle
-     */
-    var ParticleView = PixiView.extend({
+    initGraphics: function() {
+        this.sprite = Assets.createSprite(Assets.Images.PARTICLE);
+        this.sprite.anchor.x = 0.5;
+        this.sprite.anchor.y = 0.5;
+        this.displayObject.addChild(this.sprite);
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        this.updateMVT(this.mvt);
+    },
 
-            this.initGraphics();
+    updateX: function(particle, x) {
+        this.displayObject.x = this.mvt.modelToViewX(x);
+    },
 
-            this.listenTo(this.model, 'change:x', this.updateX);
-            this.listenTo(this.model, 'change:y', this.updateY);
-        },
+    updateY: function(particle, y) {
+        this.displayObject.y = this.mvt.modelToViewY(y);
+    },
 
-        initGraphics: function() {
-            this.sprite = Assets.createSprite(Assets.Images.PARTICLE);
-            this.sprite.anchor.x = 0.5;
-            this.sprite.anchor.y = 0.5;
-            this.displayObject.addChild(this.sprite);
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.updateMVT(this.mvt);
-        },
+        var tileSize = this.mvt.modelToViewDeltaX(Constants.TILE_SIZE);
+        var tileScale = tileSize / Assets.Texture(Assets.Images.FLOOR).width;
 
-        updateX: function(particle, x) {
-            this.displayObject.x = this.mvt.modelToViewX(x);
-        },
+        this.displayObject.scale.x = tileScale;
+        this.displayObject.scale.y = tileScale;
 
-        updateY: function(particle, y) {
-            this.displayObject.y = this.mvt.modelToViewY(y);
-        },
+        this.updateX(this.model, this.model.get('x'));
+        this.updateY(this.model, this.model.get('y'));
+    },
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    update: function(time, deltaTime, paused) {
+        if (this.model.get('colliding'))
+            this.sprite.alpha = Math.random() * 0.4 + 0.3;
+        else
+            this.sprite.alpha = 1;
+    }
 
-            var tileSize = this.mvt.modelToViewDeltaX(Constants.TILE_SIZE);
-            var tileScale = tileSize / Assets.Texture(Assets.Images.FLOOR).width;
-
-            this.displayObject.scale.x = tileScale;
-            this.displayObject.scale.y = tileScale;
-
-            this.updateX(this.model, this.model.get('x'));
-            this.updateY(this.model, this.model.get('y'));
-        },
-
-        update: function(time, deltaTime, paused) {
-            if (this.model.get('colliding'))
-                this.sprite.alpha = Math.random() * 0.4 + 0.3;
-            else
-                this.sprite.alpha = 1;
-        }
-
-    });
-
-    return ParticleView;
 });
+
+export default ParticleView;

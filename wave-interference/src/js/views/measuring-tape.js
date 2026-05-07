@@ -1,232 +1,223 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimDraggable from './sim-draggable';
+import Utils from '../utils/utils';
+import html from '../../templates/measuring-tape.html?raw';
+import 'styles/measuring-tape.less';
 
-	'use strict';
+var padding,
+    angle,
+    lineLength,
+    startX,
+    startY,
+    dx,
+    dy,
+    translate,
+    rotate;
 
-	var $ = require('jquery');
-	var _ = require('underscore');
+var MeasuringTapeView = SimDraggable.extend({
 
-	var SimDraggable = require('./sim-draggable');
+    template: _.template(html),
 
-	var Utils = require('../utils/utils');
-	var html  = require('text!../../templates/measuring-tape.html');
+    tagName: 'div',
+    className: 'measuring-tape-view',
 
-	// CSS
-	require('less!styles/measuring-tape');
+    events: {
+        'mousedown  .measuring-tape-handle' : 'handleDown',
+        'touchstart .measuring-tape-handle' : 'handleDown',
+        'mousedown  .measuring-tape' : 'tapeDown',
+        'touchstart .measuring-tape': 'tapeDown',
 
-	var padding,
-	    angle,
-	    lineLength,
-	    startX,
-	    startY,
-	    dx,
-	    dy,
-	    translate,
-	    rotate;
+        'click .measuring-tape-label': 'labelClicked'
+    },
 
-	var MeasuringTapeView = SimDraggable.extend({
+    initialize: function(options) {
+        options = _.extend({
+            start: {
+                x: 30,
+                y: 30
+            },
+            end: {
+                x: 120,
+                y: 30
+            }
+        }, options);
 
-		template: _.template(html),
+        SimDraggable.prototype.initialize.apply(this, [options]);
 
-		tagName: 'div',
-		className: 'measuring-tape-view',
+        this.start = options.start;
+        this.end   = options.end;
 
-		events: {
-			'mousedown  .measuring-tape-handle' : 'handleDown',
-			'touchstart .measuring-tape-handle' : 'handleDown',
-			'mousedown  .measuring-tape' : 'tapeDown',
-			'touchstart .measuring-tape': 'tapeDown',
+        this.units = this.waveSimulation.get('units').distance;
+    },
 
-			'click .measuring-tape-label': 'labelClicked'
-		},
+    render: function() {
+        this.renderMeasuringTape();
+        this.bindDragEvents();
+        this.resize();
+        this.update(0, 0);
+    },
 
-		initialize: function(options) {
-			options = _.extend({
-				start: {
-					x: 30,
-					y: 30
-				},
-				end: {
-					x: 120,
-					y: 30
-				}
-			}, options);
+    renderMeasuringTape: function() {
+        this.$el.html(this.template());
+        this.$tape = this.$('.measuring-tape');
+        this.$label = this.$('.measuring-tape-label');
+    },
 
-			SimDraggable.prototype.initialize.apply(this, [options]);
+    resize: function(){
+        SimDraggable.prototype.resize.apply(this);
 
-			this.start = options.start;
-			this.end   = options.end;
+        if (!this.visible) {
+            var offset = this.heatmapView.$el.offset();
+            var width  = this.heatmapView.$el.width();
+            this.start.x = offset.left + width * 0.33 - this.dragOffset.left;
+            this.start.y = offset.top + width / 2 - this.dragOffset.top;
+            this.end.x = offset.left + width * 0.67 - this.dragOffset.left;
+            this.end.y = offset.top + width / 2 - this.dragOffset.top;
+        }
 
-			this.units = this.waveSimulation.get('units').distance;
-		},
+        this.heatmapZoom = parseFloat($('.heatmap-column').css('zoom'));
+    },
 
-		render: function() {
-			this.renderMeasuringTape();
-			this.bindDragEvents();
-			this.resize();
-			this.update(0, 0);
-		},
+    handleDown: function(event) {
+        event.preventDefault();
 
-		renderMeasuringTape: function() {
-			this.$el.html(this.template());
-			this.$tape = this.$('.measuring-tape');
-			this.$label = this.$('.measuring-tape-label');
-		},
+        if ($(event.target).index() === 0)
+            this.draggingStart = true;
+        else
+            this.draggingEnd = true;
 
-		resize: function(){
-			SimDraggable.prototype.resize.apply(this);
+        this.fixTouchEvents(event);
 
-			if (!this.visible) {
-				var offset = this.heatmapView.$el.offset();
-				var width  = this.heatmapView.$el.width();
-				this.start.x = offset.left + width * 0.33 - this.dragOffset.left;
-				this.start.y = offset.top + width / 2 - this.dragOffset.top;
-				this.end.x = offset.left + width * 0.67 - this.dragOffset.left;
-				this.end.y = offset.top + width / 2 - this.dragOffset.top;
-			}
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
 
-			this.heatmapZoom = parseFloat($('.heatmap-column').css('zoom'));
-		},
+        $(event.target).addClass('dragging');
+    },
 
-		handleDown: function(event) {
-			event.preventDefault();
+    tapeDown: function(event) {
+        if (event.target === this.$tape[0]) {
+            event.preventDefault();
 
-			if ($(event.target).index() === 0)
-				this.draggingStart = true;
-			else
-				this.draggingEnd = true;
+            this.$el.addClass('dragging');
 
-			this.fixTouchEvents(event);
+            this.draggingTape = true;
 
-			this.dragX = event.pageX;
-			this.dragY = event.pageY;
+            this.fixTouchEvents(event);
 
-			$(event.target).addClass('dragging');
-		},
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
+        }
+    },
 
-		tapeDown: function(event) {
-			if (event.target === this.$tape[0]) {
-				event.preventDefault();
+    drag: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
 
-				this.$el.addClass('dragging');
+            this.fixTouchEvents(event);
 
-				this.draggingTape = true;
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-				this.fixTouchEvents(event);
+            if (this.draggingStart && !this.outOfBounds(this.start.x + dx, this.start.y + dy)) {
+                this.start.x += dx;
+                this.start.y += dy;
+            }
+            if (this.draggingEnd && !this.outOfBounds(this.end.x + dx, this.end.y + dy)) {
+                this.end.x += dx;
+                this.end.y += dy;
+            }
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-			}
-		},
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-		drag: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
+            this.updateOnNextFrame = true;
+        }
+        else if (this.draggingTape) {
 
-				this.fixTouchEvents(event);
+            this.fixTouchEvents(event);
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-				if (this.draggingStart && !this.outOfBounds(this.start.x + dx, this.start.y + dy)) {
-					this.start.x += dx;
-					this.start.y += dy;
-				}
-				if (this.draggingEnd && !this.outOfBounds(this.end.x + dx, this.end.y + dy)) {
-					this.end.x += dx;
-					this.end.y += dy;
-				}
+            if (!this.outOfBounds(this.start.x + dx, this.start.y + dy) &&
+                !this.outOfBounds(this.end.x   + dx, this.end.y   + dy)) {
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+                this.start.x += dx;
+                this.start.y += dy;
+                this.end.x += dx;
+                this.end.y += dy;
+            }
 
-				this.updateOnNextFrame = true;
-			}
-			else if (this.draggingTape) {
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-				this.fixTouchEvents(event);
+            this.updateOnNextFrame = true;
+        }
+    },
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+    dragEnd: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
+            this.draggingStart = false;
+            this.draggingEnd   = false;
+            this.$('.measuring-tape-handle').removeClass('dragging');
+        }
+        else if (this.draggingTape) {
+            this.draggingTape = false;
+            this.$el.removeClass('dragging');
+        }
+    },
 
-				if (!this.outOfBounds(this.start.x + dx, this.start.y + dy) &&
-					!this.outOfBounds(this.end.x   + dx, this.end.y   + dy)) {
+    labelClicked: function(event) {
+        Utils.selectText(event.target);
+    },
 
-					this.start.x += dx;
-					this.start.y += dy;
-					this.end.x += dx;
-					this.end.y += dy;
-				}
+    update: function(time, delta) {
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+        this.updateOnNextFrame = false;
 
-				this.updateOnNextFrame = true;
-			}
-		},
+        padding = this.$tape.height() / 2;
 
-		dragEnd: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
-				this.draggingStart = false;
-				this.draggingEnd   = false;
-				this.$('.measuring-tape-handle').removeClass('dragging');
-			}
-			else if (this.draggingTape) {
-				this.draggingTape = false;
-				this.$el.removeClass('dragging');
-			}
-		},
+        angle = -Utils.angleFromLine(
+            this.start.x,
+            this.start.y,
+            this.end.x,
+            this.end.y
+        );
 
-		labelClicked: function(event) {
-			Utils.selectText(event.target);
-		},
+        lineLength = Utils.lineLength(
+            this.start.x,
+            this.start.y,
+            this.end.x,
+            this.end.y
+        );
 
-		update: function(time, delta) {
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
+        startX = this.start.x;
+        startY = this.start.y - padding;
 
-			this.updateOnNextFrame = false;
+        translate = 'translateX(' + startX + 'px) translateY(' + startY + 'px)';
+        rotate = 'rotateZ(' + (-angle) + 'deg)';
 
-			padding = this.$tape.height() / 2;
+        this.$el.css({
+            '-webkit-transform': translate,
+            '-ms-transform': translate,
+            '-o-transform': translate,
+            'transform': translate,
+        });
 
-			angle = -Utils.angleFromLine(
-				this.start.x,
-				this.start.y,
-				this.end.x,
-				this.end.y
-			);
+        this.$tape.css({
+            width: lineLength,
 
-			lineLength = Utils.lineLength(
-				this.start.x,
-				this.start.y,
-				this.end.x,
-				this.end.y
-			);
+            '-webkit-transform': rotate,
+            '-ms-transform': rotate,
+            '-o-transform': rotate,
+            'transform': rotate,
+        });
 
-			startX = this.start.x;
-			startY = this.start.y - padding;
-
-			translate = 'translateX(' + startX + 'px) translateY(' + startY + 'px)';
-			rotate = 'rotateZ(' + (-angle) + 'deg)';
-
-			this.$el.css({
-				'-webkit-transform': translate,
-				'-ms-transform': translate,
-				'-o-transform': translate,
-				'transform': translate,
-			});
-
-			this.$tape.css({
-				width: lineLength,
-
-				'-webkit-transform': rotate,
-				'-ms-transform': rotate,
-				'-o-transform': rotate,
-				'transform': rotate,
-			});
-
-			this.$label.html(this.toSimXScale(lineLength / this.heatmapZoom).toFixed(2) + ' ' + this.units);
-		}
-	});
-
-	return MeasuringTapeView;
+        this.$label.html(this.toSimXScale(lineLength / this.heatmapZoom).toFixed(2) + ' ' + this.units);
+    }
 });
+
+export default MeasuringTapeView;

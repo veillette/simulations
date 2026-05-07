@@ -1,113 +1,106 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Rectangle from 'common/math/rectangle';
+import BaseGreenhouseSimulation from 'models/simulation/base-greenhouse';
+import Earth from 'models/earth';
+import Cloud from 'models/cloud';
+import Atmosphere from 'models/atmosphere';
+import PhotonCloudCollisionModel from 'models/collision-model/photon-cloud';
 
-    'use strict';
+/**
+ * Constants
+ */
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+/**
+ * The simulation model for the "Greenhouse Effect" tab
+ */
+var GreenhouseEffectSimulation = BaseGreenhouseSimulation.extend({
 
-    var Rectangle  = require('common/math/rectangle');
+    defaults: _.extend(BaseGreenhouseSimulation.prototype.defaults, {
 
-    var BaseGreenhouseSimulation  = require('models/simulation/base-greenhouse');
-    var Earth                     = require('models/earth');
-    var Cloud                     = require('models/cloud');
-    var Atmosphere                = require('models/atmosphere');
-    var PhotonCloudCollisionModel = require('models/collision-model/photon-cloud');
+    }),
 
     /**
-     * Constants
+     *
      */
+    initialize: function(attributes, options) {
+        BaseGreenhouseSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * The simulation model for the "Greenhouse Effect" tab
+     * Initializes the models used in the simulation
      */
-    var GreenhouseEffectSimulation = BaseGreenhouseSimulation.extend({
+    initComponents: function() {
+        BaseGreenhouseSimulation.prototype.initComponents.apply(this, arguments);
 
-        defaults: _.extend(BaseGreenhouseSimulation.prototype.defaults, {
+        this.initClouds();
 
-        }),
+        this.atmosphere.set('greenhouseGasConcentration', Atmosphere.GREENHOUSE_GAS_CONCENTRATION_TODAY);
+    },
 
-        /**
-         *
-         */
-        initialize: function(attributes, options) {
-            BaseGreenhouseSimulation.prototype.initialize.apply(this, [attributes, options]);
+    /**
+     * Initializes the clouds and cloud collection
+     */
+    initClouds: function() {
+        this.clouds = new Backbone.Collection([], { model: Cloud });
+        this.availableClouds = [];
 
-        },
+        var earthPos = this.earth.get('position');
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            BaseGreenhouseSimulation.prototype.initComponents.apply(this, arguments);
+        this.availableClouds.push(this.createCloud(earthPos.x + 1,   earthPos.y + Earth.RADIUS + 7.5, 3, 0.3));
+        this.availableClouds.push(this.createCloud(earthPos.x - 5,   earthPos.y + Earth.RADIUS + 5,   5, 0.5));
+        this.availableClouds.push(this.createCloud(earthPos.x + 5.5, earthPos.y + Earth.RADIUS + 5.8, 6, 0.4));
+    },
 
-            this.initClouds();
+    createCloud: function(x, y, width, height) {
+        return new Cloud({
+            bounds: new Rectangle(
+                x - width  / 2,
+                y - height / 2,
+                width,
+                height
+            )
+        });
+    },
 
-            this.atmosphere.set('greenhouseGasConcentration', Atmosphere.GREENHOUSE_GAS_CONCENTRATION_TODAY);
-        },
+    /**
+     * Resets all component models
+     */
+    resetComponents: function() {
+        BaseGreenhouseSimulation.prototype.resetComponents.apply(this, arguments);
 
-        /**
-         * Initializes the clouds and cloud collection
-         */
-        initClouds: function() {
-            this.clouds = new Backbone.Collection([], { model: Cloud });
-            this.availableClouds = [];
+        this.atmosphere.set('greenhouseGasConcentration', Atmosphere.GREENHOUSE_GAS_CONCENTRATION_TODAY);
+        this.clouds.reset();
+    },
 
-            var earthPos = this.earth.get('position');
+    /**
+     * Overrides base to add cloud interactions.
+     */
+    handlePhotonInteractions: function(photon) {
+        BaseGreenhouseSimulation.prototype.handlePhotonInteractions.apply(this, arguments);
 
-            this.availableClouds.push(this.createCloud(earthPos.x + 1,   earthPos.y + Earth.RADIUS + 7.5, 3, 0.3));
-            this.availableClouds.push(this.createCloud(earthPos.x - 5,   earthPos.y + Earth.RADIUS + 5,   5, 0.5));
-            this.availableClouds.push(this.createCloud(earthPos.x + 5.5, earthPos.y + Earth.RADIUS + 5.8, 6, 0.4));
-        },
+        // Check for collisions with clouds
+        for (var i = 0; i < this.clouds.length; i++)
+            PhotonCloudCollisionModel.handle(photon, this.clouds.at(i));
+    },
 
-        createCloud: function(x, y, width, height) {
-            return new Cloud({
-                bounds: new Rectangle(
-                    x - width  / 2,
-                    y - height / 2,
-                    width,
-                    height
-                )
-            });
-        },
+    /**
+     * If there are any available clouds to add, adds a
+     *   cloud to the model.
+     */
+    addCloud: function() {
+        if (this.clouds.length < this.availableClouds.length)
+            this.clouds.add(this.availableClouds[this.clouds.length]);
+    },
 
-        /**
-         * Resets all component models
-         */
-        resetComponents: function() {
-            BaseGreenhouseSimulation.prototype.resetComponents.apply(this, arguments);
+    /**
+     * Removes a cloud from the model
+     */
+    removeCloud: function() {
+        this.clouds.pop();
+    }
 
-            this.atmosphere.set('greenhouseGasConcentration', Atmosphere.GREENHOUSE_GAS_CONCENTRATION_TODAY);
-            this.clouds.reset();
-        },
-
-        /**
-         * Overrides base to add cloud interactions.
-         */
-        handlePhotonInteractions: function(photon) {
-            BaseGreenhouseSimulation.prototype.handlePhotonInteractions.apply(this, arguments);
-
-            // Check for collisions with clouds
-            for (var i = 0; i < this.clouds.length; i++)
-                PhotonCloudCollisionModel.handle(photon, this.clouds.at(i));
-        },
-
-        /**
-         * If there are any available clouds to add, adds a
-         *   cloud to the model.
-         */
-        addCloud: function() {
-            if (this.clouds.length < this.availableClouds.length)
-                this.clouds.add(this.availableClouds[this.clouds.length]);
-        },
-
-        /**
-         * Removes a cloud from the model
-         */
-        removeCloud: function() {
-            this.clouds.pop();
-        }
-
-    });
-
-    return GreenhouseEffectSimulation;
 });
+
+export default GreenhouseEffectSimulation;

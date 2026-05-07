@@ -1,42 +1,35 @@
-define(function(require) {
+import _ from 'underscore';
+import GOSimulation from 'models/simulation';
+import GOSimView from 'views/sim';
+import Scenarios from 'scenarios';
 
-    'use strict';
+/**
+ *
+ */
+var FriendlyScaleSimView = GOSimView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Friendly Scale',
+            name:  'friendly'
+        }, options);
 
-    var GOSimulation = require('models/simulation');
-    var GOSimView    = require('views/sim');
-
-    var Scenarios = require('scenarios');
+        GOSimView.prototype.initialize.apply(this, [ options ]);
+    },
 
     /**
-     *
+     * Initializes the Simulation.
      */
-    var FriendlyScaleSimView = GOSimView.extend({
+    initSimulation: function() {
+        this.simulation = new GOSimulation({
+            scenario: Scenarios.Friendly[0]
+        });
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Friendly Scale',
-                name:  'friendly'
-            }, options);
+    getScenarios: function() {
+        return Scenarios.Friendly;
+    }
 
-            GOSimView.prototype.initialize.apply(this, [ options ]);
-        },
-
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new GOSimulation({
-                scenario: Scenarios.Friendly[0]
-            });
-        },
-
-        getScenarios: function() {
-            return Scenarios.Friendly;
-        }
-
-    });
-
-    return FriendlyScaleSimView;
 });
+
+export default FriendlyScaleSimView;

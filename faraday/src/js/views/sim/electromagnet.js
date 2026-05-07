@@ -1,79 +1,72 @@
-define(function (require) {
+import _ from 'underscore';
+import ElectromagnetSimulation from 'models/simulation/electromagnet';
+import ElectromagnetSceneView from 'views/scene/electromagnet';
+import FaradaySimView from 'views/sim';
 
-    'use strict';
 
-    var _ = require('underscore');
-
-    var ElectromagnetSimulation = require('models/simulation/electromagnet');
-    var ElectromagnetSceneView  = require('views/scene/electromagnet');
-
-    var FaradaySimView = require('views/sim');
-
+/**
+ *
+ */
+var ElectromagnetSimView = FaradaySimView.extend({
 
     /**
-     *
+     * Dom event listeners
      */
-    var ElectromagnetSimView = FaradaySimView.extend({
+    events: _.extend(FaradaySimView.prototype.events, {
 
-        /**
-         * Dom event listeners
-         */
-        events: _.extend(FaradaySimView.prototype.events, {
+    }),
 
-        }),
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Electromagnet',
+            name: 'electromagnet'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Electromagnet',
-                name: 'electromagnet'
-            }, options);
+        FaradaySimView.prototype.initialize.apply(this, [options]);
+    },
 
-            FaradaySimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new ElectromagnetSimulation();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new ElectromagnetSimulation();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new ElectromagnetSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new ElectromagnetSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders everything
+     */
+    render: function() {
+        FaradaySimView.prototype.render.apply(this);
 
-        /**
-         * Renders everything
-         */
-        render: function() {
-            FaradaySimView.prototype.render.apply(this);
+        this.renderPlaybackControls();
+        this.renderElectromagnetControls();
 
-            this.renderPlaybackControls();
-            this.renderElectromagnetControls();
+        return this;
+    },
 
-            return this;
-        },
+    /**
+     * Resets all the components of the view.
+     */
+    resetComponents: function() {
+        FaradaySimView.prototype.resetComponents.apply(this);
 
-        /**
-         * Resets all the components of the view.
-         */
-        resetComponents: function() {
-            FaradaySimView.prototype.resetComponents.apply(this);
+        this.resetElectromagnetControls();
+    }
 
-            this.resetElectromagnetControls();
-        }
-
-    });
-
-    return ElectromagnetSimView;
 });
+
+export default ElectromagnetSimView;

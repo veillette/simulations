@@ -1,108 +1,100 @@
-define(function(require) {
+import _ from 'underscore';
+import 'common/math/polyfills';
+import PEffectSimulation from 'models/simulation';
+import GraphView from 'views/graph';
 
-    'use strict';
+/**
+ *
+ */
+var CurrentVsVoltageGraphView = GraphView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        // Default values
+        options = _.extend({
+            title: 'Current vs Battery Voltage',
+            x: {
+                start: PEffectSimulation.MIN_VOLTAGE,
+                end:   PEffectSimulation.MAX_VOLTAGE,
+                step:  2,
+                label: 'Voltage',
+                showNumbers: true
+            },
+            y: {
+                start: 0,
+                end:   PEffectSimulation.MAX_CURRENT,
+                step:  PEffectSimulation.MAX_CURRENT / 6,
+                label: 'Current',
+                showNumbers: false
+            },
+            lineColor: '#f00'
+        }, options);
 
-    require('common/math/polyfills');
+        GraphView.prototype.initialize.apply(this, [options]);
 
-    var PEffectSimulation = require('models/simulation');
-
-    var GraphView = require('views/graph');
+        this.listenTo(this.simulation, 'change:current', this.currentChanged);
+        this.listenTo(this.simulation, 'voltage-changed', this.voltageChanged);
+        this.listenTo(this.simulation.beam, 'change:wavelength', this.wavelengthChanged);
+        this.listenTo(this.simulation.beam, 'change:photonsPerSecond', this.beamIntensityChanged);
+        this.listenTo(this.simulation.target, 'change:targetMaterial', this.targetMaterialChanged);
+    },
 
     /**
-     *
+     * Updates the graph
      */
-    var CurrentVsVoltageGraphView = GraphView.extend({
+    update: function() {
+        this.updateCurrentPoint();
+    },
 
-        initialize: function(options) {
-            // Default values
-            options = _.extend({
-                title: 'Current vs Battery Voltage',
-                x: {
-                    start: PEffectSimulation.MIN_VOLTAGE,
-                    end:   PEffectSimulation.MAX_VOLTAGE,
-                    step:  2,
-                    label: 'Voltage',
-                    showNumbers: true
-                },
-                y: {
-                    start: 0,
-                    end:   PEffectSimulation.MAX_CURRENT,
-                    step:  PEffectSimulation.MAX_CURRENT / 6,
-                    label: 'Current',
-                    showNumbers: false
-                },
-                lineColor: '#f00'
-            }, options);
+    addPoint: function() {
+        var simulation = this.simulation;
+        var voltage = simulation.getVoltage();
+        var current = simulation.getCurrent();
 
-            GraphView.prototype.initialize.apply(this, [options]);
+        // Do some shenanigans to handle moving too quickly through the stopping voltage
+        var dv = 0.1 * Math.sign(voltage - this.lastVoltageRecorded);
+        for (var v = this.lastVoltageRecorded + dv; Math.abs(v - voltage) > Math.abs(dv); v += dv)
+            this.points.push(this.createPoint(v, simulation.getCurrentForVoltage(v)));
 
-            this.listenTo(this.simulation, 'change:current', this.currentChanged);
-            this.listenTo(this.simulation, 'voltage-changed', this.voltageChanged);
-            this.listenTo(this.simulation.beam, 'change:wavelength', this.wavelengthChanged);
-            this.listenTo(this.simulation.beam, 'change:photonsPerSecond', this.beamIntensityChanged);
-            this.listenTo(this.simulation.target, 'change:targetMaterial', this.targetMaterialChanged);
-        },
+        this.points.push(this.createPoint(voltage, current));
+        this.lastVoltageRecorded = voltage;
 
-        /**
-         * Updates the graph
-         */
-        update: function() {
-            this.updateCurrentPoint();
-        },
+        this.draw();
+    },
 
-        addPoint: function() {
-            var simulation = this.simulation;
-            var voltage = simulation.getVoltage();
-            var current = simulation.getCurrent();
+    updateCurrentPoint: function() {
+        if (this.points.length === 0)
+            this.points.push(this.createPoint());
 
-            // Do some shenanigans to handle moving too quickly through the stopping voltage
-            var dv = 0.1 * Math.sign(voltage - this.lastVoltageRecorded);
-            for (var v = this.lastVoltageRecorded + dv; Math.abs(v - voltage) > Math.abs(dv); v += dv)
-                this.points.push(this.createPoint(v, simulation.getCurrentForVoltage(v)));
+        this.points[this.points.length - 1].set(
+            this.simulation.getVoltage(),
+            this.simulation.getCurrent()
+        );
 
-            this.points.push(this.createPoint(voltage, current));
-            this.lastVoltageRecorded = voltage;
+        this.draw();
+    },
 
-            this.draw();
-        },
+    currentChanged: function() {
+        this.updateCurrentPoint();
+    },
 
-        updateCurrentPoint: function() {
-            if (this.points.length === 0)
-                this.points.push(this.createPoint());
+    voltageChanged: function() {
+        this.addPoint();
+    },
 
-            this.points[this.points.length - 1].set(
-                this.simulation.getVoltage(),
-                this.simulation.getCurrent()
-            );
+    wavelengthChanged: function() {
+        this.clearPoints();
+        this.updateCurrentPoint();
+    },
 
-            this.draw();
-        },
+    beamIntensityChanged: function() {
+        this.clearPoints();
+    },
 
-        currentChanged: function() {
-            this.updateCurrentPoint();
-        },
+    targetMaterialChanged: function() {
+        this.clearPoints();
+    }
 
-        voltageChanged: function() {
-            this.addPoint();
-        },
-
-        wavelengthChanged: function() {
-            this.clearPoints();
-            this.updateCurrentPoint();
-        },
-
-        beamIntensityChanged: function() {
-            this.clearPoints();
-        },
-
-        targetMaterialChanged: function() {
-            this.clearPoints();
-        }
-
-    });
-
-
-    return CurrentVsVoltageGraphView;
 });
+
+
+export default CurrentVsVoltageGraphView;

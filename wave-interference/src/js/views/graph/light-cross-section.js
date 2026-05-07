@@ -1,133 +1,125 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import CrossSectionGraphView from './cross-section';
+import ArrowGraphic from '../../graphics/arrow';
+import graphHtml from '../../../templates/graph.html?raw';
+import controlsHtml from '../../../templates/light-cross-section-graph-controls.html?raw';
 
-	'use strict';
+/*
+ * "Local" variables for functions to share and recycle
+ */
 
-	var _ = require('underscore');
-	var $ = require('jquery');
+/**
+ * LightCrossSectionGraphView shows the values of a certain row of the
+ *   lattice in real time in the form of a curve.
+ */
+var LightCrossSectionGraphView = CrossSectionGraphView.extend({
 
-	var CrossSectionGraphView = require('./cross-section');
+    template: _.template(graphHtml + controlsHtml),
 
-	var ArrowGraphic = require('../../graphics/arrow');
+    className: 'light-cross-section-graph-view open initial',
 
-	var graphHtml    = require('text!../../../templates/graph.html');
-	var controlsHtml = require('text!../../../templates/light-cross-section-graph-controls.html');
+    events: _.extend({}, CrossSectionGraphView.prototype.events, {
+        'click .curve-check'   : 'curveCheckClicked',
+        'click .vectors-check' : 'vectorsCheckClicked',
+    }),
 
-	/*
-	 * "Local" variables for functions to share and recycle
-	 */
+    initialize: function(options) {
+        CrossSectionGraphView.prototype.initialize.apply(this, [options]);
 
-	/**
-	 * LightCrossSectionGraphView shows the values of a certain row of the
-	 *   lattice in real time in the form of a curve.
-	 */
-	var LightCrossSectionGraphView = CrossSectionGraphView.extend({
+        this.pointsPerVector = 3;
 
-		template: _.template(graphHtml + controlsHtml),
+        this.showCurves  = true;
+        this.showVectors = false;
+    },
 
-		className: 'light-cross-section-graph-view open initial',
+    /**
+     *
+     */
+    initVectors: function() {
+        this.vectors = [];
 
-		events: _.extend({}, CrossSectionGraphView.prototype.events, {
-			'click .curve-check'   : 'curveCheckClicked',
-			'click .vectors-check' : 'vectorsCheckClicked',
-		}),
+        var numVectors = Math.floor(this.waveSimulation.lattice.width / this.pointsPerVector);
 
-		initialize: function(options) {
-			CrossSectionGraphView.prototype.initialize.apply(this, [options]);
+        for (var i = 0; i < numVectors; i++) {
+            this.vectors.push(new ArrowGraphic({
+                context: this.context
+            }));
+        }
+    },
 
-			this.pointsPerVector = 3;
+    /**
+     * All the graphics initializing happens at the end of the
+     *   render function, and we need to make sure the vectors
+     *   get initialized.
+     */
+    render: function() {
+        CrossSectionGraphView.prototype.render.apply(this);
 
-			this.showCurves  = true;
-			this.showVectors = false;
-		},
+        this.initVectors();
+    },
 
-		/**
-		 *
-		 */
-		initVectors: function() {
-			this.vectors = [];
+    /**
+     * Renders html container
+     */
+    renderContainer: function() {
+        this.$el.html(this.template(this.graphInfo));
 
-			var numVectors = Math.floor(this.waveSimulation.lattice.width / this.pointsPerVector);
+        this.$showButton = this.$('.graph-show-button');
+        this.$hideButton = this.$('.graph-hide-button');
+    },
 
-			for (var i = 0; i < numVectors; i++) {
-				this.vectors.push(new ArrowGraphic({
-					context: this.context
-				}));
-			}
-		},
+    /**
+     * Draws arrows from the 0 line along the x-axis to the graph's y value
+     *   at a given x.
+     */
+    drawVectors: function() {
+        var y = this.height / 2;
 
-		/**
-		 * All the graphics initializing happens at the end of the
-		 *   render function, and we need to make sure the vectors
-		 *   get initialized.
-		 */
-		render: function() {
-			CrossSectionGraphView.prototype.render.apply(this);
+        var point;
+        for (var i = 1; i < this.vectors.length; i ++) {
+            point = this.points[i * this.pointsPerVector];
+            this.vectors[i].setTail(point.x, y);
+            this.vectors[i].setHead(point.x, point.y);
+            this.vectors[i].setLineColor(this.lineColor);
+            this.vectors[i].draw();
+        }
+    },
 
-			this.initVectors();
-		},
+    /**
+     * Responds to resize events and draws everything.
+     */
+    update: function(time, delta) {
+        if (this.resizeOnNextUpdate)
+            this.resize();
 
-		/**
-		 * Renders html container
-		 */
-		renderContainer: function() {
-			this.$el.html(this.template(this.graphInfo));
+        if (this.graphVisible) {
+            this.drawGraph(time, delta);
 
-			this.$showButton = this.$('.graph-show-button');
-			this.$hideButton = this.$('.graph-hide-button');
-		},
+            if (this.showCurves || this.showVectors)
+                this.calculatePoints(time, delta);
 
-		/**
-		 * Draws arrows from the 0 line along the x-axis to the graph's y value
-		 *   at a given x.
-		 */
-		drawVectors: function() {
-			var y = this.height / 2;
+            if (this.showCurves)
+                this.drawCurve(time, delta);
+            if (this.showVectors)
+                this.drawVectors(time, delta);
+        }
+    },
 
-			var point;
-			for (var i = 1; i < this.vectors.length; i ++) {
-				point = this.points[i * this.pointsPerVector];
-				this.vectors[i].setTail(point.x, y);
-				this.vectors[i].setHead(point.x, point.y);
-				this.vectors[i].setLineColor(this.lineColor);
-				this.vectors[i].draw();
-			}
-		},
+    /**
+     *
+     */
+    curveCheckClicked: function(event) {
+        this.showCurves = $(event.target).is(':checked');
+    },
 
-		/**
-		 * Responds to resize events and draws everything.
-		 */
-		update: function(time, delta) {
-			if (this.resizeOnNextUpdate)
-				this.resize();
+    /**
+     *
+     */
+    vectorsCheckClicked: function(event) {
+        this.showVectors = $(event.target).is(':checked');
+    },
 
-			if (this.graphVisible) {
-				this.drawGraph(time, delta);
-
-				if (this.showCurves || this.showVectors)
-					this.calculatePoints(time, delta);
-
-				if (this.showCurves)
-					this.drawCurve(time, delta);
-				if (this.showVectors)
-					this.drawVectors(time, delta);
-			}
-		},
-
-		/**
-		 *
-		 */
-		curveCheckClicked: function(event) {
-			this.showCurves = $(event.target).is(':checked');
-		},
-
-		/**
-		 *
-		 */
-		vectorsCheckClicked: function(event) {
-			this.showVectors = $(event.target).is(':checked');
-		},
-
-	});
-
-	return LightCrossSectionGraphView;
 });
+
+export default LightCrossSectionGraphView;

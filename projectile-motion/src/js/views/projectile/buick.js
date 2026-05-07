@@ -1,39 +1,32 @@
-define(function(require) {
+import Buick from 'models/projectile/buick';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var BuickView = ProjectileView.extend({
 
-    var Buick = require('models/projectile/buick');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.BUICK);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.BUICK_IMPACT);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var Assets = require('assets');
+    calculateScale: function() {
+        var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('diameter'))); // in pixels
+        return targetSpriteHeight / 400;
+    }
 
-    var BuickView = ProjectileView.extend({
-
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.BUICK);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.BUICK_IMPACT);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        calculateScale: function() {
-            var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(this.model.get('diameter'))); // in pixels
-            return targetSpriteHeight / 400;
-        }
-
-    }, {
-        getModelClass: function() {
-            return Buick;
-        }
-    });
-
-    return BuickView;
+}, {
+    getModelClass: function() {
+        return Buick;
+    }
 });
+
+export default BuickView;

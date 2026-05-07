@@ -1,42 +1,36 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * Accelerates wire particles
+ */
+var AccelerationPropagator = function(g, vmax, accelScale) {
+    this.vmax = vmax;
+    this.g = g;
+    this.accelScale = accelScale;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(AccelerationPropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, wireParticle) {
+        var v = wireParticle.velocity + this.g * deltaTime;
 
-    /**
-     * Accelerates wire particles
-     */
-    var AccelerationPropagator = function(g, vmax, accelScale) {
-        this.vmax = vmax;
-        this.g = g;
-        this.accelScale = accelScale;
-    };
+        wireParticle.velocity = v;
+        if ((v < 0 && this.g > 0) || (v > 0 && this.g < 0))  // Don't go backwards
+            wireParticle.velocity = 0;
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(AccelerationPropagator.prototype, Propagator.prototype, {
+        // v = Math.min(v, this.vmax); Why is this not actually used?? - Patrick
 
-        propagate: function(deltaTime, wireParticle) {
-            var v = wireParticle.velocity + this.g * deltaTime;
+        wireParticle.position = wireParticle.position + wireParticle.velocity * deltaTime;
+    },
 
-            wireParticle.velocity = v;
-            if ((v < 0 && this.g > 0) || (v > 0 && this.g < 0))  // Don't go backwards
-                wireParticle.velocity = 0;
+    voltageChanged: function(voltage) {
+        this.g = -voltage * this.accelScale;
+    }
 
-            // v = Math.min(v, this.vmax); Why is this not actually used?? - Patrick
-
-            wireParticle.position = wireParticle.position + wireParticle.velocity * deltaTime;
-        },
-
-        voltageChanged: function(voltage) {
-            this.g = -voltage * this.accelScale;
-        }
-
-    });
-
-    return AccelerationPropagator;
 });
+
+export default AccelerationPropagator;

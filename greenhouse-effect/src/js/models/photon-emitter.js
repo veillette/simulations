@@ -1,42 +1,37 @@
-define(function (require) {
+import Backbone from 'backbone';
 
-    'use strict';
+/**
+ *
+ */
+var PhotonEmitter = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
+    defaults: {
+        productionRate: 0
+    },
 
-    /**
-     *
-     */
-    var PhotonEmitter = Backbone.Model.extend({
+    initialize: function(attributes, options) {
+        this.timeSincePhotonsProduced = 0;
 
-        defaults: {
-            productionRate: 0
-        },
-
-        initialize: function(attributes, options) {
+        this.on('change:productionRate', function() {
             this.timeSincePhotonsProduced = 0;
+        });
+    },
 
-            this.on('change:productionRate', function() {
-                this.timeSincePhotonsProduced = 0;
-            });
-        },
-
-        update: function(deltaTime) {
-            this.timeSincePhotonsProduced += deltaTime;
-            var numPhotons = Math.floor(this.get('productionRate') * this.timeSincePhotonsProduced);
-            for (var i = 0; i < numPhotons; i++) {
-                this.emitPhoton();
-                this.timeSincePhotonsProduced = 0;
-            }
-        },
-
-        emitPhoton: function() {},
-
-        setProductionRate: function(productionRate) {
-            this.set('productionRate', productionRate);
+    update: function(deltaTime) {
+        this.timeSincePhotonsProduced += deltaTime;
+        var numPhotons = Math.floor(this.get('productionRate') * this.timeSincePhotonsProduced);
+        for (var i = 0; i < numPhotons; i++) {
+            this.emitPhoton();
+            this.timeSincePhotonsProduced = 0;
         }
+    },
 
-    });
+    emitPhoton: function() {},
 
-    return PhotonEmitter;
+    setProductionRate: function(productionRate) {
+        this.set('productionRate', productionRate);
+    }
+
 });
+
+export default PhotonEmitter;

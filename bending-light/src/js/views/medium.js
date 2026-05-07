@@ -1,52 +1,46 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
 
-    'use strict';
+var MediumView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    /**
+     * Overrides PixiView's initializeDisplayObject function
+     */
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
+    initialize: function(options) {
+        this.updateMVT(options.mvt);
 
-    var MediumView = PixiView.extend({
+        this.listenTo(this.model, 'change:color', this.draw)
+    },
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+    draw: function() {
+        var rect = this.mvt.modelToView(this.model.get('shape'));
+        rect.h = Math.abs(rect.h);
+        rect.y -= rect.h;
 
-        initialize: function(options) {
-            this.updateMVT(options.mvt);
+        var color = this.model.get('color');
 
-            this.listenTo(this.model, 'change:color', this.draw)
-        },
+        var graphics = this.displayObject;
+        graphics.clear();
+        graphics.beginFill(Colors.rgbToHexInteger(color.r, color.g, color.b), 1);
+        graphics.drawRect(rect.x, rect.y, rect.w, rect.h);
+        graphics.endFill();
+    },
 
-        draw: function() {
-            var rect = this.mvt.modelToView(this.model.get('shape'));
-            rect.h = Math.abs(rect.h);
-            rect.y -= rect.h;
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            var color = this.model.get('color');
+        this.draw();
+    }
 
-            var graphics = this.displayObject;
-            graphics.clear();
-            graphics.beginFill(Colors.rgbToHexInteger(color.r, color.g, color.b), 1);
-            graphics.drawRect(rect.x, rect.y, rect.w, rect.h);
-            graphics.endFill();
-        },
-
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-        }
-
-    });
-
-    return MediumView;
 });
+
+export default MediumView;

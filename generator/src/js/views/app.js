@@ -1,32 +1,25 @@
-define(function(require) {
+import FaradayAppView from 'views/app';
+import GeneratorBarMagnetSimView from './sim/bar-magnet';
+import GeneratorPickupCoilSimView from './sim/pickup-coil';
+import GeneratorElectromagnetSimView from './sim/electromagnet';
+import GeneratorTransformerSimView from './sim/transformer';
+import GeneratorGeneratorSimView from './sim/generator';
+import Assets from 'assets';
 
-    'use strict';
+var GeneratorAppView = FaradayAppView.extend({
 
-    var FaradayAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var GeneratorBarMagnetSimView     = require('./sim/bar-magnet');
-    var GeneratorPickupCoilSimView    = require('./sim/pickup-coil');
-    var GeneratorElectromagnetSimView = require('./sim/electromagnet');
-    var GeneratorTransformerSimView   = require('./sim/transformer');
-    var GeneratorGeneratorSimView     = require('./sim/generator');
+    simViewConstructors: [
+        GeneratorBarMagnetSimView,
+        GeneratorPickupCoilSimView,
+        GeneratorElectromagnetSimView,
+        GeneratorTransformerSimView,
+        GeneratorGeneratorSimView
+    ],
 
-    var Assets = require('assets');
+    defaultSimViewIndex: 4
 
-    var GeneratorAppView = FaradayAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            GeneratorBarMagnetSimView,
-            GeneratorPickupCoilSimView,
-            GeneratorElectromagnetSimView,
-            GeneratorTransformerSimView,
-            GeneratorGeneratorSimView
-        ],
-
-        defaultSimViewIndex: 4
-
-    });
-
-    return GeneratorAppView;
 });
+
+export default GeneratorAppView;

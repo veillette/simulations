@@ -1,69 +1,61 @@
-define(function(require) {
+import SpriteCollectionView from 'common/v3/pixi/view/sprite-collection';
+import WavelengthColors from 'common/colors/wavelength';
+import Colors from 'common/colors/colors';
+import PEffectSimulation from 'models/simulation';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that renders photon sprites for every photon in the sim
+ */
+var PhotonCollectionView = SpriteCollectionView.extend({
 
+    initialize: function(options) {
+        // A map of wavelengths to colors for caching
+        this.colors = {};
 
-    var SpriteCollectionView = require('common/v3/pixi/view/sprite-collection');
-    var WavelengthColors     = require('common/colors/wavelength');
-    var Colors               = require('common/colors/colors');
+        SpriteCollectionView.prototype.initialize.apply(this, arguments);
 
-    var PEffectSimulation = require('models/simulation');
+        this.simulation = options.simulation;
 
-    var Assets = require('assets');
+        this.listenTo(this.simulation, 'change:viewMode', this.viewModeChanged);
+    },
 
     /**
-     * A view that renders photon sprites for every photon in the sim
+     * Returns texture used for sprites.  Override in child classes.
      */
-    var PhotonCollectionView = SpriteCollectionView.extend({
+    getTexture: function() {
+        return Assets.Texture(Assets.Images.PHOTON);
+    },
 
-        initialize: function(options) {
-            // A map of wavelengths to colors for caching
-            this.colors = {};
+    /**
+     * Calculates current scale for sprites.  Override in child classes.
+     */
+    getSpriteScale: function() {
+        var targetWidth = this.mvt.modelToViewDeltaX(22);
+        var scale = targetWidth / this.texture.width;
+        return scale;
+    },
 
-            SpriteCollectionView.prototype.initialize.apply(this, arguments);
+    getColorFromWavelength: function(wavelength) {
+        var key = '' + wavelength;
+        if (this.colors[key] === undefined)
+            this.colors[key] = Colors.parseHex(WavelengthColors.nmToHex(wavelength));
+        return this.colors[key];
+    },
 
-            this.simulation = options.simulation;
+    updateSprite: function(sprite, model) {
+        SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
 
-            this.listenTo(this.simulation, 'change:viewMode', this.viewModeChanged);
-        },
+        sprite.tint = this.getColorFromWavelength(model.get('wavelength'));
+    },
 
-        /**
-         * Returns texture used for sprites.  Override in child classes.
-         */
-        getTexture: function() {
-            return Assets.Texture(Assets.Images.PHOTON);
-        },
+    viewModeChanged: function(simulation, viewMode) {
+        if (viewMode === PEffectSimulation.PHOTON_VIEW)
+            this.show();
+        else
+            this.hide();
+    }
 
-        /**
-         * Calculates current scale for sprites.  Override in child classes.
-         */
-        getSpriteScale: function() {
-            var targetWidth = this.mvt.modelToViewDeltaX(22);
-            var scale = targetWidth / this.texture.width;
-            return scale;
-        },
-
-        getColorFromWavelength: function(wavelength) {
-            var key = '' + wavelength;
-            if (this.colors[key] === undefined)
-                this.colors[key] = Colors.parseHex(WavelengthColors.nmToHex(wavelength));
-            return this.colors[key];
-        },
-
-        updateSprite: function(sprite, model) {
-            SpriteCollectionView.prototype.updateSprite.apply(this, arguments);
-
-            sprite.tint = this.getColorFromWavelength(model.get('wavelength'));
-        },
-
-        viewModeChanged: function(simulation, viewMode) {
-            if (viewMode === PEffectSimulation.PHOTON_VIEW)
-                this.show();
-            else
-                this.hide();
-        }
-
-    });
-
-    return PhotonCollectionView;
 });
+
+export default PhotonCollectionView;

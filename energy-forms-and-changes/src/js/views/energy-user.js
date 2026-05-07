@@ -1,22 +1,17 @@
-define(function(require) {
+import EnergySystemsElementView from 'views/energy-systems-element';
 
-    'use strict';
+var EnergyUserView = EnergySystemsElementView.extend({
 
-    var EnergySystemsElementView = require('views/energy-systems-element');
+    showEnergyChunks: function() {
+        EnergySystemsElementView.prototype.showEnergyChunks.apply(this);
+        this.model.set('energyChunksVisible', true);
+    },
 
-    var EnergyUserView = EnergySystemsElementView.extend({
+    hideEnergyChunks: function() {
+        EnergySystemsElementView.prototype.hideEnergyChunks.apply(this);
+        this.model.set('energyChunksVisible', false);
+    },
 
-        showEnergyChunks: function() {
-            EnergySystemsElementView.prototype.showEnergyChunks.apply(this);
-            this.model.set('energyChunksVisible', true);
-        },
-
-        hideEnergyChunks: function() {
-            EnergySystemsElementView.prototype.hideEnergyChunks.apply(this);
-            this.model.set('energyChunksVisible', false);
-        },
-
-    });
-
-    return EnergyUserView;
 });
+
+export default EnergyUserView;

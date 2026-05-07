@@ -1,70 +1,64 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ *
+ */
+var BatteryForcePropagator = function(minSpeed, maxSpeed) {
+    this.minSpeed = minSpeed;
+    this.maxSpeed = maxSpeed;
+    this.forces = [];
+    this.desiredVoltage = 0;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(BatteryForcePropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, particle) {
+        var f = 0;
+        for (var i = 0; i < this.forces.length; i++)
+            f += this.forces[i].getForce(particle);
 
-    /**
-     *
-     */
-    var BatteryForcePropagator = function(minSpeed, maxSpeed) {
-        this.minSpeed = minSpeed;
-        this.maxSpeed = maxSpeed;
-        this.forces = [];
-        this.desiredVoltage = 0;
-    };
+        var m = particle.mass;
+        var v = particle.velocity;
+        var a = f / m;
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(BatteryForcePropagator.prototype, Propagator.prototype, {
+        v = v + a * deltaTime;
 
-        propagate: function(deltaTime, particle) {
-            var f = 0;
-            for (var i = 0; i < this.forces.length; i++)
-                f += this.forces[i].getForce(particle);
-
-            var m = particle.mass;
-            var v = particle.velocity;
-            var a = f / m;
-
-            v = v + a * deltaTime;
-
-            if (this.desiredVoltage < 0) {
-                // Going clockwise--Positive velocity required.
-                if (v > this.maxSpeed)
-                    v = this.maxSpeed;
-                else if (v < this.minSpeed)
-                    v = this.minSpeed;
-            }
-            else {
-                if (v < -this.maxSpeed)
-                    v = -this.maxSpeed;
-                else if (v > -this.minSpeed)
-                    v = -this.minSpeed;
-            }
-
-            particle.velocity = v;
-            particle.position += v * deltaTime;
-        },
-
-        setMinSpeed: function(vMin) {
-            this.minSpeed = vMin;
-        },
-
-        addForce: function(f) {
-            this.forces.push(f);
-        },
-
-        voltageChanged: function(val) {
-            this.desiredVoltage = val;
-
-            this.setMinSpeed(Math.abs(val * 0.7));
+        if (this.desiredVoltage < 0) {
+            // Going clockwise--Positive velocity required.
+            if (v > this.maxSpeed)
+                v = this.maxSpeed;
+            else if (v < this.minSpeed)
+                v = this.minSpeed;
+        }
+        else {
+            if (v < -this.maxSpeed)
+                v = -this.maxSpeed;
+            else if (v > -this.minSpeed)
+                v = -this.minSpeed;
         }
 
-    });
+        particle.velocity = v;
+        particle.position += v * deltaTime;
+    },
 
-    return BatteryForcePropagator;
+    setMinSpeed: function(vMin) {
+        this.minSpeed = vMin;
+    },
+
+    addForce: function(f) {
+        this.forces.push(f);
+    },
+
+    voltageChanged: function(val) {
+        this.desiredVoltage = val;
+
+        this.setMinSpeed(Math.abs(val * 0.7));
+    }
+
 });
+
+export default BatteryForcePropagator;

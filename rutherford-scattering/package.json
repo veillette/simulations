@@ -4,8 +4,9 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "postinstall": "r.js -convert node_modules/point-in-polygon node_modules/point-in-polygon-shimmed",
-    "test": "grunt test"
+    "test": "grunt test",
+    "dev": "vite",
+    "build": "vite build"
   },
   "repository": {
     "type": "git",
@@ -48,7 +49,10 @@
     "point-in-polygon": "^1.0.0",
     "requirejs": "^2.3.7",
     "requirejs-text": "^2.0.12",
-    "underscore": "^1.13.8"
+    "underscore": "^1.13.8",
+    "vite": "^8.0.10",
+    "pixi.js": "^7.4.2",
+    "nouislider": "^7.0.10"
   },
   "overrides": {
     "diff": "^9.0.0",

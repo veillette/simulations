@@ -1,42 +1,36 @@
-define(function (require) {
+import Backbone from 'backbone';
+import MediumColorFactory from 'models/medium-color-factory';
 
-    'use strict';
+/**
+ * Holds information for a medium
+ */
+var Medium = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
+    defaults: {
+        shape: null,
+        mediumProperties: null,
+        color: null
+    },
 
-    var MediumColorFactory = require('models/medium-color-factory');
+    initialize: function(attributes, options) {
+        this.on('change:mediumProperties', this.mediumPropertiesChanged);
 
-    /**
-     * Holds information for a medium
-     */
-    var Medium = Backbone.Model.extend({
+        // Set starting color
+        this.updateColor();
+    },
 
-        defaults: {
-            shape: null,
-            mediumProperties: null,
-            color: null
-        },
+    getIndexOfRefraction: function(wavelength) {
+        return this.get('mediumProperties').dispersionFunction.getIndexOfRefraction(wavelength);
+    },
 
-        initialize: function(attributes, options) {
-            this.on('change:mediumProperties', this.mediumPropertiesChanged);
+    updateColor: function() {
+        this.mediumPropertiesChanged(this, this.get('mediumProperties'));
+    },
 
-            // Set starting color
-            this.updateColor();
-        },
+    mediumPropertiesChanged: function(model, mediumProperties) {
+        this.set('color', MediumColorFactory.getRgbaColor(mediumProperties.getIndexOfRefractionForRedLight()));
+    }
 
-        getIndexOfRefraction: function(wavelength) {
-            return this.get('mediumProperties').dispersionFunction.getIndexOfRefraction(wavelength);
-        },
-
-        updateColor: function() {
-            this.mediumPropertiesChanged(this, this.get('mediumProperties'));
-        },
-
-        mediumPropertiesChanged: function(model, mediumProperties) {
-            this.set('color', MediumColorFactory.getRgbaColor(mediumProperties.getIndexOfRefractionForRedLight()));
-        }
-
-    });
-
-    return Medium;
 });
+
+export default Medium;

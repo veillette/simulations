@@ -1,36 +1,31 @@
-define(function (require, exports, module) {
+/**
+ *
+ */
+var NoiseGenerator = {
 
-    'use strict';
+    getReadout: function(trueVoltage) {
+        var maxVoltage = 10.0; // This parameter is freely chosen.
 
-    /**
-     *
-     */
-    var NoiseGenerator = {
+        // Cap the maximum possible noise to either 10% of the true voltage or 10% of the maximum voltage
+        var maxNoise = Math.min(Math.abs(trueVoltage), maxVoltage) / 10.0;
 
-        getReadout: function(trueVoltage) {
-            var maxVoltage = 10.0; // This parameter is freely chosen.
+        // Noise standard deviation is capped to 2.5% of the maximum voltage / amp
+        var voltageNoise;
+        if (Math.abs(trueVoltage) < maxVoltage)
+            voltageNoise = Math.random() * 2.5 / 100.0 * trueVoltage;
+        else
+            voltageNoise = Math.random() * 2.5 / 100 * maxVoltage;
 
-            // Cap the maximum possible noise to either 10% of the true voltage or 10% of the maximum voltage
-            var maxNoise = Math.min(Math.abs(trueVoltage), maxVoltage) / 10.0;
+        if (voltageNoise > maxNoise)
+            voltageNoise = maxNoise;
 
-            // Noise standard deviation is capped to 2.5% of the maximum voltage / amp
-            var voltageNoise;
-            if (Math.abs(trueVoltage) < maxVoltage)
-                voltageNoise = Math.random() * 2.5 / 100.0 * trueVoltage;
-            else
-                voltageNoise = Math.random() * 2.5 / 100 * maxVoltage;
+        if (voltageNoise < -maxNoise)
+            voltageNoise = -maxNoise;
 
-            if (voltageNoise > maxNoise)
-                voltageNoise = maxNoise;
+        var voltageDisplay = trueVoltage + voltageNoise;
+        return voltageDisplay;
+    }
 
-            if (voltageNoise < -maxNoise)
-                voltageNoise = -maxNoise;
+};
 
-            var voltageDisplay = trueVoltage + voltageNoise;
-            return voltageDisplay;
-        }
-
-    };
-
-    return NoiseGenerator;
-});
+export default NoiseGenerator;

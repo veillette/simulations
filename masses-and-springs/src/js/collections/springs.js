@@ -1,15 +1,9 @@
+import Backbone from 'backbone';
 
-define(function (require) {
+import SpringModel from 'models/spring';
 
-    'use strict';
-
-    var Backbone = require('backbone');
-
-    var SpringModel = require('models/spring');
-
-    var SpringsCollection = Backbone.Collection.extend({
-        model: SpringModel
-    });
-
-    return SpringsCollection;
+var SpringsCollection = Backbone.Collection.extend({
+    model: SpringModel
 });
+
+export default SpringsCollection;

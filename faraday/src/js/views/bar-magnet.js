@@ -1,112 +1,105 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Vector2 from 'common/math/vector2';
+import Assets from 'assets';
 
-    'use strict';
 
-    var PIXI = require('pixi');
+/**
+ *
+ */
+var BarMagnetView = PixiView.extend({
 
-    var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
-
-    var Assets = require('assets');
-
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd'
+    },
 
     /**
-     *
+     * Initializes the new BarMagnetView.
      */
-    var BarMagnetView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd'
-        },
+        this._dragOffset   = new PIXI.Point();
+        this._dragLocation = new PIXI.Point();
+        this._vec = new Vector2();
 
-        /**
-         * Initializes the new BarMagnetView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+        this.initGraphics();
 
-            this._dragOffset   = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._vec = new Vector2();
+        this.listenTo(this.model, 'change:position',  this.updatePosition);
+        this.listenTo(this.model, 'change:direction', this.updateDirection);
+    },
 
-            this.initGraphics();
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.sprite = Assets.createSprite(Assets.Images.BAR_MAGNET);
+        this.sprite.anchor.x = this.sprite.anchor.y = 0.5;
+        this.displayObject.addChild(this.sprite);
+        this.displayObject.buttonMode = true;
 
-            this.listenTo(this.model, 'change:position',  this.updatePosition);
-            this.listenTo(this.model, 'change:direction', this.updateDirection);
-        },
+        this.updateMVT(this.mvt);
+    },
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.sprite = Assets.createSprite(Assets.Images.BAR_MAGNET);
-            this.sprite.anchor.x = this.sprite.anchor.y = 0.5;
-            this.displayObject.addChild(this.sprite);
-            this.displayObject.buttonMode = true;
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.updateMVT(this.mvt);
-        },
+        var targetWidth = this.mvt.modelToViewDeltaX(this.model.get('width'));
+        var scale = targetWidth / this.sprite.texture.width;
+        this.displayObject.scale.x = scale;
+        this.displayObject.scale.y = scale;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.updatePosition(this.model, this.model.get('position'));
+    },
 
-            var targetWidth = this.mvt.modelToViewDeltaX(this.model.get('width'));
-            var scale = targetWidth / this.sprite.texture.width;
-            this.displayObject.scale.x = scale;
-            this.displayObject.scale.y = scale;
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        this.displayObject.x = viewPosition.x;
+        this.displayObject.y = viewPosition.y;
+    },
 
-            this.updatePosition(this.model, this.model.get('position'));
-        },
+    updateDirection: function(model, direction) {
+        this.sprite.rotation = direction;
+    },
 
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y;
-        },
+    dragStart: function(event) {
+        if (this.simulation.get('paused'))
+            return;
 
-        updateDirection: function(model, direction) {
-            this.sprite.rotation = direction;
-        },
+        this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
+    },
 
-        dragStart: function(event) {
-            if (this.simulation.get('paused'))
-                return;
+    drag: function(event) {
+        if (this.dragging) {
+            var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
+            var x = local.x - this.dragOffset.x;
+            var y = local.y - this.dragOffset.y;
 
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
+            var mx = this.mvt.viewToModelX(x);
+            var my = this.mvt.viewToModelY(y);
 
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                var x = local.x - this.dragOffset.x;
-                var y = local.y - this.dragOffset.y;
-
-                var mx = this.mvt.viewToModelX(x);
-                var my = this.mvt.viewToModelY(y);
-
-                this.model.setPosition(mx, my);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
+            this.model.setPosition(mx, my);
         }
+    },
 
-    });
+    dragEnd: function(event) {
+        this.dragging = false;
+    }
 
-
-    return BarMagnetView;
 });
+
+
+export default BarMagnetView;

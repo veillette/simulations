@@ -1,236 +1,226 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import * as PIXI from 'pixi.js';
+import AppView from 'common/v3/app/app';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import Nucleon from 'models/nucleon';
+import NucleonView from 'views/nucleon';
+import ExplodingNucleusView from 'views/nucleus/exploding';
+import NeutronSourceView from 'nuclear-fission/views/neutron-source';
+import ContainmentVesselView from 'nuclear-fission/views/containment-vessel';
+import NuclearPhysicsSceneView from 'views/scene';
 
-    'use strict';
+/**
+ *
+ */
+var ChainReactionSceneView = NuclearPhysicsSceneView.extend({
 
-    var _    = require('underscore');
-    var $    = require('jquery');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        this.particleViews = [];
+        this.nucleusViews = [];
 
-    var AppView            = require('common/v3/app/app');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+        NuclearPhysicsSceneView.prototype.initialize.apply(this, arguments);
 
-    var Nucleon = require('models/nucleon');
+        this.listenTo(this.simulation.freeNeutrons, 'add',     this.neutronAdded);
+        this.listenTo(this.simulation.freeNeutrons, 'destroy', this.neutronDestroyed);
 
-    var NucleonView          = require('views/nucleon');
-    var ExplodingNucleusView = require('views/nucleus/exploding');
+        this.listenTo(this.simulation, 'nucleus-added',        this.nucleusAdded);
+        this.listenTo(this.simulation, 'nucleus-removed',      this.nucleusRemoved);
+        this.listenTo(this.simulation, 'remove-all-particles', this.allParticlesRemoved);
 
-    var NeutronSourceView     = require('nuclear-fission/views/neutron-source');
-    var ContainmentVesselView = require('nuclear-fission/views/containment-vessel');
+        this.listenTo(this.simulation, 'nucleus-change',       this.nucleusChanged);
+        this.listenTo(this.simulation, 'change:numU235Nuclei', this.numReactiveNucleiChanged);
+        this.listenTo(this.simulation, 'change:numU238Nuclei', this.numReactiveNucleiChanged);
+    },
 
-    var NuclearPhysicsSceneView = require('views/scene');
+    renderContent: function() {
+        var self = this;
+        this.$resetButton = $('<button class="btn btn-lg reset-nuclei-btn">Reset Nuclei</button>');
+        this.$resetButton.on('click', function() {
+            self.resetNuclei();
+        });
+        this.$resetButton.hide();
 
-    /**
-     *
-     */
-    var ChainReactionSceneView = NuclearPhysicsSceneView.extend({
+        this.$ui.append(this.$resetButton);
+    },
 
-        initialize: function(options) {
-            this.particleViews = [];
-            this.nucleusViews = [];
+    reset: function() {
 
-            NuclearPhysicsSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-            this.listenTo(this.simulation.freeNeutrons, 'add',     this.neutronAdded);
-            this.listenTo(this.simulation.freeNeutrons, 'destroy', this.neutronDestroyed);
+    initMVT: function() {
+        this.viewOriginX = this.getLeftPadding() + this.getAvailableWidth() / 2;
+        this.viewOriginY = this.getTopPadding() + this.getAvailableHeight() / 2;
 
-            this.listenTo(this.simulation, 'nucleus-added',        this.nucleusAdded);
-            this.listenTo(this.simulation, 'nucleus-removed',      this.nucleusRemoved);
-            this.listenTo(this.simulation, 'remove-all-particles', this.allParticlesRemoved);
+        var pixelsPerFemtometer = AppView.windowIsShort() ? 2.2 : 3;
 
-            this.listenTo(this.simulation, 'nucleus-change',       this.nucleusChanged);
-            this.listenTo(this.simulation, 'change:numU235Nuclei', this.numReactiveNucleiChanged);
-            this.listenTo(this.simulation, 'change:numU238Nuclei', this.numReactiveNucleiChanged);
-        },
+        // The center of the screen is actually (5, 5) in the original
+        this.mvt = ModelViewTransform.createSinglePointScaleMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            pixelsPerFemtometer
+        );
+    },
 
-        renderContent: function() {
-            var self = this;
-            this.$resetButton = $('<button class="btn btn-lg reset-nuclei-btn">Reset Nuclei</button>');
-            this.$resetButton.on('click', function() {
-                self.resetNuclei();
-            });
-            this.$resetButton.hide();
+    initGraphics: function() {
+        NuclearPhysicsSceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.$ui.append(this.$resetButton);
-        },
+        this.particlesLayer = new PIXI.Container();
+        this.nucleusLayer = new PIXI.Container();
 
-        reset: function() {
+        this.stage.addChild(this.particlesLayer);
+        this.stage.addChild(this.nucleusLayer);
 
-        },
+        this.initMVT();
+        this.initNeutronSourceView();
+        this.initContainmentVesselView();
+        this.initStartingNuclei();
+    },
 
-        initMVT: function() {
-            this.viewOriginX = this.getLeftPadding() + this.getAvailableWidth() / 2;
-            this.viewOriginY = this.getTopPadding() + this.getAvailableHeight() / 2;
+    initNeutronSourceView: function() {
+        this.neutronSourceView = new NeutronSourceView({
+            model: this.simulation.neutronSource,
+            mvt: this.mvt,
+            modelWidth: 52,
+            rotationEnabled: true
+        });
 
-            var pixelsPerFemtometer = AppView.windowIsShort() ? 2.2 : 3;
+        this.stage.addChild(this.neutronSourceView.displayObject);
+    },
 
-            // The center of the screen is actually (5, 5) in the original
-            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                pixelsPerFemtometer
-            );
-        },
+    initContainmentVesselView: function() {
+        this.containmentVesselView = new ContainmentVesselView({
+            model: this.simulation.containmentVessel,
+            mvt: this.mvt
+        });
 
-        initGraphics: function() {
-            NuclearPhysicsSceneView.prototype.initGraphics.apply(this, arguments);
+        this.stage.addChild(this.containmentVesselView.displayObject);
+    },
 
-            this.particlesLayer = new PIXI.Container();
-            this.nucleusLayer = new PIXI.Container();
+    initStartingNuclei: function() {
+        var i;
 
-            this.stage.addChild(this.particlesLayer);
-            this.stage.addChild(this.nucleusLayer);
+        for (i = 0; i < this.simulation.u235Nuclei.length; i++)
+            this.nucleusAdded(this.simulation.u235Nuclei.at(i));
 
-            this.initMVT();
-            this.initNeutronSourceView();
-            this.initContainmentVesselView();
-            this.initStartingNuclei();
-        },
+        for (i = 0; i < this.simulation.u238Nuclei.length; i++)
+            this.nucleusAdded(this.simulation.u238Nuclei.at(i));
+    },
 
-        initNeutronSourceView: function() {
-            this.neutronSourceView = new NeutronSourceView({
-                model: this.simulation.neutronSource,
-                mvt: this.mvt,
-                modelWidth: 52,
-                rotationEnabled: true
-            });
-
-            this.stage.addChild(this.neutronSourceView.displayObject);
-        },
-
-        initContainmentVesselView: function() {
-            this.containmentVesselView = new ContainmentVesselView({
-                model: this.simulation.containmentVessel,
+    createParticleView: function(particle) {
+        if (particle instanceof Nucleon) {
+            // Add a visible representation of the nucleon to the canvas.
+            return new NucleonView({
+                model: particle,
                 mvt: this.mvt
             });
+        }
+        else {
+            // There is some unexpected object in the list of constituents
+            //   of the nucleus.  This should never happen and should be
+            //   debugged if it does.
+            throw 'unexpected particle';
+        }
+    },
 
-            this.stage.addChild(this.containmentVesselView.displayObject);
-        },
+    _update: function(time, deltaTime, paused, timeScale) {
+        NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
 
-        initStartingNuclei: function() {
-            var i;
+        this.neutronSourceView.update(time, deltaTime, paused);
+        this.containmentVesselView.update(time, deltaTime, paused);
 
-            for (i = 0; i < this.simulation.u235Nuclei.length; i++)
-                this.nucleusAdded(this.simulation.u235Nuclei.at(i));
+        var i;
+        for (i = 0; i < this.particleViews.length; i++)
+            this.particleViews[i].update(time, deltaTime, paused);
 
-            for (i = 0; i < this.simulation.u238Nuclei.length; i++)
-                this.nucleusAdded(this.simulation.u238Nuclei.at(i));
-        },
+        for (i = 0; i < this.nucleusViews.length; i++)
+            this.nucleusViews[i].update(time, deltaTime, paused);
+    },
 
-        createParticleView: function(particle) {
-            if (particle instanceof Nucleon) {
-                // Add a visible representation of the nucleon to the canvas.
-                return new NucleonView({
-                    model: particle,
-                    mvt: this.mvt
-                });
-            }
-            else {
-                // There is some unexpected object in the list of constituents
-                //   of the nucleus.  This should never happen and should be
-                //   debugged if it does.
-                throw 'unexpected particle';
-            }
-        },
+    resetNuclei: function() {
+        this.simulation.resetNuclei();
+        this.hideResetButton();
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            NuclearPhysicsSceneView.prototype._update.apply(this, arguments);
+    neutronAdded: function(neutron) {
+        var nucleonView = this.createParticleView(neutron);
+        this.particleViews.push(nucleonView);
+        this.particlesLayer.addChild(nucleonView.displayObject);
+    },
 
-            this.neutronSourceView.update(time, deltaTime, paused);
-            this.containmentVesselView.update(time, deltaTime, paused);
-
-            var i;
-            for (i = 0; i < this.particleViews.length; i++)
-                this.particleViews[i].update(time, deltaTime, paused);
-
-            for (i = 0; i < this.nucleusViews.length; i++)
-                this.nucleusViews[i].update(time, deltaTime, paused);
-        },
-
-        resetNuclei: function() {
-            this.simulation.resetNuclei();
-            this.hideResetButton();
-        },
-
-        neutronAdded: function(neutron) {
-            var nucleonView = this.createParticleView(neutron);
-            this.particleViews.push(nucleonView);
-            this.particlesLayer.addChild(nucleonView.displayObject);
-        },
-
-        neutronDestroyed: function(nucleon) {
-            for (var i = 0; i < this.particleViews.length; i++) {
-                if (this.particleViews[i].model === nucleon) {
-                    this.particleViews[i].remove();
-                    this.particleViews.splice(i, 1);
-                    return;
-                }
-            }
-        },
-
-        nucleusAdded: function(nucleus) {
-            var nucleusView = new ExplodingNucleusView({
-                model: nucleus,
-                mvt: this.mvt,
-                renderer: this.renderer
-            });
-
-            this.nucleusViews.push(nucleusView);
-            this.nucleusLayer.addChild(nucleusView.displayObject);
-        },
-
-        nucleusRemoved: function(nucleus) {
-            for (var i = 0; i < this.nucleusViews.length; i++) {
-                if (this.nucleusViews[i].model === nucleus) {
-                    this.nucleusViews[i].remove();
-                    this.nucleusViews.splice(i, 1);
-                    return;
-                }
-            }
-        },
-
-        showResetButtonWithDelay: function() {
-            // Clear the currently running one if it exists so we start over
-            if (this.buttonTimeout)
-                window.clearTimeout(this.buttonTimeout);
-
-            this.buttonTimeout = window.setTimeout(_.bind(function() {
-                this.$resetButton.show();
-                this.buttonTimeout = null;
-            }, this), 1500);
-        },
-
-        hideResetButton: function() {
-            if (this.buttonTimeout)
-                window.clearTimeout(this.buttonTimeout);
-            this.$resetButton.hide();
-        },
-
-        nucleusChanged: function() {
-            if (this.simulation.getChangedNucleiExist())
-                this.showResetButtonWithDelay();
-        },
-
-        numReactiveNucleiChanged: function() {
-            if (!this.simulation.getChangedNucleiExist())
-                this.hideResetButton();
-        },
-
-        allParticlesRemoved: function() {
-            var i;
-
-            for (i = this.nucleusViews.length - 1; i >= 0; i--) {
-                this.nucleusViews[i].remove();
-                this.nucleusViews.splice(i, 1);
-            }
-
-            for (i = 0; i < this.particleViews.length; i++) {
+    neutronDestroyed: function(nucleon) {
+        for (var i = 0; i < this.particleViews.length; i++) {
+            if (this.particleViews[i].model === nucleon) {
                 this.particleViews[i].remove();
                 this.particleViews.splice(i, 1);
+                return;
             }
         }
+    },
 
-    });
+    nucleusAdded: function(nucleus) {
+        var nucleusView = new ExplodingNucleusView({
+            model: nucleus,
+            mvt: this.mvt,
+            renderer: this.renderer
+        });
 
-    return ChainReactionSceneView;
+        this.nucleusViews.push(nucleusView);
+        this.nucleusLayer.addChild(nucleusView.displayObject);
+    },
+
+    nucleusRemoved: function(nucleus) {
+        for (var i = 0; i < this.nucleusViews.length; i++) {
+            if (this.nucleusViews[i].model === nucleus) {
+                this.nucleusViews[i].remove();
+                this.nucleusViews.splice(i, 1);
+                return;
+            }
+        }
+    },
+
+    showResetButtonWithDelay: function() {
+        // Clear the currently running one if it exists so we start over
+        if (this.buttonTimeout)
+            window.clearTimeout(this.buttonTimeout);
+
+        this.buttonTimeout = window.setTimeout(_.bind(function() {
+            this.$resetButton.show();
+            this.buttonTimeout = null;
+        }, this), 1500);
+    },
+
+    hideResetButton: function() {
+        if (this.buttonTimeout)
+            window.clearTimeout(this.buttonTimeout);
+        this.$resetButton.hide();
+    },
+
+    nucleusChanged: function() {
+        if (this.simulation.getChangedNucleiExist())
+            this.showResetButtonWithDelay();
+    },
+
+    numReactiveNucleiChanged: function() {
+        if (!this.simulation.getChangedNucleiExist())
+            this.hideResetButton();
+    },
+
+    allParticlesRemoved: function() {
+        var i;
+
+        for (i = this.nucleusViews.length - 1; i >= 0; i--) {
+            this.nucleusViews[i].remove();
+            this.nucleusViews.splice(i, 1);
+        }
+
+        for (i = 0; i < this.particleViews.length; i++) {
+            this.particleViews[i].remove();
+            this.particleViews.splice(i, 1);
+        }
+    }
+
 });
+
+export default ChainReactionSceneView;

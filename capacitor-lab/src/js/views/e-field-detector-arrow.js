@@ -1,150 +1,143 @@
-define(function(require) {
-
-    'use strict';
-
-    var _    = require('underscore');
-    var PIXI = require('pixi');
-
-    var ArrowView = require('common/v3/pixi/view/arrow');
-
-    var Constants = require('constants');
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import ArrowView from 'common/v3/pixi/view/arrow';
+import Constants from 'constants';
 
 
-    var EFieldDetectorArrowView = ArrowView.extend({
+var EFieldDetectorArrowView = ArrowView.extend({
 
-        initialize: function(options) {
-            options = _.extend({
-                label: 'An Arrow',
+    initialize: function(options) {
+        options = _.extend({
+            label: 'An Arrow',
 
-                tailWidth: 8,
+            tailWidth: 8,
 
-                headWidth: 20,
-                headLength: 20,
+            headWidth: 20,
+            headLength: 20,
 
-                fillColor: Constants.EFieldDetectorView.DISPLAY_COLOR
-            }, options);
+            fillColor: Constants.EFieldDetectorView.DISPLAY_COLOR
+        }, options);
 
-            this.label = options.label;
+        this.label = options.label;
 
-            this.model = new ArrowView.ArrowViewModel({
-                originX: 0,
-                originY: 0,
-                targetX: 0,
-                targetY: 0,
-                minLength: null
-            });
-            this.scale = 1;
-            this.value = 0;
+        this.model = new ArrowView.ArrowViewModel({
+            originX: 0,
+            originY: 0,
+            targetX: 0,
+            targetY: 0,
+            minLength: null
+        });
+        this.scale = 1;
+        this.value = 0;
 
-            ArrowView.prototype.initialize.apply(this, [ options ]);
-        },
+        ArrowView.prototype.initialize.apply(this, [ options ]);
+    },
 
-        initGraphics: function() {
-            ArrowView.prototype.initGraphics.apply(this, arguments);
+    initGraphics: function() {
+        ArrowView.prototype.initGraphics.apply(this, arguments);
 
-            var textStyle = {
-                font: '11px Helvetica Neue',
-                fill: Constants.EFieldDetectorView.DISPLAY_COLOR
-            };
+        var textStyle = {
+            font: '11px Helvetica Neue',
+            fill: Constants.EFieldDetectorView.DISPLAY_COLOR
+        };
 
-            var label = new PIXI.Text(this.label, textStyle);
-            var value = new PIXI.Text('10 V/m', textStyle);
-            label.resolution = this.getResolution();
-            value.resolution = this.getResolution();
-            value.y = 12;
+        var label = new PIXI.Text(this.label, textStyle);
+        var value = new PIXI.Text('10 V/m', textStyle);
+        label.resolution = this.getResolution();
+        value.resolution = this.getResolution();
+        value.y = 12;
 
-            this.text = new PIXI.Container();
-            this.text.addChild(label);
-            this.text.addChild(value);
-            this.displayObject.addChild(this.text);
+        this.text = new PIXI.Container();
+        this.text.addChild(label);
+        this.text.addChild(value);
+        this.displayObject.addChild(this.text);
 
-            this.labelText = label;
-            this.valueText = value;
+        this.labelText = label;
+        this.valueText = value;
 
-            this.update();
-            this.drawArrow();
-        },
+        this.update();
+        this.drawArrow();
+    },
 
-        update: function() {
-            var length = this.value * this.scale;
-            this.model.set('targetY', this.model.get('originY') + length);
+    update: function() {
+        var length = this.value * this.scale;
+        this.model.set('targetY', this.model.get('originY') + length);
 
-            this.updateText();
-        },
+        this.updateText();
+    },
 
-        updateText: function(defaultDirection) {
-            var length = this.value * this.scale;
-            if (length === 0 && !defaultDirection)
-                this.text.y = Math.round(-this.text.height / 2);
-            else if (length > 0 || (defaultDirection && defaultDirection < 0))
-                this.text.y = Math.round(-this.text.height + 4);
-            else
-                this.text.y = 4;
+    updateText: function(defaultDirection) {
+        var length = this.value * this.scale;
+        if (length === 0 && !defaultDirection)
+            this.text.y = Math.round(-this.text.height / 2);
+        else if (length > 0 || (defaultDirection && defaultDirection < 0))
+            this.text.y = Math.round(-this.text.height + 4);
+        else
+            this.text.y = 4;
 
-            this.labelText.x = Math.round(-this.labelText.width / 2);
-            this.valueText.x = Math.round(-this.valueText.width / 2);
+        this.labelText.x = Math.round(-this.labelText.width / 2);
+        this.valueText.x = Math.round(-this.valueText.width / 2);
 
-            this.valueText.text = Math.abs(Math.round(this.value)) + ' V/m';
-        },
+        this.valueText.text = Math.abs(Math.round(this.value)) + ' V/m';
+    },
 
-        setScale: function(scale) {
-            this.scale = scale;
-            this.update();
-        },
+    setScale: function(scale) {
+        this.scale = scale;
+        this.update();
+    },
 
-        setValue: function(value) {
-            this.value = value;
-            this.update();
-        },
+    setValue: function(value) {
+        this.value = value;
+        this.update();
+    },
 
-        alignTextAbove: function() {
-            this.updateText(-1);
-        },
+    alignTextAbove: function() {
+        this.updateText(-1);
+    },
 
-        alignTextBelow: function() {
-            this.updateText(1);
-        },
+    alignTextBelow: function() {
+        this.updateText(1);
+    },
 
-        centerOn: function(x, y) {
-            var dx = this.model.get('targetX') - this.model.get('originX');
-            var dy = this.model.get('targetY') - this.model.get('originY');
-            this.model.moveTo(x - dx / 2, y - dy / 2);
-            this.updateText();
-        },
+    centerOn: function(x, y) {
+        var dx = this.model.get('targetX') - this.model.get('originX');
+        var dy = this.model.get('targetY') - this.model.get('originY');
+        this.model.moveTo(x - dx / 2, y - dy / 2);
+        this.updateText();
+    },
 
-        moveToY: function(y) {
-            this.model.moveTo(this.model.get('originX'), y);
-        },
+    moveToY: function(y) {
+        this.model.moveTo(this.model.get('originX'), y);
+    },
 
-        getTotalHeight: function() {
-            return this.displayObject.height;
-        },
+    getTotalHeight: function() {
+        return this.displayObject.height;
+    },
 
-        getArrowHeight: function() {
-            return Math.abs(Math.round(this.value));
-        },
+    getArrowHeight: function() {
+        return Math.abs(Math.round(this.value));
+    },
 
-        getTextHeight: function() {
-            return this.text.height;
-        },
+    getTextHeight: function() {
+        return this.text.height;
+    },
 
-        getOriginY: function() {
-            return this.model.get('originY');
-        },
+    getOriginY: function() {
+        return this.model.get('originY');
+    },
 
-        getTargetY: function() {
-            return this.model.get('targetY');
-        },
+    getTargetY: function() {
+        return this.model.get('targetY');
+    },
 
-        showValue: function() {
-            this.valueText.visible = true;
-        },
+    showValue: function() {
+        this.valueText.visible = true;
+    },
 
-        hideValue: function() {
-            this.valueText.visible = false;
-        }
+    hideValue: function() {
+        this.valueText.visible = false;
+    }
 
-    });
-
-    return EFieldDetectorArrowView;
 });
+
+export default EFieldDetectorArrowView;

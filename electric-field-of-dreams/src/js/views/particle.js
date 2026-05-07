@@ -1,108 +1,101 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
 
-    'use strict';
+var ParticleView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd'
+    },
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
+    /**
+     * Overrides PixiView's initializeDisplayObject function
+     */
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-    var Constants = require('constants');
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-    var ParticleView = PixiView.extend({
+        this.lineWidth = ParticleView.LINE_WIDTH;
+        this.lineColor = Colors.parseHex(ParticleView.LINE_COLOR);
+        this.fillColor = Colors.parseHex(ParticleView.FILL_COLOR);
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd'
-        },
+        this._dragOffset   = new PIXI.Point();
+        this._dragLocation = new PIXI.Point();
+        this._viewPosition = new Vector2();
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+        this.initGraphics();
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        this.listenTo(this.model, 'change:position',  this.updatePosition);
+    },
 
-            this.lineWidth = ParticleView.LINE_WIDTH;
-            this.lineColor = Colors.parseHex(ParticleView.LINE_COLOR);
-            this.fillColor = Colors.parseHex(ParticleView.FILL_COLOR);
+    initGraphics: function() {
+        this.displayObject.buttonMode = true;
+        this.displayObject.defaultCursor = 'move';
 
-            this._dragOffset   = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._viewPosition = new Vector2();
+        this.updateMVT(this.mvt);
+    },
 
-            this.initGraphics();
+    draw: function() {
+        var radius = this.mvt.modelToViewDeltaX(ParticleView.MODEL_RADIUS);
 
-            this.listenTo(this.model, 'change:position',  this.updatePosition);
-        },
+        this.displayObject.clear();
+        this.displayObject.lineStyle(this.lineWidth, this.lineColor, 1);
+        this.displayObject.beginFill(this.fillColor, 1);
+        this.displayObject.drawCircle(0, 0, radius);
+        this.displayObject.endFill();
+    },
 
-        initGraphics: function() {
-            this.displayObject.buttonMode = true;
-            this.displayObject.defaultCursor = 'move';
+    dragStart: function(event) {
+        this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
 
-            this.updateMVT(this.mvt);
-        },
+        this.model.detach();
+    },
 
-        draw: function() {
-            var radius = this.mvt.modelToViewDeltaX(ParticleView.MODEL_RADIUS);
+    drag: function(event) {
+        if (this.dragging) {
+            var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
+            var x = local.x - this.dragOffset.x;
+            var y = local.y - this.dragOffset.y;
 
-            this.displayObject.clear();
-            this.displayObject.lineStyle(this.lineWidth, this.lineColor, 1);
-            this.displayObject.beginFill(this.fillColor, 1);
-            this.displayObject.drawCircle(0, 0, radius);
-            this.displayObject.endFill();
-        },
+            var mx = this.mvt.viewToModelX(x);
+            var my = this.mvt.viewToModelY(y);
 
-        dragStart: function(event) {
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-
-            this.model.detach();
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.displayObject.parent, this._dragLocation);
-                var x = local.x - this.dragOffset.x;
-                var y = local.y - this.dragOffset.y;
-
-                var mx = this.mvt.viewToModelX(x);
-                var my = this.mvt.viewToModelY(y);
-
-                this.model.setPosition(mx, my);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-
-            this.model.attach();
-        },
-
-        updatePosition: function(model, position) {
-            var viewPos = this.mvt.modelToView(position);
-            this.displayObject.x = viewPos.x;
-            this.displayObject.y = viewPos.y;
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-            this.updatePosition(this.model, this.model.get('position'));
+            this.model.setPosition(mx, my);
         }
+    },
 
-    }, Constants.ParticleView);
+    dragEnd: function(event) {
+        this.dragging = false;
 
-    return ParticleView;
-});
+        this.model.attach();
+    },
+
+    updatePosition: function(model, position) {
+        var viewPos = this.mvt.modelToView(position);
+        this.displayObject.x = viewPos.x;
+        this.displayObject.y = viewPos.y;
+    },
+
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+
+        this.draw();
+        this.updatePosition(this.model, this.model.get('position'));
+    }
+
+}, Constants.ParticleView);
+
+export default ParticleView;

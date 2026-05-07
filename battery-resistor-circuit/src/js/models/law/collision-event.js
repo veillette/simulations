@@ -1,56 +1,50 @@
-define(function (require) {
+import _ from 'underscore';
+import Law from 'models/law';
 
-    'use strict';
+/**
+ *
+ */
+var CollisionEvent = function(distThreshold, amplitudeThreshold, oscillateFactory) {
+    this.velocityToZero = Number.POSITIVE_INFINITY;
+    this.oscillateFactory = oscillateFactory;
+    this.distThreshold = distThreshold;
+    this.amplitudeThreshold = amplitudeThreshold;
+    this.time = 0;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(CollisionEvent.prototype, Law.prototype, {
 
-    var Law = require('models/law');
+    update: function(deltaTime, system) {
+        this.time += deltaTime;
+    },
 
-    /**
-     *
-     */
-    var CollisionEvent = function(distThreshold, amplitudeThreshold, oscillateFactory) {
-        this.velocityToZero = Number.POSITIVE_INFINITY;
-        this.oscillateFactory = oscillateFactory;
-        this.distThreshold = distThreshold;
-        this.amplitudeThreshold = amplitudeThreshold;
-        this.time = 0;
-    };
+    collide: function(core, waveParticle) {
+        var dx = core.get('scalarPosition') - waveParticle.position;
+        var osc = core.get('propagator');
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(CollisionEvent.prototype, Law.prototype, {
+        if (Math.abs(dx) < this.distThreshold) {
+            if (osc.getAmplitude() < this.amplitudeThreshold) {
+                if (waveParticle.getLastCollision() !== core) {
+                    var newOscillatePropagator = this.oscillateFactory.create(waveParticle.velocity, core);
+                    core.set('propagator', newOscillatePropagator);
 
-        update: function(deltaTime, system) {
-            this.time += deltaTime;
-        },
-
-        collide: function(core, waveParticle) {
-            var dx = core.get('scalarPosition') - waveParticle.position;
-            var osc = core.get('propagator');
-
-            if (Math.abs(dx) < this.distThreshold) {
-                if (osc.getAmplitude() < this.amplitudeThreshold) {
-                    if (waveParticle.getLastCollision() !== core) {
-                        var newOscillatePropagator = this.oscillateFactory.create(waveParticle.velocity, core);
-                        core.set('propagator', newOscillatePropagator);
-
-                        waveParticle.setCollided( true );
-                        waveParticle.setLastCollision( core, this.time );
-                    }
-                }
-                else if (waveParticle.velocity >= this.velocityToZero) {
                     waveParticle.setCollided( true );
+                    waveParticle.setLastCollision( core, this.time );
                 }
             }
-        },
-
-        currentTime: function() {
-            return this.time;
+            else if (waveParticle.velocity >= this.velocityToZero) {
+                waveParticle.setCollided( true );
+            }
         }
+    },
 
-    });
+    currentTime: function() {
+        return this.time;
+    }
 
-    return CollisionEvent;
 });
+
+export default CollisionEvent;

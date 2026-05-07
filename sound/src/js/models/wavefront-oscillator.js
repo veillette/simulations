@@ -1,96 +1,85 @@
-define(function (require) {
+import 'timbre';
+import Backbone from 'backbone';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
+var T = window.T;
 
-    'use strict';
+/**
+ * TODO: Make it actually play sounds like the original
+ */
+var WavefrontOscillator = Backbone.Model.extend({
 
-    // This bower module doesn't satisfy AMD, so I'm just trying to satisfy the linter
-    require('timbre'); var T = window.T;
+    defaults: {
+        frequency: null,
+        amplitude: null,
+        harmonicFactor: 1,
 
-    var Backbone = require('backbone');
+        enabled: false,
+        // This is a special overide flag so that the two source interference panel works.
+        interferenceOverideEnabled: false,
 
-    var Vector2 = require('common/math/vector2');
+        listener: null
+    },
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+    initialize: function(attributes, options) {
+        this.referencePoint = new Vector2();
 
-    /**
-     * TODO: Make it actually play sounds like the original
-     */
-    var WavefrontOscillator = Backbone.Model.extend({
+        this.sound = T('sin');
+        this.sound.set({
+            frequency: Constants.DEFAULT_FREQUENCY,
+            mul: 0
+        });
+        this.sound.play();
 
-        defaults: {
-            frequency: null,
-            amplitude: null,
-            harmonicFactor: 1,
+        this.on('change:frequency', this.frequencyChanged);
+        this.on('change:amplitude', this.amplitudeChanged);
+        this.on('change:enabled',   this.enabledChanged);
+    },
 
-            enabled: false,
-            // This is a special overide flag so that the two source interference panel works.
-            interferenceOverideEnabled: false,
+    update: function(time, deltaTime) {
+        var listener = this.get('listener');
+        this.referencePoint.set(listener.get('position'));
+        var frequency = listener.getFrequencyHeard() * this.get('harmonicFactor');
+        var amplitude = listener.getAmplitudeHeard();
 
-            listener: null
-        },
+        if (amplitude < -1)
+            throw 'amplitude < -1';
 
-        initialize: function(attributes, options) {
-            this.referencePoint = new Vector2();
+        // PhET note: We never set the frequency to 0, because otherwise the oscillator
+        //   chokes. We need to make this assignment so that the following if() will test
+        //   false when frequency == 0.  Note that that frequencyDisplayFactor must be
+        //   used here, because the model uses a value for frequency that corresponds to
+        //   what will appear on the screen. It would be better if the frequency in the
+        //   model were accurate for the pitch of the sound, but I haven't figured out
+        //   how to make that work yet.
+        frequency = (frequency === 0) ? 0.1 : frequency * Constants.FREQUENCY_DISPLAY_FACTOR;
+        this.set('frequency', frequency);
+        this.set('amplitude', amplitude);
+    },
 
-            this.sound = T('sin');
-            this.sound.set({
-                frequency: Constants.DEFAULT_FREQUENCY,
-                mul: 0
-            });
-            this.sound.play();
+    play: function() {
+        this.sound.play();
+    },
 
-            this.on('change:frequency', this.frequencyChanged);
-            this.on('change:amplitude', this.amplitudeChanged);
-            this.on('change:enabled',   this.enabledChanged);
-        },
+    pause: function() {
+        this.sound.pause();
+    },
 
-        update: function(time, deltaTime) {
-            var listener = this.get('listener');
-            this.referencePoint.set(listener.get('position'));
-            var frequency = listener.getFrequencyHeard() * this.get('harmonicFactor');
-            var amplitude = listener.getAmplitudeHeard();
+    frequencyChanged: function(model, frequency) {
+        this.sound.set({ freq: frequency });
+    },
 
-            if (amplitude < -1)
-                throw 'amplitude < -1';
+    amplitudeChanged: function(model, amplitude) {
+        if (this.get('enabled'))
+            this.sound.set({ mul: amplitude });
+        else
+            this.sound.set({ mul: 0 });
+    },
 
-            // PhET note: We never set the frequency to 0, because otherwise the oscillator
-            //   chokes. We need to make this assignment so that the following if() will test
-            //   false when frequency == 0.  Note that that frequencyDisplayFactor must be
-            //   used here, because the model uses a value for frequency that corresponds to
-            //   what will appear on the screen. It would be better if the frequency in the
-            //   model were accurate for the pitch of the sound, but I haven't figured out
-            //   how to make that work yet.
-            frequency = (frequency === 0) ? 0.1 : frequency * Constants.FREQUENCY_DISPLAY_FACTOR;
-            this.set('frequency', frequency);
-            this.set('amplitude', amplitude);
-        },
+    enabledChanged: function(model, enabled) {
+        this.amplitudeChanged(this, this.get('amplitude'));
+    }
 
-        play: function() {
-            this.sound.play();
-        },
-
-        pause: function() {
-            this.sound.pause();
-        },
-
-        frequencyChanged: function(model, frequency) {
-            this.sound.set({ freq: frequency });
-        },
-
-        amplitudeChanged: function(model, amplitude) {
-            if (this.get('enabled'))
-                this.sound.set({ mul: amplitude });
-            else
-                this.sound.set({ mul: 0 });
-        },
-
-        enabledChanged: function(model, enabled) {
-            this.amplitudeChanged(this, this.get('amplitude'));
-        }
-
-    });
-
-    return WavefrontOscillator;
 });
+
+export default WavefrontOscillator;

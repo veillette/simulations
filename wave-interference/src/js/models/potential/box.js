@@ -1,56 +1,51 @@
 
-define(function(require) {
+import _ from 'underscore';
+import Potential from '../potential';
 
-	'use strict';
+/**
+ * Named after PhET's BarrierPotential with the flexibility of WallPotential
+ */
+var BoxPotential = function(options) {
 
-	var _         = require('underscore');
-	var Potential = require('../potential');
+    Potential.apply(this, [options]);
 
-	/**
-	 * Named after PhET's BarrierPotential with the flexibility of WallPotential
-	 */
-	var BoxPotential = function(options) {
+    // Default values
+    options = _.extend({
+        x: 0,
+        y: 0,
+        width: 2,
+        height: 2,
+        potentialValue: 100,
+        enabled: true
+    }, options);
 
-		Potential.apply(this, [options]);
+    this.x = options.x;
+    this.y = options.y;
 
-		// Default values
-		options = _.extend({
-			x: 0,
-			y: 0,
-			width: 2,
-			height: 2,
-			potentialValue: 100,
-			enabled: true
-		}, options);
+    this.width  = options.width;
+    this.height = options.height;
 
-		this.x = options.x;
-		this.y = options.y;
+    this.potentialValue = options.potentialValue;
 
-		this.width  = options.width;
-		this.height = options.height;
+    this.enabled = options.enabled;
+};
 
-		this.potentialValue = options.potentialValue;
+_.extend(BoxPotential.prototype, Potential.prototype, {
 
-		this.enabled = options.enabled;
-	};
+    /**
+     * If the point (x, y) lies within the box, it will
+     *   return the BoxPotential's potential value.
+     */
+    getPotential: function(x, y, time) {
+        if (!this.enabled)
+            return 0;
 
-	_.extend(BoxPotential.prototype, Potential.prototype, {
+        if (x >= this.x && y >= this.y && x <= this.x + this.width && y <= this.y + this.height)
+            return this.potentialValue;
+        else
+            return 0;
+    },
 
-		/**
-		 * If the point (x, y) lies within the box, it will
-		 *   return the BoxPotential's potential value.
-		 */
-		getPotential: function(x, y, time) {
-			if (!this.enabled)
-				return 0;
-
-			if (x >= this.x && y >= this.y && x <= this.x + this.width && y <= this.y + this.height)
-				return this.potentialValue;
-			else
-				return 0;
-		},
-
-	});
-
-	return BoxPotential;
 });
+
+export default BoxPotential;

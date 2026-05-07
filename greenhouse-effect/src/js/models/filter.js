@@ -1,34 +1,29 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+/**
+ *
+ */
+var Filter = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(Filter.prototype, {
 
     /**
-     *
+     * Returns whether or not a certain value passes
+     *   through the filter.
      */
-    var Filter = function() {};
+    passes: function(value) {},
 
     /**
-     * Instance functions/properties
+     * Returns whether or not a certain value gets absorbed
+     *   by the filter
      */
-    _.extend(Filter.prototype, {
+    absorbs: function(value) {
+        return !this.passes(value);
+    }
 
-        /**
-         * Returns whether or not a certain value passes
-         *   through the filter.
-         */
-        passes: function(value) {},
-
-        /**
-         * Returns whether or not a certain value gets absorbed
-         *   by the filter
-         */
-        absorbs: function(value) {
-            return !this.passes(value);
-        }
-
-    });
-
-    return Filter;
 });
+
+export default Filter;

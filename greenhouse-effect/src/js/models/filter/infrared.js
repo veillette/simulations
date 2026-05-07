@@ -1,32 +1,26 @@
-define(function (require) {
+import _ from 'underscore';
+import Filter from 'models/filter';
 
-    'use strict';
+/**
+ * This filter filters out infrared wavelengths
+ */
+var InfraredFilter = function() {
+    Filter.apply(this, arguments);
+};
 
-    var _ = require('underscore');
-
-    var Filter = require('models/filter');
+/**
+ * Instance functions/properties
+ */
+_.extend(InfraredFilter.prototype, Filter.prototype, {
 
     /**
-     * This filter filters out infrared wavelengths
+     * Returns whether or not a certain wavelength passes
+     *   through the filter.
      */
-    var InfraredFilter = function() {
-        Filter.apply(this, arguments);
-    };
+    passes: function(wavelength) {
+        return wavelength < 800E-9 || wavelength > 1500E-9;
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(InfraredFilter.prototype, Filter.prototype, {
-
-        /**
-         * Returns whether or not a certain wavelength passes
-         *   through the filter.
-         */
-        passes: function(wavelength) {
-            return wavelength < 800E-9 || wavelength > 1500E-9;
-        }
-
-    });
-
-    return InfraredFilter;
 });
+
+export default InfraredFilter;

@@ -1,42 +1,35 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import BoundsBouncePropagator from 'models/propagator/bounds-bounce';
 
-    'use strict';
+/**
+ *
+ */
+var WestBouncePropagator = function(xMin, distFromWall) {
+    this.xMin = xMin;
+    this.distFromWall = distFromWall;
 
-    var _ = require('underscore');
+    this._vec = new Vector2();
+};
 
-    var Vector2 = require('common/math/vector2');
+/**
+ * Instance functions/properties
+ */
+_.extend(WestBouncePropagator.prototype, BoundsBouncePropagator.prototype, {
 
-    var BoundsBouncePropagator = require('models/propagator/bounds-bounce');
+    isOutOfBounds: function(position) {
+        return position.x < this.xMin;
+    },
 
-    /**
-     *
-     */
-    var WestBouncePropagator = function(xMin, distFromWall) {
-        this.xMin = xMin;
-        this.distFromWall = distFromWall;
+    getPointAtBounds: function(oldPosition) {
+        return this._vec.set(this.xMin + this.distFromWall, oldPosition.y);
+    },
 
-        this._vec = new Vector2();
-    };
+    getNewVelocity: function(oldVelocity) {
+        var x = Math.abs(oldVelocity.x);
+        return this._vec.set(x, oldVelocity.y);
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(WestBouncePropagator.prototype, BoundsBouncePropagator.prototype, {
-
-        isOutOfBounds: function(position) {
-            return position.x < this.xMin;
-        },
-
-        getPointAtBounds: function(oldPosition) {
-            return this._vec.set(this.xMin + this.distFromWall, oldPosition.y);
-        },
-
-        getNewVelocity: function(oldVelocity) {
-            var x = Math.abs(oldVelocity.x);
-            return this._vec.set(x, oldVelocity.y);
-        }
-
-    });
-
-    return WestBouncePropagator;
 });
+
+export default WestBouncePropagator;

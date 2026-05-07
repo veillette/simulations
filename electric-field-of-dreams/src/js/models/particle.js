@@ -1,37 +1,31 @@
-define(function (require) {
+import _ from 'underscore';
+import MotionObject from 'common/models/motion-object';
 
-    'use strict';
+var Particle = MotionObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, MotionObject.prototype.defaults, {
+        charge: 1,
+        mass: 1
+    }),
 
-    var MotionObject = require('common/models/motion-object');
+    initialize: function(attributes, options) {
+        MotionObject.prototype.initialize.apply(this, arguments);
+    },
 
-    var Particle = MotionObject.extend({
+    /**
+     * Signals to listeners that this particle should enter a detached state.
+     */
+    detach: function() {
+        this.trigger('detach', this);
+    },
 
-        defaults: _.extend({}, MotionObject.prototype.defaults, {
-            charge: 1,
-            mass: 1
-        }),
+    /**
+     * Signals to listeners that this particle should leave its detached state.
+     */
+    attach: function() {
+        this.trigger('attach', this);
+    }
 
-        initialize: function(attributes, options) {
-            MotionObject.prototype.initialize.apply(this, arguments);
-        },
-
-        /**
-         * Signals to listeners that this particle should enter a detached state.
-         */
-        detach: function() {
-            this.trigger('detach', this);
-        },
-
-        /**
-         * Signals to listeners that this particle should leave its detached state.
-         */
-        attach: function() {
-            this.trigger('attach', this);
-        }
-
-    });
-
-    return Particle;
 });
+
+export default Particle;

@@ -1,60 +1,53 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/extensions';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
+var FILL_COLOR = Colors.parseHex(Constants.GlassPaneView.FILL_COLOR);
+var FILL_ALPHA = Constants.GlassPaneView.FILL_ALPHA;
 
-    'use strict';
-
-    var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-
-    var Constants = require('constants');
-    var FILL_COLOR = Colors.parseHex(Constants.GlassPaneView.FILL_COLOR);
-    var FILL_ALPHA = Constants.GlassPaneView.FILL_ALPHA;
+/**
+ * A view that represents a glass pane
+ */
+var GlassPaneView = PixiView.extend({
 
     /**
-     * A view that represents a glass pane
+     * Initializes the new GlassPaneView.
      */
-    var GlassPaneView = PixiView.extend({
+    initialize: function(options) {
+        this.initGraphics();
+        this.updateMVT(options.mvt);
+    },
 
-        /**
-         * Initializes the new GlassPaneView.
-         */
-        initialize: function(options) {
-            this.initGraphics();
-            this.updateMVT(options.mvt);
-        },
+    initGraphics: function() {
+        this.glassPane = new PIXI.Graphics();
+        this.displayObject.addChild(this.glassPane);
+    },
 
-        initGraphics: function() {
-            this.glassPane = new PIXI.Graphics();
-            this.displayObject.addChild(this.glassPane);
-        },
+    drawGlassPane: function() {
+        var bounds = this.model.get('bounds');
+        var viewRect = this.mvt.modelToView(bounds);
 
-        drawGlassPane: function() {
-            var bounds = this.model.get('bounds');
-            var viewRect = this.mvt.modelToView(bounds);
+        this.glassPane.beginFill(FILL_COLOR, FILL_ALPHA);
+        this.glassPane.drawRect(
+            viewRect.x,
+            viewRect.y - viewRect.h, // This is wrong, but for some reason it's necessary
+            viewRect.w,
+            viewRect.h
+        );
+        this.glassPane.endFill();
+    },
 
-            this.glassPane.beginFill(FILL_COLOR, FILL_ALPHA);
-            this.glassPane.drawRect(
-                viewRect.x,
-                viewRect.y - viewRect.h, // This is wrong, but for some reason it's necessary
-                viewRect.w,
-                viewRect.h
-            );
-            this.glassPane.endFill();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.drawGlassPane();
+    }
 
-            this.drawGlassPane();
-        }
-
-    });
-
-    return GlassPaneView;
 });
+
+export default GlassPaneView;

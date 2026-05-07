@@ -1,26 +1,21 @@
-define(function (require) {
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.Images = {
+    TANK:                  'tank.png',
+    TANK_LID:              'tank-lid.png',
+    HOSE_CONNECTOR:        'hose-connector.png',
+    PRESSURE_GAUGE:        'pressure-gauge.png',
+    PRESSURE_GAUGE_NEEDLE: 'pressure-gauge-needle.png',
+    PUMP_BASE:             'pump-base.png',
+    PUMP_HANDLE:           'pump-handle.png',
 
-    Assets.Path = 'img/';
+    FLAME:  'flame.png',
+    ICE:    'ice-cube-stack.png',
+    FINGER: 'finger-4.png'
+};
 
-    Assets.Images = {
-        TANK:                  'tank.png',
-        TANK_LID:              'tank-lid.png',
-        HOSE_CONNECTOR:        'hose-connector.png',
-        PRESSURE_GAUGE:        'pressure-gauge.png',
-        PRESSURE_GAUGE_NEEDLE: 'pressure-gauge-needle.png',
-        PUMP_BASE:             'pump-base.png',
-        PUMP_HANDLE:           'pump-handle.png',
+Assets.SpriteSheets = {};
 
-        FLAME:  'flame.png',
-        ICE:    'ice-cube-stack.png',
-        FINGER: 'finger-4.png'
-    };
-
-    Assets.SpriteSheets = {};
-
-    return Assets;
-});
+export default Assets;

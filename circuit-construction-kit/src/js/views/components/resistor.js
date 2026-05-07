@@ -1,158 +1,148 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Colors from 'common/colors/colors';
+import RectangularComponentView from 'views/components/rectangular';
+import Constants from 'constants';
+import Assets from 'assets';
+var BAND_COLORS = _.map(Constants.ResistorView.BAND_COLORS, function(color) {
+    return Colors.parseHex(color);
+});
 
-    'use strict';
+/**
+ * A view that represents a resistor
+ */
+var ResistorView = RectangularComponentView.extend({
 
-    var _ = require('underscore');
+    imagePath:     Assets.Images.RESISTOR,
+    maskImagePath: Assets.Images.RESISTOR_MASK,
 
-    var PIXI = require('pixi');
+    schematicImagePath:     Assets.Images.SCHEMATIC_RESISTOR,
+    schematicMaskImagePath: Assets.Images.SCHEMATIC_RESISTOR_MASK,
 
-    var Colors      = require('common/colors/colors');
-
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Constants = require('constants');
-    var BAND_COLORS = _.map(Constants.ResistorView.BAND_COLORS, function(color) {
-        return Colors.parseHex(color);
-    });
-
-    var Assets = require('assets');
+    contextMenuContent:
+        '<li><a class="change-resistance-btn"><span class="fa fa-bolt"></span>&nbsp; Change Resistance</a></li>' +
+        '<li><a class="show-value-btn"><span class="fa fa-square-o"></span>&nbsp; Show Value</a></li>' +
+        '<hr>' +
+        RectangularComponentView.prototype.contextMenuContent,
 
     /**
-     * A view that represents a resistor
+     * Initializes the new ResistorView.
      */
-    var ResistorView = RectangularComponentView.extend({
+    initialize: function(options) {
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
 
-        imagePath:     Assets.Images.RESISTOR,
-        maskImagePath: Assets.Images.RESISTOR_MASK,
+        this.listenTo(this.model, 'change:resistance', this.resistanceChanged);
+    },
 
-        schematicImagePath:     Assets.Images.SCHEMATIC_RESISTOR,
-        schematicMaskImagePath: Assets.Images.SCHEMATIC_RESISTOR_MASK,
+    initGraphics: function() {
+        this.colorBands = new PIXI.Graphics();
 
-        contextMenuContent:
-            '<li><a class="change-resistance-btn"><span class="fa fa-bolt"></span>&nbsp; Change Resistance</a></li>' +
-            '<li><a class="show-value-btn"><span class="fa fa-square-o"></span>&nbsp; Show Value</a></li>' +
-            '<hr>' +
-            RectangularComponentView.prototype.contextMenuContent,
+        RectangularComponentView.prototype.initGraphics.apply(this, arguments);
 
-        /**
-         * Initializes the new ResistorView.
-         */
-        initialize: function(options) {
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
+        this.displayObject.addChild(this.colorBands);
+        this.colorBands.y = -this.getBandHeight() / 2;
+        this.drawColorBands();
+    },
 
-            this.listenTo(this.model, 'change:resistance', this.resistanceChanged);
-        },
+    initContextMenu: function($contextMenu) {
+        RectangularComponentView.prototype.initContextMenu.apply(this, arguments);
 
-        initGraphics: function() {
-            this.colorBands = new PIXI.Graphics();
+        this.initShowValueMenuItem($contextMenu);
+        this.initChangeResistanceMenuItem($contextMenu);
+    },
 
-            RectangularComponentView.prototype.initGraphics.apply(this, arguments);
+    showResistanceControls: function(event) {
+        this.model.set('selected', false);
 
-            this.displayObject.addChild(this.colorBands);
-            this.colorBands.y = -this.getBandHeight() / 2;
-            this.drawColorBands();
-        },
+        RectangularComponentView.prototype.showResistanceControls.apply(this, arguments);
+    },
 
-        initContextMenu: function($contextMenu) {
-            RectangularComponentView.prototype.initContextMenu.apply(this, arguments);
+    getBandHeight: function() {
+        return Math.floor((this.sprite.height - 1) / 2) * 2;
+    },
 
-            this.initShowValueMenuItem($contextMenu);
-            this.initChangeResistanceMenuItem($contextMenu);
-        },
+    drawColorBands: function() {
+        var height = this.getBandHeight();
+        var width = 24;
+        var startX = 90;
+        var spacing = (340 - 90 * 2 - 24) / 3;
 
-        showResistanceControls: function(event) {
-            this.model.set('selected', false);
+        var colors = this.getColors();
+        var graphics = this.colorBands;
+        graphics.clear();
 
-            RectangularComponentView.prototype.showResistanceControls.apply(this, arguments);
-        },
-
-        getBandHeight: function() {
-            return Math.floor((this.sprite.height - 1) / 2) * 2;
-        },
-
-        drawColorBands: function() {
-            var height = this.getBandHeight();
-            var width = 24;
-            var startX = 90;
-            var spacing = (340 - 90 * 2 - 24) / 3;
-
-            var colors = this.getColors();
-            var graphics = this.colorBands;
-            graphics.clear();
-
-            for (var i = 0; i < colors.length; i++) {
-                graphics.beginFill(colors[i], 1);
-                graphics.drawRect(startX + spacing * i, 0, width, height);
-                graphics.endFill();
-            }
-        },
-
-        getColors: function() {
-            var resistance = this.model.get('resistance');
-            var firstDigit;
-            var secondDigit;
-
-            // First 2 digits for value, third digit for scale.
-            if (resistance < 10) {
-                return [
-                    BAND_COLORS[0],
-                    this.digitToColor(resistance),
-                    BAND_COLORS[0],
-                    BAND_COLORS[4]
-                ];
-            }
-            else if (resistance < 100) {
-                firstDigit  = Math.floor(resistance / 10);
-                secondDigit = Math.floor(resistance % 10);
-                return [
-                    this.digitToColor(firstDigit),
-                    this.digitToColor(secondDigit),
-                    BAND_COLORS[0],
-                    BAND_COLORS[4]
-                ];
-            }
-            else {
-                var s = '' + resistance;
-                firstDigit  = parseInt(s.charAt(0));
-                secondDigit = parseInt(s.charAt(1));
-                var factor = s.length - 2;
-
-                var predicted = ((firstDigit * 10 + secondDigit) * Math.pow(10, factor));
-                var offBy = (resistance - predicted) / predicted * 100;
-
-                var colors = [
-                    this.digitToColor(firstDigit),
-                    this.digitToColor(secondDigit),
-                    this.digitToColor(factor)
-                ];
-
-                if (offBy < 5)
-                    colors.push(BAND_COLORS[4]);
-                else if (offBy < 20)
-                    colors.push(BAND_COLORS[8]);
-
-                return colors;
-            }
-        },
-
-        digitToColor: function(digit) {
-            if (digit < 0 || digit >= 10)
-                throw 'Out of range: ' + digit;
-
-            return BAND_COLORS[digit];
-        },
-
-        resistanceChanged: function(model, resistance) {
-            this.drawColorBands();
-        },
-
-        schematicModeChanged: function(circuit, schematic) {
-            RectangularComponentView.prototype.schematicModeChanged.apply(this, arguments);
-
-            this.colorBands.visible = !schematic;
+        for (var i = 0; i < colors.length; i++) {
+            graphics.beginFill(colors[i], 1);
+            graphics.drawRect(startX + spacing * i, 0, width, height);
+            graphics.endFill();
         }
+    },
 
-    }, Constants.ResistorView);
+    getColors: function() {
+        var resistance = this.model.get('resistance');
+        var firstDigit;
+        var secondDigit;
 
-    return ResistorView;
-});
+        // First 2 digits for value, third digit for scale.
+        if (resistance < 10) {
+            return [
+                BAND_COLORS[0],
+                this.digitToColor(resistance),
+                BAND_COLORS[0],
+                BAND_COLORS[4]
+            ];
+        }
+        else if (resistance < 100) {
+            firstDigit  = Math.floor(resistance / 10);
+            secondDigit = Math.floor(resistance % 10);
+            return [
+                this.digitToColor(firstDigit),
+                this.digitToColor(secondDigit),
+                BAND_COLORS[0],
+                BAND_COLORS[4]
+            ];
+        }
+        else {
+            var s = '' + resistance;
+            firstDigit  = parseInt(s.charAt(0));
+            secondDigit = parseInt(s.charAt(1));
+            var factor = s.length - 2;
+
+            var predicted = ((firstDigit * 10 + secondDigit) * Math.pow(10, factor));
+            var offBy = (resistance - predicted) / predicted * 100;
+
+            var colors = [
+                this.digitToColor(firstDigit),
+                this.digitToColor(secondDigit),
+                this.digitToColor(factor)
+            ];
+
+            if (offBy < 5)
+                colors.push(BAND_COLORS[4]);
+            else if (offBy < 20)
+                colors.push(BAND_COLORS[8]);
+
+            return colors;
+        }
+    },
+
+    digitToColor: function(digit) {
+        if (digit < 0 || digit >= 10)
+            throw 'Out of range: ' + digit;
+
+        return BAND_COLORS[digit];
+    },
+
+    resistanceChanged: function(model, resistance) {
+        this.drawColorBands();
+    },
+
+    schematicModeChanged: function(circuit, schematic) {
+        RectangularComponentView.prototype.schematicModeChanged.apply(this, arguments);
+
+        this.colorBands.visible = !schematic;
+    }
+
+}, Constants.ResistorView);
+
+export default ResistorView;

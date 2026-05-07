@@ -1,23 +1,17 @@
-define(function (require) {
+import DraggableArrowView from 'common/v3/pixi/view/arrow-draggable';
 
-  'use strict';
+var SumVectorXViewModel = DraggableArrowView.ArrowViewModel.extend({
+  defaults: {
+    originX: 0,
+    originY: 0,
+    targetX: 0,
+    targetY: 0
+  },
 
-  var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
+  initialize: function() {
 
-  var SumVectorXViewModel = DraggableArrowView.ArrowViewModel.extend({
-    defaults: {
-      originX: 0,
-      originY: 0,
-      targetX: 0,
-      targetY: 0
-    },
-
-    initialize: function() {
-
-    }
-
-  });
-
-  return SumVectorXViewModel;
+  }
 
 });
+
+export default SumVectorXViewModel;

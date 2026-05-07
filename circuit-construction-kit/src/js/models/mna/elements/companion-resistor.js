@@ -1,25 +1,20 @@
-define(function (require) {
+import MNAElement from 'models/mna/elements/element';
 
-    'use strict';
-
-    var MNAElement = require('models/mna/elements/element');
+/**
+ * Battery model for the MNA circuit
+ */
+var MNACompanionResistor = MNAElement.extend({
 
     /**
-     * Battery model for the MNA circuit
+     * Initializes the MNACompanionResistor's properties with provided initial values
      */
-    var MNACompanionResistor = MNAElement.extend({
+    init: function(node0, node1, resistance) {
+        MNAElement.prototype.init.apply(this, [null, node0, node1]);
 
-        /**
-         * Initializes the MNACompanionResistor's properties with provided initial values
-         */
-        init: function(node0, node1, resistance) {
-            MNAElement.prototype.init.apply(this, [null, node0, node1]);
+        this.resistance = resistance;
+    }
 
-            this.resistance = resistance;
-        }
-
-    });
-
-
-    return MNACompanionResistor;
 });
+
+
+export default MNACompanionResistor;

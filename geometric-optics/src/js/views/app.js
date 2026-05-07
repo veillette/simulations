@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import GeometricOpticsSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var TemplateAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var GeometricOpticsSimView = require('views/sim');
+    simViewConstructors: [
+        GeometricOpticsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var TemplateAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            GeometricOpticsSimView
-        ]
-
-    });
-
-    return TemplateAppView;
 });
+
+export default TemplateAppView;

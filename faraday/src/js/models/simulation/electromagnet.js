@@ -1,121 +1,111 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import FaradaySimulation from 'models/simulation';
+import Electromagnet from 'models/magnet/electromagnet';
+import Compass from 'models/compass';
+import FieldMeter from 'models/field-meter';
+import SourceCoil from 'models/coil/source';
+import ACPowerSupply from 'models/current-source/ac-power-supply';
+import Battery from 'models/current-source/battery';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Simulation model for the bar magnet tab
+ */
+var ElectromagnetSimulation = FaradaySimulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
-    var FaradaySimulation = require('models/simulation');
-    var Electromagnet     = require('models/magnet/electromagnet');
-    var Compass           = require('models/compass');
-    var FieldMeter        = require('models/field-meter');
-    var SourceCoil        = require('models/coil/source');
-    var ACPowerSupply     = require('models/current-source/ac-power-supply');
-    var Battery           = require('models/current-source/battery');
+    }),
+
+    initialize: function(attributes, options) {
+        FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        FaradaySimulation.prototype.initComponents.apply(this, arguments);
 
-    /**
-     * Simulation model for the bar magnet tab
-     */
-    var ElectromagnetSimulation = FaradaySimulation.extend({
+        // Battery
+        this.battery = new Battery({
+            maxVoltage: Constants.BATTERY_VOLTAGE_MAX,
+            amplitude: ElectromagnetSimulation.BATTERY_AMPLITUDE,
+            enabled: true
+        });
 
-        defaults: _.extend(FaradaySimulation.prototype.defaults, {
+        // AC Power Supply
+        this.acPowerSupply = new ACPowerSupply({
+            maxVoltage: Constants.AC_VOLTAGE_MAX,
+            maxAmplitude: ElectromagnetSimulation.AC_MAX_AMPLITUDE,
+            frequency: ElectromagnetSimulation.AC_FREQUENCY,
+            enabled: false
+        });
 
-        }),
+        // Source Coil
+        this.sourceCoil = new SourceCoil({
+            numberOfLoops: ElectromagnetSimulation.ELECTROMAGNET_NUMBER_OF_LOOPS,
+            radius:        ElectromagnetSimulation.ELECTROMAGNET_LOOP_RADIUS,
+            direction:     ElectromagnetSimulation.ELECTROMAGNET_DIRECTION
+        });
 
-        initialize: function(attributes, options) {
-            FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+        // Electromagnet
+        var currentSource;
+        if (this.battery.get('enabled'))
+            currentSource = this.battery;
+        else if (this.acPowerSupply.get('enabled'))
+            currentSource = this.acPowerSupply;
 
-        },
+        this.electromagnet = new Electromagnet({
+            sourceCoilModel: this.sourceCoil,
+            currentSource: currentSource,
+            maxStrength: Constants.ELECTROMAGNET_STRENGTH_MAX,
+            position: ElectromagnetSimulation.ELECTROMAGNET_LOCATION,
+            direction: ElectromagnetSimulation.ELECTROMAGNET_DIRECTION
+        });
+        // Do NOT set the strength! -- strength will be set based on the source coil model.
+        // Do NOT set the size! -- size will be based on the source coil model.
+        this.electromagnet.update();
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            FaradaySimulation.prototype.initComponents.apply(this, arguments);
+        // Compass model
+        this.compass = new Compass({
+            position: ElectromagnetSimulation.COMPASS_LOCATION,
+            behavior: Compass.INCREMENTAL_BEHAVIOR
+        }, {
+            magnetModel: this.electromagnet
+        });
 
-            // Battery
-            this.battery = new Battery({
-                maxVoltage: Constants.BATTERY_VOLTAGE_MAX,
-                amplitude: ElectromagnetSimulation.BATTERY_AMPLITUDE,
-                enabled: true
-            });
+        // Field Meter
+        this.fieldMeter = new FieldMeter({
+            position: ElectromagnetSimulation.FIELD_METER_LOCATION,
+            enabled: false
+        }, {
+            magnetModel: this.electromagnet
+        });
+    },
 
-            // AC Power Supply
-            this.acPowerSupply = new ACPowerSupply({
-                maxVoltage: Constants.AC_VOLTAGE_MAX,
-                maxAmplitude: ElectromagnetSimulation.AC_MAX_AMPLITUDE,
-                frequency: ElectromagnetSimulation.AC_FREQUENCY,
-                enabled: false
-            });
+    resetComponents: function() {
+        FaradaySimulation.prototype.resetComponents.apply(this, arguments);
 
-            // Source Coil
-            this.sourceCoil = new SourceCoil({
-                numberOfLoops: ElectromagnetSimulation.ELECTROMAGNET_NUMBER_OF_LOOPS,
-                radius:        ElectromagnetSimulation.ELECTROMAGNET_LOOP_RADIUS,
-                direction:     ElectromagnetSimulation.ELECTROMAGNET_DIRECTION
-            });
+        this.battery.reset();
+        this.acPowerSupply.reset();
+        this.sourceCoil.reset();
+        this.electromagnet.reset();
+        this.compass.reset();
+        this.fieldMeter.reset();
 
-            // Electromagnet
-            var currentSource;
-            if (this.battery.get('enabled'))
-                currentSource = this.battery;
-            else if (this.acPowerSupply.get('enabled'))
-                currentSource = this.acPowerSupply;
+        this.electromagnet.update();
+    },
 
-            this.electromagnet = new Electromagnet({
-                sourceCoilModel: this.sourceCoil,
-                currentSource: currentSource,
-                maxStrength: Constants.ELECTROMAGNET_STRENGTH_MAX,
-                position: ElectromagnetSimulation.ELECTROMAGNET_LOCATION,
-                direction: ElectromagnetSimulation.ELECTROMAGNET_DIRECTION
-            });
-            // Do NOT set the strength! -- strength will be set based on the source coil model.
-            // Do NOT set the size! -- size will be based on the source coil model.
-            this.electromagnet.update();
+    _update: function(time, deltaTime) {
+        FaradaySimulation.prototype._update.apply(this, arguments);
 
-            // Compass model
-            this.compass = new Compass({
-                position: ElectromagnetSimulation.COMPASS_LOCATION,
-                behavior: Compass.INCREMENTAL_BEHAVIOR
-            }, {
-                magnetModel: this.electromagnet
-            });
+        this.compass.update(time, deltaTime);
+        this.fieldMeter.update(time, deltaTime);
+        this.acPowerSupply.update(time, deltaTime);
+    }
 
-            // Field Meter
-            this.fieldMeter = new FieldMeter({
-                position: ElectromagnetSimulation.FIELD_METER_LOCATION,
-                enabled: false
-            }, {
-                magnetModel: this.electromagnet
-            });
-        },
+}, Constants.ElectromagnetSimulation);
 
-        resetComponents: function() {
-            FaradaySimulation.prototype.resetComponents.apply(this, arguments);
-
-            this.battery.reset();
-            this.acPowerSupply.reset();
-            this.sourceCoil.reset();
-            this.electromagnet.reset();
-            this.compass.reset();
-            this.fieldMeter.reset();
-
-            this.electromagnet.update();
-        },
-
-        _update: function(time, deltaTime) {
-            FaradaySimulation.prototype._update.apply(this, arguments);
-
-            this.compass.update(time, deltaTime);
-            this.fieldMeter.update(time, deltaTime);
-            this.acPowerSupply.update(time, deltaTime);
-        }
-
-    }, Constants.ElectromagnetSimulation);
-
-    return ElectromagnetSimulation;
-});
+export default ElectromagnetSimulation;

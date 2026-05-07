@@ -1,27 +1,19 @@
-define(function (require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import WaterSimView from './sim/water';
+import SoundSimView from './sim/sound';
+import LightSimView from './sim/light';
+import 'styles/font-awesome.less';
 
-	'use strict';
+var WaveInterferenceAppView = PixiAppView.extend({
 
+    assets: [],
 
-	var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        WaterSimView,
+        SoundSimView,
+        LightSimView
+    ]
 
-	var WaterSimView = require('./sim/water');
-	var SoundSimView = require('./sim/sound');
-	var LightSimView = require('./sim/light');
-
-    require('less!styles/font-awesome');
-
-    var WaveInterferenceAppView = PixiAppView.extend({
-
-        assets: [],
-
-        simViewConstructors: [
-            WaterSimView,
-            SoundSimView,
-            LightSimView
-        ]
-
-    });
-
-	return WaveInterferenceAppView;
 });
+
+export default WaveInterferenceAppView;

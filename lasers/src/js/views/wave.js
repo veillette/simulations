@@ -1,91 +1,84 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/extensions';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
 
-    'use strict';
-
-    var PIXI = require('pixi');
-
-                   require('common/v3/pixi/extensions');
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
-
-    var Constants = require('constants');
+/**
+ * Draws a wave
+ */
+var WaveView = PixiView.extend({
 
     /**
-     * Draws a wave
+     * Overrides PixiView's initializeDisplayObject function
      */
-    var WaveView = PixiView.extend({
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
+        this.origin = options.origin;
+        this.extent = options.extent;
+        this.lambda = options.lambda;
+        this.period = options.period;
+        this.amplitude = options.amplitude;
+        this.tube = options.tube;
+        this.color = options.color;
+        this.thickness = 2;
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
-            this.origin = options.origin;
-            this.extent = options.extent;
-            this.lambda = options.lambda;
-            this.period = options.period;
-            this.amplitude = options.amplitude;
-            this.tube = options.tube;
-            this.color = options.color;
-            this.thickness = 2;
+        // Steps in x for which each piece-wise segment of the standing wave is computed
+        this.dx = 1;
+        this.elapsedTime = 0;
 
-            // Steps in x for which each piece-wise segment of the standing wave is computed
-            this.dx = 1;
-            this.elapsedTime = 0;
+        // Cached objects
+        this._origin = new Vector2();
 
-            // Cached objects
-            this._origin = new Vector2();
+        this.updateMVT(options.mvt);
+    },
 
-            this.updateMVT(options.mvt);
-        },
+    setColor: function(color) {
+        this.color = color;
+    },
 
-        setColor: function(color) {
-            this.color = color;
-        },
+    setAmplitude: function(amplitude) {
+        this.amplitude = amplitude;
+    },
 
-        setAmplitude: function(amplitude) {
-            this.amplitude = amplitude;
-        },
+    clear: function() {
+        this.displayObject.clear();
+    },
 
-        clear: function() {
-            this.displayObject.clear();
-        },
+    draw: function() {
+        var extent = this.mvt.modelToViewDeltaX(this.extent);
+        this.numPoints = Math.floor(extent / this.dx) + 1;
+        this.displayObject.lineStyle(this.thickness, Colors.parseHex(this.color), 1);
+    },
 
-        draw: function() {
-            var extent = this.mvt.modelToViewDeltaX(this.extent);
-            this.numPoints = Math.floor(extent / this.dx) + 1;
-            this.displayObject.lineStyle(this.thickness, Colors.parseHex(this.color), 1);
-        },
+    /**
+     * Updates the model-view-transform and anything that relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.draw();
+    },
 
-            this.draw();
-        },
-
-        update: function(time, deltaTime, paused) {
-            if (this.simulation.updated()) {
-                this.elapsedTime += Constants.DT;
-                this.clear();
-                if (this.amplitude !== 0)
-                    this.draw();
-            }
-        },
-
-        getMaxInternalAmplitude: function() {
-            return Constants.LASING_THRESHOLD;
+    update: function(time, deltaTime, paused) {
+        if (this.simulation.updated()) {
+            this.elapsedTime += Constants.DT;
+            this.clear();
+            if (this.amplitude !== 0)
+                this.draw();
         }
+    },
 
-    });
+    getMaxInternalAmplitude: function() {
+        return Constants.LASING_THRESHOLD;
+    }
 
-    return WaveView;
 });
+
+export default WaveView;

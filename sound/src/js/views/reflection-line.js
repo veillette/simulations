@@ -1,103 +1,97 @@
 
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
 
-    'use strict';
+var DEG_TO_RAD = Math.PI / 180;
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+/**
+ * A view that draws a line of reflection
+ */
+var ReflectionLine = PixiView.extend({
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
+    initialize: function(options) {
+        options = _.extend({
+            position: {
+                x: 200,
+                y: 400
+            },
+            length: 400,
+            thickness: 6,
+            color: '#21366b',
+            angle: 45
+        }, options);
 
-    var DEG_TO_RAD = Math.PI / 180;
+        this.displayObject.x = options.position.x;
+        this.displayObject.y = options.position.y;
 
-    /**
-     * A view that draws a line of reflection
-     */
-    var ReflectionLine = PixiView.extend({
+        this.length = options.length;
+        this.thickness = options.thickness;
+        this.color = Colors.parseHex(options.color);
 
-        initialize: function(options) {
-            options = _.extend({
-                position: {
-                    x: 200,
-                    y: 400
-                },
-                length: 400,
-                thickness: 6,
-                color: '#21366b',
-                angle: 45
-            }, options);
+        this._midpoint = new Vector2();
 
-            this.displayObject.x = options.position.x;
-            this.displayObject.y = options.position.y;
+        this.initGraphics();
 
-            this.length = options.length;
-            this.thickness = options.thickness;
-            this.color = Colors.parseHex(options.color);
+        // Set default angle
+        this.setAngle(options.angle);
+    },
 
-            this._midpoint = new Vector2();
+    initGraphics: function() {
+        this.line = new PIXI.Graphics();
 
-            this.initGraphics();
+        this.displayObject.addChild(this.line);
 
-            // Set default angle
-            this.setAngle(options.angle);
-        },
+        this.drawLine();
+    },
 
-        initGraphics: function() {
-            this.line = new PIXI.Graphics();
+    drawLine: function(){
+        this.line.clear();
 
-            this.displayObject.addChild(this.line);
+        // Draw a line going horizontally to the right.
+        this.line.lineStyle(this.thickness, this.color, 1);
+        this.line.moveTo(0, 0);
+        this.line.lineTo(this.length, 0);
+    },
 
-            this.drawLine();
-        },
+    setX: function(x) {
+        this.displayObject.x = x;
+    },
 
-        drawLine: function(){
-            this.line.clear();
+    setAngle: function(degrees) {
+        this.displayObject.rotation = -degrees * DEG_TO_RAD;
+    },
 
-            // Draw a line going horizontally to the right.
-            this.line.lineStyle(this.thickness, this.color, 1);
-            this.line.moveTo(0, 0);
-            this.line.lineTo(this.length, 0);
-        },
+    getMidPoint: function() {
+        return this._midpoint.set(
+            this.displayObject.x + Math.cos(this.displayObject.rotation) * this.length / 2,
+            this.displayObject.y + Math.sin(this.displayObject.rotation) * this.length / 2
+        );
+    },
 
-        setX: function(x) {
-            this.displayObject.x = x;
-        },
+    getAngle: function() {
+        return this.displayObject.rotation;
+    },
 
-        setAngle: function(degrees) {
-            this.displayObject.rotation = -degrees * DEG_TO_RAD;
-        },
+    getLeftSideMaskFunction: function(minX, stageWidth, stageHeight) {
+        var x = this.displayObject.x;
+        var y = this.displayObject.y;
+        var topPointX = x + Math.cos(this.displayObject.rotation) * this.length;
+        var topPointY = y + Math.sin(this.displayObject.rotation) * this.length;
 
-        getMidPoint: function() {
-            return this._midpoint.set(
-                this.displayObject.x + Math.cos(this.displayObject.rotation) * this.length / 2,
-                this.displayObject.y + Math.sin(this.displayObject.rotation) * this.length / 2
-            );
-        },
+        return function(ctx) {
+            ctx.beginPath();
+            ctx.moveTo(minX, 0);
+            ctx.lineTo(minX, stageHeight);
+            ctx.lineTo(x, y);
+            ctx.lineTo(topPointX, topPointY);
+            ctx.lineTo(topPointX, -20);
+            ctx.clip();
+        };
+    }
 
-        getAngle: function() {
-            return this.displayObject.rotation;
-        },
-
-        getLeftSideMaskFunction: function(minX, stageWidth, stageHeight) {
-            var x = this.displayObject.x;
-            var y = this.displayObject.y;
-            var topPointX = x + Math.cos(this.displayObject.rotation) * this.length;
-            var topPointY = y + Math.sin(this.displayObject.rotation) * this.length;
-
-            return function(ctx) {
-                ctx.beginPath();
-                ctx.moveTo(minX, 0);
-                ctx.lineTo(minX, stageHeight);
-                ctx.lineTo(x, y);
-                ctx.lineTo(topPointX, topPointY);
-                ctx.lineTo(topPointX, -20);
-                ctx.clip();
-            };
-        }
-
-    });
-
-    return ReflectionLine;
 });
+
+export default ReflectionLine;

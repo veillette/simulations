@@ -1,165 +1,157 @@
-define(function(require) {
+import _ from 'underscore';
+import IntroSimulation from 'models/simulation/intro';
+import BendingLightSimView from 'views/sim';
+import IntroSceneView from 'views/scene/intro';
+import MediumControlsView from 'views/medium-controls';
+import LaserControlsView from 'views/laser-controls';
+import ToolboxView from 'views/toolbox';
+import Assets from 'assets';
+import simHtml from 'templates/sim/intro.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var IntroSimView = BendingLightSimView.extend({
 
-    var _        = require('underscore');
+    template: _.template(simHtml),
 
-    var IntroSimulation     = require('models/simulation/intro');
-    var BendingLightSimView = require('views/sim');
-    var IntroSceneView      = require('views/scene/intro');
-    var MediumControlsView  = require('views/medium-controls');
-    var LaserControlsView   = require('views/laser-controls');
-    var ToolboxView         = require('views/toolbox');
+    events: _.extend(BendingLightSimView.prototype.events, {
 
-    var Assets = require('assets');
+    }),
 
-    var simHtml = require('text!templates/sim/intro.html');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Intro',
+            name:  'intro'
+        }, options);
+
+        BendingLightSimView.prototype.initialize.apply(this, [ options ]);
+
+        this.initMediumControls();
+        this.initLaserControls();
+    },
 
     /**
-     *
+     * Initializes the Simulation.
      */
-    var IntroSimView = BendingLightSimView.extend({
+    initSimulation: function() {
+        this.simulation = new IntroSimulation();
+    },
 
-        template: _.template(simHtml),
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new IntroSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        events: _.extend(BendingLightSimView.prototype.events, {
+    initMediumControls: function() {
+        this.topMediumControlsView = new MediumControlsView({
+            model: this.simulation.topMedium,
+            simulation: this.simulation,
+            name: 'top'
+        });
 
-        }),
+        this.bottomMediumControlsView = new MediumControlsView({
+            model: this.simulation.bottomMedium,
+            simulation: this.simulation,
+            name: 'bottom'
+        });
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Intro',
-                name:  'intro'
-            }, options);
+    initLaserControls: function() {
+        this.laserControlsView = new LaserControlsView({
+            model: this.simulation.laser,
+            simulation: this.simulation,
+            showWavelengthControls: false
+        });
+    },
 
-            BendingLightSimView.prototype.initialize.apply(this, [ options ]);
+    initToolbox: function() {
+        this.toolboxView = new ToolboxView(this.getToolboxConfig());
+    },
 
-            this.initMediumControls();
-            this.initLaserControls();
-        },
+    getToolboxConfig: function() {
+        var sceneView = this.sceneView;
+        var simulation = this.simulation;
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new IntroSimulation();
-        },
-
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new IntroSceneView({
-                simulation: this.simulation
-            });
-        },
-
-        initMediumControls: function() {
-            this.topMediumControlsView = new MediumControlsView({
-                model: this.simulation.topMedium,
-                simulation: this.simulation,
-                name: 'top'
-            });
-
-            this.bottomMediumControlsView = new MediumControlsView({
-                model: this.simulation.bottomMedium,
-                simulation: this.simulation,
-                name: 'bottom'
-            });
-        },
-
-        initLaserControls: function() {
-            this.laserControlsView = new LaserControlsView({
-                model: this.simulation.laser,
-                simulation: this.simulation,
-                showWavelengthControls: false
-            });
-        },
-
-        initToolbox: function() {
-            this.toolboxView = new ToolboxView(this.getToolboxConfig());
-        },
-
-        getToolboxConfig: function() {
-            var sceneView = this.sceneView;
-            var simulation = this.simulation;
-
-            return {
-                title: 'Toolbox',
-                tools: {
-                    protractor: {
-                        title: 'Protractor',
-                        label: '',
-                        img: Assets.Image(Assets.Images.PROTRACTOR),
-                        activate: function() {
-                            sceneView.showProtractor();
-                        },
-                        deactivate: function() {
-                            sceneView.hideProtractor();
-                        }
+        return {
+            title: 'Toolbox',
+            tools: {
+                protractor: {
+                    title: 'Protractor',
+                    label: '',
+                    img: Assets.Image(Assets.Images.PROTRACTOR),
+                    activate: function() {
+                        sceneView.showProtractor();
                     },
-                    intensityMeter: {
-                        title: 'Intensity Meter',
-                        label: '',
-                        img: sceneView.getIntensityMeterIcon(),
-                        activate: function() {
-                            simulation.intensityMeter.set('enabled', true);
-                        },
-                        deactivate: function() {
-                            simulation.intensityMeter.set('enabled', false);
-                        }
-                    },
-                    normal: {
-                        title: 'Normal Line',
-                        label: 'Normal Line',
-                        img: sceneView.getNormalLineIcon(),
-                        activate: function() {
-                            sceneView.showNormal();
-                        },
-                        deactivate: function() {
-                            sceneView.hideNormal();
-                        },
-                        startActive: true
+                    deactivate: function() {
+                        sceneView.hideProtractor();
                     }
+                },
+                intensityMeter: {
+                    title: 'Intensity Meter',
+                    label: '',
+                    img: sceneView.getIntensityMeterIcon(),
+                    activate: function() {
+                        simulation.intensityMeter.set('enabled', true);
+                    },
+                    deactivate: function() {
+                        simulation.intensityMeter.set('enabled', false);
+                    }
+                },
+                normal: {
+                    title: 'Normal Line',
+                    label: 'Normal Line',
+                    img: sceneView.getNormalLineIcon(),
+                    activate: function() {
+                        sceneView.showNormal();
+                    },
+                    deactivate: function() {
+                        sceneView.hideNormal();
+                    },
+                    startActive: true
                 }
-            };
-        },
+            }
+        };
+    },
 
-        /**
-         * Resets the sim and options
-         */
-        reset: function() {
-            BendingLightSimView.prototype.reset.apply(this);
+    /**
+     * Resets the sim and options
+     */
+    reset: function() {
+        BendingLightSimView.prototype.reset.apply(this);
 
-            this.toolboxView.reset();
-            this.laserControlsView.reset();
-        },
+        this.toolboxView.reset();
+        this.laserControlsView.reset();
+    },
 
-        render: function() {
-            BendingLightSimView.prototype.render.apply(this);
+    render: function() {
+        BendingLightSimView.prototype.render.apply(this);
 
-            this.initToolbox();
+        this.initToolbox();
 
-            this.topMediumControlsView.render();
-            this.bottomMediumControlsView.render();
-            this.laserControlsView.render();
-            this.toolboxView.render();
+        this.topMediumControlsView.render();
+        this.bottomMediumControlsView.render();
+        this.laserControlsView.render();
+        this.toolboxView.render();
 
-            this.$el.append(this.topMediumControlsView.el);
-            this.$el.append(this.bottomMediumControlsView.el);
-            this.$el.append(this.laserControlsView.el);
-            this.$el.append(this.toolboxView.el);
+        this.$el.append(this.topMediumControlsView.el);
+        this.$el.append(this.bottomMediumControlsView.el);
+        this.$el.append(this.laserControlsView.el);
+        this.$el.append(this.toolboxView.el);
 
-            return this;
-        },
+        return this;
+    },
 
-        postRender: function() {
-            BendingLightSimView.prototype.postRender.apply(this, arguments);
+    postRender: function() {
+        BendingLightSimView.prototype.postRender.apply(this, arguments);
 
-            this.laserControlsView.postRender();
-        }
+        this.laserControlsView.postRender();
+    }
 
-    });
-
-    return IntroSimView;
 });
+
+export default IntroSimView;

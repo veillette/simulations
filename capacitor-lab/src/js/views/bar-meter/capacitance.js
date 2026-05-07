@@ -1,49 +1,43 @@
-define(function (require) {
+import _ from 'underscore';
+import BarMeterView from 'views/bar-meter';
 
-    'use strict';
+var CapacitanceMeterView = BarMeterView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            units: 'F',
+            barColor: '#21366b',
+            title: 'Capacitance'
+        }, options);
 
-    var BarMeterView = require('views/bar-meter');
+        this.lastCapacitance = undefined;
 
-    var CapacitanceMeterView = BarMeterView.extend({
+        BarMeterView.prototype.initialize.apply(this, [options]);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                units: 'F',
-                barColor: '#21366b',
-                title: 'Capacitance'
-            }, options);
+    renderBarMeter: function() {
+        BarMeterView.prototype.renderBarMeter.apply(this, arguments);
 
-            this.lastCapacitance = undefined;
+    },
 
-            BarMeterView.prototype.initialize.apply(this, [options]);
-        },
+    update: function(time, delta, paused, timeScale) {
+        var capacitance;
 
-        renderBarMeter: function() {
-            BarMeterView.prototype.renderBarMeter.apply(this, arguments);
+        if (this.model.circuits)
+            capacitance = this.model.get('circuit').getTotalCapacitance();
+        else
+            capacitance = this.model.circuit.getTotalCapacitance();
 
-        },
-
-        update: function(time, delta, paused, timeScale) {
-            var capacitance;
-
-            if (this.model.circuits)
-                capacitance = this.model.get('circuit').getTotalCapacitance();
-            else
-                capacitance = this.model.circuit.getTotalCapacitance();
-
-            if (capacitance !== this.lastCapacitance) {
-                this.setValue(capacitance);
-                this.updateZoomButtons();
-            }
-
-            BarMeterView.prototype.update.apply(this, arguments);
-
-            this.lastCapacitance = capacitance;
+        if (capacitance !== this.lastCapacitance) {
+            this.setValue(capacitance);
+            this.updateZoomButtons();
         }
 
-    });
+        BarMeterView.prototype.update.apply(this, arguments);
 
-    return CapacitanceMeterView;
+        this.lastCapacitance = capacitance;
+    }
+
 });
+
+export default CapacitanceMeterView;

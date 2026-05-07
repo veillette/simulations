@@ -1,45 +1,40 @@
-define(function (require) {
+import Molecule from 'models/molecule';
+import NitrogenAtom from 'models/atom/nitrogen';
+import AtomicBond from 'models/atomic-bond';
 
-    'use strict';
+var INITIAL_NITROGEN_NITROGEN_DISTANCE = 170; // In picometers
 
-    var Molecule     = require('models/molecule');
-    var NitrogenAtom = require('models/atom/nitrogen');
-    var AtomicBond   = require('models/atomic-bond');
+/**
+ * Class that represents N2 (nitrogen) in the model.
+ */
+var N2 = Molecule.extend({
 
-    var INITIAL_NITROGEN_NITROGEN_DISTANCE = 170; // In picometers
+    initialize: function(attributes, options) {
+        Molecule.prototype.initialize.apply(this, arguments);
+
+        // Create and add atoms
+        this.nitrogenAtom1 = this.addAtom(new NitrogenAtom());
+        this.nitrogenAtom2 = this.addAtom(new NitrogenAtom());
+
+        // Create and add bonds
+        this.addAtomicBond(new AtomicBond(this.atoms[this.nitrogenAtom1], this.atoms[this.nitrogenAtom2], 3));
+
+        // Set the initial offsets.
+        this.initAtomOffsets();
+    },
 
     /**
-     * Class that represents N2 (nitrogen) in the model.
+     * Initialize sthe offsets from the center of gravity for each atom
+     *   within this molecule.  This should be in the "relaxed" (i.e.
+     *   non-vibrating) state.
      */
-    var N2 = Molecule.extend({
+    initAtomOffsets: function() {
+        this.getInitialAtomCogOffset(this.nitrogenAtom1).set(-INITIAL_NITROGEN_NITROGEN_DISTANCE / 2, 0);
+        this.getInitialAtomCogOffset(this.nitrogenAtom2).set( INITIAL_NITROGEN_NITROGEN_DISTANCE / 2, 0);
 
-        initialize: function(attributes, options) {
-            Molecule.prototype.initialize.apply(this, arguments);
+        this.updateAtomPositions();
+    }
 
-            // Create and add atoms
-            this.nitrogenAtom1 = this.addAtom(new NitrogenAtom());
-            this.nitrogenAtom2 = this.addAtom(new NitrogenAtom());
-
-            // Create and add bonds
-            this.addAtomicBond(new AtomicBond(this.atoms[this.nitrogenAtom1], this.atoms[this.nitrogenAtom2], 3));
-
-            // Set the initial offsets.
-            this.initAtomOffsets();
-        },
-
-        /**
-         * Initialize sthe offsets from the center of gravity for each atom
-         *   within this molecule.  This should be in the "relaxed" (i.e.
-         *   non-vibrating) state.
-         */
-        initAtomOffsets: function() {
-            this.getInitialAtomCogOffset(this.nitrogenAtom1).set(-INITIAL_NITROGEN_NITROGEN_DISTANCE / 2, 0);
-            this.getInitialAtomCogOffset(this.nitrogenAtom2).set( INITIAL_NITROGEN_NITROGEN_DISTANCE / 2, 0);
-
-            this.updateAtomPositions();
-        }
-
-    });
-
-    return N2;
 });
+
+export default N2;

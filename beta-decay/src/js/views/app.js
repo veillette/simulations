@@ -1,24 +1,17 @@
-define(function(require) {
+import NuclearPhysicsAppView from 'views/app';
+import MultiNucleusBetaDecaySimView from 'beta-decay/views/sim/multiple';
+import SingleNucleusBetaDecaySimView from 'beta-decay/views/sim/single';
+import Assets from 'assets';
 
-    'use strict';
+var BetaDecayAppView = NuclearPhysicsAppView.extend({
 
-    var NuclearPhysicsAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var MultiNucleusBetaDecaySimView  = require('beta-decay/views/sim/multiple');
-    var SingleNucleusBetaDecaySimView = require('beta-decay/views/sim/single');
+    simViewConstructors: [
+        MultiNucleusBetaDecaySimView,
+        SingleNucleusBetaDecaySimView
+    ]
 
-    var Assets = require('assets');
-
-    var BetaDecayAppView = NuclearPhysicsAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            MultiNucleusBetaDecaySimView,
-            SingleNucleusBetaDecaySimView
-        ]
-
-    });
-
-    return BetaDecayAppView;
 });
+
+export default BetaDecayAppView;

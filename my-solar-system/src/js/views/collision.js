@@ -1,98 +1,93 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+var CollisionView = PixiView.extend({
 
-    var PixiView  = require('common/v3/pixi/view');
-    var Assets    = require('assets');
-    var Constants = require('constants');
+    initialize: function(options) {
+        this.position = options.position;
+        this.mvt = options.mvt;
 
-    var CollisionView = PixiView.extend({
+        this.animationFinished = false;
 
-        initialize: function(options) {
-            this.position = options.position;
-            this.mvt = options.mvt;
+        this.initGraphics();
+    },
 
-            this.animationFinished = false;
+    initGraphics: function() {
+        var explosionSprite = Assets.createSprite(Assets.Images.EXPLOSION);
+        explosionSprite.anchor.x = explosionSprite.anchor.y = 0.5;
+        explosionSprite.rotation = Math.PI * 2 * Math.random();
 
-            this.initGraphics();
-        },
+        this.explosionSprite = explosionSprite;
+        this.imageWidth = explosionSprite.width;
 
-        initGraphics: function() {
-            var explosionSprite = Assets.createSprite(Assets.Images.EXPLOSION);
-            explosionSprite.anchor.x = explosionSprite.anchor.y = 0.5;
-            explosionSprite.rotation = Math.PI * 2 * Math.random();
+        this.animate(0);
+        this.updateMVT(this.mvt);
 
-            this.explosionSprite = explosionSprite;
-            this.imageWidth = explosionSprite.width;
+        this.displayObject.addChild(explosionSprite);
+    },
 
-            this.animate(0);
-            this.updateMVT(this.mvt);
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.displayObject.addChild(explosionSprite);
-        },
+        var viewPosition = this.mvt.modelToView(this.position);
+        this.displayObject.x = viewPosition.x;
+        this.displayObject.y = viewPosition.y;
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        var targetSpriteWidth = this.mvt.modelToViewDeltaX(CollisionView.DIAMETER_RANGE.max);
+        var scale = targetSpriteWidth / this.imageWidth;
+        this.displayObject.scale.x = scale;
+        this.displayObject.scale.y = scale;
+    },
 
-            var viewPosition = this.mvt.modelToView(this.position);
-            this.displayObject.x = viewPosition.x;
-            this.displayObject.y = viewPosition.y;
+    update: function(time, deltaTime, paused) {
+        if (paused)
+            return;
 
-            var targetSpriteWidth = this.mvt.modelToViewDeltaX(CollisionView.DIAMETER_RANGE.max);
-            var scale = targetSpriteWidth / this.imageWidth;
-            this.displayObject.scale.x = scale;
-            this.displayObject.scale.y = scale;
-        },
+        if (this.time === undefined)
+            this.time = 0;
+        else
+            this.time += deltaTime;
 
-        update: function(time, deltaTime, paused) {
-            if (paused)
-                return;
+        this.animate(this.time);
 
-            if (this.time === undefined)
-                this.time = 0;
-            else
-                this.time += deltaTime;
+        if (this.time > CollisionView.ANIMATION_DURATION)
+            this.animationFinished = true;
+    },
 
-            this.animate(this.time);
+    animate: function(time) {
+        var lerpValue;
+        var percentTimeElapsed = time / CollisionView.ANIMATION_DURATION;
 
-            if (this.time > CollisionView.ANIMATION_DURATION)
-                this.animationFinished = true;
-        },
+        // Animate scale
+        if (percentTimeElapsed < CollisionView.ANIMATION_MIDPOINT)
+            lerpValue = percentTimeElapsed / CollisionView.ANIMATION_MIDPOINT;
+        else
+            lerpValue = 1 - ((percentTimeElapsed - CollisionView.ANIMATION_MIDPOINT) / (1 - CollisionView.ANIMATION_MIDPOINT));
 
-        animate: function(time) {
-            var lerpValue;
-            var percentTimeElapsed = time / CollisionView.ANIMATION_DURATION;
+        var targetDiameter = CollisionView.DIAMETER_RANGE.lerp(lerpValue);
+        var scale = targetDiameter / CollisionView.DIAMETER_RANGE.max;
 
-            // Animate scale
-            if (percentTimeElapsed < CollisionView.ANIMATION_MIDPOINT)
-                lerpValue = percentTimeElapsed / CollisionView.ANIMATION_MIDPOINT;
-            else
-                lerpValue = 1 - ((percentTimeElapsed - CollisionView.ANIMATION_MIDPOINT) / (1 - CollisionView.ANIMATION_MIDPOINT));
+        // Animate alpha
+        var alpha;
+        if (percentTimeElapsed < CollisionView.ANIMATION_MIDPOINT)
+            alpha = 1;
+        else
+            alpha = lerpValue;
 
-            var targetDiameter = CollisionView.DIAMETER_RANGE.lerp(lerpValue);
-            var scale = targetDiameter / CollisionView.DIAMETER_RANGE.max;
+        // Animate rotation
+        //var rotation = CollisionView.ANIMATION_ROTATION * percentTimeElapsed;
 
-            // Animate alpha
-            var alpha;
-            if (percentTimeElapsed < CollisionView.ANIMATION_MIDPOINT)
-                alpha = 1;
-            else
-                alpha = lerpValue;
+        this.explosionSprite.scale.x = scale;
+        this.explosionSprite.scale.y = scale;
+        this.explosionSprite.alpha = alpha;
+        //this.explosionSprite.rotation = rotation;
+    },
 
-            // Animate rotation
-            //var rotation = CollisionView.ANIMATION_ROTATION * percentTimeElapsed;
+    finished: function() {
+        return this.animationFinished;
+    }
 
-            this.explosionSprite.scale.x = scale;
-            this.explosionSprite.scale.y = scale;
-            this.explosionSprite.alpha = alpha;
-            //this.explosionSprite.rotation = rotation;
-        },
+}, Constants.CollisionView);
 
-        finished: function() {
-            return this.animationFinished;
-        }
-
-    }, Constants.CollisionView);
-
-    return CollisionView;
-});
+export default CollisionView;

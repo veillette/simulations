@@ -1,320 +1,311 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import buzz from 'buzz';
+import SimDraggable from 'views/sim-draggable';
+import html from 'templates/moving-man.html?raw';
+import 'styles/moving-man.css';
 
-    'use strict';
+/**
+ * Constants
+ */
+var MOVEMENT_STATE_IDLE  = 0;
+var MOVEMENT_STATE_LEFT  = 1;
+var MOVEMENT_STATE_RIGHT = 2;
 
-    // var $ = require('jquery');
-    var _    = require('underscore');
-    var buzz = require('buzz');
+// These are from PhET and seem fairly arbitrary...
+var VELOCITY_SCALE     = 0.2;
+var ACCELERATION_SCALE = 0.8;
 
-    var SimDraggable = require('views/sim-draggable');
+/**
+ * The moving man view is the focus of the application.  He
+ *   represents the state of the moving man model and animates
+ *   with changes to the model.  The user can also drag him,
+ *   changing his position and derivative variables in turn.
+ */
+var MovingManView = SimDraggable.extend({
 
-    var html = require('text!templates/moving-man.html');
+    template: _.template(html),
 
-    require('css!styles/moving-man');
+    tagName: 'div',
+    className: 'moving-man-view',
 
-    /**
-     * Constants
-     */
-    var MOVEMENT_STATE_IDLE  = 0;
-    var MOVEMENT_STATE_LEFT  = 1;
-    var MOVEMENT_STATE_RIGHT = 2;
+    events: {
+        'mousedown'  : 'down',
+        'touchstart' : 'down'
+    },
 
-    // These are from PhET and seem fairly arbitrary...
-    var VELOCITY_SCALE     = 0.2;
-    var ACCELERATION_SCALE = 0.8;
+    initialize: function(options) {
+        SimDraggable.prototype.initialize.apply(this, [options]);
 
-    /**
-     * The moving man view is the focus of the application.  He
-     *   represents the state of the moving man model and animates
-     *   with changes to the model.  The user can also drag him,
-     *   changing his position and derivative variables in turn.
-     */
-    var MovingManView = SimDraggable.extend({
+        this.simulation = options.simulation;
+        this.movingMan  = this.simulation.movingMan;
 
-        template: _.template(html),
+        this.velocityVectorEnabled = false;
+        this.velocityVectorVisible = false;
 
-        tagName: 'div',
-        className: 'moving-man-view',
+        this.accelerationVectorEnabled = false;
+        this.accelerationVectorVisible = false;
 
-        events: {
-            'mousedown'  : 'down',
-            'touchstart' : 'down'
-        },
+        var formats = ['ogg', 'mp3', 'wav'];
 
-        initialize: function(options) {
-            SimDraggable.prototype.initialize.apply(this, [options]);
+        this.crashSound = new buzz.sound('audio/thud', { formats: formats });
 
-            this.simulation = options.simulation;
-            this.movingMan  = this.simulation.movingMan;
+        this.gruntSounds = [
+            new buzz.sound('audio/grunt01', { formats: formats }),
+            new buzz.sound('audio/grunt02', { formats: formats }),
+            new buzz.sound('audio/grunt03', { formats: formats }),
+            new buzz.sound('audio/grunt04', { formats: formats })
+        ];
 
-            this.velocityVectorEnabled = false;
-            this.velocityVectorVisible = false;
+        this.gruntSoundGroup = new buzz.group(this.gruntSounds);
 
-            this.accelerationVectorEnabled = false;
-            this.accelerationVectorVisible = false;
+        this.lowVolume();
 
-            var formats = ['ogg', 'mp3', 'wav'];
+        this.listenTo(this.movingMan, 'collide', this.collide);
+    },
 
-            this.crashSound = new buzz.sound('audio/thud', { formats: formats });
+    render: function() {
+        this.renderMovingMan();
+        this.bindDragEvents();
+        this.resize();
+        this.update(0, 0);
+    },
 
-            this.gruntSounds = [
-                new buzz.sound('audio/grunt01', { formats: formats }),
-                new buzz.sound('audio/grunt02', { formats: formats }),
-                new buzz.sound('audio/grunt03', { formats: formats }),
-                new buzz.sound('audio/grunt04', { formats: formats })
-            ];
+    renderMovingMan: function() {
+        this.$el.html(this.template());
 
-            this.gruntSoundGroup = new buzz.group(this.gruntSounds);
+        this.$velocityVector     = this.$('.arrow.velocity');
+        this.$accelerationVector = this.$('.arrow.acceleration');
+    },
 
-            this.lowVolume();
+    resize: function() {
+        SimDraggable.prototype.resize.apply(this);
 
-            this.listenTo(this.movingMan, 'collide', this.collide);
-        },
+        this.pixelRatio = this.dragBounds.width / this.simulation.get('containerWidth');
+    },
 
-        render: function() {
-            this.renderMovingMan();
-            this.bindDragEvents();
-            this.resize();
-            this.update(0, 0);
-        },
+    down: function(event) {
+        event.preventDefault();
 
-        renderMovingMan: function() {
-            this.$el.html(this.template());
+        this.dragging = true;
+        this.$el.addClass('dragging');
 
-            this.$velocityVector     = this.$('.arrow.velocity');
-            this.$accelerationVector = this.$('.arrow.acceleration');
-        },
+        // Start recording on drag if the simulation records and isn't currently
+        if (!this.simulation.noRecording && !this.simulation.get('recording'))
+            this.simulation.record();
+        if (this.simulation.get('paused'))
+            this.simulation.play();
 
-        resize: function() {
-            SimDraggable.prototype.resize.apply(this);
+        this.fixTouchEvents(event);
 
-            this.pixelRatio = this.dragBounds.width / this.simulation.get('containerWidth');
-        },
+        this.dragX = event.pageX;
+    },
 
-        down: function(event) {
-            event.preventDefault();
-
-            this.dragging = true;
-            this.$el.addClass('dragging');
-
-            // Start recording on drag if the simulation records and isn't currently
-            if (!this.simulation.noRecording && !this.simulation.get('recording'))
-                this.simulation.record();
-            if (this.simulation.get('paused'))
-                this.simulation.play();
+    drag: function(event) {
+        if (this.dragging) {
 
             this.fixTouchEvents(event);
 
-            this.dragX = event.pageX;
-        },
+            // Get position
+            this._xPercent = (event.pageX - this.dragOffset.left) / this.dragBounds.width;
+            this._xPosition = (this._xPercent * this.simulation.get('containerWidth')) - this.simulation.get('halfContainerWidth');
 
-        drag: function(event) {
-            if (this.dragging) {
+            this.movingMan.setMousePosition(this._xPosition);
+            this.movingMan.positionDriven(true);
 
-                this.fixTouchEvents(event);
-
-                // Get position
-                this._xPercent = (event.pageX - this.dragOffset.left) / this.dragBounds.width;
-                this._xPosition = (this._xPercent * this.simulation.get('containerWidth')) - this.simulation.get('halfContainerWidth');
-
-                this.movingMan.setMousePosition(this._xPosition);
-                this.movingMan.positionDriven(true);
-
-                // Get direction
-                if ((event.pageX - this.dragX) > 0)
-                    this.movementState = MOVEMENT_STATE_RIGHT;
-                else if ((event.pageX - this.dragX) < 0)
-                    this.movementState = MOVEMENT_STATE_LEFT;
-                this.dragX = event.pageX;
-            }
-        },
-
-        dragEnd: function(event) {
-            if (this.dragging) {
-                this.dragging = false;
-                this.$el.removeClass('dragging');
-
-                this.movementState = MOVEMENT_STATE_IDLE;
-            }
-        },
-
-        update: function(time, delta) {
-            this._lastPosition = this._position;
-            this._position = this.movingMan.get('position');
-
-            this._lastVelocity = this._velocity;
-            this._velocity = this.movingMan.get('velocity');
-
-            this._lastAcceleration = this._acceleration;
-            this._acceleration = this.movingMan.get('acceleration');
-
-            if (!this.updateOnNextFrame &&
-                this._position === this._lastPosition &&
-                this._velocity === this._lastVelocity &&
-                this._acceleration === this._lastAcceleration)
-                return;
-
-            if (this.updateOnNextFrame)
-                this.updateOnNextFrame = false;
-
-            this._updatePosition();
-
-            this._updateDirection();
-
-            this._updateArrows();
-        },
-
-        _updatePosition: function() {
-            // Update position
-            this._xPercent  = (this._position + this.simulation.get('halfContainerWidth')) / this.simulation.get('containerWidth');
-            this._xPixels   = this._xPercent * this.dragBounds.width;
-            this._translate = 'translateX(' + this._xPixels + 'px)';
-
-            this.$el.css({
-                '-webkit-transform': this._translate,
-                '-ms-transform':     this._translate,
-                '-o-transform':      this._translate,
-                'transform':         this._translate,
-            });
-        },
-
-        _updateDirection: function() {
-            if (this.movingMan.get('velocity') > 0.1)
+            // Get direction
+            if ((event.pageX - this.dragX) > 0)
                 this.movementState = MOVEMENT_STATE_RIGHT;
-            else if (this.movingMan.get('velocity') < -0.1)
+            else if ((event.pageX - this.dragX) < 0)
                 this.movementState = MOVEMENT_STATE_LEFT;
-            else
-                this.movementState = MOVEMENT_STATE_IDLE;
+            this.dragX = event.pageX;
+        }
+    },
 
-            // Update direction
-            if (this.visibleMovementState !== this.movementState) {
-                this.visibleMovementState = this.movementState;
+    dragEnd: function(event) {
+        if (this.dragging) {
+            this.dragging = false;
+            this.$el.removeClass('dragging');
 
-                switch (this.movementState) {
-                    case MOVEMENT_STATE_IDLE:
-                        this.$el
-                            .removeClass('left')
-                            .removeClass('right');
-                        break;
-                    case MOVEMENT_STATE_RIGHT:
-                        this.$el
-                            .removeClass('left')
-                            .addClass('right');
-                        break;
-                    case MOVEMENT_STATE_LEFT:
-                        this.$el
-                            .removeClass('right')
-                            .addClass('left');
-                        break;
-                }
-            }
-        },
+            this.movementState = MOVEMENT_STATE_IDLE;
+        }
+    },
 
-        _updateArrows: function() {
-            // Update arrow visiblity
-            if (this.velocityVectorEnabled !== this.velocityVectorVisible) {
-                if (this.velocityVectorEnabled) {
-                    this.$velocityVector.show();
-                    this.velocityVectorVisible = true;
-                }
-                else {
-                    this.$velocityVector.hide();
-                    this.velocityVectorVisible = false;
-                }
-            }
+    update: function(time, delta) {
+        this._lastPosition = this._position;
+        this._position = this.movingMan.get('position');
 
-            if (this.accelerationVectorEnabled !== this.accelerationVectorVisible) {
-                if (this.accelerationVectorEnabled) {
-                    this.$accelerationVector.show();
-                    this.accelerationVectorVisible = true;
-                }
-                else {
-                    this.$accelerationVector.hide();
-                    this.accelerationVectorVisible = false;
-                }
-            }
+        this._lastVelocity = this._velocity;
+        this._velocity = this.movingMan.get('velocity');
 
-            // Update arrow lengths and directions
-            var vectorWidth;
+        this._lastAcceleration = this._acceleration;
+        this._acceleration = this.movingMan.get('acceleration');
 
-            if (this.velocityVectorVisible) {
-                vectorWidth = Math.abs(this._velocity * VELOCITY_SCALE) * this.pixelRatio;
-                this.$velocityVector.width(vectorWidth);
+        if (!this.updateOnNextFrame &&
+            this._position === this._lastPosition &&
+            this._velocity === this._lastVelocity &&
+            this._acceleration === this._lastAcceleration)
+            return;
 
-                if (this._velocity > 0) {
-                    this.$velocityVector
+        if (this.updateOnNextFrame)
+            this.updateOnNextFrame = false;
+
+        this._updatePosition();
+
+        this._updateDirection();
+
+        this._updateArrows();
+    },
+
+    _updatePosition: function() {
+        // Update position
+        this._xPercent  = (this._position + this.simulation.get('halfContainerWidth')) / this.simulation.get('containerWidth');
+        this._xPixels   = this._xPercent * this.dragBounds.width;
+        this._translate = 'translateX(' + this._xPixels + 'px)';
+
+        this.$el.css({
+            '-webkit-transform': this._translate,
+            '-ms-transform':     this._translate,
+            '-o-transform':      this._translate,
+            'transform':         this._translate,
+        });
+    },
+
+    _updateDirection: function() {
+        if (this.movingMan.get('velocity') > 0.1)
+            this.movementState = MOVEMENT_STATE_RIGHT;
+        else if (this.movingMan.get('velocity') < -0.1)
+            this.movementState = MOVEMENT_STATE_LEFT;
+        else
+            this.movementState = MOVEMENT_STATE_IDLE;
+
+        // Update direction
+        if (this.visibleMovementState !== this.movementState) {
+            this.visibleMovementState = this.movementState;
+
+            switch (this.movementState) {
+                case MOVEMENT_STATE_IDLE:
+                    this.$el
+                        .removeClass('left')
+                        .removeClass('right');
+                    break;
+                case MOVEMENT_STATE_RIGHT:
+                    this.$el
                         .removeClass('left')
                         .addClass('right');
-                }
-                else {
-                    this.$velocityVector
+                    break;
+                case MOVEMENT_STATE_LEFT:
+                    this.$el
                         .removeClass('right')
                         .addClass('left');
-                }
+                    break;
             }
+        }
+    },
 
-            if (this.accelerationVectorVisible) {
-                vectorWidth = Math.abs(this._acceleration * ACCELERATION_SCALE) * this.pixelRatio;
-                this.$accelerationVector.width(vectorWidth);
-
-                if (this._acceleration > 0) {
-                    this.$accelerationVector
-                        .removeClass('left')
-                        .addClass('right');
-                }
-                else {
-                    this.$accelerationVector
-                        .removeClass('right')
-                        .addClass('left');
-                }
+    _updateArrows: function() {
+        // Update arrow visiblity
+        if (this.velocityVectorEnabled !== this.velocityVectorVisible) {
+            if (this.velocityVectorEnabled) {
+                this.$velocityVector.show();
+                this.velocityVectorVisible = true;
             }
-        },
-
-        showVelocityVector: function() {
-            this.velocityVectorEnabled = true;
-            this.updateOnNextFrame = true;
-        },
-
-        hideVelocityVector: function() {
-            this.velocityVectorEnabled = false;
-            this.updateOnNextFrame = true;
-        },
-
-        showAccelerationVector: function() {
-            this.accelerationVectorEnabled = true;
-            this.updateOnNextFrame = true;
-        },
-
-        hideAccelerationVector: function() {
-            this.accelerationVectorEnabled = false;
-            this.updateOnNextFrame = true;
-        },
-
-        muteVolume: function() {
-            this.crashSound.setVolume(0);
-            this.gruntSoundGroup.setVolume(0);
-        },
-
-        lowVolume: function() {
-            this.crashSound.setVolume(20);
-            this.gruntSoundGroup.setVolume(20);
-        },
-
-        highVolume: function() {
-            this.crashSound.setVolume(80);
-            this.gruntSoundGroup.setVolume(80);
-        },
-
-        collide: function() {
-            // Stop previous sounds
-            this.crashSound.stop();
-            this.gruntSoundGroup.stop();
-
-            this.crashSound.play();
-            _.sample(this.gruntSounds).play();
+            else {
+                this.$velocityVector.hide();
+                this.velocityVectorVisible = false;
+            }
         }
 
-    });
+        if (this.accelerationVectorEnabled !== this.accelerationVectorVisible) {
+            if (this.accelerationVectorEnabled) {
+                this.$accelerationVector.show();
+                this.accelerationVectorVisible = true;
+            }
+            else {
+                this.$accelerationVector.hide();
+                this.accelerationVectorVisible = false;
+            }
+        }
 
-    return MovingManView;
+        // Update arrow lengths and directions
+        var vectorWidth;
+
+        if (this.velocityVectorVisible) {
+            vectorWidth = Math.abs(this._velocity * VELOCITY_SCALE) * this.pixelRatio;
+            this.$velocityVector.width(vectorWidth);
+
+            if (this._velocity > 0) {
+                this.$velocityVector
+                    .removeClass('left')
+                    .addClass('right');
+            }
+            else {
+                this.$velocityVector
+                    .removeClass('right')
+                    .addClass('left');
+            }
+        }
+
+        if (this.accelerationVectorVisible) {
+            vectorWidth = Math.abs(this._acceleration * ACCELERATION_SCALE) * this.pixelRatio;
+            this.$accelerationVector.width(vectorWidth);
+
+            if (this._acceleration > 0) {
+                this.$accelerationVector
+                    .removeClass('left')
+                    .addClass('right');
+            }
+            else {
+                this.$accelerationVector
+                    .removeClass('right')
+                    .addClass('left');
+            }
+        }
+    },
+
+    showVelocityVector: function() {
+        this.velocityVectorEnabled = true;
+        this.updateOnNextFrame = true;
+    },
+
+    hideVelocityVector: function() {
+        this.velocityVectorEnabled = false;
+        this.updateOnNextFrame = true;
+    },
+
+    showAccelerationVector: function() {
+        this.accelerationVectorEnabled = true;
+        this.updateOnNextFrame = true;
+    },
+
+    hideAccelerationVector: function() {
+        this.accelerationVectorEnabled = false;
+        this.updateOnNextFrame = true;
+    },
+
+    muteVolume: function() {
+        this.crashSound.setVolume(0);
+        this.gruntSoundGroup.setVolume(0);
+    },
+
+    lowVolume: function() {
+        this.crashSound.setVolume(20);
+        this.gruntSoundGroup.setVolume(20);
+    },
+
+    highVolume: function() {
+        this.crashSound.setVolume(80);
+        this.gruntSoundGroup.setVolume(80);
+    },
+
+    collide: function() {
+        // Stop previous sounds
+        this.crashSound.stop();
+        this.gruntSoundGroup.stop();
+
+        this.crashSound.play();
+        _.sample(this.gruntSounds).play();
+    }
+
 });
+
+export default MovingManView;

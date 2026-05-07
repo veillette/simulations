@@ -1,36 +1,30 @@
-define(function (require) {
+import _ from 'underscore';
+import Force from 'models/force';
 
-    'use strict';
+/**
+ *
+ */
+var CoulombForce = function(params, system) {
+    this.system = system;
+    this.params = params;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(CoulombForce.prototype, Force.prototype, {
 
-    var Force = require('models/force');
-
-    /**
-     *
-     */
-    var CoulombForce = function(params, system) {
-        this.system = system;
-        this.params = params;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(CoulombForce.prototype, Force.prototype, {
-
-        getForce: function(wireParticle) {
-            var sum = 0;
-            var particles = this.system.particles;
-            for (var i = 0; i < particles.length; i++) {
-                var p = particles[i];
-                if (p !== wireParticle && p.wirePatch == wireParticle.wirePatch)
-                    sum += this.params.getForce(p.position, p.charge, wireParticle.position, wireParticle.charge);
-            }
-            return sum;
+    getForce: function(wireParticle) {
+        var sum = 0;
+        var particles = this.system.particles;
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            if (p !== wireParticle && p.wirePatch == wireParticle.wirePatch)
+                sum += this.params.getForce(p.position, p.charge, wireParticle.position, wireParticle.charge);
         }
+        return sum;
+    }
 
-    });
-
-    return CoulombForce;
 });
+
+export default CoulombForce;

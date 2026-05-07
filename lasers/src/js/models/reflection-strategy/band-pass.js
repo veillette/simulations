@@ -1,34 +1,28 @@
-define(function (require) {
+import _ from 'underscore';
+import ReflectionStrategy from 'models/reflection-strategy';
 
-    'use strict';
+/**
+ * A ReflectionStrategy that reflects photons whose wavelengths
+ *   are between two cutoff points. Probably misnamed. It's really
+ *   more of a notch.
+ */
+var BandPassReflectionStrategy = function(cutoffLow, cutoffHigh) {
+    ReflectionStrategy.apply(this, arguments);
 
-    var _ = require('underscore');
+    this.cutoffLow = cutoffLow;
+    this.cutoffHigh = cutoffHigh;
+};
 
-    var ReflectionStrategy = require('models/reflection-strategy');
+_.extend(BandPassReflectionStrategy.prototype, ReflectionStrategy.prototype, {
 
-    /**
-     * A ReflectionStrategy that reflects photons whose wavelengths
-     *   are between two cutoff points. Probably misnamed. It's really
-     *   more of a notch.
-     */
-    var BandPassReflectionStrategy = function(cutoffLow, cutoffHigh) {
-        ReflectionStrategy.apply(this, arguments);
+    reflects: function(photon) {
+        return (
+            photon.get('wavelength') >= this.cutoffLow &&
+            photon.get('wavelength') <= this.cutoffHigh
+        );
+    }
 
-        this.cutoffLow = cutoffLow;
-        this.cutoffHigh = cutoffHigh;
-    };
-
-    _.extend(BandPassReflectionStrategy.prototype, ReflectionStrategy.prototype, {
-
-        reflects: function(photon) {
-            return (
-                photon.get('wavelength') >= this.cutoffLow &&
-                photon.get('wavelength') <= this.cutoffHigh
-            );
-        }
-
-    });
-
-
-    return BandPassReflectionStrategy;
 });
+
+
+export default BandPassReflectionStrategy;

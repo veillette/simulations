@@ -1,21 +1,16 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var Force = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(Force.prototype, {
 
-    var Force = function() {};
+    getForce: function(wireParticle) {
+        throw 'Function not implemented.';
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Force.prototype, {
-
-        getForce: function(wireParticle) {
-            throw 'Function not implemented.';
-        }
-
-    });
-
-    return Force;
 });
+
+export default Force;

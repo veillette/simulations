@@ -1,15 +1,8 @@
+import RutherfordParticle from 'rutherford-scattering/models/rutherford-particle';
+import AlphaParticles from 'rutherford-scattering/collections/alpha-particles';
 
-define(function (require) {
-
-    'use strict';
-
-
-    var RutherfordParticle = require('rutherford-scattering/models/rutherford-particle');
-    var AlphaParticles  = require('rutherford-scattering/collections/alpha-particles');
-
-    var RutherfordParticles = AlphaParticles.extend({
-        model: RutherfordParticle
-    });
-
-    return RutherfordParticles;
+var RutherfordParticles = AlphaParticles.extend({
+    model: RutherfordParticle
 });
+
+export default RutherfordParticles;

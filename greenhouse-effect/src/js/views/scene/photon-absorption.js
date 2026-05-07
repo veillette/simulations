@@ -1,211 +1,199 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Rectangle from 'common/math/rectangle';
+import Vector2 from 'common/math/vector2';
+import MoleculeView from 'views/molecule';
+import PhotonView from 'views/photon';
+import PhotonEmitterView from 'views/photon-emitter';
+import Constants from 'constants';
+import 'styles/scene.less';
 
-    'use strict';
+/**
+ *
+ */
+var PhotonAbsorptionSceneView = PixiSceneView.extend({
 
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
 
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Rectangle          = require('common/math/rectangle');
-    var Vector2            = require('common/math/vector2');
+        this.listenTo(this.simulation.molecules, 'reset',          this.moleculesReset);
+        this.listenTo(this.simulation.molecules, 'add',            this.moleculeAdded);
+        this.listenTo(this.simulation.molecules, 'remove destroy', this.moleculeRemoved);
 
-    var MoleculeView      = require('views/molecule');
-    var PhotonView        = require('views/photon');
-    var PhotonEmitterView = require('views/photon-emitter');
+        this.listenTo(this.simulation.photons, 'reset',          this.photonsReset);
+        this.listenTo(this.simulation.photons, 'add',            this.photonAdded);
+        this.listenTo(this.simulation.photons, 'remove destroy', this.photonRemoved);
+    },
 
+    renderContent: function() {
 
-    // Constants
-    var Constants = require('constants');
+    },
 
-    // CSS
-    require('less!styles/scene');
+    initGraphics: function() {
+        this.initMVT();
+        this.initContainmentBox();
+        this.initMolecules();
+        this.initPhotons();
+        this.initPhotonEmitter();
+    },
 
-    /**
-     *
-     */
-    var PhotonAbsorptionSceneView = PixiSceneView.extend({
+    initMVT: function() {
+        // Map the simulation bounds...
+        var bounds = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_RECT;
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
+        // ...to the usable screen space that we have
+        var controlsWidth = 180;
+        var margin = 20;
+        var leftMargin  = margin + controlsWidth + margin; // Need space for molecule cannon
+        var rightMargin = margin + controlsWidth + margin;
+        var topMargin = margin;
+        var bottomMargin = margin;
+        var usableScreenSpace = new Rectangle(
+            leftMargin,
+            topMargin,
+            this.width - leftMargin - rightMargin,
+            this.height - topMargin - bottomMargin
+        );
 
-            this.listenTo(this.simulation.molecules, 'reset',          this.moleculesReset);
-            this.listenTo(this.simulation.molecules, 'add',            this.moleculeAdded);
-            this.listenTo(this.simulation.molecules, 'remove destroy', this.moleculeRemoved);
+        var boundsRatio = bounds.w / bounds.h;
+        var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
 
-            this.listenTo(this.simulation.photons, 'reset',          this.photonsReset);
-            this.listenTo(this.simulation.photons, 'add',            this.photonAdded);
-            this.listenTo(this.simulation.photons, 'remove destroy', this.photonRemoved);
-        },
+        var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
 
-        renderContent: function() {
+        this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
+        this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
 
-        },
+        this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            scale
+        );
+    },
 
-        initGraphics: function() {
-            this.initMVT();
-            this.initContainmentBox();
-            this.initMolecules();
-            this.initPhotons();
-            this.initPhotonEmitter();
-        },
+    initContainmentBox: function() {
+        var bounds = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_RECT;
+        var viewBounds = this.mvt.modelToView(bounds);
+        viewBounds.x = Math.round(viewBounds.x);
+        viewBounds.y = Math.round(viewBounds.y - viewBounds.h);
+        viewBounds.w = Math.round(viewBounds.w);
+        viewBounds.h = Math.round(Math.abs(viewBounds.h));
 
-        initMVT: function() {
-            // Map the simulation bounds...
-            var bounds = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_RECT;
+        var graphics = new PIXI.Graphics();
+        graphics.lineStyle(10, 0xA1C1D2, 0.5);
+        graphics.drawRect(viewBounds.x, viewBounds.y, viewBounds.w, viewBounds.h);
+        graphics.lineStyle(2, 0xFFFFFF, 0.6);
+        graphics.drawRect(viewBounds.x, viewBounds.y, viewBounds.w, viewBounds.h);
+        this.stage.addChild(graphics);
+    },
 
-            // ...to the usable screen space that we have
-            var controlsWidth = 180;
-            var margin = 20;
-            var leftMargin  = margin + controlsWidth + margin; // Need space for molecule cannon
-            var rightMargin = margin + controlsWidth + margin;
-            var topMargin = margin;
-            var bottomMargin = margin;
-            var usableScreenSpace = new Rectangle(
-                leftMargin,
-                topMargin,
-                this.width - leftMargin - rightMargin,
-                this.height - topMargin - bottomMargin
-            );
+    initMolecules: function() {
+        this.moleculeViews = [];
 
-            var boundsRatio = bounds.w / bounds.h;
-            var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
+        this.molecules = new PIXI.Container();
+        this.stage.addChild(this.molecules);
 
-            var scale = (screenRatio > boundsRatio) ? usableScreenSpace.h / bounds.h : usableScreenSpace.w / bounds.w;
+        this.moleculesReset(this.simulation.molecules);
+    },
 
-            this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
-            this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
+    initPhotons: function() {
+        this.photonViews = [];
 
-            this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-        },
+        this.photons = new PIXI.Container();
+        this.stage.addChild(this.photons);
 
-        initContainmentBox: function() {
-            var bounds = Constants.PhotonAbsorptionSimulation.CONTAINMENT_AREA_RECT;
-            var viewBounds = this.mvt.modelToView(bounds);
-            viewBounds.x = Math.round(viewBounds.x);
-            viewBounds.y = Math.round(viewBounds.y - viewBounds.h);
-            viewBounds.w = Math.round(viewBounds.w);
-            viewBounds.h = Math.round(Math.abs(viewBounds.h));
+        this.photonsReset(this.simulation.photons);
+    },
 
-            var graphics = new PIXI.Graphics();
-            graphics.lineStyle(10, 0xA1C1D2, 0.5);
-            graphics.drawRect(viewBounds.x, viewBounds.y, viewBounds.w, viewBounds.h);
-            graphics.lineStyle(2, 0xFFFFFF, 0.6);
-            graphics.drawRect(viewBounds.x, viewBounds.y, viewBounds.w, viewBounds.h);
-            this.stage.addChild(graphics);
-        },
+    initPhotonEmitter: function() {
+        this.photonEmitterView = new PhotonEmitterView({
+            model: this.simulation,
+            mvt: this.mvt
+        });
+        this.stage.addChild(this.photonEmitterView.displayObject);
+    },
 
-        initMolecules: function() {
-            this.moleculeViews = [];
+    reset: function() {
+        this.photonEmitterView.reset();
+    },
 
-            this.molecules = new PIXI.Container();
-            this.stage.addChild(this.molecules);
+    _update: function(time, deltaTime, paused, timeScale) {
 
-            this.moleculesReset(this.simulation.molecules);
-        },
+    },
 
-        initPhotons: function() {
-            this.photonViews = [];
+    moleculeAdded: function(molecule, molecules) {
+        this.createAndAddMoleculeView(molecule);
+    },
 
-            this.photons = new PIXI.Container();
-            this.stage.addChild(this.photons);
-
-            this.photonsReset(this.simulation.photons);
-        },
-
-        initPhotonEmitter: function() {
-            this.photonEmitterView = new PhotonEmitterView({
-                model: this.simulation,
-                mvt: this.mvt
-            });
-            this.stage.addChild(this.photonEmitterView.displayObject);
-        },
-
-        reset: function() {
-            this.photonEmitterView.reset();
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-
-        },
-
-        moleculeAdded: function(molecule, molecules) {
-            this.createAndAddMoleculeView(molecule);
-        },
-
-        moleculeRemoved: function(molecule, molecules) {
-            for (var i = this.moleculeViews.length - 1; i >= 0; i--) {
-                if (this.moleculeViews[i].model === molecule) {
-                    this.moleculeViews[i].removeFrom(this.molecules);
-                    this.moleculeViews.splice(i, 1);
-                    break;
-                }
-            }
-        },
-
-        moleculesReset: function(molecules) {
-            // Remove old molecule views
-            for (var i = this.moleculeViews.length - 1; i >= 0; i--) {
+    moleculeRemoved: function(molecule, molecules) {
+        for (var i = this.moleculeViews.length - 1; i >= 0; i--) {
+            if (this.moleculeViews[i].model === molecule) {
                 this.moleculeViews[i].removeFrom(this.molecules);
                 this.moleculeViews.splice(i, 1);
+                break;
             }
+        }
+    },
 
-            // Add new molecule views
-            molecules.each(function(molecule) {
-                this.createAndAddMoleculeView(molecule);
-            }, this);
-        },
+    moleculesReset: function(molecules) {
+        // Remove old molecule views
+        for (var i = this.moleculeViews.length - 1; i >= 0; i--) {
+            this.moleculeViews[i].removeFrom(this.molecules);
+            this.moleculeViews.splice(i, 1);
+        }
 
-        createAndAddMoleculeView: function(molecule) {
-            var moleculeView = new MoleculeView({
-                model: molecule,
-                mvt: this.mvt
-            });
-            this.molecules.addChild(moleculeView.displayObject);
-            this.moleculeViews.push(moleculeView);
-        },
+        // Add new molecule views
+        molecules.each(function(molecule) {
+            this.createAndAddMoleculeView(molecule);
+        }, this);
+    },
 
-        photonAdded: function(photon, photons) {
-            this.createAndAddPhotonView(photon);
-        },
+    createAndAddMoleculeView: function(molecule) {
+        var moleculeView = new MoleculeView({
+            model: molecule,
+            mvt: this.mvt
+        });
+        this.molecules.addChild(moleculeView.displayObject);
+        this.moleculeViews.push(moleculeView);
+    },
 
-        photonRemoved: function(photon, photons) {
-            for (var i = this.photonViews.length - 1; i >= 0; i--) {
-                if (this.photonViews[i].model === photon) {
-                    this.photonViews[i].removeFrom(this.photons);
-                    this.photonViews.splice(i, 1);
-                    break;
-                }
-            }
-        },
+    photonAdded: function(photon, photons) {
+        this.createAndAddPhotonView(photon);
+    },
 
-        photonsReset: function(photons) {
-            // Remove old photon views
-            for (var i = this.photonViews.length - 1; i >= 0; i--) {
+    photonRemoved: function(photon, photons) {
+        for (var i = this.photonViews.length - 1; i >= 0; i--) {
+            if (this.photonViews[i].model === photon) {
                 this.photonViews[i].removeFrom(this.photons);
                 this.photonViews.splice(i, 1);
+                break;
             }
+        }
+    },
 
-            // Add new photon views
-            photons.each(function(photon) {
-                this.createAndAddPhotonView(photon);
-            }, this);
-        },
+    photonsReset: function(photons) {
+        // Remove old photon views
+        for (var i = this.photonViews.length - 1; i >= 0; i--) {
+            this.photonViews[i].removeFrom(this.photons);
+            this.photonViews.splice(i, 1);
+        }
 
-        createAndAddPhotonView: function(photon) {
-            var photonView = new PhotonView({
-                model: photon,
-                mvt: this.mvt,
-                modelDiameter: 100
-            });
-            this.photons.addChild(photonView.displayObject);
-            this.photonViews.push(photonView);
-        },
+        // Add new photon views
+        photons.each(function(photon) {
+            this.createAndAddPhotonView(photon);
+        }, this);
+    },
 
-    });
+    createAndAddPhotonView: function(photon) {
+        var photonView = new PhotonView({
+            model: photon,
+            mvt: this.mvt,
+            modelDiameter: 100
+        });
+        this.photons.addChild(photonView.displayObject);
+        this.photonViews.push(photonView);
+    },
 
-    return PhotonAbsorptionSceneView;
 });
+
+export default PhotonAbsorptionSceneView;

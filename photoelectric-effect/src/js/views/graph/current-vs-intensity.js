@@ -1,107 +1,100 @@
-define(function(require) {
+import _ from 'underscore';
+import PEffectSimulation from 'models/simulation';
+import GraphView from 'views/graph';
 
-    'use strict';
+/**
+ *
+ */
+var CurrentVsIntensityGraphView = GraphView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        // Default values
+        options = _.extend({
+            title: 'Current vs Light Intensity',
+            x: {
+                start: 0,
+                end:   PEffectSimulation.MAX_PHOTONS_PER_SECOND,
+                step:  100,
+                label: 'Intensity',
+                showNumbers: false
+            },
+            y: {
+                start: 0,
+                end:   PEffectSimulation.MAX_CURRENT,
+                step:  PEffectSimulation.MAX_CURRENT / 6,
+                label: 'Current',
+                showNumbers: false
+            },
+            lineColor: '#349E34'
+        }, options);
 
-    var PEffectSimulation = require('models/simulation');
+        GraphView.prototype.initialize.apply(this, [options]);
 
-    var GraphView = require('views/graph');
+        this.listenTo(this.simulation, 'change:current', this.currentChanged);
+        this.listenTo(this.simulation, 'voltage-changed', this.voltageChanged);
+        this.listenTo(this.simulation.beam, 'change:wavelength', this.wavelengthChanged);
+        this.listenTo(this.simulation.beam, 'change:photonsPerSecond', this.beamIntensityChanged);
+        this.listenTo(this.simulation.target, 'change:targetMaterial', this.targetMaterialChanged);
+    },
 
     /**
-     *
+     * Updates the graph
      */
-    var CurrentVsIntensityGraphView = GraphView.extend({
+    update: function() {
+        this.updateCurrentPoint();
+    },
 
-        initialize: function(options) {
-            // Default values
-            options = _.extend({
-                title: 'Current vs Light Intensity',
-                x: {
-                    start: 0,
-                    end:   PEffectSimulation.MAX_PHOTONS_PER_SECOND,
-                    step:  100,
-                    label: 'Intensity',
-                    showNumbers: false
-                },
-                y: {
-                    start: 0,
-                    end:   PEffectSimulation.MAX_CURRENT,
-                    step:  PEffectSimulation.MAX_CURRENT / 6,
-                    label: 'Current',
-                    showNumbers: false
-                },
-                lineColor: '#349E34'
-            }, options);
+    addPoint: function() {
+        this.points.push(this.createPoint(
+            this.getBeamIntensity(),
+            this.simulation.getCurrent()
+        ));
 
-            GraphView.prototype.initialize.apply(this, [options]);
+        this.draw();
+    },
 
-            this.listenTo(this.simulation, 'change:current', this.currentChanged);
-            this.listenTo(this.simulation, 'voltage-changed', this.voltageChanged);
-            this.listenTo(this.simulation.beam, 'change:wavelength', this.wavelengthChanged);
-            this.listenTo(this.simulation.beam, 'change:photonsPerSecond', this.beamIntensityChanged);
-            this.listenTo(this.simulation.target, 'change:targetMaterial', this.targetMaterialChanged);
-        },
+    updateCurrentPoint: function() {
+        if (this.points.length === 0)
+            this.points.push(this.createPoint());
 
-        /**
-         * Updates the graph
-         */
-        update: function() {
-            this.updateCurrentPoint();
-        },
+        this.points[this.points.length - 1].set(
+            this.getBeamIntensity(),
+            this.simulation.getCurrent()
+        );
 
-        addPoint: function() {
-            this.points.push(this.createPoint(
-                this.getBeamIntensity(),
-                this.simulation.getCurrent()
-            ));
+        this.draw();
+    },
 
-            this.draw();
-        },
+    getBeamIntensity: function() {
+        return this.simulation.photonRateToIntensity(
+            this.simulation.beam.get('photonsPerSecond'),
+            this.simulation.beam.get('wavelength')
+        );
+    },
 
-        updateCurrentPoint: function() {
-            if (this.points.length === 0)
-                this.points.push(this.createPoint());
+    currentChanged: function() {
+        this.addPoint();
+    },
 
-            this.points[this.points.length - 1].set(
-                this.getBeamIntensity(),
-                this.simulation.getCurrent()
-            );
+    voltageChanged: function() {
+        this.clearPoints();
+        this.addPoint();
+    },
 
-            this.draw();
-        },
+    wavelengthChanged: function() {
+        this.clearPoints();
+        this.addPoint();
+    },
 
-        getBeamIntensity: function() {
-            return this.simulation.photonRateToIntensity(
-                this.simulation.beam.get('photonsPerSecond'),
-                this.simulation.beam.get('wavelength')
-            );
-        },
+    beamIntensityChanged: function() {
+        this.addPoint();
+    },
 
-        currentChanged: function() {
-            this.addPoint();
-        },
+    targetMaterialChanged: function() {
+        this.clearPoints();
+    }
 
-        voltageChanged: function() {
-            this.clearPoints();
-            this.addPoint();
-        },
-
-        wavelengthChanged: function() {
-            this.clearPoints();
-            this.addPoint();
-        },
-
-        beamIntensityChanged: function() {
-            this.addPoint();
-        },
-
-        targetMaterialChanged: function() {
-            this.clearPoints();
-        }
-
-    });
-
-
-    return CurrentVsIntensityGraphView;
 });
+
+
+export default CurrentVsIntensityGraphView;

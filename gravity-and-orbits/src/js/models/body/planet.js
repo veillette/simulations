@@ -1,25 +1,18 @@
-define(function (require) {
+import _ from 'underscore';
+import Body from 'models/body';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var Planet = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        name: 'planet',
+        referenceMassLabel: 'Earth',
+        color: Constants.PLANET_COLOR
+    })
 
-    var Body = require('models/body');
-
-    var Constants = require('constants');
-
-    /**
-     *
-     */
-    var Planet = Body.extend({
-
-        defaults: _.extend({}, Body.prototype.defaults, {
-            name: 'planet',
-            referenceMassLabel: 'Earth',
-            color: Constants.PLANET_COLOR
-        })
-
-    });
-
-    return Planet;
 });
+
+export default Planet;

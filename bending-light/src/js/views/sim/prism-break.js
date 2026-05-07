@@ -1,113 +1,105 @@
-define(function(require) {
+import _ from 'underscore';
+import PrismBreakSimulation from 'models/simulation/prism-break';
+import BendingLightSimView from 'views/sim';
+import MediumControlsView from 'views/medium-controls';
+import PrismBreakSceneView from 'views/scene/prism-break';
+import PrismsPanelView from 'views/prisms-panel';
+import PrismBreakControlsView from 'views/prism-break-controls';
+import simHtml from 'templates/sim/prism-break.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var PrismBreakSimView = BendingLightSimView.extend({
 
-    var _        = require('underscore');
+    template: _.template(simHtml),
 
-    var PrismBreakSimulation = require('models/simulation/prism-break');
+    events: _.extend(BendingLightSimView.prototype.events, {
 
-    var BendingLightSimView    = require('views/sim');
-    var MediumControlsView     = require('views/medium-controls');
-    var PrismBreakSceneView    = require('views/scene/prism-break');
-    var PrismsPanelView        = require('views/prisms-panel');
-    var PrismBreakControlsView = require('views/prism-break-controls');
+    }),
 
-    var simHtml = require('text!templates/sim/prism-break.html');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Prism Break',
+            name:  'prism-break'
+        }, options);
+
+        BendingLightSimView.prototype.initialize.apply(this, [ options ]);
+
+        this.initEnvironmentMediumControls();
+    },
 
     /**
-     *
+     * Initializes the Simulation.
      */
-    var PrismBreakSimView = BendingLightSimView.extend({
+    initSimulation: function() {
+        this.simulation = new PrismBreakSimulation();
+    },
 
-        template: _.template(simHtml),
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new PrismBreakSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        events: _.extend(BendingLightSimView.prototype.events, {
+    initEnvironmentMediumControls: function() {
+        this.environmentMediumControlsView = new MediumControlsView({
+            model: this.simulation.environment,
+            simulation: this.simulation,
+            name: 'environment',
+            label: 'Environment'
+        });
+    },
 
-        }),
+    initPrismsPanel: function() {
+        this.prismsPanelView = new PrismsPanelView({
+            simulation: this.simulation,
+            prismImages: this.sceneView.getPrismIcons()
+        });
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Prism Break',
-                name:  'prism-break'
-            }, options);
+    initPrismBreakControls: function() {
+        this.prismBreakControlsView = new PrismBreakControlsView({
+            simulation: this.simulation,
+            sceneView: this.sceneView
+        });
+    },
 
-            BendingLightSimView.prototype.initialize.apply(this, [ options ]);
+    /**
+     * Resets the sim and options
+     */
+    reset: function() {
+        BendingLightSimView.prototype.reset.apply(this);
 
-            this.initEnvironmentMediumControls();
-        },
+        this.prismBreakControlsView.reset();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new PrismBreakSimulation();
-        },
+    render: function() {
+        BendingLightSimView.prototype.render.apply(this);
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new PrismBreakSceneView({
-                simulation: this.simulation
-            });
-        },
+        this.initPrismsPanel();
+        this.initPrismBreakControls();
 
-        initEnvironmentMediumControls: function() {
-            this.environmentMediumControlsView = new MediumControlsView({
-                model: this.simulation.environment,
-                simulation: this.simulation,
-                name: 'environment',
-                label: 'Environment'
-            });
-        },
+        this.prismsPanelView.render();
+        this.prismBreakControlsView.render();
+        this.environmentMediumControlsView.render();
 
-        initPrismsPanel: function() {
-            this.prismsPanelView = new PrismsPanelView({
-                simulation: this.simulation,
-                prismImages: this.sceneView.getPrismIcons()
-            });
-        },
+        this.$el.append(this.prismsPanelView.el);
+        this.$el.append(this.prismBreakControlsView.el);
+        this.$el.append(this.environmentMediumControlsView.el);
 
-        initPrismBreakControls: function() {
-            this.prismBreakControlsView = new PrismBreakControlsView({
-                simulation: this.simulation,
-                sceneView: this.sceneView
-            });
-        },
+        return this;
+    },
 
-        /**
-         * Resets the sim and options
-         */
-        reset: function() {
-            BendingLightSimView.prototype.reset.apply(this);
+    postRender: function() {
+        BendingLightSimView.prototype.postRender.apply(this);
 
-            this.prismBreakControlsView.reset();
-        },
+        this.prismBreakControlsView.postRender();
+    }
 
-        render: function() {
-            BendingLightSimView.prototype.render.apply(this);
-
-            this.initPrismsPanel();
-            this.initPrismBreakControls();
-
-            this.prismsPanelView.render();
-            this.prismBreakControlsView.render();
-            this.environmentMediumControlsView.render();
-
-            this.$el.append(this.prismsPanelView.el);
-            this.$el.append(this.prismBreakControlsView.el);
-            this.$el.append(this.environmentMediumControlsView.el);
-
-            return this;
-        },
-
-        postRender: function() {
-            BendingLightSimView.prototype.postRender.apply(this);
-
-            this.prismBreakControlsView.postRender();
-        }
-
-    });
-
-    return PrismBreakSimView;
 });
+
+export default PrismBreakSimView;

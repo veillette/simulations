@@ -4,7 +4,9 @@
   "description": "A simulation of movement--the relationship between position, velocity, acceleration, and time",
   "main": "main.js",
   "scripts": {
-    "test": "node_modules/.bin/grunt test"
+    "test": "node_modules/.bin/grunt test",
+    "dev": "vite",
+    "build": "vite build"
   },
   "repository": {
     "type": "git",
@@ -43,9 +45,15 @@
     "karma-requirejs": "^1.1.0",
     "less": "^4.6.4",
     "load-grunt-tasks": "^5.1.0",
+    "buzz": "^2.0.0",
+    "fparser": "^1.2.1",
     "mocha": "^11.7.5",
+    "nouislider": "^7.0.10",
+    "pixi.js": "^7.4.2",
+    "requirejs": "^2.3.7",
     "requirejs-text": "^2.0.12",
-    "underscore": "^1.13.8"
+    "underscore": "^1.13.8",
+    "vite": "^8.0.10"
   },
   "overrides": {
     "diff": "^9.0.0",

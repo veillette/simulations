@@ -1,159 +1,150 @@
-define(function (require) {
+import _ from 'underscore';
+import SimDraggable from './sim-draggable';
+import Utils from '../utils/utils';
+import html from '../../templates/stopwatch.html?raw';
+import 'styles/stopwatch.less';
 
-	'use strict';
+var dx,
+    dy,
+    translate;
 
-	var _ = require('underscore');
+var StopwatchView = SimDraggable.extend({
 
-	var SimDraggable = require('./sim-draggable');
+    template: _.template(html),
 
-	var Utils = require('../utils/utils');
-	var html  = require('text!../../templates/stopwatch.html');
+    tagName: 'div',
+    className: 'stopwatch-view',
 
-	// CSS
-	require('less!styles/stopwatch');
+    events: {
+        'mousedown' : 'panelDown',
+        'touchstart': 'panelDown',
 
-	var dx,
-	    dy,
-	    translate;
+        'click .stopwatch-toggle-btn' : 'toggleClicked',
+        'click .stopwatch-reset-btn'  : 'resetClicked',
 
-	var StopwatchView = SimDraggable.extend({
+        'click .stopwatch-label-value': 'labelClicked'
+    },
 
-		template: _.template(html),
+    initialize: function(options) {
+        options = _.extend({
+            position: {
+                x: 30,
+                y: 30
+            }
+        }, options);
 
-		tagName: 'div',
-		className: 'stopwatch-view',
+        SimDraggable.prototype.initialize.apply(this, [options]);
 
-		events: {
-			'mousedown' : 'panelDown',
-			'touchstart': 'panelDown',
+        this.position = options.position;
 
-			'click .stopwatch-toggle-btn' : 'toggleClicked',
-			'click .stopwatch-reset-btn'  : 'resetClicked',
+        this.units = this.waveSimulation.get('units').time;
+        this.timeScale = this.waveSimulation.get('timeScale');
 
-			'click .stopwatch-label-value': 'labelClicked'
-		},
+        this.timing = false;
+    },
 
-		initialize: function(options) {
-			options = _.extend({
-				position: {
-					x: 30,
-					y: 30
-				}
-			}, options);
+    render: function() {
+        this.renderStopwatch();
+        this.bindDragEvents();
+        this.resize();
+        this.reset();
+        this.update(0, 0);
+    },
 
-			SimDraggable.prototype.initialize.apply(this, [options]);
+    renderStopwatch: function() {
+        this.$el.html(this.template());
+        this.$labelValue = this.$('.stopwatch-label-value');
+        this.$toggleButtonText = this.$('.stopwatch-toggle-btn .btn-text');
+        this.$('.stopwatch-label-units').text(this.units);
+    },
 
-			this.position = options.position;
+    panelDown: function(event) {
+        if (event.target === this.el) {
+            event.preventDefault();
 
-			this.units = this.waveSimulation.get('units').time;
-			this.timeScale = this.waveSimulation.get('timeScale');
+            this.$el.addClass('dragging');
 
-			this.timing = false;
-		},
+            this.dragging = true;
 
-		render: function() {
-			this.renderStopwatch();
-			this.bindDragEvents();
-			this.resize();
-			this.reset();
-			this.update(0, 0);
-		},
+            this.fixTouchEvents(event);
 
-		renderStopwatch: function() {
-			this.$el.html(this.template());
-			this.$labelValue = this.$('.stopwatch-label-value');
-			this.$toggleButtonText = this.$('.stopwatch-toggle-btn .btn-text');
-			this.$('.stopwatch-label-units').text(this.units);
-		},
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
+        }
+    },
 
-		panelDown: function(event) {
-			if (event.target === this.el) {
-				event.preventDefault();
+    drag: function(event) {
+        if (this.dragging) {
 
-				this.$el.addClass('dragging');
+            this.fixTouchEvents(event);
 
-				this.dragging = true;
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-				this.fixTouchEvents(event);
+            if (!this.boxOutOfBounds(this.position.x + dx, this.position.y + dy)) {
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-			}
-		},
+                this.position.x += dx;
+                this.position.y += dy;
+            }
 
-		drag: function(event) {
-			if (this.dragging) {
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-				this.fixTouchEvents(event);
+            this.updateOnNextFrame = true;
+        }
+    },
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+    dragEnd: function(event) {
+        if (this.dragging) {
+            this.dragging = false;
+            this.$el.removeClass('dragging');
+        }
+    },
 
-				if (!this.boxOutOfBounds(this.position.x + dx, this.position.y + dy)) {
+    toggleClicked: function(event) {
+        this.timing = !this.timing;
+        if (this.timing)
+            this.$toggleButtonText.text('Stop');
+        else
+            this.$toggleButtonText.text('Start');
+    },
 
-					this.position.x += dx;
-					this.position.y += dy;
-				}
+    resetClicked: function(event) {
+        this.reset();
+    },
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+    labelClicked: function(event) {
+        Utils.selectText(this.$labelValue[0]);
+    },
 
-				this.updateOnNextFrame = true;
-			}
-		},
+    reset: function() {
+        this.time = 0;
+        this.$labelValue.text(this.time.toFixed(2));
+    },
 
-		dragEnd: function(event) {
-			if (this.dragging) {
-				this.dragging = false;
-				this.$el.removeClass('dragging');
-			}
-		},
+    update: function(time, delta) {
 
-		toggleClicked: function(event) {
-			this.timing = !this.timing;
-			if (this.timing)
-				this.$toggleButtonText.text('Stop');
-			else
-				this.$toggleButtonText.text('Start');
-		},
+        if (this.timing && !this.waveSimulation.paused) {
+            this.time += (delta / 1000);
+            var scaledTime = this.time * this.timeScale;
+            this.$labelValue.text(scaledTime.toFixed(2));
+        }
 
-		resetClicked: function(event) {
-			this.reset();
-		},
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-		labelClicked: function(event) {
-			Utils.selectText(this.$labelValue[0]);
-		},
+        this.updateOnNextFrame = false;
 
-		reset: function() {
-			this.time = 0;
-			this.$labelValue.text(this.time.toFixed(2));
-		},
+        translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
 
-		update: function(time, delta) {
-
-			if (this.timing && !this.waveSimulation.paused) {
-				this.time += (delta / 1000);
-				var scaledTime = this.time * this.timeScale;
-				this.$labelValue.text(scaledTime.toFixed(2));
-			}
-
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
-
-			this.updateOnNextFrame = false;
-
-			translate = 'translateX(' + this.position.x + 'px) translateY(' + this.position.y + 'px)';
-
-			this.$el.css({
-				'-webkit-transform': translate,
-				'-ms-transform': translate,
-				'-o-transform': translate,
-				'transform': translate,
-			});
-		}
-	});
-
-	return StopwatchView;
+        this.$el.css({
+            '-webkit-transform': translate,
+            '-ms-transform': translate,
+            '-o-transform': translate,
+            'transform': translate,
+        });
+    }
 });
+
+export default StopwatchView;

@@ -1,40 +1,33 @@
-define(function(require) {
+import AdultHuman from 'models/projectile/adult-human';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var AdultHumanView = ProjectileView.extend({
 
-    var AdultHuman = require('models/projectile/adult-human');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.HUMAN);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.HUMAN_IMPACT);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var Assets = require('assets');
+    calculateScale: function() {
+        var targetSpriteWidth = this.mvt.modelToViewDeltaX(this.model.get('diameter')); // in pixels
+        targetSpriteWidth *= 2;
+        return targetSpriteWidth / this.projectileSprite.width;
+    }
 
-    var AdultHumanView = ProjectileView.extend({
-
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.HUMAN);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.HUMAN_IMPACT);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        calculateScale: function() {
-            var targetSpriteWidth = this.mvt.modelToViewDeltaX(this.model.get('diameter')); // in pixels
-            targetSpriteWidth *= 2;
-            return targetSpriteWidth / this.projectileSprite.width;
-        }
-
-    }, {
-        getModelClass: function() {
-            return AdultHuman;
-        }
-    });
-
-    return AdultHumanView;
+}, {
+    getModelClass: function() {
+        return AdultHuman;
+    }
 });
+
+export default AdultHumanView;

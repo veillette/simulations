@@ -1,221 +1,214 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import HeatmapDraggable from './heatmap-draggable';
+import Utils from '../utils/utils';
+import html from '../../templates/segment.html?raw';
 
-	'use strict';
+var segment,
+    xSpacing,
+    ySpacing,
+    halfYSpacing,
+    halfXSpacing,
+    padding,
+    height,
+    angle,
+    lineLength,
+    startX,
+    startY,
+    dx,
+    dy,
+    transform,
+    transformOrigin;
 
-	var $ = require('jquery');
-	var _ = require('underscore');
+var SegmentPotentialView = HeatmapDraggable.extend({
 
-	var HeatmapDraggable = require('./heatmap-draggable');
+    template: _.template(html),
 
-	var Utils = require('../utils/utils');
-	var html  = require('text!../../templates/segment.html');
+    tagName: 'div',
+    className: 'segment-view',
 
-	var segment,
-	    xSpacing,
-	    ySpacing,
-	    halfYSpacing,
-	    halfXSpacing,
-	    padding,
-	    height,
-	    angle,
-	    lineLength,
-	    startX,
-	    startY,
-	    dx,
-	    dy,
-	    transform,
-	    transformOrigin;
+    events: {
+        'mousedown  .segment-handle' : 'handleDown',
+        'touchstart .segment-handle' : 'handleDown',
+        'mousedown' : 'boxDown',
+        'touchstart': 'boxDown'
+    },
 
-	var SegmentPotentialView = HeatmapDraggable.extend({
+    initialize: function(options) {
+        HeatmapDraggable.prototype.initialize.apply(this, [options]);
 
-		template: _.template(html),
+        if (options.segment)
+            this.segment = options.segment;
+        else
+            throw 'SegmentPotentialView requires a Barrier model.';
+    },
 
-		tagName: 'div',
-		className: 'segment-view',
+    render: function() {
+        this.renderBox();
+        this.bindDragEvents();
+        this.resize();
+        this.update(0, 0);
+    },
 
-		events: {
-			'mousedown  .segment-handle' : 'handleDown',
-			'touchstart .segment-handle' : 'handleDown',
-			'mousedown' : 'boxDown',
-			'touchstart': 'boxDown'
-		},
+    renderBox: function() {
+        this.$el.html(this.template());
+    },
 
-		initialize: function(options) {
-			HeatmapDraggable.prototype.initialize.apply(this, [options]);
+    handleDown: function(event) {
+        event.preventDefault();
 
-			if (options.segment)
-				this.segment = options.segment;
-			else
-				throw 'SegmentPotentialView requires a Barrier model.';
-		},
+        if ($(event.target).index() === 0)
+            this.draggingStart = true;
+        else
+            this.draggingEnd = true;
 
-		render: function() {
-			this.renderBox();
-			this.bindDragEvents();
-			this.resize();
-			this.update(0, 0);
-		},
+        this.fixTouchEvents(event);
 
-		renderBox: function() {
-			this.$el.html(this.template());
-		},
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
 
-		handleDown: function(event) {
-			event.preventDefault();
+        $(event.target).addClass('active');
+    },
 
-			if ($(event.target).index() === 0)
-				this.draggingStart = true;
-			else
-				this.draggingEnd = true;
+    boxDown: function(event) {
+        if (event.target === this.el) {
+            event.preventDefault();
 
-			this.fixTouchEvents(event);
+            this.$el.addClass('active');
 
-			this.dragX = event.pageX;
-			this.dragY = event.pageY;
+            this.draggingBox = true;
 
-			$(event.target).addClass('active');
-		},
+            this.fixTouchEvents(event);
 
-		boxDown: function(event) {
-			if (event.target === this.el) {
-				event.preventDefault();
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
+        }
+    },
 
-				this.$el.addClass('active');
+    drag: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
 
-				this.draggingBox = true;
+            this.fixTouchEvents(event);
 
-				this.fixTouchEvents(event);
+            dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
+            dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
-			}
-		},
+            segment = this.segment;
 
-		drag: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
+            if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
+                if (this.draggingStart && this.heatmapView.isVisiblePoint(segment.start.x + dx, segment.start.y + dy)) {
+                    segment.start.x += dx;
+                    segment.start.y += dy;
+                }
+                if (this.draggingEnd && this.heatmapView.isVisiblePoint(segment.end.x + dx, segment.end.y + dy)) {
+                    segment.end.x += dx;
+                    segment.end.y += dy;
+                }
+            }
+            else
+                this.dragEnd();
 
-				this.fixTouchEvents(event);
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-				dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
-				dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
+            this.updateOnNextFrame = true;
+        }
+        else if (this.draggingBox) {
 
-				segment = this.segment;
+            this.fixTouchEvents(event);
 
-				if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
-					if (this.draggingStart && this.heatmapView.isVisiblePoint(segment.start.x + dx, segment.start.y + dy)) {
-						segment.start.x += dx;
-						segment.start.y += dy;
-					}
-					if (this.draggingEnd && this.heatmapView.isVisiblePoint(segment.end.x + dx, segment.end.y + dy)) {
-						segment.end.x += dx;
-						segment.end.y += dy;
-					}
-				}
-				else
-					this.dragEnd();
+            dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
+            dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+            segment = this.segment;
 
-				this.updateOnNextFrame = true;
-			}
-			else if (this.draggingBox) {
+            if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
+                if (this.heatmapView.isVisiblePoint(segment.start.x + dx, segment.start.y + dy) &&
+                    this.heatmapView.isVisiblePoint(segment.end.x   + dx, segment.end.y   + dy)) {
 
-				this.fixTouchEvents(event);
+                    segment.start.x += dx;
+                    segment.start.y += dy;
+                    segment.end.x += dx;
+                    segment.end.y += dy;
+                }
+            }
+            else
+                this.dragEnd();
 
-				dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
-				dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-				segment = this.segment;
+            this.updateOnNextFrame = true;
+        }
+    },
 
-				if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
-					if (this.heatmapView.isVisiblePoint(segment.start.x + dx, segment.start.y + dy) &&
-						this.heatmapView.isVisiblePoint(segment.end.x   + dx, segment.end.y   + dy)) {
+    dragEnd: function(event) {
+        if (this.draggingStart || this.draggingEnd) {
+            this.draggingStart = false;
+            this.draggingEnd   = false;
+            this.$('.segment-handle').removeClass('active');
+        }
+        else if (this.draggingBox) {
+            this.draggingBox = false;
+            this.$el.removeClass('active');
+        }
+    },
 
-						segment.start.x += dx;
-						segment.start.y += dy;
-						segment.end.x += dx;
-						segment.end.y += dy;
-					}
-				}
-				else
-					this.dragEnd();
+    update: function(time, delta) {
+        segment = this.segment;
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+        if (!segment.enabled)
+            return;
 
-				this.updateOnNextFrame = true;
-			}
-		},
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-		dragEnd: function(event) {
-			if (this.draggingStart || this.draggingEnd) {
-				this.draggingStart = false;
-				this.draggingEnd   = false;
-				this.$('.segment-handle').removeClass('active');
-			}
-			else if (this.draggingBox) {
-				this.draggingBox = false;
-				this.$el.removeClass('active');
-			}
-		},
+        this.updateOnNextFrame = false;
 
-		update: function(time, delta) {
-			segment = this.segment;
+        height = this.waveSimulation.lattice.height;
 
-			if (!segment.enabled)
-				return;
+        xSpacing = this.heatmapView.xSpacing;
+        ySpacing = this.heatmapView.ySpacing;
+        halfYSpacing = ySpacing / 2.0;
+        halfXSpacing = xSpacing / 2.0;
 
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
+        padding = (segment.thickness / 2) * ySpacing;
 
-			this.updateOnNextFrame = false;
+        angle = segment.getAngle();
 
-			height = this.waveSimulation.lattice.height;
+        lineLength = Utils.lineLength(
+            segment.start.x * xSpacing,
+            segment.start.y * ySpacing,
+            segment.end.x * xSpacing,
+            segment.end.y * ySpacing
+        );
 
-			xSpacing = this.heatmapView.xSpacing;
-			ySpacing = this.heatmapView.ySpacing;
-			halfYSpacing = ySpacing / 2.0;
-			halfXSpacing = xSpacing / 2.0;
+        startX = segment.start.x * xSpacing - halfXSpacing;
+        startY = (height - segment.start.y) * ySpacing - halfYSpacing - padding;
 
-			padding = (segment.thickness / 2) * ySpacing;
+        transform = 'translateX(' + startX + 'px) translateY(' + startY + 'px) rotateZ(' + (-angle) + 'deg)';
+        transformOrigin = padding + 'px center';
 
-			angle = segment.getAngle();
+        // Set the width so it spans the two points
+        this.$el.css({
+            width: lineLength + segment.thickness * xSpacing,
+            height: segment.thickness * xSpacing,
 
-			lineLength = Utils.lineLength(
-				segment.start.x * xSpacing,
-				segment.start.y * ySpacing,
-				segment.end.x * xSpacing,
-				segment.end.y * ySpacing
-			);
+            '-webkit-transform': transform,
+            '-ms-transform': transform,
+            '-o-transform': transform,
+            'transform': transform,
 
-			startX = segment.start.x * xSpacing - halfXSpacing;
-			startY = (height - segment.start.y) * ySpacing - halfYSpacing - padding;
+            '-webkit-transform-origin': transformOrigin,
+            '-moz-transform-origin': transformOrigin,
+            '-ms-transform-origin': transformOrigin,
+            'transform-origin': transformOrigin,
+        });
 
-			transform = 'translateX(' + startX + 'px) translateY(' + startY + 'px) rotateZ(' + (-angle) + 'deg)';
-			transformOrigin = padding + 'px center';
-
-			// Set the width so it spans the two points
-			this.$el.css({
-				width: lineLength + segment.thickness * xSpacing,
-				height: segment.thickness * xSpacing,
-
-				'-webkit-transform': transform,
-				'-ms-transform': transform,
-				'-o-transform': transform,
-				'transform': transform,
-
-				'-webkit-transform-origin': transformOrigin,
-				'-moz-transform-origin': transformOrigin,
-				'-ms-transform-origin': transformOrigin,
-				'transform-origin': transformOrigin,
-			});
-
-			// Make sure the handles are circles
-			this.$('.segment-handle').width(this.$('.segment-handle').height());
-		}
-	});
-
-	return SegmentPotentialView;
+        // Make sure the handles are circles
+        this.$('.segment-handle').width(this.$('.segment-handle').height());
+    }
 });
+
+export default SegmentPotentialView;
