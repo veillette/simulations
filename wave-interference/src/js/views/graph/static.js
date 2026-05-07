@@ -1,110 +1,103 @@
-define(function(require) {
+import _ from 'underscore';
+import GraphView from '../graph';
+import html from '../../../templates/graph.html?raw';
 
-	'use strict';
+/**
+ * StaticGraphView defines a template and certain behaviors of the UI,
+ *   but it doesn't define how the data points are calculated.  Before
+ *   the StaticGraphView is useful, these functions must be filled:
+ *
+ *     + initPoints
+ *     + calculatePoints
+ */
+var StaticGraphView = GraphView.extend({
 
-	var _ = require('underscore');
+    template: _.template(html),
 
-	var GraphView = require('../graph');
+    tagName: 'figure',
 
-	var html = require('text!../../../templates/graph.html');
+    events: {
+        'click .graph-show-button' : 'show',
+        'click .graph-hide-button' : 'hide'
+    },
 
-	/**
-	 * StaticGraphView defines a template and certain behaviors of the UI,
-	 *   but it doesn't define how the data points are calculated.  Before
-	 *   the StaticGraphView is useful, these functions must be filled:
-	 *
-	 *     + initPoints
-	 *     + calculatePoints
-	 */
-	var StaticGraphView = GraphView.extend({
+    initialize: function(options) {
+        GraphView.prototype.initialize.apply(this, [options]);
 
-		template: _.template(html),
+        // Don't start drawing the curve until the graph is showing
+        this.graphVisible = false;
+    },
 
-		tagName: 'figure',
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        GraphView.prototype.postRender.apply(this);
+        this.$el.removeClass('open');
+    },
 
-		events: {
-			'click .graph-show-button' : 'show',
-			'click .graph-hide-button' : 'hide'
-		},
+    show: function(event) {
+        if (this.toggling)
+            return;
 
-		initialize: function(options) {
-			GraphView.prototype.initialize.apply(this, [options]);
+        this.toggling = true;
 
-			// Don't start drawing the curve until the graph is showing
-			this.graphVisible = false;
-		},
+        this.graphVisible = true;
 
-		/**
-		 * Called after every component on the page has rendered to make sure
-		 *   things like widths and heights and offsets are correct.
-		 */
-		postRender: function() {
-			GraphView.prototype.postRender.apply(this);
-			this.$el.removeClass('open');
-		},
+        this.$el.removeClass('initial');
+        this.$el.removeClass('closed');
+        this.$el.addClass('open');
 
-		show: function(event) {
-			if (this.toggling)
-				return;
+        this.$hideButton.show();
+        this.$showButton.addClass('clicked');
 
-			this.toggling = true;
+        this.duration = this.animationDuration();
 
-			this.graphVisible = true;
+        var self = this;
+        setTimeout(function(){
+            self._afterShow();
+        }, this.duration);
+    },
 
-			this.$el.removeClass('initial');
-			this.$el.removeClass('closed');
-			this.$el.addClass('open');
+    _afterShow: function() {
+        this.$showButton.hide();
+        this.$showButton.removeClass('clicked');
+        this.resize();
+        this.toggling = false;
+    },
 
-			this.$hideButton.show();
-			this.$showButton.addClass('clicked');
+    hide: function(event) {
+        if (this.toggling)
+            return;
 
-			this.duration = this.animationDuration();
+        this.toggling = true;
 
-			var self = this;
-			setTimeout(function(){
-				self._afterShow();
-			}, this.duration);
-		},
+        this.$el.removeClass('open');
+        this.$el.addClass('closed');
+        this.$showButton.show();
+        this.$showButton.addClass('reenabled');
+        this.$hideButton.hide();
 
-		_afterShow: function() {
-			this.$showButton.hide();
-			this.$showButton.removeClass('clicked');
-			this.resize();
-			this.toggling = false;
-		},
+        var self = this;
+        setTimeout(function(){
+            self._afterHide();
+        }, this.duration);
+    },
 
-		hide: function(event) {
-			if (this.toggling)
-				return;
+    _afterHide: function() {
+        this.graphVisible = false;
+        this.$showButton.removeClass('reenabled');
+        this.toggling = false;
+    },
 
-			this.toggling = true;
-
-			this.$el.removeClass('open');
-			this.$el.addClass('closed');
-			this.$showButton.show();
-			this.$showButton.addClass('reenabled');
-			this.$hideButton.hide();
-
-			var self = this;
-			setTimeout(function(){
-				self._afterHide();
-			}, this.duration);
-		},
-
-		_afterHide: function() {
-			this.graphVisible = false;
-			this.$showButton.removeClass('reenabled');
-			this.toggling = false;
-		},
-
-		animationDuration: function() {
-			var duration = this.$showButton.css('animation-duration');
-			if (duration.indexOf('ms') !== -1)
-				return parseInt(duration);
-			else
-				return parseFloat(duration) * 1000;
-		},
-	});
-
-	return StaticGraphView;
+    animationDuration: function() {
+        var duration = this.$showButton.css('animation-duration');
+        if (duration.indexOf('ms') !== -1)
+            return parseInt(duration);
+        else
+            return parseFloat(duration) * 1000;
+    },
 });
+
+export default StaticGraphView;

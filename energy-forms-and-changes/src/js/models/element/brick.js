@@ -1,30 +1,20 @@
-define(function (require) {
+import _ from 'underscore';
+import Block from 'models/element/block';
+import Constants from 'constants';
+var EnergyContainerCategory = Constants.EnergyContainerCategory;
 
-    'use strict';
+/**
+ *
+ */
+var Brick = Block.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Block.prototype.defaults, {
+        energyContainerCategory: EnergyContainerCategory.BRICK,
 
-    var Block = require('models/element/block');
+        density:      Constants.Brick.DENSITY,
+        specificHeat: Constants.Brick.SPECIFIC_HEAT
+    })
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
-    var EnergyContainerCategory = Constants.EnergyContainerCategory;
+}, Constants.Brick);
 
-    /**
-     *
-     */
-    var Brick = Block.extend({
-
-        defaults: _.extend({}, Block.prototype.defaults, {
-            energyContainerCategory: EnergyContainerCategory.BRICK,
-
-            density:      Constants.Brick.DENSITY,
-            specificHeat: Constants.Brick.SPECIFIC_HEAT
-        })
-
-    }, Constants.Brick);
-
-    return Brick;
-});
+export default Brick;

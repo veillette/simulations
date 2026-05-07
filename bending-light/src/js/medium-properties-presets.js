@@ -1,21 +1,15 @@
-define(function (require) {
+import Constants from 'constants';
+import MediumProperties from 'models/medium-properties';
 
-    'use strict';
+// Media that can be selected
+var MediumPropertiesPresets = {};
 
-    var Constants = require('constants');
+MediumPropertiesPresets.AIR       = new MediumProperties('Air',       1.000293);
+MediumPropertiesPresets.WATER     = new MediumProperties('Water',     1.333);
+MediumPropertiesPresets.GLASS     = new MediumProperties('Glass',     1.5);
+MediumPropertiesPresets.DIAMOND   = new MediumProperties('Diamond',   Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT);
+MediumPropertiesPresets.MYSTERY_A = new MediumProperties('Mystery A', Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT, true);
+MediumPropertiesPresets.MYSTERY_B = new MediumProperties('Mystery B', 1.4, true);
+MediumPropertiesPresets.CUSTOM    = new MediumProperties('Custom',    1.0, false, true);
 
-    var MediumProperties = require('models/medium-properties');
-
-    // Media that can be selected
-    var MediumPropertiesPresets = {};
-
-    MediumPropertiesPresets.AIR       = new MediumProperties('Air',       1.000293);
-    MediumPropertiesPresets.WATER     = new MediumProperties('Water',     1.333);
-    MediumPropertiesPresets.GLASS     = new MediumProperties('Glass',     1.5);
-    MediumPropertiesPresets.DIAMOND   = new MediumProperties('Diamond',   Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT);
-    MediumPropertiesPresets.MYSTERY_A = new MediumProperties('Mystery A', Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT, true);
-    MediumPropertiesPresets.MYSTERY_B = new MediumProperties('Mystery B', 1.4, true);
-    MediumPropertiesPresets.CUSTOM    = new MediumProperties('Custom',    1.0, false, true);
-
-    return MediumPropertiesPresets;
-});
+export default MediumPropertiesPresets;

@@ -1,168 +1,159 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import buzz from 'buzz';
+import Simulation from 'common/simulation/simulation';
+import Particle from 'models/particle';
+import Level from 'models/level';
+import Levels from 'levels';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * The simulation model
+ */
+var MazeGameSimulation = Simulation.extend({
 
-    var _ = require('underscore');
-    var buzz = require('buzz');
+    defaults: _.extend(Simulation.prototype.defaults, {
+        level: Levels['Practice'],
+        levelName: 'Practice',
+        collisions: 0,
+        soundVolume: 80,
+        won: false
+    }),
 
-    var Simulation = require('common/simulation/simulation');
+    initialize: function(attributes, options) {
+        this.particle = new Particle();
 
-    var Particle = require('models/particle');
-    var Level    = require('models/level');
+        // Sounds
+        this.ambientSound = new buzz.sound('audio/ambient-loop', {
+            formats: ['ogg', 'mp3', 'wav']
+        });
+        this.collisionSound = new buzz.sound('audio/computer-twitches', {
+            formats: ['ogg', 'mp3', 'wav']
+        });
+        this.winSound = new buzz.sound('audio/success-2', {
+            formats: ['ogg', 'mp3', 'wav']
+        });
 
-    var Levels = require('levels');
+        Simulation.prototype.initialize.apply(this, [attributes, options]);
 
-    var Constants = require('constants');
+        this.on('change:level', this.levelChanged);
+        this.on('change:soundVolume', this.volumeChanged);
+        this.on('change:won', this.winStateChanged);
+        this.listenTo(this.particle, 'change:colliding', this.collidingChanged);
+    },
 
     /**
-     * The simulation model
+     * Initializes the models used in the simulation
      */
-    var MazeGameSimulation = Simulation.extend({
+    initComponents: function() {
+        this.resetParticle();
+        this.ambientSound
+            .play()
+            .fadeTo(80)
+            .loop();
+    },
 
-        defaults: _.extend(Simulation.prototype.defaults, {
-            level: Levels['Practice'],
-            levelName: 'Practice',
-            collisions: 0,
-            soundVolume: 80,
-            won: false
-        }),
+    /**
+     * Overrides simulation's reset function
+     */
+    reset: function() {
+        this.stopTimer();
+        this.resetParticle();
+        this.set({
+            time: 0,
+            won: false,
+            collisions: 0
+        });
+    },
 
-        initialize: function(attributes, options) {
-            this.particle = new Particle();
+    resetParticle: function() {
+        var startPosition = this.get('level').startPosition();
+        this.particle.set({
+            // Position it in the middle of the start tile
+            x: this.get('level').colToX(startPosition.col) + Constants.TILE_SIZE / 2,
+            y: this.get('level').rowToY(startPosition.row) + Constants.TILE_SIZE / 2,
 
-            // Sounds
-            this.ambientSound = new buzz.sound('audio/ambient-loop', {
-                formats: ['ogg', 'mp3', 'wav']
-            });
-            this.collisionSound = new buzz.sound('audio/computer-twitches', {
-                formats: ['ogg', 'mp3', 'wav']
-            });
-            this.winSound = new buzz.sound('audio/success-2', {
-                formats: ['ogg', 'mp3', 'wav']
-            });
+            // And reset the velocity and acceleration
+            vx: 0,
+            vy: 0,
+            ax: 0,
+            ay: 0
+        });
+    },
 
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
+    startTimer: function() {
+        this.set('time', 0);
+        this.timing = true;
+    },
 
-            this.on('change:level', this.levelChanged);
-            this.on('change:soundVolume', this.volumeChanged);
-            this.on('change:won', this.winStateChanged);
-            this.listenTo(this.particle, 'change:colliding', this.collidingChanged);
-        },
+    stopTimer: function() {
+        this.timing = false;
+    },
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            this.resetParticle();
-            this.ambientSound
+    resetTimer: function() {
+        this.set('time', 0);
+    },
+
+    win: function() {
+        this.winSound.play();
+        this.stopTimer();
+    },
+
+    changeLevel: function(levelName) {
+        this.set({
+            levelName: levelName,
+            level: Levels[levelName]
+        });
+    },
+
+    _update: function(time, deltaTime) {
+        // Update the position
+        this.particle.update(time, deltaTime);
+        var x = this.particle.get('x');
+        var y = this.particle.get('y');
+        var radius = this.particle.get('radius');
+
+        // Check for collisions
+        if (this.get('level').collidesWithTileTypeAt(Level.TILE_WALL, x, y, radius))
+            this.particle.set('colliding', true);
+        else
+            this.particle.set('colliding', false);
+
+        if (this.get('level').collidesWithTileTypeAt(Level.TILE_FINISH, x, y, radius) && this.get('collisions') === 0)
+            this.set('won', true);
+
+        if (this.timing)
+            this.set('time', this.get('time') + deltaTime);
+    },
+
+    winStateChanged: function(simulation, won) {
+        if (won)
+            this.win();
+    },
+
+    levelChanged: function(simulation, level) {
+        this.resetParticle();
+        this.set('won', false);
+        this.set('collisions', 0);
+    },
+
+    volumeChanged: function(simulation, volume) {
+        this.collisionSound.setVolume(volume);
+        this.ambientSound.setVolume(volume);
+        this.winSound.setVolume(volume);
+    },
+
+    collidingChanged: function(particle, colliding) {
+        if (colliding) {
+            this.set('collisions', this.get('collisions') + 1);
+            this.collisionSound
                 .play()
-                .fadeTo(80)
                 .loop();
-        },
-
-        /**
-         * Overrides simulation's reset function
-         */
-        reset: function() {
-            this.stopTimer();
-            this.resetParticle();
-            this.set({
-                time: 0,
-                won: false,
-                collisions: 0
-            });
-        },
-
-        resetParticle: function() {
-            var startPosition = this.get('level').startPosition();
-            this.particle.set({
-                // Position it in the middle of the start tile
-                x: this.get('level').colToX(startPosition.col) + Constants.TILE_SIZE / 2,
-                y: this.get('level').rowToY(startPosition.row) + Constants.TILE_SIZE / 2,
-
-                // And reset the velocity and acceleration
-                vx: 0,
-                vy: 0,
-                ax: 0,
-                ay: 0
-            });
-        },
-
-        startTimer: function() {
-            this.set('time', 0);
-            this.timing = true;
-        },
-
-        stopTimer: function() {
-            this.timing = false;
-        },
-
-        resetTimer: function() {
-            this.set('time', 0);
-        },
-
-        win: function() {
-            this.winSound.play();
-            this.stopTimer();
-        },
-
-        changeLevel: function(levelName) {
-            this.set({
-                levelName: levelName,
-                level: Levels[levelName]
-            });
-        },
-
-        _update: function(time, deltaTime) {
-            // Update the position
-            this.particle.update(time, deltaTime);
-            var x = this.particle.get('x');
-            var y = this.particle.get('y');
-            var radius = this.particle.get('radius');
-
-            // Check for collisions
-            if (this.get('level').collidesWithTileTypeAt(Level.TILE_WALL, x, y, radius))
-                this.particle.set('colliding', true);
-            else
-                this.particle.set('colliding', false);
-
-            if (this.get('level').collidesWithTileTypeAt(Level.TILE_FINISH, x, y, radius) && this.get('collisions') === 0)
-                this.set('won', true);
-
-            if (this.timing)
-                this.set('time', this.get('time') + deltaTime);
-        },
-
-        winStateChanged: function(simulation, won) {
-            if (won)
-                this.win();
-        },
-
-        levelChanged: function(simulation, level) {
-            this.resetParticle();
-            this.set('won', false);
-            this.set('collisions', 0);
-        },
-
-        volumeChanged: function(simulation, volume) {
-            this.collisionSound.setVolume(volume);
-            this.ambientSound.setVolume(volume);
-            this.winSound.setVolume(volume);
-        },
-
-        collidingChanged: function(particle, colliding) {
-            if (colliding) {
-                this.set('collisions', this.get('collisions') + 1);
-                this.collisionSound
-                    .play()
-                    .loop();
-            }
-            else {
-                this.collisionSound.pause();
-            }
         }
+        else {
+            this.collisionSound.pause();
+        }
+    }
 
-    });
-
-    return MazeGameSimulation;
 });
+
+export default MazeGameSimulation;

@@ -1,22 +1,15 @@
-define(function(require) {
+import FaradayAppView from 'views/app';
+import MagnetAndCompassSimView from './sim/magnet-and-compass';
+import Assets from 'assets';
 
-    'use strict';
+var MagnetAndCompassAppView = FaradayAppView.extend({
 
-    var FaradayAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var MagnetAndCompassSimView = require('./sim/magnet-and-compass');
+    simViewConstructors: [
+        MagnetAndCompassSimView
+    ]
 
-    var Assets = require('assets');
-
-    var MagnetAndCompassAppView = FaradayAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            MagnetAndCompassSimView
-        ]
-
-    });
-
-    return MagnetAndCompassAppView;
 });
+
+export default MagnetAndCompassAppView;

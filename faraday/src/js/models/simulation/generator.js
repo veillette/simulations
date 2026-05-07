@@ -1,120 +1,110 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import FaradaySimulation from 'models/simulation';
+import Turbine from 'models/magnet/turbine';
+import Compass from 'models/compass';
+import FieldMeter from 'models/field-meter';
+import PickupCoil from 'models/coil/pickup';
+import Lightbulb from 'models/lightbulb';
+import Voltmeter from 'models/voltmeter';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Simulation model for the bar magnet tab
+ */
+var GeneratorSimulation = FaradaySimulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
-    var FaradaySimulation = require('models/simulation');
-    var Turbine           = require('models/magnet/turbine');
-    var Compass           = require('models/compass');
-    var FieldMeter        = require('models/field-meter');
-    var PickupCoil        = require('models/coil/pickup');
-    var Lightbulb         = require('models/lightbulb');
-    var Voltmeter         = require('models/voltmeter');
+    }),
+
+    initialize: function(attributes, options) {
+        FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        FaradaySimulation.prototype.initComponents.apply(this, arguments);
 
-    /**
-     * Simulation model for the bar magnet tab
-     */
-    var GeneratorSimulation = FaradaySimulation.extend({
+        // Turbine
+        this.turbine = new Turbine({
+            width:       GeneratorSimulation.TURBINE_SIZE.width,
+            height:      GeneratorSimulation.TURBINE_SIZE.height,
+            maxStrength: Constants.TURBINE_STRENGTH_MAX,
+            minStrength: Constants.TURBINE_STRENGTH_MIN,
+            strength:    GeneratorSimulation.TURBINE_STRENGTH,
+            position:    GeneratorSimulation.TURBINE_LOCATION,
+            direction:   GeneratorSimulation.TURBINE_DIRECTION,
+            speed:       GeneratorSimulation.TURBINE_SPEED
+        });
 
-        defaults: _.extend(FaradaySimulation.prototype.defaults, {
+        // Compass model
+        this.compass = new Compass({
+            position: GeneratorSimulation.COMPASS_LOCATION,
+            behavior: Compass.SIMPLE_BEHAVIOR
+        }, {
+            magnetModel: this.turbine
+        });
 
-        }),
+        // Field Meter
+        this.fieldMeter = new FieldMeter({
+            position: GeneratorSimulation.FIELD_METER_LOCATION,
+            enabled: false
+        }, {
+            magnetModel: this.turbine
+        });
 
-        initialize: function(attributes, options) {
-            FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+        // Pickup Coil
+        this.pickupCoil = new PickupCoil({
+            position:                 GeneratorSimulation.PICKUP_COIL_LOCATION,
+            direction:                GeneratorSimulation.PICKUP_COIL_DIRECTION,
+            numberOfLoops:            GeneratorSimulation.PICKUP_COIL_NUMBER_OF_LOOPS,
+            transitionSmoothingScale: GeneratorSimulation.PICKUP_COIL_TRANSITION_SMOOTHING_SCALE,
+            loopArea:                 GeneratorSimulation.PICKUP_COIL_LOOP_AREA
+        }, {
+            magnetModel: this.turbine,
+            calibrationEmf: GeneratorSimulation.CALIBRATION_EMF
+        });
 
-        },
+        // Lightbulb
+        this.lightbulb = new Lightbulb({
+            enabled: true
+        }, {
+            pickupCoilModel: this.pickupCoil
+        });
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            FaradaySimulation.prototype.initComponents.apply(this, arguments);
+        // Voltmeter
+        this.voltmeter = new Voltmeter({
+            enabled: false,
+            jiggleEnabled: true
+        }, {
+            pickupCoilModel: this.pickupCoil
+        });
+    },
 
-            // Turbine
-            this.turbine = new Turbine({
-                width:       GeneratorSimulation.TURBINE_SIZE.width,
-                height:      GeneratorSimulation.TURBINE_SIZE.height,
-                maxStrength: Constants.TURBINE_STRENGTH_MAX,
-                minStrength: Constants.TURBINE_STRENGTH_MIN,
-                strength:    GeneratorSimulation.TURBINE_STRENGTH,
-                position:    GeneratorSimulation.TURBINE_LOCATION,
-                direction:   GeneratorSimulation.TURBINE_DIRECTION,
-                speed:       GeneratorSimulation.TURBINE_SPEED
-            });
+    resetComponents: function() {
+        FaradaySimulation.prototype.resetComponents.apply(this, arguments);
 
-            // Compass model
-            this.compass = new Compass({
-                position: GeneratorSimulation.COMPASS_LOCATION,
-                behavior: Compass.SIMPLE_BEHAVIOR
-            }, {
-                magnetModel: this.turbine
-            });
+        this.turbine.reset();
+        this.compass.reset();
+        this.fieldMeter.reset();
+        this.pickupCoil.reset();
+        this.lightbulb.reset();
+        this.voltmeter.reset();
+    },
 
-            // Field Meter
-            this.fieldMeter = new FieldMeter({
-                position: GeneratorSimulation.FIELD_METER_LOCATION,
-                enabled: false
-            }, {
-                magnetModel: this.turbine
-            });
+    _update: function(time, deltaTime) {
+        FaradaySimulation.prototype._update.apply(this, arguments);
 
-            // Pickup Coil
-            this.pickupCoil = new PickupCoil({
-                position:                 GeneratorSimulation.PICKUP_COIL_LOCATION,
-                direction:                GeneratorSimulation.PICKUP_COIL_DIRECTION,
-                numberOfLoops:            GeneratorSimulation.PICKUP_COIL_NUMBER_OF_LOOPS,
-                transitionSmoothingScale: GeneratorSimulation.PICKUP_COIL_TRANSITION_SMOOTHING_SCALE,
-                loopArea:                 GeneratorSimulation.PICKUP_COIL_LOOP_AREA
-            }, {
-                magnetModel: this.turbine,
-                calibrationEmf: GeneratorSimulation.CALIBRATION_EMF
-            });
+        this.turbine.update(time, deltaTime);
+        this.compass.update(time, deltaTime);
+        this.fieldMeter.update(time, deltaTime);
+        this.pickupCoil.update(time, deltaTime);
+        this.voltmeter.update(time, deltaTime);
+    }
 
-            // Lightbulb
-            this.lightbulb = new Lightbulb({
-                enabled: true
-            }, {
-                pickupCoilModel: this.pickupCoil
-            });
+}, Constants.GeneratorSimulation);
 
-            // Voltmeter
-            this.voltmeter = new Voltmeter({
-                enabled: false,
-                jiggleEnabled: true
-            }, {
-                pickupCoilModel: this.pickupCoil
-            });
-        },
-
-        resetComponents: function() {
-            FaradaySimulation.prototype.resetComponents.apply(this, arguments);
-
-            this.turbine.reset();
-            this.compass.reset();
-            this.fieldMeter.reset();
-            this.pickupCoil.reset();
-            this.lightbulb.reset();
-            this.voltmeter.reset();
-        },
-
-        _update: function(time, deltaTime) {
-            FaradaySimulation.prototype._update.apply(this, arguments);
-
-            this.turbine.update(time, deltaTime);
-            this.compass.update(time, deltaTime);
-            this.fieldMeter.update(time, deltaTime);
-            this.pickupCoil.update(time, deltaTime);
-            this.voltmeter.update(time, deltaTime);
-        }
-
-    }, Constants.GeneratorSimulation);
-
-    return GeneratorSimulation;
-});
+export default GeneratorSimulation;

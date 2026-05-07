@@ -1,28 +1,20 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import IntroSimView from 'views/sim/intro';
+import DielectricSimView from 'views/sim/dielectric';
+import MultipleCapacitorsSimView from 'views/sim/multiple-capacitors';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var CapacitorLabAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var IntroSimView              = require('views/sim/intro');
-    var DielectricSimView         = require('views/sim/dielectric');
-    var MultipleCapacitorsSimView = require('views/sim/multiple-capacitors');
+    simViewConstructors: [
+        IntroSimView,
+        DielectricSimView,
+        MultipleCapacitorsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var CapacitorLabAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            IntroSimView,
-            DielectricSimView,
-            MultipleCapacitorsSimView
-        ]
-
-    });
-
-    return CapacitorLabAppView;
 });
+
+export default CapacitorLabAppView;

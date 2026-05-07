@@ -1,69 +1,60 @@
-define(function(require) {
+import _ from 'underscore';
+import AppView from 'common/app/app';
+import IntroSimView from 'views/sim/intro';
+import ChartsSimView from 'views/sim/charts';
+import 'styles/font-awesome.css';
+import 'styles/app.css';
+import universalControlsHtml from 'templates/universal-controls.html?raw';
 
-    'use strict';
+var MovingManAppView = AppView.extend({
 
-    var _ = require('underscore');
+    simViewConstructors: [
+        IntroSimView,
+        ChartsSimView
+    ],
 
-    var AppView = require('common/app/app');
+    events: _.extend({}, AppView.prototype.events, {
+        'click .sound-btn' : 'changeVolume'
+    }),
 
-    var IntroSimView  = require('views/sim/intro');
-    var ChartsSimView = require('views/sim/charts');
+    /**
+     * Override render function to add universal controls
+     */
+    render: function() {
+        AppView.prototype.render.apply(this);
 
-    require('css!styles/font-awesome');
-    require('css!styles/app');
+        this.$el.append(universalControlsHtml);
+    },
 
-    var universalControlsHtml = require('text!templates/universal-controls.html');
+    /**
+     * Steps between the different discrete volume values and updates
+     *   the button's icon.
+     */
+    changeVolume: function(event) {
+        var $btn = $(event.target).closest('.sound-btn');
 
-    var MovingManAppView = AppView.extend({
+        $btn.hide();
 
-        simViewConstructors: [
-            IntroSimView,
-            ChartsSimView
-        ],
+        if ($btn.hasClass('sound-btn-mute')) {
+            this.$('.sound-btn-low').show();
+            _.each(this.simViews, function(simView) {
+                simView.sceneView.movingManView.lowVolume();
+            });
+        }
+        else if ($btn.hasClass('sound-btn-low')) {
+            this.$('.sound-btn-high').show();
+            _.each(this.simViews, function(simView) {
+                simView.sceneView.movingManView.highVolume();
+            });
+        }
+        else if ($btn.hasClass('sound-btn-high')) {
+            this.$('.sound-btn-mute').show();
+            _.each(this.simViews, function(simView) {
+                simView.sceneView.movingManView.muteVolume();
+            });
+        }
+    },
 
-        events: _.extend({}, AppView.prototype.events, {
-            'click .sound-btn' : 'changeVolume'
-        }),
-
-        /**
-         * Override render function to add universal controls
-         */
-        render: function() {
-            AppView.prototype.render.apply(this);
-
-            this.$el.append(universalControlsHtml);
-        },
-
-        /**
-         * Steps between the different discrete volume values and updates
-         *   the button's icon.
-         */
-        changeVolume: function(event) {
-            var $btn = $(event.target).closest('.sound-btn');
-
-            $btn.hide();
-
-            if ($btn.hasClass('sound-btn-mute')) {
-                this.$('.sound-btn-low').show();
-                _.each(this.simViews, function(simView) {
-                    simView.sceneView.movingManView.lowVolume();
-                });
-            }
-            else if ($btn.hasClass('sound-btn-low')) {
-                this.$('.sound-btn-high').show();
-                _.each(this.simViews, function(simView) {
-                    simView.sceneView.movingManView.highVolume();
-                });
-            }
-            else if ($btn.hasClass('sound-btn-high')) {
-                this.$('.sound-btn-mute').show();
-                _.each(this.simViews, function(simView) {
-                    simView.sceneView.movingManView.muteVolume();
-                });
-            }
-        },
-
-    });
-
-    return MovingManAppView;
 });
+
+export default MovingManAppView;

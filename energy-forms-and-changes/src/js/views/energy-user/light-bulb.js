@@ -1,93 +1,86 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import EnergyUserView from 'views/energy-user';
+import LightRaySourceView from 'views/light-ray-source';
 
-    'use strict';
+var LightBulb = EnergyUserView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        options = _.extend({
+            lightRayColor: '#fff',
+            lightRayCenter: new Vector2(),
+            lightRayInnerRadius: 30
+        }, options);
 
-    var Vector2 = require('common/math/vector2');
+        this.lightRayColor = options.lightRayColor;
+        this.lightRayCenter = options.lightRayCenter;
+        this.lightRayInnerRadius = options.lightRayInnerRadius;
 
-    var EnergyUserView = require('views/energy-user');
-    var LightRaySourceView = require('views/light-ray-source');
+        EnergyUserView.prototype.initialize.apply(this, [options]);
 
-    var LightBulb = EnergyUserView.extend({
+        this.listenTo(this.model, 'change:litProportion', this.updateLitProportion);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                lightRayColor: '#fff',
-                lightRayCenter: new Vector2(),
-                lightRayInnerRadius: 30
-            }, options);
+    initGraphics: function() {
+        EnergyUserView.prototype.initGraphics.apply(this);
 
-            this.lightRayColor = options.lightRayColor;
-            this.lightRayCenter = options.lightRayCenter;
-            this.lightRayInnerRadius = options.lightRayInnerRadius;
+        this.backLayer = new PIXI.Container();
+        this.frontLayer = new PIXI.Container();
 
-            EnergyUserView.prototype.initialize.apply(this, [options]);
+        this.initImages();
+        this.initLightRays();
 
-            this.listenTo(this.model, 'change:litProportion', this.updateLitProportion);
-        },
+        this.drawDebugOrigin();
 
-        initGraphics: function() {
-            EnergyUserView.prototype.initGraphics.apply(this);
+        // Make sure it's lit the right amount to start
+        this.updateLitProportion(this.model, this.model.get('litProportion'));
+    },
 
-            this.backLayer = new PIXI.Container();
-            this.frontLayer = new PIXI.Container();
+    initLightRays: function() {
+        var imageScale = this.getImageScale();
 
-            this.initImages();
-            this.initLightRays();
+        var raySource = new LightRaySourceView({
+            center: this.lightRayCenter.clone().scale(imageScale), // Origin of rays in pixels
+            innerRadius: this.lightRayInnerRadius * imageScale,    // Distance from center to start the rays
+            outerRadius: 400 * imageScale,                         // Furthest reach of the rays (making them technically segments)
+            numRays: 20,                           // The number of rays if none were clipped
+            clippingWedgeAngle: Math.PI / 4,       // Angle of area that won't emit rays
+            color: this.lightRayColor              // Ray color
+        });
+        this.lightRays = raySource.displayObject;
 
-            this.drawDebugOrigin();
+        this.backLayer.addChild(this.lightRays);
+    },
 
-            // Make sure it's lit the right amount to start
-            this.updateLitProportion(this.model, this.model.get('litProportion'));
-        },
+    /**
+     * This should be overriden by child classes
+     */
+    initImages: function() {
+        this.litBulb = new PIXI.DisplayObject();
+    },
 
-        initLightRays: function() {
-            var imageScale = this.getImageScale();
+    updateLitProportion: function(model, litProportion) {
+        this.litBulb.alpha = litProportion;
+        this.lightRays.alpha = litProportion;
+    },
 
-            var raySource = new LightRaySourceView({
-                center: this.lightRayCenter.clone().scale(imageScale), // Origin of rays in pixels
-                innerRadius: this.lightRayInnerRadius * imageScale,    // Distance from center to start the rays
-                outerRadius: 400 * imageScale,                         // Furthest reach of the rays (making them technically segments)
-                numRays: 20,                           // The number of rays if none were clipped
-                clippingWedgeAngle: Math.PI / 4,       // Angle of area that won't emit rays
-                color: this.lightRayColor              // Ray color
-            });
-            this.lightRays = raySource.displayObject;
+    updatePosition: function(model, position) {
+        var viewPoint = this.mvt.modelToView(position);
+        this.backLayer.x = this.frontLayer.x = viewPoint.x;
+        this.backLayer.y = this.frontLayer.y = viewPoint.y;
+    },
 
-            this.backLayer.addChild(this.lightRays);
-        },
+    showEnergyChunks: function() {
+        EnergyUserView.prototype.showEnergyChunks.apply(this);
+        this.lightRays.visible = false;
+    },
 
-        /**
-         * This should be overriden by child classes
-         */
-        initImages: function() {
-            this.litBulb = new PIXI.DisplayObject();
-        },
+    hideEnergyChunks: function() {
+        EnergyUserView.prototype.hideEnergyChunks.apply(this);
+        this.lightRays.visible = true;
+    },
 
-        updateLitProportion: function(model, litProportion) {
-            this.litBulb.alpha = litProportion;
-            this.lightRays.alpha = litProportion;
-        },
-
-        updatePosition: function(model, position) {
-            var viewPoint = this.mvt.modelToView(position);
-            this.backLayer.x = this.frontLayer.x = viewPoint.x;
-            this.backLayer.y = this.frontLayer.y = viewPoint.y;
-        },
-
-        showEnergyChunks: function() {
-            EnergyUserView.prototype.showEnergyChunks.apply(this);
-            this.lightRays.visible = false;
-        },
-
-        hideEnergyChunks: function() {
-            EnergyUserView.prototype.hideEnergyChunks.apply(this);
-            this.lightRays.visible = true;
-        },
-
-    });
-
-    return LightBulb;
 });
+
+export default LightBulb;

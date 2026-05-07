@@ -1,77 +1,69 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import EnergyConverterView from 'views/energy-converter';
+import Assets from 'assets';
+import Constants from 'constants';
+var ElectricalGenerator = Constants.ElectricalGenerator;
 
-    'use strict';
+var ElectricalGeneratorView = EnergyConverterView.extend({
 
-    var PIXI = require('pixi');
+    /**
+     *
+     */
+    initialize: function(options) {
+        EnergyConverterView.prototype.initialize.apply(this, [options]);
 
-    var EnergyConverterView = require('views/energy-converter');
+        this.listenTo(this.model, 'change:wheelRotationalAngle', this.updateWheelRotation);
+        this.listenTo(this.model, 'change:directCouplingMode',   this.directCouplingModeChanged);
+    },
 
-    var Assets = require('assets');
+    initGraphics: function() {
+        EnergyConverterView.prototype.initGraphics.apply(this);
 
-    var Constants = require('constants');
-    var ElectricalGenerator = Constants.ElectricalGenerator;
+        this.backLayer = new PIXI.Container();
+        this.frontLayer = new PIXI.Container();
 
-    var ElectricalGeneratorView = EnergyConverterView.extend({
+        this.createEnergyChunkCollectionView('electricalEnergyChunkLayer', this.model.electricalEnergyChunks);
+        this.createEnergyChunkCollectionView('hiddenEnergyChunkLayer',     this.model.hiddenEnergyChunks);
 
-        /**
-         *
-         */
-        initialize: function(options) {
-            EnergyConverterView.prototype.initialize.apply(this, [options]);
+        var curvedWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_LEFT,         ElectricalGenerator.WIRE_OFFSET);
+        var housing    = this.createSpriteWithOffset(Assets.Images.GENERATOR);
+        var connector  = this.createSpriteWithOffset(Assets.Images.CONNECTOR,               ElectricalGenerator.CONNECTOR_OFFSET);
+        var spokes     = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_SPOKES,  ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
+        var paddles    = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_PADDLES, ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
+        var hub        = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_HUB_2,   ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
 
-            this.listenTo(this.model, 'change:wheelRotationalAngle', this.updateWheelRotation);
-            this.listenTo(this.model, 'change:directCouplingMode',   this.directCouplingModeChanged);
-        },
+        // Need to fudge the position a little...
+        curvedWire.x += 2;
 
-        initGraphics: function() {
-            EnergyConverterView.prototype.initGraphics.apply(this);
+        this.backLayer.addChild(curvedWire);
+        this.frontLayer.addChild(housing);
+        this.frontLayer.addChild(connector);
+        this.frontLayer.addChild(spokes);
+        this.frontLayer.addChild(paddles);
+        this.frontLayer.addChild(hub);
 
-            this.backLayer = new PIXI.Container();
-            this.frontLayer = new PIXI.Container();
+        this.spokes = spokes;
+        this.paddles = paddles;
 
-            this.createEnergyChunkCollectionView('electricalEnergyChunkLayer', this.model.electricalEnergyChunks);
-            this.createEnergyChunkCollectionView('hiddenEnergyChunkLayer',     this.model.hiddenEnergyChunks);
+        //this.drawDebugOrigin(this.frontLayer);
+    },
 
-            var curvedWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_LEFT,         ElectricalGenerator.WIRE_OFFSET);
-            var housing    = this.createSpriteWithOffset(Assets.Images.GENERATOR);
-            var connector  = this.createSpriteWithOffset(Assets.Images.CONNECTOR,               ElectricalGenerator.CONNECTOR_OFFSET);
-            var spokes     = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_SPOKES,  ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
-            var paddles    = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_PADDLES, ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
-            var hub        = this.createSpriteWithOffset(Assets.Images.GENERATOR_WHEEL_HUB_2,   ElectricalGenerator.WHEEL_CENTER_OFFSET, 0.5);
+    updatePosition: function(model, position) {
+        var viewPoint = this.mvt.modelToView(position);
+        this.backLayer.x = this.frontLayer.x = viewPoint.x;
+        this.backLayer.y = this.frontLayer.y = viewPoint.y;
+    },
 
-            // Need to fudge the position a little...
-            curvedWire.x += 2;
+    updateWheelRotation: function(model, rotation) {
+        this.spokes.rotation  = -rotation;
+        this.paddles.rotation = -rotation;
+    },
 
-            this.backLayer.addChild(curvedWire);
-            this.frontLayer.addChild(housing);
-            this.frontLayer.addChild(connector);
-            this.frontLayer.addChild(spokes);
-            this.frontLayer.addChild(paddles);
-            this.frontLayer.addChild(hub);
+    directCouplingModeChanged: function(model, directCouplingMode) {
+        this.paddles.visible = !directCouplingMode;
+        this.spokes.visible  =  directCouplingMode;
+    }
 
-            this.spokes = spokes;
-            this.paddles = paddles;
-
-            //this.drawDebugOrigin(this.frontLayer);
-        },
-
-        updatePosition: function(model, position) {
-            var viewPoint = this.mvt.modelToView(position);
-            this.backLayer.x = this.frontLayer.x = viewPoint.x;
-            this.backLayer.y = this.frontLayer.y = viewPoint.y;
-        },
-
-        updateWheelRotation: function(model, rotation) {
-            this.spokes.rotation  = -rotation;
-            this.paddles.rotation = -rotation;
-        },
-
-        directCouplingModeChanged: function(model, directCouplingMode) {
-            this.paddles.visible = !directCouplingMode;
-            this.spokes.visible  =  directCouplingMode;
-        }
-
-    });
-
-    return ElectricalGeneratorView;
 });
+
+export default ElectricalGeneratorView;

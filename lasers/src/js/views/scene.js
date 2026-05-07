@@ -1,253 +1,242 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import AppView from 'common/v3/app/app';
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import ModelViewTransform from 'common/math/model-view-transform';
+import PiecewiseCurve from 'common/math/piecewise-curve';
+import Rectangle from 'common/math/rectangle';
+import MirrorView from 'views/mirror';
+import PhotonCollectionView from 'views/photon-collection';
+import TubeView from 'views/tube';
+import LaserCurtainView from 'views/laser-curtain';
+import BeamCurtainView from 'views/beam-curtain';
+import LaserWaveView from 'views/laser-wave';
+import EnergyLevelPanelView from 'views/energy-level-panel';
+import LaserExplosionView from 'views/laser-explosion';
+import Constants from 'constants';
+import 'styles/scene.less';
 
-    'use strict';
+/**
+ *
+ */
+var LasersSceneView = PixiSceneView.extend({
 
-    var PIXI = require('pixi');
+    events: {
 
-    var AppView            = require('common/v3/app/app');
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var PiecewiseCurve     = require('common/math/piecewise-curve');
-    var Rectangle          = require('common/math/rectangle');
+    },
 
-    var MirrorView           = require('views/mirror');
-    var PhotonCollectionView = require('views/photon-collection');
-    var TubeView             = require('views/tube');
-    var LaserCurtainView     = require('views/laser-curtain');
-    var BeamCurtainView      = require('views/beam-curtain');
-    var LaserWaveView        = require('views/laser-wave');
-    var EnergyLevelPanelView = require('views/energy-level-panel');
-    var LaserExplosionView   = require('views/laser-explosion');
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
 
-    // Constants
-    var Constants = require('constants');
+        this.listenTo(this.simulation, 'change:exploded', this.explodedChanged);
+    },
 
-    // CSS
-    require('less!styles/scene');
+    reset: function() {
 
-    /**
-     *
-     */
-    var LasersSceneView = PixiSceneView.extend({
+    },
 
-        events: {
+    initGraphics: function() {
+        PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
-        },
+        this.initMVT();
+        this.initLayers();
+        this.initPhotons();
+        this.initTube();
+        this.initMirrors();
+        this.initLaserCurtainViews();
+        this.initBeamCurtainView();
+        this.initLaserWaveView();
+        this.initEnergyLevelPanel();
+        this.initExplosion();
+    },
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
+    initMVT: function() {
+        // TODO: Remove this
+        this.mvt = ModelViewTransform.createScaleMapping(1);
+    },
 
-            this.listenTo(this.simulation, 'change:exploded', this.explodedChanged);
-        },
+    initLayers: function() {
+        this.backgroundLayer     = new PIXI.Container();
+        this.atomLayer           = new PIXI.Container();
+        this.tubeLayer           = new PIXI.Container();
+        this.photonElectronLayer = new PIXI.Container();
+        this.foregroundLayer     = new PIXI.Container();
+        this.lampLayer           = new PIXI.Container();
+        this.effectsLayer        = new PIXI.Container();
+        this.controlsLayer       = new PIXI.Container();
 
-        reset: function() {
+        this.stage.addChild(this.backgroundLayer);
+        this.stage.addChild(this.atomLayer);
+        this.stage.addChild(this.tubeLayer);
+        this.stage.addChild(this.photonElectronLayer);
+        this.stage.addChild(this.foregroundLayer);
+        this.stage.addChild(this.lampLayer);
+        this.stage.addChild(this.effectsLayer);
+        this.stage.addChild(this.controlsLayer);
+    },
 
-        },
+    initPhotons: function() {
+        this.photonsView = new PhotonCollectionView({
+            collection: this.simulation.photons,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
 
-        initGraphics: function() {
-            PixiSceneView.prototype.initGraphics.apply(this, arguments);
+        this.photonElectronLayer.addChild(this.photonsView.displayObject);
+    },
 
-            this.initMVT();
-            this.initLayers();
-            this.initPhotons();
-            this.initTube();
-            this.initMirrors();
-            this.initLaserCurtainViews();
-            this.initBeamCurtainView();
-            this.initLaserWaveView();
-            this.initEnergyLevelPanel();
-            this.initExplosion();
-        },
+    initTube: function() {
+        this.tubeView = new TubeView({
+            model: this.simulation.tube,
+            mvt: this.mvt
+        });
 
-        initMVT: function() {
-            // TODO: Remove this
-            this.mvt = ModelViewTransform.createScaleMapping(1);
-        },
+        this.tubeLayer.addChild(this.tubeView.displayObject);
+    },
 
-        initLayers: function() {
-            this.backgroundLayer     = new PIXI.Container();
-            this.atomLayer           = new PIXI.Container();
-            this.tubeLayer           = new PIXI.Container();
-            this.photonElectronLayer = new PIXI.Container();
-            this.foregroundLayer     = new PIXI.Container();
-            this.lampLayer           = new PIXI.Container();
-            this.effectsLayer        = new PIXI.Container();
-            this.controlsLayer       = new PIXI.Container();
+    initMirrors: function() {
+        this.rightMirrorView = new MirrorView({
+            mvt: this.mvt,
+            model: this.simulation.rightMirror,
+            simulation: this.simulation,
+            leftFacing: true
+        });
 
-            this.stage.addChild(this.backgroundLayer);
-            this.stage.addChild(this.atomLayer);
-            this.stage.addChild(this.tubeLayer);
-            this.stage.addChild(this.photonElectronLayer);
-            this.stage.addChild(this.foregroundLayer);
-            this.stage.addChild(this.lampLayer);
-            this.stage.addChild(this.effectsLayer);
-            this.stage.addChild(this.controlsLayer);
-        },
+        this.leftMirrorView = new MirrorView({
+            mvt: this.mvt,
+            model: this.simulation.leftMirror,
+            simulation: this.simulation,
+            leftFacing: false
+        });
 
-        initPhotons: function() {
-            this.photonsView = new PhotonCollectionView({
-                collection: this.simulation.photons,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
+        this.backgroundLayer.addChild(this.rightMirrorView.displayObject);
+        this.foregroundLayer.addChild(this.leftMirrorView.displayObject);
+    },
 
-            this.photonElectronLayer.addChild(this.photonsView.displayObject);
-        },
+    initBeamCurtainView: function() {
+        this.beamCurtainView = new BeamCurtainView({
+            mvt: this.mvt,
+            model: this.simulation.pumpingBeam
+        });
 
-        initTube: function() {
-            this.tubeView = new TubeView({
-                model: this.simulation.tube,
-                mvt: this.mvt
-            });
+        this.backgroundLayer.addChildAt(this.beamCurtainView.displayObject, 0);
 
-            this.tubeLayer.addChild(this.tubeView.displayObject);
-        },
+        this.determineBeamCurtainViewVisibility();
+    },
 
-        initMirrors: function() {
-            this.rightMirrorView = new MirrorView({
-                mvt: this.mvt,
-                model: this.simulation.rightMirror,
-                simulation: this.simulation,
-                leftFacing: true
-            });
+    initLaserCurtainViews: function() {
+        var tubeBounds = this.simulation.tube.getBounds();
+        var lensRadius = Constants.MIRROR_THICKNESS / 2 + 3;
+        var internalShape = new PiecewiseCurve()
+            .moveTo(tubeBounds.right(), tubeBounds.top())
+            .lineTo(tubeBounds.left(),  tubeBounds.top())
+            .lineTo(tubeBounds.left(),  tubeBounds.bottom())
+            .lineTo(tubeBounds.right(), tubeBounds.bottom())
+            .curveTo(
+                tubeBounds.right() + lensRadius, tubeBounds.bottom(),
+                tubeBounds.right() + lensRadius, tubeBounds.top(),
+                tubeBounds.right(),              tubeBounds.top()
+            );
 
-            this.leftMirrorView = new MirrorView({
-                mvt: this.mvt,
-                model: this.simulation.leftMirror,
-                simulation: this.simulation,
-                leftFacing: false
-            });
+        this.internalLaserCurtainView = new LaserCurtainView({
+            mvt: this.mvt,
+            simulation: this.simulation,
+            modelShape: internalShape
+        });
 
-            this.backgroundLayer.addChild(this.rightMirrorView.displayObject);
-            this.foregroundLayer.addChild(this.leftMirrorView.displayObject);
-        },
+        var externalShape = new Rectangle(tubeBounds.right(), tubeBounds.y, 500, tubeBounds.h);
 
-        initBeamCurtainView: function() {
-            this.beamCurtainView = new BeamCurtainView({
-                mvt: this.mvt,
-                model: this.simulation.pumpingBeam
-            });
+        this.externalLaserCurtainView = new LaserCurtainView({
+            mvt: this.mvt,
+            simulation: this.simulation,
+            modelShape: externalShape
+        });
 
-            this.backgroundLayer.addChildAt(this.beamCurtainView.displayObject, 0);
+        // Create a listener that will adjust the maximum alpha of the external beam based on
+        //   the reflectivity of the right-hand mirror
+        this.listenTo(this.simulation.rightMirror, 'change:reflectivity', this.rightMirrorReflectivityChanged);
+        this.rightMirrorReflectivityChanged(this.simulation.rightMirror, this.simulation.rightMirror.get('reflectivity'));
 
-            this.determineBeamCurtainViewVisibility();
-        },
+        this.foregroundLayer.addChildAt(this.internalLaserCurtainView.displayObject, 0);
+        this.backgroundLayer.addChildAt(this.externalLaserCurtainView.displayObject, 0);
+    },
 
-        initLaserCurtainViews: function() {
-            var tubeBounds = this.simulation.tube.getBounds();
-            var lensRadius = Constants.MIRROR_THICKNESS / 2 + 3;
-            var internalShape = new PiecewiseCurve()
-                .moveTo(tubeBounds.right(), tubeBounds.top())
-                .lineTo(tubeBounds.left(),  tubeBounds.top())
-                .lineTo(tubeBounds.left(),  tubeBounds.bottom())
-                .lineTo(tubeBounds.right(), tubeBounds.bottom())
-                .curveTo(
-                    tubeBounds.right() + lensRadius, tubeBounds.bottom(),
-                    tubeBounds.right() + lensRadius, tubeBounds.top(),
-                    tubeBounds.right(),              tubeBounds.top()
-                );
+    initLaserWaveView: function() {
+        this.laserWaveView = new LaserWaveView({
+            mvt: this.mvt,
+            simulation: this.simulation
+        });
 
-            this.internalLaserCurtainView = new LaserCurtainView({
-                mvt: this.mvt,
-                simulation: this.simulation,
-                modelShape: internalShape
-            });
+        this.tubeLayer.addChild(this.laserWaveView.foregroundLayer);
+        this.backgroundLayer.addChildAt(this.laserWaveView.backgroundLayer, 0);
+    },
 
-            var externalShape = new Rectangle(tubeBounds.right(), tubeBounds.y, 500, tubeBounds.h);
+    initEnergyLevelPanel: function() {
+        this.energyLevelPanelView = new EnergyLevelPanelView({
+            simulation: this.simulation,
+            averagingPeriod: 0
+        });
 
-            this.externalLaserCurtainView = new LaserCurtainView({
-                mvt: this.mvt,
-                simulation: this.simulation,
-                modelShape: externalShape
-            });
-
-            // Create a listener that will adjust the maximum alpha of the external beam based on
-            //   the reflectivity of the right-hand mirror
-            this.listenTo(this.simulation.rightMirror, 'change:reflectivity', this.rightMirrorReflectivityChanged);
-            this.rightMirrorReflectivityChanged(this.simulation.rightMirror, this.simulation.rightMirror.get('reflectivity'));
-
-            this.foregroundLayer.addChildAt(this.internalLaserCurtainView.displayObject, 0);
-            this.backgroundLayer.addChildAt(this.externalLaserCurtainView.displayObject, 0);
-        },
-
-        initLaserWaveView: function() {
-            this.laserWaveView = new LaserWaveView({
-                mvt: this.mvt,
-                simulation: this.simulation
-            });
-
-            this.tubeLayer.addChild(this.laserWaveView.foregroundLayer);
-            this.backgroundLayer.addChildAt(this.laserWaveView.backgroundLayer, 0);
-        },
-
-        initEnergyLevelPanel: function() {
-            this.energyLevelPanelView = new EnergyLevelPanelView({
-                simulation: this.simulation,
-                averagingPeriod: 0
-            });
-
-            if (AppView.windowIsShort()) {
-                this.energyLevelPanelView.displayObject.x = 12;
-                this.energyLevelPanelView.displayObject.y = 12;
-            }
-            else {
-                this.energyLevelPanelView.displayObject.x = 20;
-                this.energyLevelPanelView.displayObject.y = 20;
-            }
-
-            this.controlsLayer.addChild(this.energyLevelPanelView.displayObject);
-        },
-
-        initExplosion: function() {
-            this.explosionView = new LaserExplosionView({
-                mvt: this.mvt,
-                simulation: this.simulation
-            });
-
-            this.effectsLayer.addChild(this.explosionView.displayObject);
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            this.photonsView.update(time, deltaTime, paused);
-            this.energyLevelPanelView.update(time, deltaTime, paused);
-            this.laserWaveView.update(time, deltaTime, paused);
-            this.explosionView.update(time, deltaTime, paused);
-        },
-
-        showHelp: function() {
-            this.energyLevelPanelView.showHelp();
-        },
-
-        hideHelp: function() {
-            this.energyLevelPanelView.hideHelp();
-        },
-
-        rightMirrorReflectivityChanged: function(mirror, reflectivity) {
-            this.externalLaserCurtainView.setMaxAlpha(1 - (Math.pow(reflectivity, 1.5)));
-        },
-
-        explodedChanged: function(simulation, exploded) {
-            if (exploded) {
-                this.backgroundLayer.visible = false;
-                this.atomLayer.visible = false;
-                this.tubeLayer.visible = false;
-                this.photonElectronLayer.visible = false;
-                this.foregroundLayer.visible = false;
-            }
-            else {
-                this.backgroundLayer.visible = true;
-                this.atomLayer.visible = true;
-                this.tubeLayer.visible = true;
-                this.photonElectronLayer.visible = true;
-                this.foregroundLayer.visible = true;
-            }
-        },
-
-        photonSizeChanged: function() {
-            this.photonsView.updateMVT(this.mvt);
+        if (AppView.windowIsShort()) {
+            this.energyLevelPanelView.displayObject.x = 12;
+            this.energyLevelPanelView.displayObject.y = 12;
+        }
+        else {
+            this.energyLevelPanelView.displayObject.x = 20;
+            this.energyLevelPanelView.displayObject.y = 20;
         }
 
-    });
+        this.controlsLayer.addChild(this.energyLevelPanelView.displayObject);
+    },
 
-    return LasersSceneView;
+    initExplosion: function() {
+        this.explosionView = new LaserExplosionView({
+            mvt: this.mvt,
+            simulation: this.simulation
+        });
+
+        this.effectsLayer.addChild(this.explosionView.displayObject);
+    },
+
+    _update: function(time, deltaTime, paused, timeScale) {
+        this.photonsView.update(time, deltaTime, paused);
+        this.energyLevelPanelView.update(time, deltaTime, paused);
+        this.laserWaveView.update(time, deltaTime, paused);
+        this.explosionView.update(time, deltaTime, paused);
+    },
+
+    showHelp: function() {
+        this.energyLevelPanelView.showHelp();
+    },
+
+    hideHelp: function() {
+        this.energyLevelPanelView.hideHelp();
+    },
+
+    rightMirrorReflectivityChanged: function(mirror, reflectivity) {
+        this.externalLaserCurtainView.setMaxAlpha(1 - (Math.pow(reflectivity, 1.5)));
+    },
+
+    explodedChanged: function(simulation, exploded) {
+        if (exploded) {
+            this.backgroundLayer.visible = false;
+            this.atomLayer.visible = false;
+            this.tubeLayer.visible = false;
+            this.photonElectronLayer.visible = false;
+            this.foregroundLayer.visible = false;
+        }
+        else {
+            this.backgroundLayer.visible = true;
+            this.atomLayer.visible = true;
+            this.tubeLayer.visible = true;
+            this.photonElectronLayer.visible = true;
+            this.foregroundLayer.visible = true;
+        }
+    },
+
+    photonSizeChanged: function() {
+        this.photonsView.updateMVT(this.mvt);
+    }
+
 });
+
+export default LasersSceneView;

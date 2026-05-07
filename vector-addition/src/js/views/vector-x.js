@@ -1,45 +1,39 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import CommonArrowView from 'common/v3/pixi/view/arrow';
+import VectorXViewModel from 'models/vector-x';
 
-  'use strict';
+var VectorXView = PixiView.extend({
 
-  var PIXI = require('pixi');
-  var PixiView = require('common/v3/pixi/view');
-  var CommonArrowView = require('common/v3/pixi/view/arrow');
-  var VectorXViewModel = require('models/vector-x');
+  initialize: function(options) {
+    this.vectorXViewModel = new VectorXViewModel();
+    this.model = options.simModel;
+    this.vectorViewModel = options.vectorViewModel;
 
-  var VectorXView = PixiView.extend({
+    this.drawVectorX();
+  },
 
-    initialize: function(options) {
-      this.vectorXViewModel = new VectorXViewModel();
-      this.model = options.simModel;
-      this.vectorViewModel = options.vectorViewModel;
+  drawVectorX: function() {
+    this.vectorXView = new CommonArrowView({
+        model: this.vectorXViewModel,
+        fillColor: this.model.get('pink')
+    });
 
-      this.drawVectorX();
-    },
+    this.vectorXContainer = new PIXI.Container();
+    this.vectorXContainer.addChild(this.vectorXView.displayObject);
+    this.displayObject.addChild(this.vectorXContainer);
+    this.vectorXContainer.visible = false;
 
-    drawVectorX: function() {
-      this.vectorXView = new CommonArrowView({
-          model: this.vectorXViewModel,
-          fillColor: this.model.get('pink')
-      });
+    var model = this.vectorXViewModel;
 
-      this.vectorXContainer = new PIXI.Container();
-      this.vectorXContainer.addChild(this.vectorXView.displayObject);
-      this.displayObject.addChild(this.vectorXContainer);
-      this.vectorXContainer.visible = false;
+    model.set('originX', this.model.vectorViewModel.get('originX'));
+    model.set('originY', this.model.vectorViewModel.get('originY'));
+    model.set('targetX', this.model.vectorViewModel.get('targetX'));
+    model.set('targetY', this.model.vectorViewModel.get('targetY'));
+    model.set('oldOriginX', model.get('originX'));
+    model.set('oldOriginY', model.get('originY'));
+  }
 
-      var model = this.vectorXViewModel;
+});
 
-      model.set('originX', this.model.vectorViewModel.get('originX'));
-      model.set('originY', this.model.vectorViewModel.get('originY'));
-      model.set('targetX', this.model.vectorViewModel.get('targetX'));
-      model.set('targetY', this.model.vectorViewModel.get('targetY'));
-      model.set('oldOriginX', model.get('originX'));
-      model.set('oldOriginY', model.get('originY'));
-    }
-
-  });
-
-  return VectorXView;
-
-})
+export default VectorXView;

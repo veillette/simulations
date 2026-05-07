@@ -1,130 +1,123 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
 
-    'use strict';
+var MirrorView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        this.simulation = options.simulation;
+        this.leftFacing = options.leftFacing;
+        this.modelThickness = Constants.MIRROR_THICKNESS;
+        this.xOffset = (options.leftFacing) ? 0 : -this.modelThickness;
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
+        // Cached objects
+        this._position = new Vector2();
 
-    var Constants = require('constants');
+        this.initGraphics();
+        this.updateMVT(options.mvt);
 
-    var MirrorView = PixiView.extend({
+        this.listenTo(this.model, 'change:reflectivity', this.reflecivityChanged);
+        this.listenTo(this.simulation, 'change:mirrorsEnabled', this.mirrorsEnabledChanged);
 
-        initialize: function(options) {
-            this.simulation = options.simulation;
-            this.leftFacing = options.leftFacing;
-            this.modelThickness = Constants.MIRROR_THICKNESS;
-            this.xOffset = (options.leftFacing) ? 0 : -this.modelThickness;
+        this.mirrorsEnabledChanged(this.simulation, this.simulation.get('mirrorsEnabled'));
+    },
 
-            // Cached objects
-            this._position = new Vector2();
+    initGraphics: function() {
+        this.graphics = new PIXI.Graphics();
+        this.outlineGraphics = new PIXI.Graphics();
 
-            this.initGraphics();
-            this.updateMVT(options.mvt);
+        var blurFilter = new PIXI.filters.BlurFilter();
+        blurFilter.blur = 20;
 
-            this.listenTo(this.model, 'change:reflectivity', this.reflecivityChanged);
-            this.listenTo(this.simulation, 'change:mirrorsEnabled', this.mirrorsEnabledChanged);
+        this.shineMask = new PIXI.Graphics();
 
-            this.mirrorsEnabledChanged(this.simulation, this.simulation.get('mirrorsEnabled'));
-        },
+        this.shineGraphics = new PIXI.Graphics();
+        this.shineGraphics.mask = this.shineMask;
+        this.shineGraphics.filters = [ blurFilter ];
 
-        initGraphics: function() {
-            this.graphics = new PIXI.Graphics();
-            this.outlineGraphics = new PIXI.Graphics();
+        this.displayObject.addChild(this.graphics);
+        this.displayObject.addChild(this.shineGraphics);
+        this.displayObject.addChild(this.shineMask);
+        this.displayObject.addChild(this.outlineGraphics);
+    },
 
-            var blurFilter = new PIXI.filters.BlurFilter();
-            blurFilter.blur = 20;
+    draw: function() {
+        // Calculate position and dimensions
+        var thickness = this.mvt.modelToViewDeltaX(this.modelThickness);
+        var height = this.mvt.modelToViewDeltaY(this.model.getBounds().h);
+        var position = this._position
+            .set(this.mvt.modelToView(this.model.get('position')))
+            .add(-thickness / 2 + this.xOffset, 0);
 
-            this.shineMask = new PIXI.Graphics();
+        // Calculate color
+        var reflectivity = this.model.getReflectivity();
+        var maxGray = 100;
+        var minGray = 220;
+        var grayValue = minGray - Math.floor(reflectivity * (minGray - maxGray));
+        var fillColor = Colors.rgbToHexInteger(grayValue, grayValue, grayValue);
+        var lineGrayValue = Math.floor(grayValue * 0.7);
+        var lineColor = Colors.rgbToHexInteger(lineGrayValue, lineGrayValue, lineGrayValue);
+        var lineWidth = 2;
 
-            this.shineGraphics = new PIXI.Graphics();
-            this.shineGraphics.mask = this.shineMask;
-            this.shineGraphics.filters = [ blurFilter ];
+        // Position everything
+        this.displayObject.x = position.x;
+        this.displayObject.y = position.y;
 
-            this.displayObject.addChild(this.graphics);
-            this.displayObject.addChild(this.shineGraphics);
-            this.displayObject.addChild(this.shineMask);
-            this.displayObject.addChild(this.outlineGraphics);
-        },
+        var graphics = this.graphics;
+        graphics.clear();
+        graphics.beginFill(fillColor, 1);
 
-        draw: function() {
-            // Calculate position and dimensions
-            var thickness = this.mvt.modelToViewDeltaX(this.modelThickness);
-            var height = this.mvt.modelToViewDeltaY(this.model.getBounds().h);
-            var position = this._position
-                .set(this.mvt.modelToView(this.model.get('position')))
-                .add(-thickness / 2 + this.xOffset, 0);
+        graphics.lineStyle(lineWidth, lineColor, 1);
+        graphics.drawEllipse(thickness * 1.5, height / 2, thickness / 2, height / 2);
 
-            // Calculate color
-            var reflectivity = this.model.getReflectivity();
-            var maxGray = 100;
-            var minGray = 220;
-            var grayValue = minGray - Math.floor(reflectivity * (minGray - maxGray));
-            var fillColor = Colors.rgbToHexInteger(grayValue, grayValue, grayValue);
-            var lineGrayValue = Math.floor(grayValue * 0.7);
-            var lineColor = Colors.rgbToHexInteger(lineGrayValue, lineGrayValue, lineGrayValue);
-            var lineWidth = 2;
+        graphics.lineStyle(0, 0, 0);
+        graphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+        graphics.drawRect(thickness / 2, 0, thickness, height);
 
-            // Position everything
-            this.displayObject.x = position.x;
-            this.displayObject.y = position.y;
+        graphics.endFill();
 
-            var graphics = this.graphics;
-            graphics.clear();
-            graphics.beginFill(fillColor, 1);
+        graphics.lineStyle(lineWidth, lineColor, 1);
+        graphics.moveTo(thickness / 2, 0);
+        graphics.lineTo(thickness * 1.5, 0);
+        graphics.moveTo(thickness / 2, height);
+        graphics.lineTo(thickness * 1.5, height);
 
-            graphics.lineStyle(lineWidth, lineColor, 1);
-            graphics.drawEllipse(thickness * 1.5, height / 2, thickness / 2, height / 2);
+        var outlineGraphics = this.outlineGraphics;
+        outlineGraphics.lineStyle(lineWidth, lineColor, 1);
+        outlineGraphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
 
-            graphics.lineStyle(0, 0, 0);
-            graphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
-            graphics.drawRect(thickness / 2, 0, thickness, height);
+        var mask = this.shineMask;
+        mask.clear();
+        mask.beginFill();
+        mask.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+        mask.endFill();
 
-            graphics.endFill();
+        var shineGraphics = this.shineGraphics;
+        shineGraphics.clear();
+        shineGraphics.lineStyle(2, 0xFFFFFF, 1);
+        shineGraphics.moveTo(0, height);
+        shineGraphics.lineTo(thickness, 0);
+    },
 
-            graphics.lineStyle(lineWidth, lineColor, 1);
-            graphics.moveTo(thickness / 2, 0);
-            graphics.lineTo(thickness * 1.5, 0);
-            graphics.moveTo(thickness / 2, height);
-            graphics.lineTo(thickness * 1.5, height);
+    /**
+     * Updates the model-view-transform and anything that relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            var outlineGraphics = this.outlineGraphics;
-            outlineGraphics.lineStyle(lineWidth, lineColor, 1);
-            outlineGraphics.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
+        this.draw();
+    },
 
-            var mask = this.shineMask;
-            mask.clear();
-            mask.beginFill();
-            mask.drawEllipse(thickness / 2, height / 2, thickness / 2, height / 2);
-            mask.endFill();
+    reflecivityChanged: function() {
+        this.draw();
+    },
 
-            var shineGraphics = this.shineGraphics;
-            shineGraphics.clear();
-            shineGraphics.lineStyle(2, 0xFFFFFF, 1);
-            shineGraphics.moveTo(0, height);
-            shineGraphics.lineTo(thickness, 0);
-        },
+    mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
+        this.displayObject.visible = mirrorsEnabled;
+    }
 
-        /**
-         * Updates the model-view-transform and anything that relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-        },
-
-        reflecivityChanged: function() {
-            this.draw();
-        },
-
-        mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
-            this.displayObject.visible = mirrorsEnabled;
-        }
-
-    });
-
-    return MirrorView;
 });
+
+export default MirrorView;

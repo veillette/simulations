@@ -1,123 +1,114 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import EnergyUserView from 'views/energy-user';
+import BeakerView from 'views/element/beaker';
+import ThermometerView from 'views/element/thermometer';
+import Assets from 'assets';
+import Constants from 'constants';
+var BeakerHeater = Constants.BeakerHeater;
 
-    'use strict';
+var BeakerHeaterView = EnergyUserView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        options = _.extend({
 
-    var Vector2 = require('common/math/vector2');
+        }, options);
 
-    var EnergyUserView  = require('views/energy-user');
-    var BeakerView      = require('views/element/beaker');
-    var ThermometerView = require('views/element/thermometer');
+        if (!options.simulation)
+            throw 'BeakerHeaterView requires the simulation object to be passed in as an option.';
+        this.simulation = options.simulation;
 
-    var Assets = require('assets');
+        EnergyUserView.prototype.initialize.apply(this, [options]);
 
-    var Constants = require('constants');
-    var BeakerHeater = Constants.BeakerHeater;
+        this.listenTo(this.model, 'change:heatProportion', this.updateHeatProportion);
+        this.updateHeatProportion(this.model, this.model.get('litProportion'));
+    },
 
-    var BeakerHeaterView = EnergyUserView.extend({
+    initGraphics: function() {
+        EnergyUserView.prototype.initGraphics.apply(this);
 
-        initialize: function(options) {
-            options = _.extend({
+        this.backLayer = new PIXI.Container();
+        this.frontLayer = new PIXI.Container();
 
-            }, options);
+        this.initImages();
+        this.initBeakerView();
+        this.initThermometerView();
 
-            if (!options.simulation)
-                throw 'BeakerHeaterView requires the simulation object to be passed in as an option.';
-            this.simulation = options.simulation;
+        this.createEnergyChunkCollectionView('radiatedEnergyChunks', this.model.radiatedEnergyChunks);
+        this.energyChunkLayer.addChild(this.radiatedEnergyChunks);
+    },
 
-            EnergyUserView.prototype.initialize.apply(this, [options]);
+    /**
+     * This should be overriden by child classes
+     */
+    initImages: function() {
+        var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,      new Vector2(-0.036, -0.04));
+        var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,   new Vector2(-0.009, -0.016));
+        var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
+        var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
+        var coldCoil     = this.createSpriteWithOffset(Assets.Images.HEATER_ELEMENT_DARK, BeakerHeater.HEATER_ELEMENT_OFFSET);
+        var energizedCoil = this.createSpriteWithOffset(Assets.Images.HEATER_ELEMENT,     BeakerHeater.HEATER_ELEMENT_OFFSET);
+        this.energizedCoil = energizedCoil; // We need to remember this one
 
-            this.listenTo(this.model, 'change:heatProportion', this.updateHeatProportion);
-            this.updateHeatProportion(this.model, this.model.get('litProportion'));
-        },
+        // Fudging
+        straightWire.x += 4;
 
-        initGraphics: function() {
-            EnergyUserView.prototype.initGraphics.apply(this);
+        this.backLayer.addChild(straightWire);
+        this.backLayer.addChild(curvedWire);
+        this.backLayer.addChild(baseBack);
+        this.backLayer.addChild(coldCoil);
+        this.backLayer.addChild(energizedCoil);
 
-            this.backLayer = new PIXI.Container();
-            this.frontLayer = new PIXI.Container();
+        // [ energy chunks layer ]
 
-            this.initImages();
-            this.initBeakerView();
-            this.initThermometerView();
+        this.frontLayer.addChild(baseFront);
+    },
 
-            this.createEnergyChunkCollectionView('radiatedEnergyChunks', this.model.radiatedEnergyChunks);
-            this.energyChunkLayer.addChild(this.radiatedEnergyChunks);
-        },
+    initBeakerView: function() {
+        var beakerView = new BeakerView({
+            model: this.model.beaker,
+            mvt: this.mvt,
+            simulation: this.simulation
+        });
+        this.beakerView = beakerView;
+    },
 
-        /**
-         * This should be overriden by child classes
-         */
-        initImages: function() {
-            var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,      new Vector2(-0.036, -0.04));
-            var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,   new Vector2(-0.009, -0.016));
-            var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
-            var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
-            var coldCoil     = this.createSpriteWithOffset(Assets.Images.HEATER_ELEMENT_DARK, BeakerHeater.HEATER_ELEMENT_OFFSET);
-            var energizedCoil = this.createSpriteWithOffset(Assets.Images.HEATER_ELEMENT,     BeakerHeater.HEATER_ELEMENT_OFFSET);
-            this.energizedCoil = energizedCoil; // We need to remember this one
+    initThermometerView: function() {
+        var thermometerView = new ThermometerView({
+            model: this.model.thermometer,
+            mvt: this.mvt,
+            simulation: this.simulation,
+            measurableElementViews: [ this.beakerView ]
+        });
+        this.thermometerView = thermometerView;
+    },
 
-            // Fudging
-            straightWire.x += 4;
+    updateHeatProportion: function(model, heatProportion) {
+        this.energizedCoil.alpha = heatProportion;
+    },
 
-            this.backLayer.addChild(straightWire);
-            this.backLayer.addChild(curvedWire);
-            this.backLayer.addChild(baseBack);
-            this.backLayer.addChild(coldCoil);
-            this.backLayer.addChild(energizedCoil);
+    updatePosition: function(model, position) {
+        var viewPoint = this.mvt.modelToView(position);
+        this.backLayer.x = this.frontLayer.x = viewPoint.x;
+        this.backLayer.y = this.frontLayer.y = viewPoint.y;
+    },
 
-            // [ energy chunks layer ]
+    update: function(time, deltaTime, simulationPaused, timeScale) {
+        EnergyUserView.prototype.update.apply(this, [time, deltaTime, simulationPaused]);
+        this.beakerView.update(time, deltaTime, simulationPaused, timeScale);
+    },
 
-            this.frontLayer.addChild(baseFront);
-        },
+    showEnergyChunks: function() {
+        EnergyUserView.prototype.showEnergyChunks.apply(this);
+        this.beakerView.showEnergyChunks();
+    },
 
-        initBeakerView: function() {
-            var beakerView = new BeakerView({
-                model: this.model.beaker,
-                mvt: this.mvt,
-                simulation: this.simulation
-            });
-            this.beakerView = beakerView;
-        },
+    hideEnergyChunks: function() {
+        EnergyUserView.prototype.hideEnergyChunks.apply(this);
+        this.beakerView.hideEnergyChunks();
+    }
 
-        initThermometerView: function() {
-            var thermometerView = new ThermometerView({
-                model: this.model.thermometer,
-                mvt: this.mvt,
-                simulation: this.simulation,
-                measurableElementViews: [ this.beakerView ]
-            });
-            this.thermometerView = thermometerView;
-        },
-
-        updateHeatProportion: function(model, heatProportion) {
-            this.energizedCoil.alpha = heatProportion;
-        },
-
-        updatePosition: function(model, position) {
-            var viewPoint = this.mvt.modelToView(position);
-            this.backLayer.x = this.frontLayer.x = viewPoint.x;
-            this.backLayer.y = this.frontLayer.y = viewPoint.y;
-        },
-
-        update: function(time, deltaTime, simulationPaused, timeScale) {
-            EnergyUserView.prototype.update.apply(this, [time, deltaTime, simulationPaused]);
-            this.beakerView.update(time, deltaTime, simulationPaused, timeScale);
-        },
-
-        showEnergyChunks: function() {
-            EnergyUserView.prototype.showEnergyChunks.apply(this);
-            this.beakerView.showEnergyChunks();
-        },
-
-        hideEnergyChunks: function() {
-            EnergyUserView.prototype.hideEnergyChunks.apply(this);
-            this.beakerView.hideEnergyChunks();
-        }
-
-    });
-
-    return BeakerHeaterView;
 });
+
+export default BeakerHeaterView;

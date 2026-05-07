@@ -1,35 +1,29 @@
-define(function (require) {
+import ElementProperties from 'common/quantum/models/element-properties';
+import Constants from '../constants';
 
-    'use strict';
+/**
+ * A place to store element properties in the laser simulation
+ */
+var LaserElementProperties = ElementProperties.extend({
 
-    var ElementProperties = require('common/quantum/models/element-properties');
+    initialize: function(attributes, options) {
+        ElementProperties.prototype.initialize.apply(this, [attributes, options]);
 
-    var Constants = require('../constants');
+        // Set the mean lifetimes of the states
+        var states = this.states;
+        for (var i = 1; i < states.length; i++)
+            states[i].set('meanLifetime', Constants.MAXIMUM_STATE_LIFETIME / 2);
+    },
 
-    /**
-     * A place to store element properties in the laser simulation
-     */
-    var LaserElementProperties = ElementProperties.extend({
+    getMiddleEnergyState: function() {
+        return this.states[1];
+    },
 
-        initialize: function(attributes, options) {
-            ElementProperties.prototype.initialize.apply(this, [attributes, options]);
+    getHighEnergyState: function() {
+        throw 'Function must be implemented in child class.';
+    }
 
-            // Set the mean lifetimes of the states
-            var states = this.states;
-            for (var i = 1; i < states.length; i++)
-                states[i].set('meanLifetime', Constants.MAXIMUM_STATE_LIFETIME / 2);
-        },
-
-        getMiddleEnergyState: function() {
-            return this.states[1];
-        },
-
-        getHighEnergyState: function() {
-            throw 'Function must be implemented in child class.';
-        }
-
-    });
-
-
-    return LaserElementProperties;
 });
+
+
+export default LaserElementProperties;

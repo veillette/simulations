@@ -1,95 +1,88 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import WavelengthColors from 'common/colors/wavelength';
+import Colors from 'common/colors/colors';
+import Assets from 'assets';
 
-    'use strict';
+var LampView = PixiView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        options = _.extend({
+            modelWidth: 100
+        }, options);
 
-    var PixiView         = require('common/v3/pixi/view');
-    var WavelengthColors = require('common/colors/wavelength');
-    var Colors           = require('common/colors/colors');
+        this.mvt = options.mvt;
+        this.modelWidth = options.modelWidth;
 
-    var Assets = require('assets');
+        this.initGraphics();
 
-    var LampView = PixiView.extend({
+        this.listenTo(this.model, 'change:wavelength',       this.drawLight);
+        this.listenTo(this.model, 'change:photonsPerSecond', this.drawLight);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                modelWidth: 100
-            }, options);
+    initGraphics: function() {
+        this.lampLightGraphics = new PIXI.Graphics();
 
-            this.mvt = options.mvt;
-            this.modelWidth = options.modelWidth;
+        this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
+        this.flashlight.anchor.x = 1;
+        this.flashlight.anchor.y = 0.5;
 
-            this.initGraphics();
+        this.flashlightLayer = new PIXI.Container();
+        this.flashlightLayer.addChild(this.lampLightGraphics);
+        this.flashlightLayer.addChild(this.flashlight);
 
-            this.listenTo(this.model, 'change:wavelength',       this.drawLight);
-            this.listenTo(this.model, 'change:photonsPerSecond', this.drawLight);
-        },
+        this.displayObject.addChild(this.flashlightLayer);
 
-        initGraphics: function() {
-            this.lampLightGraphics = new PIXI.Graphics();
+        this.updateMVT(this.mvt);
+    },
 
-            this.flashlight = Assets.createSprite(Assets.Images.FLASHLIGHT);
-            this.flashlight.anchor.x = 1;
-            this.flashlight.anchor.y = 0.5;
+    /**
+     * Updates the model-view-transform and anything that relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            this.flashlightLayer = new PIXI.Container();
-            this.flashlightLayer.addChild(this.lampLightGraphics);
-            this.flashlightLayer.addChild(this.flashlight);
+        // Position and rotation of the flashlight layer
+        this.updatePosition(this.model, this.model.get('position'));
+        this.updateRotation();
 
-            this.displayObject.addChild(this.flashlightLayer);
+        // Update the flashlight position and scale relative to the flashlight layer
+        var targetWidth = this.mvt.modelToViewDeltaX(this.modelWidth);
+        var scale = targetWidth / this.flashlight.texture.width;
+        this.flashlight.scale.x = scale;
+        this.flashlight.scale.y = scale;
+        this.flashlight.x = this.getLampRadiusA();
 
-            this.updateMVT(this.mvt);
-        },
+        this.drawLight();
+    },
 
-        /**
-         * Updates the model-view-transform and anything that relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        this.flashlightLayer.x = viewPosition.x;
+        this.flashlightLayer.y = viewPosition.y;
+    },
 
-            // Position and rotation of the flashlight layer
-            this.updatePosition(this.model, this.model.get('position'));
-            this.updateRotation();
+    updateRotation: function() {
+        this.flashlightLayer.rotation = this.model.getDirection();
+    },
 
-            // Update the flashlight position and scale relative to the flashlight layer
-            var targetWidth = this.mvt.modelToViewDeltaX(this.modelWidth);
-            var scale = targetWidth / this.flashlight.texture.width;
-            this.flashlight.scale.x = scale;
-            this.flashlight.scale.y = scale;
-            this.flashlight.x = this.getLampRadiusA();
+    drawLight: function() {
+        var color = Colors.parseHex(WavelengthColors.nmToHex(this.model.get('wavelength')));
 
-            this.drawLight();
-        },
+        this.lampLightGraphics.clear();
 
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            this.flashlightLayer.x = viewPosition.x;
-            this.flashlightLayer.y = viewPosition.y;
-        },
+        // Draw the ellipse filling the flashlight with full saturation.
+        var radiusA = this.getLampRadiusA();
+        this.lampLightGraphics.beginFill(color, 1);
+        this.lampLightGraphics.drawEllipse(0, 0, radiusA, this.flashlight.height / 2);
+        this.lampLightGraphics.endFill();
+    },
 
-        updateRotation: function() {
-            this.flashlightLayer.rotation = this.model.getDirection();
-        },
+    getLampRadiusA: function() {
+        return this.flashlight.width * (6 / 161);
+    }
 
-        drawLight: function() {
-            var color = Colors.parseHex(WavelengthColors.nmToHex(this.model.get('wavelength')));
-
-            this.lampLightGraphics.clear();
-
-            // Draw the ellipse filling the flashlight with full saturation.
-            var radiusA = this.getLampRadiusA();
-            this.lampLightGraphics.beginFill(color, 1);
-            this.lampLightGraphics.drawEllipse(0, 0, radiusA, this.flashlight.height / 2);
-            this.lampLightGraphics.endFill();
-        },
-
-        getLampRadiusA: function() {
-            return this.flashlight.width * (6 / 161);
-        }
-
-    });
-
-    return LampView;
 });
+
+export default LampView;

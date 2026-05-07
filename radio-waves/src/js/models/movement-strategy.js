@@ -1,27 +1,22 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var MovementStrategy = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(MovementStrategy.prototype, {
 
-    var MovementStrategy = function() {};
+    update: function(deltaTime) {},
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(MovementStrategy.prototype, {
+    getVelocity: function() {},
 
-        update: function(deltaTime) {},
+    getAcceleration: function() {},
 
-        getVelocity: function() {},
+    getNextPosition: function(position, t) {},
 
-        getAcceleration: function() {},
+    getMaxAcceleration: function() {}
 
-        getNextPosition: function(position, t) {},
-
-        getMaxAcceleration: function() {}
-
-    });
-
-    return MovementStrategy;
 });
+
+export default MovementStrategy;

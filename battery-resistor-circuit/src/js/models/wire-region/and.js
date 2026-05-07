@@ -1,36 +1,30 @@
-define(function (require) {
+import _ from 'underscore';
+import WireRegion from 'models/wire-region';
 
-    'use strict';
+/**
+ *
+ */
+var AndWireRegion = function() {
+    this.regions = [];
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(AndWireRegion.prototype, WireRegion.prototype, {
 
-    var WireRegion = require('models/wire-region');
-
-    /**
-     *
-     */
-    var AndWireRegion = function() {
-        this.regions = [];
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(AndWireRegion.prototype, WireRegion.prototype, {
-
-        contains: function(wireParticle) {
-            for (var i = 0; i < this.regions.length; i++) {
-                if (this.regions[i].contains(wireParticle))
-                    return true;
-            }
-            return false;
-        },
-
-        addRegion: function(wireRegion) {
-            this.regions.push(wireRegion);
+    contains: function(wireParticle) {
+        for (var i = 0; i < this.regions.length; i++) {
+            if (this.regions[i].contains(wireParticle))
+                return true;
         }
+        return false;
+    },
 
-    });
+    addRegion: function(wireRegion) {
+        this.regions.push(wireRegion);
+    }
 
-    return AndWireRegion;
 });
+
+export default AndWireRegion;

@@ -1,67 +1,58 @@
-define(function(require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import LightBulbView from 'views/energy-user/light-bulb';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+var FluorescentLightBulbView = LightBulbView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        var bulbTexture = Assets.Texture(Assets.Images.FLUORESCENT_ON_FRONT_2);
 
-    var Vector2 = require('common/math/vector2');
+        options = _.extend({
+            lightRayColor: FluorescentLightBulbView.RAY_COLOR,
+            lightRayCenter: new Vector2(0, -bulbTexture.height * 0.55)
+        }, options);
 
-    var LightBulbView = require('views/energy-user/light-bulb');
+        LightBulbView.prototype.initialize.apply(this, [options]);
+    },
 
-    var Assets = require('assets');
+    initImages: function() {
+        var bulbOffset = new Vector2(0, 0.04);
 
-    var Constants = require('constants');
+        var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,          new Vector2(-0.036, -0.04));
+        var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,       new Vector2(-0.009, -0.016));
+        var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
+        var bulbBackOff  = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_BACK_2,     bulbOffset);
+        var bulbBackOn   = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_ON_BACK_2,  bulbOffset);
+        var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
+        var bulbFrontOff = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_FRONT_2,    bulbOffset);
+        var bulbFrontOn  = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_ON_FRONT_2, bulbOffset);
 
-    var FluorescentLightBulbView = LightBulbView.extend({
+        this.litBulbBack = bulbBackOn; // We need to remember this one
+        this.litBulb     = bulbFrontOn;
 
-        initialize: function(options) {
-            var bulbTexture = Assets.Texture(Assets.Images.FLUORESCENT_ON_FRONT_2);
+        // Fudging
+        straightWire.x += 4;
 
-            options = _.extend({
-                lightRayColor: FluorescentLightBulbView.RAY_COLOR,
-                lightRayCenter: new Vector2(0, -bulbTexture.height * 0.55)
-            }, options);
+        this.backLayer.addChild(straightWire);
+        this.backLayer.addChild(curvedWire);
+        this.backLayer.addChild(baseBack);
+        this.backLayer.addChild(bulbBackOff);
+        this.backLayer.addChild(bulbBackOn);
 
-            LightBulbView.prototype.initialize.apply(this, [options]);
-        },
+        // [ then the energy chunks layer ]
 
-        initImages: function() {
-            var bulbOffset = new Vector2(0, 0.04);
+        this.frontLayer.addChild(baseFront);
+        this.frontLayer.addChild(bulbFrontOff);
+        this.frontLayer.addChild(bulbFrontOn);
+    },
 
-            var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,          new Vector2(-0.036, -0.04));
-            var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,       new Vector2(-0.009, -0.016));
-            var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
-            var bulbBackOff  = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_BACK_2,     bulbOffset);
-            var bulbBackOn   = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_ON_BACK_2,  bulbOffset);
-            var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
-            var bulbFrontOff = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_FRONT_2,    bulbOffset);
-            var bulbFrontOn  = this.createSpriteWithOffset(Assets.Images.FLUORESCENT_ON_FRONT_2, bulbOffset);
+    updateLitProportion: function(model, litProportion) {
+        LightBulbView.prototype.updateLitProportion.apply(this, [model, litProportion]);
+        this.litBulbBack.alpha = litProportion;
+    },
 
-            this.litBulbBack = bulbBackOn; // We need to remember this one
-            this.litBulb     = bulbFrontOn;
+}, Constants.FluorescentLightBulbView);
 
-            // Fudging
-            straightWire.x += 4;
-
-            this.backLayer.addChild(straightWire);
-            this.backLayer.addChild(curvedWire);
-            this.backLayer.addChild(baseBack);
-            this.backLayer.addChild(bulbBackOff);
-            this.backLayer.addChild(bulbBackOn);
-
-            // [ then the energy chunks layer ]
-
-            this.frontLayer.addChild(baseFront);
-            this.frontLayer.addChild(bulbFrontOff);
-            this.frontLayer.addChild(bulbFrontOn);
-        },
-
-        updateLitProportion: function(model, litProportion) {
-            LightBulbView.prototype.updateLitProportion.apply(this, [model, litProportion]);
-            this.litBulbBack.alpha = litProportion;
-        },
-
-    }, Constants.FluorescentLightBulbView);
-
-    return FluorescentLightBulbView;
-});
+export default FluorescentLightBulbView;

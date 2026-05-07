@@ -1,52 +1,46 @@
-define(function(require) {
+import BodyView from 'views/body';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a moon.
+ */
+var MoonView = BodyView.extend({
 
-    var BodyView = require('views/body');
+    textureBodyWidthRatio: 0.571,
 
-    var Assets = require('assets');
+    bodyLabelOffsetX: BodyView.prototype.bodyLabelOffsetX * -1,
+    massLabelOffsetY: BodyView.prototype.massLabelOffsetY * -1,
 
-    /**
-     * A view that represents a moon.
-     */
-    var MoonView = BodyView.extend({
+    initialize: function(options) {
+        this.lowMass  = this.model.get('referenceMass') * (1 - BodyView.GENERIC_BODY_THRESHOLD * 2);
+        this.highMass = this.model.get('referenceMass') * (1 + BodyView.GENERIC_BODY_THRESHOLD);
 
-        textureBodyWidthRatio: 0.571,
+        BodyView.prototype.initialize.apply(this, arguments);
+    },
 
-        bodyLabelOffsetX: BodyView.prototype.bodyLabelOffsetX * -1,
-        massLabelOffsetY: BodyView.prototype.massLabelOffsetY * -1,
+    initGraphics: function() {
+        BodyView.prototype.initGraphics.apply(this);
 
-        initialize: function(options) {
-            this.lowMass  = this.model.get('referenceMass') * (1 - BodyView.GENERIC_BODY_THRESHOLD * 2);
-            this.highMass = this.model.get('referenceMass') * (1 + BodyView.GENERIC_BODY_THRESHOLD);
+        this.genericMoon = Assets.createSprite(Assets.Images.MOON_GENERIC);
+        this.genericMoon.anchor.x = 0.5;
+        this.genericMoon.anchor.y = 0.5;
+        this.genericMoon.visible = false;
+        this.bodyContainer.addChild(this.genericMoon);
+    },
 
-            BodyView.prototype.initialize.apply(this, arguments);
-        },
+    updateMass: function(body, mass) {
+        BodyView.prototype.updateMass.apply(this, arguments);
 
-        initGraphics: function() {
-            BodyView.prototype.initGraphics.apply(this);
-
-            this.genericMoon = Assets.createSprite(Assets.Images.MOON_GENERIC);
-            this.genericMoon.anchor.x = 0.5;
-            this.genericMoon.anchor.y = 0.5;
-            this.genericMoon.visible = false;
-            this.bodyContainer.addChild(this.genericMoon);
-        },
-
-        updateMass: function(body, mass) {
-            BodyView.prototype.updateMass.apply(this, arguments);
-
-            if (mass > this.highMass || mass < this.lowMass) {
-                this.genericMoon.visible = true;
-                this.body.visible = false;
-            }
-            else {
-                this.genericMoon.visible = false;
-                this.body.visible = true;
-            }
+        if (mass > this.highMass || mass < this.lowMass) {
+            this.genericMoon.visible = true;
+            this.body.visible = false;
         }
+        else {
+            this.genericMoon.visible = false;
+            this.body.visible = true;
+        }
+    }
 
-    });
-
-    return MoonView;
 });
+
+export default MoonView;

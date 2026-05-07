@@ -1,78 +1,68 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var Spring = Backbone.Model.extend({
 
-    var _ = require('underscore');
+    defaults: {
+        restL: Constants.SpringDefaults.REST_L,
+        k : Constants.SpringDefaults.STIFFNESS,
+        x : 0,
+        y1 : 0,
+        body: undefined //a body can be attached to the spring
+        // snagged : false  //a spring is snagged if it is attached to a mass
+    },
 
-    var Backbone = require('backbone');
+    initialize: function(attributes, options) {
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+        this.restL = this.get('restL'); //equilibrium length of spring, stretched length handled by bodySpringSystem and view
+        this.k = this.get('k');         //spring constant
+        this.x = this.get('x');         //x position of spring (middle)
+        this.y1 = this.get('y1');       //y position of top of spring
 
-    /**
-     * Wraps the update function in
-     */
-    var Spring = Backbone.Model.extend({
+        this.restY2(); //y-position of bottom of spring
 
-        defaults: {
-            restL: Constants.SpringDefaults.REST_L,
-            k : Constants.SpringDefaults.STIFFNESS,
-            x : 0,
-            y1 : 0,
-            body: undefined //a body can be attached to the spring
-            // snagged : false  //a spring is snagged if it is attached to a mass
-        },
+        this.on('change:k', this.updateK);
+        // this.on('change:y2', this.updateY2);
+    },
 
-        initialize: function(attributes, options) {
+    hang: function(body){
+        this.body = body;
+        this.trigger('snag');
+        this.set('body', body);
+    },
 
-            this.restL = this.get('restL'); //equilibrium length of spring, stretched length handled by bodySpringSystem and view
-            this.k = this.get('k');         //spring constant
-            this.x = this.get('x');         //x position of spring (middle)
-            this.y1 = this.get('y1');       //y position of top of spring
+    unhang: function(){
+        this.hang(undefined);
+        this.trigger('unsnag');
+        // TODO how to do spring animation?
+        this.restY2();
+    },
 
-            this.restY2(); //y-position of bottom of spring
+    updateY2ByDelta : function(deltaY){
+        this.y2 = this.y1 + this.restL + (deltaY || 0);
+        this.set('y2', this.y2);
+    },
 
-            this.on('change:k', this.updateK);
-            // this.on('change:y2', this.updateY2);
-        },
+    restY2 : function(){
+        this.updateY2ByDelta(0);
+    },
 
-        hang: function(body){
-            this.body = body;
-            this.trigger('snag');
-            this.set('body', body);
-        },
+    updateK: function(model, k){
+        this.k = k;
+    },
 
-        unhang: function(){
-            this.hang(undefined);
-            this.trigger('unsnag');
-            // TODO how to do spring animation?
-            this.restY2();
-        },
+    updateY2: function(model, y2){
+        this.y2 = y2;
+    },
 
-        updateY2ByDelta : function(deltaY){
-            this.y2 = this.y1 + this.restL + (deltaY || 0);
-            this.set('y2', this.y2);
-        },
+    isSnagged : function(){
+        return !_.isUndefined(this.body);
+    }
 
-        restY2 : function(){
-            this.updateY2ByDelta(0);
-        },
-
-        updateK: function(model, k){
-            this.k = k;
-        },
-
-        updateY2: function(model, y2){
-            this.y2 = y2;
-        },
-
-        isSnagged : function(){
-            return !_.isUndefined(this.body);
-        }
-
-    });
-
-    return Spring;
 });
+
+export default Spring;

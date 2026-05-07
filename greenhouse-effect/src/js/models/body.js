@@ -1,48 +1,42 @@
-define(function (require) {
+import _ from 'underscore';
+import MotionObject from 'common/models/motion-object';
 
-    'use strict';
+var Body = MotionObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, MotionObject.prototype.defaults, {
+        alpha: 0,
+        omega: 0,
+        mass:  0,
+        charge: 0,
 
-    var MotionObject = require('common/models/motion-object');
+        lastCollidedBody: null
+    }),
 
-    var Body = MotionObject.extend({
+    /**
+     * Determines the new state of the body using the Verlet method
+     */
+    update: function(deltaTime) {
+        this.updatePositionFromAcceleration(deltaTime);
+    },
 
-        defaults: _.extend({}, MotionObject.prototype.defaults, {
-            alpha: 0,
-            omega: 0,
-            mass:  0,
-            charge: 0,
+    /**
+     * Calculates and returns center of mass.
+     */
+    getCenterOfMass: function() {},
 
-            lastCollidedBody: null
-        }),
+    /**
+     * Calculates and returns the moment of inertia.
+     */
+    getMomentOfInertia: function() {},
 
-        /**
-         * Determines the new state of the body using the Verlet method
-         */
-        update: function(deltaTime) {
-            this.updatePositionFromAcceleration(deltaTime);
-        },
+    /**
+     * Calculates and returns the body's kinetic energy.
+     */
+    getKineticEnergy: function() {
+        return (this.get('mass') * this.get('velocity').lengthSq() / 2) +
+            (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2);
+    }
 
-        /**
-         * Calculates and returns center of mass.
-         */
-        getCenterOfMass: function() {},
-
-        /**
-         * Calculates and returns the moment of inertia.
-         */
-        getMomentOfInertia: function() {},
-
-        /**
-         * Calculates and returns the body's kinetic energy.
-         */
-        getKineticEnergy: function() {
-            return (this.get('mass') * this.get('velocity').lengthSq() / 2) +
-                (this.getMomentOfInertia() * this.get('omega') * this.get('omega') / 2);
-        }
-
-    });
-
-    return Body;
 });
+
+export default Body;

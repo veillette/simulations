@@ -1,66 +1,60 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
 
-    'use strict';
+/**
+ *
+ */
+var WireSegment = function(start, finish, scalarStart) {
+    this.start = new Vector2(start);
+    this.finish = new Vector2(finish);
+    this.length = new Vector2(finish).sub(start).length();
 
-    var _ = require('underscore');
+    this.scalarStart = scalarStart;
+    this.scalarFinish = scalarStart + this.length;
 
-    var Vector2 = require('common/math/vector2');
+    this._vec = new Vector2();
+};
 
-    /**
-     *
-     */
-    var WireSegment = function(start, finish, scalarStart) {
-        this.start = new Vector2(start);
-        this.finish = new Vector2(finish);
-        this.length = new Vector2(finish).sub(start).length();
+/**
+ * Instance functions/properties
+ */
+_.extend(WireSegment.prototype, {
 
-        this.scalarStart = scalarStart;
-        this.scalarFinish = scalarStart + this.length;
+    getStart: function() {
+        return this.start;
+    },
 
-        this._vec = new Vector2();
-    };
+    getFinishScalar: function() {
+        return this.scalarFinish;
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(WireSegment.prototype, {
+    toString: function() {
+        return 'Start=' + this.start + ', finish=' + this.finish + ', length=' + this.length + ', scalarStart=' + this.scalarStart + ', scalarFinish=' + this.scalarFinish;
+    },
 
-        getStart: function() {
-            return this.start;
-        },
+    getFinish: function() {
+        return this.finish;
+    },
 
-        getFinishScalar: function() {
-            return this.scalarFinish;
-        },
+    contains: function(dist) {
+        return dist >= this.scalarStart && dist <= this.scalarFinish;
+    },
 
-        toString: function() {
-            return 'Start=' + this.start + ', finish=' + this.finish + ', length=' + this.length + ', scalarStart=' + this.scalarStart + ', scalarFinish=' + this.scalarFinish;
-        },
+    getPosition: function(dist) {
+        var rel = dist - this.scalarStart;
+        var dx = this._vec
+            .set(this.finish)
+            .sub(this.start)
+            .normalize()
+            .scale(rel)
+            .add(this.start);
+        return dx;
+    },
 
-        getFinish: function() {
-            return this.finish;
-        },
+    getLength: function() {
+        return this.length;
+    }
 
-        contains: function(dist) {
-            return dist >= this.scalarStart && dist <= this.scalarFinish;
-        },
-
-        getPosition: function(dist) {
-            var rel = dist - this.scalarStart;
-            var dx = this._vec
-                .set(this.finish)
-                .sub(this.start)
-                .normalize()
-                .scale(rel)
-                .add(this.start);
-            return dx;
-        },
-
-        getLength: function() {
-            return this.length;
-        }
-
-    });
-
-    return WireSegment;
 });
+
+export default WireSegment;

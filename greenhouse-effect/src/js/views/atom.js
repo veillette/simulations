@@ -1,62 +1,56 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
 
-    'use strict';
 
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-
+/**
+ * A view that represents an atom
+ */
+var AtomView = PixiView.extend({
 
     /**
-     * A view that represents an atom
+     * Overrides PixiView's initializeDisplayObject function
      */
-    var AtomView = PixiView.extend({
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+    /**
+     * Initializes the new AtomView.
+     */
+    initialize: function(options) {
+        this.color = Colors.parseHex(this.model.get('color'));
 
-        /**
-         * Initializes the new AtomView.
-         */
-        initialize: function(options) {
-            this.color = Colors.parseHex(this.model.get('color'));
+        this.listenTo(this.model, 'change:position', this.drawAtom);
 
-            this.listenTo(this.model, 'change:position', this.drawAtom);
+        this.updateMVT(options.mvt);
+    },
 
-            this.updateMVT(options.mvt);
-        },
+    /**
+     * Draws the atom
+     */
+    drawAtom: function() {
+        var graphics = this.displayObject;
+        graphics.clear();
+        graphics.beginFill(this.color, 1);
+        graphics.drawCircle(
+            this.mvt.modelToViewX(this.model.get('position').x),
+            this.mvt.modelToViewY(this.model.get('position').y),
+            this.mvt.modelToViewDeltaX(this.model.get('radius'))
+        );
+        graphics.endFill();
+    },
 
-        /**
-         * Draws the atom
-         */
-        drawAtom: function() {
-            var graphics = this.displayObject;
-            graphics.clear();
-            graphics.beginFill(this.color, 1);
-            graphics.drawCircle(
-                this.mvt.modelToViewX(this.model.get('position').x),
-                this.mvt.modelToViewY(this.model.get('position').y),
-                this.mvt.modelToViewDeltaX(this.model.get('radius'))
-            );
-            graphics.endFill();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.drawAtom();
+    }
 
-            this.drawAtom();
-        }
-
-    });
-
-    return AtomView;
 });
+
+export default AtomView;

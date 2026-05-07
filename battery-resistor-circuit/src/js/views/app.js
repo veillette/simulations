@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import BRCSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var BRCAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var BRCSimView = require('views/sim');
+    simViewConstructors: [
+        BRCSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var BRCAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            BRCSimView
-        ]
-
-    });
-
-    return BRCAppView;
 });
+
+export default BRCAppView;

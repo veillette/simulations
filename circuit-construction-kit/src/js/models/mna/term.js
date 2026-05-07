@@ -1,24 +1,19 @@
-define(function (require) {
+import PooledObject from 'common/pooled-object/pooled-object';
 
-    'use strict';
-
-    var PooledObject = require('common/pooled-object/pooled-object');
+/**
+ * Represents a single term in an equation
+ */
+var Term = PooledObject.extend({
 
     /**
-     * Represents a single term in an equation
+     * Initializes the Term's properties with provided initial values
      */
-    var Term = PooledObject.extend({
+    init: function(coefficient, variable) {
+        this.coefficient = coefficient;
+        this.variable = variable;
+    }
 
-        /**
-         * Initializes the Term's properties with provided initial values
-         */
-        init: function(coefficient, variable) {
-            this.coefficient = coefficient;
-            this.variable = variable;
-        }
-
-    });
-
-
-    return Term;
 });
+
+
+export default Term;

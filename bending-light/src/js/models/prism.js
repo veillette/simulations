@@ -1,81 +1,74 @@
-define(function (require) {
+import _ from 'underscore';
+import PositionableObject from 'common/models/positionable-object';
+import Vector2 from 'common/math/vector2';
+import Polygon from 'models/shape/polygon';
 
-    'use strict';
+/**
+ *
+ */
+var Prism = PositionableObject.extend({
 
-    var _        = require('underscore');
-
-    var PositionableObject = require('common/models/positionable-object');
-    var Vector2            = require('common/math/vector2');
-
-    var Polygon = require('models/shape/polygon');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        rotation: 0
+    }),
 
     /**
-     *
+     * Initializes new Prism object.
      */
-    var Prism = PositionableObject.extend({
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, [attributes, options]);
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            rotation: 0
-        }),
+        if (options.shape)
+            this.shape = options.shape;
+        else if (options.points)
+            this.shape = new Polygon(options.points, options.referencePointIndex);
 
-        /**
-         * Initializes new Prism object.
-         */
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, [attributes, options]);
+        this._point = new Vector2();
+    },
 
-            if (options.shape)
-                this.shape = options.shape;
-            else if (options.points)
-                this.shape = new Polygon(options.points, options.referencePointIndex);
+    /**
+     * Returns whether a point falls within the prism's shape
+     */
+    contains: function(point) {
+        return this.shape.contains(point);
+    },
 
-            this._point = new Vector2();
-        },
+    /**
+     * Compute the intersections of the specified ray with this polygon's edges
+     */
+    getIntersections: function(incidentRay) {
+        return this.shape.getIntersections(incidentRay.tail, incidentRay.directionUnitVector);
+    },
 
-        /**
-         * Returns whether a point falls within the prism's shape
-         */
-        contains: function(point) {
-            return this.shape.contains(point);
-        },
+    /**
+     * Clones this prism instance and returns it
+     */
+    clone: function() {
+        return new Prism({
+            position: this.get('position')
+        }, {
+            shape: this.shape.clone()
+        });
+    },
 
-        /**
-         * Compute the intersections of the specified ray with this polygon's edges
-         */
-        getIntersections: function(incidentRay) {
-            return this.shape.getIntersections(incidentRay.tail, incidentRay.directionUnitVector);
-        },
+    /**
+     * Rotates the shape in place
+     */
+    rotate: function(radians) {
+        this.shape.translate(-this.get('position').x, -this.get('position').y);
+        this.shape.rotate(radians);
+        this.shape.translate(this.get('position').x, this.get('position').y);
 
-        /**
-         * Clones this prism instance and returns it
-         */
-        clone: function() {
-            return new Prism({
-                position: this.get('position')
-            }, {
-                shape: this.shape.clone()
-            });
-        },
+        // Add the rotation amount to our rotation attribute
+        this.set('rotation', this.get('rotation') + radians);
+    },
 
-        /**
-         * Rotates the shape in place
-         */
-        rotate: function(radians) {
-            this.shape.translate(-this.get('position').x, -this.get('position').y);
-            this.shape.rotate(radians);
-            this.shape.translate(this.get('position').x, this.get('position').y);
+    translate: function(dx, dy) {
+        this.shape.translate(dx, dy);
 
-            // Add the rotation amount to our rotation attribute
-            this.set('rotation', this.get('rotation') + radians);
-        },
+        PositionableObject.prototype.translate.apply(this, arguments);
+    }
 
-        translate: function(dx, dy) {
-            this.shape.translate(dx, dy);
+}, Prism);
 
-            PositionableObject.prototype.translate.apply(this, arguments);
-        }
-
-    }, Prism);
-
-    return Prism;
-});
+export default Prism;

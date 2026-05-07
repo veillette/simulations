@@ -1,36 +1,30 @@
-define(function(require) {
+import WaveView from 'views/wave';
 
-    'use strict';
+/**
+ * A traveling sinusoidal wave
+ */
+var TravelingWaveView = WaveView.extend({
 
+    draw: function() {
+        WaveView.prototype.draw.apply(this, arguments);
 
-    var WaveView = require('views/wave');
+        var graphics = this.displayObject;
+        var origin = this._origin.set(this.mvt.modelToView(this.origin));
 
-    /**
-     * A traveling sinusoidal wave
-     */
-    var TravelingWaveView = WaveView.extend({
+        for (var i = 0; i < this.numPoints; i++) {
+            var x = this.dx * i;
+            var y = this.amplitude * Math.sin(((x - this.elapsedTime) / this.lambda) * Math.PI);
 
-        draw: function() {
-            WaveView.prototype.draw.apply(this, arguments);
-
-            var graphics = this.displayObject;
-            var origin = this._origin.set(this.mvt.modelToView(this.origin));
-
-            for (var i = 0; i < this.numPoints; i++) {
-                var x = this.dx * i;
-                var y = this.amplitude * Math.sin(((x - this.elapsedTime) / this.lambda) * Math.PI);
-
-                if (i === 0)
-                    graphics.moveTo(x + origin.x, y + origin.y);
-                else
-                    graphics.lineTo(x + origin.x, y + origin.y);
-            }
-
-            if (graphics.currentPath && graphics.currentPath.shape)
-                graphics.currentPath.shape.closed = false;
+            if (i === 0)
+                graphics.moveTo(x + origin.x, y + origin.y);
+            else
+                graphics.lineTo(x + origin.x, y + origin.y);
         }
 
-    });
+        if (graphics.currentPath && graphics.currentPath.shape)
+            graphics.currentPath.shape.closed = false;
+    }
 
-    return TravelingWaveView;
 });
+
+export default TravelingWaveView;

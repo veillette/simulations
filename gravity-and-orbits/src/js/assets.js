@@ -1,39 +1,33 @@
-define(function (require) {
+import Sun from 'models/body/sun';
+import Planet from 'models/body/planet';
+import Moon from 'models/body/moon';
+import Satellite from 'models/body/satellite';
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Sun       = require('models/body/sun');
-    var Planet    = require('models/body/planet');
-    var Moon      = require('models/body/moon');
-    var Satellite = require('models/body/satellite');
+Assets.Images = {
+    PLANET:       'planet.png',
+    EARTH:        'earth.png',
+    SUN:          'sun.png',
+    MOON:         'moon.png',
+    MOON_GENERIC: 'moon-generic.png',
+    SATELLITE:    'phet/space-station.png',
+    EXPLOSION:    'explosion.png'
+};
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.SpriteSheets = {};
 
-    Assets.Path = 'img/';
-
-    Assets.Images = {
-        PLANET:       'planet.png',
-        EARTH:        'earth.png',
-        SUN:          'sun.png',
-        MOON:         'moon.png',
-        MOON_GENERIC: 'moon-generic.png',
-        SATELLITE:    'phet/space-station.png',
-        EXPLOSION:    'explosion.png'
-    };
-
-    Assets.SpriteSheets = {};
-
-    Assets.ImageFromModel = function(modelInstance) {
-        if (modelInstance instanceof Sun)
-            return Assets.Images.SUN;
-        if (modelInstance instanceof Planet)
-            return Assets.Images.EARTH;
-        if (modelInstance instanceof Moon)
-            return Assets.Images.MOON;
-        if (modelInstance instanceof Satellite)
-            return Assets.Images.SATELLITE;
+Assets.ImageFromModel = function(modelInstance) {
+    if (modelInstance instanceof Sun)
+        return Assets.Images.SUN;
+    if (modelInstance instanceof Planet)
         return Assets.Images.EARTH;
-    };
+    if (modelInstance instanceof Moon)
+        return Assets.Images.MOON;
+    if (modelInstance instanceof Satellite)
+        return Assets.Images.SATELLITE;
+    return Assets.Images.EARTH;
+};
 
-    return Assets;
-});
+export default Assets;

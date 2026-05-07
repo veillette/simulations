@@ -1,117 +1,110 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import ArrowView from 'common/v3/pixi/view/arrow';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var CurrentIndicatorView = PixiView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        options = _.extend({
+            positivePointsRight: false
+        }, options);
 
-    var PixiView   = require('common/v3/pixi/view');
-    var ArrowView  = require('common/v3/pixi/view/arrow');
+        this.mvt = options.mvt;
+        this.defaultDirection = options.positivePointsRight ? 1 : -1;
 
-    var Constants = require('constants');
+        // Initialize graphics
+        this.initGraphics();
 
-    /**
-     *
-     */
-    var CurrentIndicatorView = PixiView.extend({
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                positivePointsRight: false
-            }, options);
+    initGraphics: function() {
+        this.initArrow();
+        this.initMinus();
 
-            this.mvt = options.mvt;
-            this.defaultDirection = options.positivePointsRight ? 1 : -1;
+        this.displayObject.alpha = 0;
 
-            // Initialize graphics
-            this.initGraphics();
+        this.updateMVT(this.mvt);
+    },
 
-        },
+    initArrow: function() {
+        var arrowViewModel = new ArrowView.ArrowViewModel({
+            originX: -60,
+            targetX:  60
+        });
 
-        initGraphics: function() {
-            this.initArrow();
-            this.initMinus();
+        this.arrowView = new ArrowView({
+            model: arrowViewModel,
 
-            this.displayObject.alpha = 0;
+            tailWidth: 20,
 
-            this.updateMVT(this.mvt);
-        },
+            headWidth: 47,
+            headLength: 47,
 
-        initArrow: function() {
-            var arrowViewModel = new ArrowView.ArrowViewModel({
-                originX: -60,
-                targetX:  60
-            });
+            fillColor: '#2875B6',
+            fillAlpha: 1
+        });
 
-            this.arrowView = new ArrowView({
-                model: arrowViewModel,
+        this.displayObject.addChild(this.arrowView.displayObject);
+    },
 
-                tailWidth: 20,
+    initMinus: function() {
+        var graphics = new PIXI.Graphics();
+        graphics.lineStyle(1, 0xFFFFFF, 1);
+        graphics.drawCircle(0, 0, 7);
+        graphics.moveTo(-3, 0);
+        graphics.lineTo( 3, 0);
 
-                headWidth: 47,
-                headLength: 47,
+        this.displayObject.addChild(graphics);
+    },
 
-                fillColor: '#2875B6',
-                fillAlpha: 1
-            });
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+    },
 
-            this.displayObject.addChild(this.arrowView.displayObject);
-        },
+    update: function(time, deltaTime) {
+        this.updateOrientation(this.model.get('currentAmplitude'));
+        this.updateTransparency(this.model.get('currentAmplitude'), deltaTime);
+    },
 
-        initMinus: function() {
-            var graphics = new PIXI.Graphics();
-            graphics.lineStyle(1, 0xFFFFFF, 1);
-            graphics.drawCircle(0, 0, 7);
-            graphics.moveTo(-3, 0);
-            graphics.lineTo( 3, 0);
+    updateOrientation: function(currentAmplitude) {
+        if (currentAmplitude !== 0)
+            this.displayObject.scale.x = (currentAmplitude > 0) ? this.defaultDirection : -this.defaultDirection;
+    },
 
-            this.displayObject.addChild(graphics);
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-        },
-
-        update: function(time, deltaTime) {
-            this.updateOrientation(this.model.get('currentAmplitude'));
-            this.updateTransparency(this.model.get('currentAmplitude'), deltaTime);
-        },
-
-        updateOrientation: function(currentAmplitude) {
-            if (currentAmplitude !== 0)
-                this.displayObject.scale.x = (currentAmplitude > 0) ? this.defaultDirection : -this.defaultDirection;
-        },
-
-        updateTransparency: function(currentAmplitude, deltaTime) {
-            if (currentAmplitude !== 0)
-                this.displayObject.alpha = CurrentIndicatorView.TRANSPARENCY;
-            else {
-                var alpha = this.displayObject.alpha - (deltaTime / CurrentIndicatorView.FADEOUT_DURATION);
-                if (alpha < 0)
-                    this.displayObject.alpha = 0;
-                else
-                    this.displayObject.alpha = alpha;
-            }
-        },
-
-        currentAmplitudeChanged: function(circuit, currentAmplitude) {
-            this.updateOrientation(currentAmplitude);
-        },
-
-        setPosition: function(x, y) {
-            this.displayObject.x = x;
-            this.displayObject.y = y;
-        },
-
-        show: function() {
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
+    updateTransparency: function(currentAmplitude, deltaTime) {
+        if (currentAmplitude !== 0)
+            this.displayObject.alpha = CurrentIndicatorView.TRANSPARENCY;
+        else {
+            var alpha = this.displayObject.alpha - (deltaTime / CurrentIndicatorView.FADEOUT_DURATION);
+            if (alpha < 0)
+                this.displayObject.alpha = 0;
+            else
+                this.displayObject.alpha = alpha;
         }
+    },
 
-    }, Constants.CurrentIndicatorView);
+    currentAmplitudeChanged: function(circuit, currentAmplitude) {
+        this.updateOrientation(currentAmplitude);
+    },
 
-    return CurrentIndicatorView;
-});
+    setPosition: function(x, y) {
+        this.displayObject.x = x;
+        this.displayObject.y = y;
+    },
+
+    show: function() {
+        this.displayObject.visible = true;
+    },
+
+    hide: function() {
+        this.displayObject.visible = false;
+    }
+
+}, Constants.CurrentIndicatorView);
+
+export default CurrentIndicatorView;

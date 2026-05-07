@@ -1,49 +1,43 @@
-define(function(require) {
+import PixiView from 'common/v3/pixi/view';
+import EnergyChunkCollectionView from 'views/energy-chunk-collection';
 
-    'use strict';
-
-    var PixiView = require('common/v3/pixi/view');
-
-    var EnergyChunkCollectionView = require('views/energy-chunk-collection');
+/**
+ * A view that represents the air model
+ */
+var EnergyChunkContainerSliceView = PixiView.extend({
 
     /**
-     * A view that represents the air model
+     *
      */
-    var EnergyChunkContainerSliceView = PixiView.extend({
+    initialize: function(options) {
+        if (options.slice === undefined)
+            throw 'EnergyChunkContainerSliceView requires an EnergyChunkContainerSlice object.';
 
-        /**
-         *
-         */
-        initialize: function(options) {
-            if (options.slice === undefined)
-                throw 'EnergyChunkContainerSliceView requires an EnergyChunkContainerSlice object.';
+        this.slice = options.slice;
 
-            this.slice = options.slice;
+        if (options.mvt === undefined)
+            throw 'EnergyChunkContainerSliceView requires a ModelViewTransform object specified in the options as "mvt".';
 
-            if (options.mvt === undefined)
-                throw 'EnergyChunkContainerSliceView requires a ModelViewTransform object specified in the options as "mvt".';
+        this.mvt = options.mvt;
 
-            this.mvt = options.mvt;
+        this.parent = options.parent;
 
-            this.parent = options.parent;
+        this.initGraphics();
+    },
 
-            this.initGraphics();
-        },
+    initGraphics: function() {
+        this.energyChunkCollectionView = new EnergyChunkCollectionView({
+            collection: this.slice.energyChunkList,
+            mvt: this.mvt
+        });
 
-        initGraphics: function() {
-            this.energyChunkCollectionView = new EnergyChunkCollectionView({
-                collection: this.slice.energyChunkList,
-                mvt: this.mvt
-            });
+        this.displayObject.addChild(this.energyChunkCollectionView.displayObject);
+    },
 
-            this.displayObject.addChild(this.energyChunkCollectionView.displayObject);
-        },
+    update: function(time, deltaTime) {
+        this.energyChunkCollectionView.update(time, deltaTime);
+    }
 
-        update: function(time, deltaTime) {
-            this.energyChunkCollectionView.update(time, deltaTime);
-        }
-
-    });
-
-    return EnergyChunkContainerSliceView;
 });
+
+export default EnergyChunkContainerSliceView;

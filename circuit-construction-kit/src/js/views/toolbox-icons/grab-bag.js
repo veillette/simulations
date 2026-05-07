@@ -1,79 +1,70 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import GrabBagResistor from 'models/components/grab-bag-resistor';
+import GrabBagResistorView from 'views/components/grab-bag-resistor';
+import ComponentToolboxIcon from 'views/component-toolbox-icon';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A visual representation of some kind of object supply.  The
+ *   user creates new objects with this view.  Dragging from
+ *   the view creates a new object and places it in the scene.
+ */
+var GrabBagIcon = ComponentToolboxIcon.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        options = _.extend({
+            labelText: options.grabBagItem.name
+        }, options);
 
-    var Vector2 = require('common/math/vector2');
+        this.grabBagItem = options.grabBagItem;
 
-    var GrabBagResistor = require('models/components/grab-bag-resistor');
-
-    var GrabBagResistorView  = require('views/components/grab-bag-resistor');
-    var ComponentToolboxIcon = require('views/component-toolbox-icon');
-
-    var Assets    = require('assets');
+        ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     * A visual representation of some kind of object supply.  The
-     *   user creates new objects with this view.  Dragging from
-     *   the view creates a new object and places it in the scene.
+     * This should be overwritten by child classes to use perhaps the
+     *   actual kind of view for the model type with maybe a static
+     *   MVT that isn't bound to the scene's MVT.
      */
-    var GrabBagIcon = ComponentToolboxIcon.extend({
-
-        initialize: function(options) {
-            options = _.extend({
-                labelText: options.grabBagItem.name
-            }, options);
-
-            this.grabBagItem = options.grabBagItem;
-
-            ComponentToolboxIcon.prototype.initialize.apply(this, [options]);
-        },
-
-        /**
-         * This should be overwritten by child classes to use perhaps the
-         *   actual kind of view for the model type with maybe a static
-         *   MVT that isn't bound to the scene's MVT.
-         */
-        createIconSprite: function() {
-            var sprite = Assets.createSprite(this.grabBagItem.imagePath);
-            if (this.grabBagItem.imagePath === Assets.Images.PENCIL) {
-                var cropArea = new PIXI.Rectangle(0, 0, 200, 80);
-                var croppedTexture = new PIXI.Texture(sprite.texture.baseTexture, null, cropArea, cropArea);
-                sprite.texture = croppedTexture;
-            }
-            return sprite;
-        },
-
-        /**
-         * Creates a new object of whatever this icon represents
-         */
-        createComponentView: function(x, y) {
-            var modelLength = this.grabBagItem.modelLength;
-            var modelHeight = 1;
-
-            var model = new GrabBagResistor({
-                length: modelLength,
-                height: modelHeight,
-                grabBagItem: this.grabBagItem
-            }, {
-                start:     new Vector2(0, 0),
-                direction: new Vector2(1, 0)
-            });
-            this.setJunctionPositions(model, x, y);
-
-            var view = new GrabBagResistorView({
-                mvt: this.mvt,
-                simulation: this.simulation,
-                circuit: this.simulation.circuit,
-                model: model
-            });
-            return view;
+    createIconSprite: function() {
+        var sprite = Assets.createSprite(this.grabBagItem.imagePath);
+        if (this.grabBagItem.imagePath === Assets.Images.PENCIL) {
+            var cropArea = new PIXI.Rectangle(0, 0, 200, 80);
+            var croppedTexture = new PIXI.Texture(sprite.texture.baseTexture, null, cropArea, cropArea);
+            sprite.texture = croppedTexture;
         }
+        return sprite;
+    },
 
-    });
+    /**
+     * Creates a new object of whatever this icon represents
+     */
+    createComponentView: function(x, y) {
+        var modelLength = this.grabBagItem.modelLength;
+        var modelHeight = 1;
 
+        var model = new GrabBagResistor({
+            length: modelLength,
+            height: modelHeight,
+            grabBagItem: this.grabBagItem
+        }, {
+            start:     new Vector2(0, 0),
+            direction: new Vector2(1, 0)
+        });
+        this.setJunctionPositions(model, x, y);
 
-    return GrabBagIcon;
+        var view = new GrabBagResistorView({
+            mvt: this.mvt,
+            simulation: this.simulation,
+            circuit: this.simulation.circuit,
+            model: model
+        });
+        return view;
+    }
+
 });
+
+
+export default GrabBagIcon;

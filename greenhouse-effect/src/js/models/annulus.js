@@ -1,56 +1,49 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import Body from 'models/body';
 
-    'use strict';
+/**
+ * Model representation of an annulus, which is like a
+ *   a ring with thickness or a 2D version of a torus.
+ */
+var Annulus = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        center: null,
+        innerDiameter: 0,
+        outerDiameter: 0
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        Body.prototype.initialize.apply(this, [attributes, options]);
 
-    var Body = require('models/body');
+        this.set('center', new Vector2(this.get('center')));
+    },
 
     /**
-     * Model representation of an annulus, which is like a
-     *   a ring with thickness or a 2D version of a torus.
+     * Returns the distance from a point to the inner
+     *   diameter of the annulus.
      */
-    var Annulus = Body.extend({
+    distanceFromInnerDiameter: function(point) {
+        return Math.abs(point.distance(this.get('center')) - (this.get('innerDiameter') / 2));
+    },
 
-        defaults: _.extend({}, Body.prototype.defaults, {
-            center: null,
-            innerDiameter: 0,
-            outerDiameter: 0
-        }),
+    /**
+     * Returns center of mass of the annulus.
+     */
+    getCenterOfMass: function() {
+        return this.get('center');
+    },
 
-        initialize: function(attributes, options) {
-            Body.prototype.initialize.apply(this, [attributes, options]);
+    /**
+     * Calculates and returns the moment of inertia.
+     */
+    getMomentOfInertia: function() {
+        return (Math.PI / 4) * (
+            Math.pow(this.get('outerDiameter'), 4) - Math.pow(this.get('innerDiameter'), 4)
+        );
+    }
 
-            this.set('center', new Vector2(this.get('center')));
-        },
-
-        /**
-         * Returns the distance from a point to the inner
-         *   diameter of the annulus.
-         */
-        distanceFromInnerDiameter: function(point) {
-            return Math.abs(point.distance(this.get('center')) - (this.get('innerDiameter') / 2));
-        },
-
-        /**
-         * Returns center of mass of the annulus.
-         */
-        getCenterOfMass: function() {
-            return this.get('center');
-        },
-
-        /**
-         * Calculates and returns the moment of inertia.
-         */
-        getMomentOfInertia: function() {
-            return (Math.PI / 4) * (
-                Math.pow(this.get('outerDiameter'), 4) - Math.pow(this.get('innerDiameter'), 4)
-            );
-        }
-
-    });
-
-    return Annulus;
 });
+
+export default Annulus;

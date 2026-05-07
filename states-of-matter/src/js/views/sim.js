@@ -1,184 +1,170 @@
-define(function (require) {
-
-    'use strict';
-
-    var $ = require('jquery');
-    var _ = require('underscore');
-
-    var SimView = require('common/v3/app/sim');
-
-    var SOMSimulation = require('models/simulation');
-    var SOMSceneView  = require('views/scene');
-
-    var Constants = require('constants');
-
-    require('nouislider');
-    require('bootstrap');
-
-    // CSS
-    require('less!styles/sim');
-    require('less!common/styles/slider');
-    require('less!common/styles/radio');
-
-    // HTML
-    var simHtml = require('text!templates/sim.html');
+import $ from 'jquery';
+import _ from 'underscore';
+import SimView from 'common/v3/app/sim';
+import SOMSimulation from 'models/simulation';
+import SOMSceneView from 'views/scene';
+import Constants from 'constants';
+import 'nouislider';
+import 'styles/sim.less';
+import 'common/styles/slider.less';
+import 'common/styles/radio.less';
+import simHtml from 'templates/sim.html?raw';
 
 
-    var SOMSimView = SimView.extend({
+var SOMSimView = SimView.extend({
 
-        /**
-         * Root element properties
-         */
-        tagName:   'section',
-        className: 'sim-view',
+    /**
+     * Root element properties
+     */
+    tagName:   'section',
+    className: 'sim-view',
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
+    /**
+     * Template for rendering the basic scaffolding
+     */
+    template: _.template(simHtml),
 
-        /**
-         * Dom event listeners
-         */
-        events: {
-            'click .play-btn'  : 'play',
-            'click .pause-btn' : 'pause',
-            'click .step-btn'  : 'step',
-            'click .reset-btn' : 'reset',
+    /**
+     * Dom event listeners
+     */
+    events: {
+        'click .play-btn'  : 'play',
+        'click .pause-btn' : 'pause',
+        'click .step-btn'  : 'step',
+        'click .reset-btn' : 'reset',
 
-            'change .molecule-type' : 'changeMoleculeType'
-        },
+        'change .molecule-type' : 'changeMoleculeType'
+    },
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            SimView.prototype.initialize.apply(this, [options]);
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        SimView.prototype.initialize.apply(this, [options]);
 
-            this.initSceneView();
+        this.initSceneView();
 
-            this.listenTo(this.simulation, 'change:moleculeType', this.moleculeTypeChanged);
-            this.listenTo(this.simulation, 'change:paused',       this.pausedChanged);
-        },
+        this.listenTo(this.simulation, 'change:moleculeType', this.moleculeTypeChanged);
+        this.listenTo(this.simulation, 'change:paused',       this.pausedChanged);
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new SOMSimulation();
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new SOMSimulation();
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new SOMSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new SOMSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Renders everything
-         */
-        render: function() {
-            this.$el.empty();
+    /**
+     * Renders everything
+     */
+    render: function() {
+        this.$el.empty();
 
-            this.renderScaffolding();
-            this.renderSceneView();
+        this.renderScaffolding();
+        this.renderSceneView();
 
-            this.simulation.trigger('change:paused');
+        this.simulation.trigger('change:paused');
 
-            return this;
-        },
+        return this;
+    },
 
-        /**
-         * Renders page content. Should be overriden by child classes
-         */
-        renderScaffolding: function() {
-            var data = {
-                Constants: Constants,
-                simulation: this.simulation,
-                name: this.name
-            };
-            this.$el.html(this.template(data));
-            this.$('select');
-        },
+    /**
+     * Renders page content. Should be overriden by child classes
+     */
+    renderScaffolding: function() {
+        var data = {
+            Constants: Constants,
+            simulation: this.simulation,
+            name: this.name
+        };
+        this.$el.html(this.template(data));
+        this.$('select');
+    },
 
-        /**
-         * Renders the scene view
-         */
-        renderSceneView: function() {
-            this.sceneView.render();
-            this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-            this.$el.append(this.sceneView.$ui);
-        },
+    /**
+     * Renders the scene view
+     */
+    renderSceneView: function() {
+        this.sceneView.render();
+        this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
+        this.$el.append(this.sceneView.$ui);
+    },
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.sceneView.postRender();
-        },
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.sceneView.postRender();
+    },
 
-        /**
-         * Overrides so that we don't rerender on a reset.
-         */
-        rerender: function(event) {
-            this.sceneView.reset();
+    /**
+     * Overrides so that we don't rerender on a reset.
+     */
+    rerender: function(event) {
+        this.sceneView.reset();
 
-            var currentMoleculeType = this.simulation.get('moleculeType');
-            this.$('.molecule-type').each(function() {
-                if ($(this).val() == currentMoleculeType)
-                    $(this).click();
-            });
-        },
+        var currentMoleculeType = this.simulation.get('moleculeType');
+        this.$('.molecule-type').each(function() {
+            if ($(this).val() == currentMoleculeType)
+                $(this).click();
+        });
+    },
 
-        /**
-         * This is run every tick of the updater.  It updates the wave
-         *   simulation and the views.
-         */
-        update: function(time, deltaTime) {
-            // Update the model
-            this.simulation.update(time, deltaTime);
+    /**
+     * This is run every tick of the updater.  It updates the wave
+     *   simulation and the views.
+     */
+    update: function(time, deltaTime) {
+        // Update the model
+        this.simulation.update(time, deltaTime);
 
-            var timeSeconds = time / 1000;
-            var dtSeconds   = deltaTime / 1000;
+        var timeSeconds = time / 1000;
+        var dtSeconds   = deltaTime / 1000;
 
-            // Update the scene
-            this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
-        },
+        // Update the scene
+        this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
+    },
 
-        useKelvin: function() {
-            this.sceneView.useKelvin();
-        },
+    useKelvin: function() {
+        this.sceneView.useKelvin();
+    },
 
-        useCelsius: function() {
-            this.sceneView.useCelsius();
-        },
+    useCelsius: function() {
+        this.sceneView.useCelsius();
+    },
 
-        changeMoleculeType: function(event) {
-            var moleculeType = parseInt($(event.target).val());
-            this.simulation.set('moleculeType', moleculeType);
-        },
+    changeMoleculeType: function(event) {
+        var moleculeType = parseInt($(event.target).val());
+        this.simulation.set('moleculeType', moleculeType);
+    },
 
-        moleculeTypeChanged: function(simulation, moleculeType) {
-            this.$('.molecule-type[value="' + moleculeType + '"]').attr('checked', 'checked');
-        },
+    moleculeTypeChanged: function(simulation, moleculeType) {
+        this.$('.molecule-type[value="' + moleculeType + '"]').attr('checked', 'checked');
+    },
 
-        /**
-         * The simulation changed its paused state.
-         */
-        pausedChanged: function() {
-            if (this.simulation.get('paused'))
-                this.$el.removeClass('playing');
-            else
-                this.$el.addClass('playing');
-        },
+    /**
+     * The simulation changed its paused state.
+     */
+    pausedChanged: function() {
+        if (this.simulation.get('paused'))
+            this.$el.removeClass('playing');
+        else
+            this.$el.addClass('playing');
+    },
 
-    });
-
-    return SOMSimView;
 });
+
+export default SOMSimView;

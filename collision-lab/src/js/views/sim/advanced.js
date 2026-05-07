@@ -1,51 +1,43 @@
-define(function (require) {
+import _ from 'underscore';
+import CollisionLabSimView from 'views/sim';
+import ballSettingsHtml from 'templates/ball-settings-2d.html?raw';
+import advancedCheckboxesHtml from 'templates/advanced-checkboxes.html?raw';
 
-    'use strict';
+/**
+ * Advanced tab
+ */
+var AdvancedSimView = CollisionLabSimView.extend({
 
-    var _ = require('underscore');
-
-    var CollisionLabSimView   = require('views/sim');
-
-    // HTML
-    var ballSettingsHtml       = require('text!templates/ball-settings-2d.html');
-    var advancedCheckboxesHtml = require('text!templates/advanced-checkboxes.html');
+    ballSettingsHtml: ballSettingsHtml,
+    advancedCheckboxesTemplate: _.template(advancedCheckboxesHtml),
 
     /**
-     * Advanced tab
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var AdvancedSimView = CollisionLabSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Advanced',
+            name: 'advanced-sim',
+        }, options);
 
-        ballSettingsHtml: ballSettingsHtml,
-        advancedCheckboxesTemplate: _.template(advancedCheckboxesHtml),
+        CollisionLabSimView.prototype.initialize.apply(this, [options]);
+    },
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Advanced',
-                name: 'advanced-sim',
-            }, options);
+    /**
+     * Renders playback and sim controls
+     */
+    renderControls: function() {
+        CollisionLabSimView.prototype.renderControls.apply(this);
 
-            CollisionLabSimView.prototype.initialize.apply(this, [options]);
-        },
+        var data = {
+            name: this.name
+        };
 
-        /**
-         * Renders playback and sim controls
-         */
-        renderControls: function() {
-            CollisionLabSimView.prototype.renderControls.apply(this);
+        this.$('.visibility-controls').append(this.advancedCheckboxesTemplate(data));
+    },
 
-            var data = {
-                name: this.name
-            };
-
-            this.$('.visibility-controls').append(this.advancedCheckboxesTemplate(data));
-        },
-
-    });
-
-    return AdvancedSimView;
 });
+
+export default AdvancedSimView;

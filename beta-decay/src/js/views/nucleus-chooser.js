@@ -1,118 +1,111 @@
-define(function(require) {
+import _ from 'underscore';
+import NucleusType from 'models/nucleus-type';
+import Hydrogen3CompositeNucleus from 'models/nucleus/hydrogen-3-composite';
+import Carbon14CompositeNucleus from 'models/nucleus/carbon-14-composite';
+import LightAdjustableCompositeNucleus from 'models/nucleus/light-adjustable-composite';
+import NucleusChooser from 'views/nucleus-chooser';
+import NucleusView from 'views/nucleus';
 
-    'use strict';
 
-    var _ = require('underscore');
+/**
+ *
+ */
+var BetaDecayNucleusChooserView = NucleusChooser.extend({
 
-    var NucleusType                     = require('models/nucleus-type');
-    var Hydrogen3CompositeNucleus       = require('models/nucleus/hydrogen-3-composite');
-    var Carbon14CompositeNucleus        = require('models/nucleus/carbon-14-composite');
-    var LightAdjustableCompositeNucleus = require('models/nucleus/light-adjustable-composite');
+    initialize: function(options) {
+        options = _.extend({
+            scale: 18
+        }, options);
 
-    var NucleusChooser = require('views/nucleus-chooser');
-    var NucleusView    = require('views/nucleus');
-
+        NucleusChooser.prototype.initialize.apply(this, [options]);
+    },
 
     /**
-     *
+     * Creates the views and labels that will be used to render the list
      */
-    var BetaDecayNucleusChooserView = NucleusChooser.extend({
+    initItems: function() {
+        var items = [];
+        var symbolSize = 36;
 
-        initialize: function(options) {
-            options = _.extend({
-                scale: 18
-            }, options);
+        // Hydrogen-3 to Helium-3
+        var hydrogen3 = Hydrogen3CompositeNucleus.create();
+        var helium3   = Hydrogen3CompositeNucleus.create();
+        helium3.decay(); // Decay from Hydrogen-3 into Helium-3
 
-            NucleusChooser.prototype.initialize.apply(this, [options]);
-        },
+        items.push({
+            nucleusType: NucleusType.HYDROGEN_3,
+            isDefault: true,
+            start: {
+                label: 'Hydrogen-3',
+                displayObject: new NucleusView({
+                    model: hydrogen3,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            },
+            end: {
+                label: 'Helium-3',
+                displayObject: new NucleusView({
+                    model: helium3,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            }
+        });
 
-        /**
-         * Creates the views and labels that will be used to render the list
-         */
-        initItems: function() {
-            var items = [];
-            var symbolSize = 36;
+        // Carbon-14 to Nitrogen-14
+        var carbon14   = Carbon14CompositeNucleus.create();
+        var nitrogen14 = Carbon14CompositeNucleus.create();
+        nitrogen14.decay(); // Decay from Carbon-14 into Nitrogen-14
 
-            // Hydrogen-3 to Helium-3
-            var hydrogen3 = Hydrogen3CompositeNucleus.create();
-            var helium3   = Hydrogen3CompositeNucleus.create();
-            helium3.decay(); // Decay from Hydrogen-3 into Helium-3
+        items.push({
+            nucleusType: NucleusType.CARBON_14,
+            start: {
+                label: 'Carbon-14',
+                displayObject: new NucleusView({
+                    model: carbon14,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            },
+            end: {
+                label: 'Nitrogen-14',
+                displayObject: new NucleusView({
+                    model: nitrogen14,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            }
+        });
 
-            items.push({
-                nucleusType: NucleusType.HYDROGEN_3,
-                isDefault: true,
-                start: {
-                    label: 'Hydrogen-3',
-                    displayObject: new NucleusView({
-                        model: hydrogen3,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                },
-                end: {
-                    label: 'Helium-3',
-                    displayObject: new NucleusView({
-                        model: helium3,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                }
-            });
+        // Custom to custom decayed
+        var custom  = LightAdjustableCompositeNucleus.create();
+        var decayed = LightAdjustableCompositeNucleus.create();
+        decayed.decay();
 
-            // Carbon-14 to Nitrogen-14
-            var carbon14   = Carbon14CompositeNucleus.create();
-            var nitrogen14 = Carbon14CompositeNucleus.create();
-            nitrogen14.decay(); // Decay from Carbon-14 into Nitrogen-14
+        items.push({
+            nucleusType: NucleusType.LIGHT_CUSTOM,
+            start: {
+                label: 'Custom',
+                displayObject: new NucleusView({
+                    model: custom,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            },
+            end: {
+                label: 'Custom<br>(Decayed)',
+                displayObject: new NucleusView({
+                    model: decayed,
+                    mvt: this.mvt,
+                    symbolSize: symbolSize
+                }).displayObject
+            }
+        });
 
-            items.push({
-                nucleusType: NucleusType.CARBON_14,
-                start: {
-                    label: 'Carbon-14',
-                    displayObject: new NucleusView({
-                        model: carbon14,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                },
-                end: {
-                    label: 'Nitrogen-14',
-                    displayObject: new NucleusView({
-                        model: nitrogen14,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                }
-            });
+        this.items = items;
+    }
 
-            // Custom to custom decayed
-            var custom  = LightAdjustableCompositeNucleus.create();
-            var decayed = LightAdjustableCompositeNucleus.create();
-            decayed.decay();
-
-            items.push({
-                nucleusType: NucleusType.LIGHT_CUSTOM,
-                start: {
-                    label: 'Custom',
-                    displayObject: new NucleusView({
-                        model: custom,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                },
-                end: {
-                    label: 'Custom<br>(Decayed)',
-                    displayObject: new NucleusView({
-                        model: decayed,
-                        mvt: this.mvt,
-                        symbolSize: symbolSize
-                    }).displayObject
-                }
-            });
-
-            this.items = items;
-        }
-
-    });
-
-    return BetaDecayNucleusChooserView;
 });
+
+export default BetaDecayNucleusChooserView;

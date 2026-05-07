@@ -1,93 +1,86 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import BaseGreenhouseSceneView from 'views/scene/base-greenhouse';
+import GlassPaneView from 'views/glass-pane';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * Scene view fro the Greenhouse Effect tab
+ */
+var GlassLayersSceneView = BaseGreenhouseSceneView.extend({
 
-    var PIXI = require('pixi');
+    initialize: function(options) {
+        BaseGreenhouseSceneView.prototype.initialize.apply(this, arguments);
 
-    var BaseGreenhouseSceneView = require('views/scene/base-greenhouse');
-    var GlassPaneView           = require('views/glass-pane');
+        this.listenTo(this.simulation.glassPanes, 'reset',          this.glassPanesReset);
+        this.listenTo(this.simulation.glassPanes, 'add',            this.glassPaneAdded);
+        this.listenTo(this.simulation.glassPanes, 'remove destroy', this.glassPaneRemoved);
+    },
 
-    var Assets    = require('assets');
+    initGraphics: function() {
+        BaseGreenhouseSceneView.prototype.initGraphics.apply(this, arguments);
 
-    /**
-     * Scene view fro the Greenhouse Effect tab
-     */
-    var GlassLayersSceneView = BaseGreenhouseSceneView.extend({
+        this.initGlassPanes();
+    },
 
-        initialize: function(options) {
-            BaseGreenhouseSceneView.prototype.initialize.apply(this, arguments);
+    initBackground: function() {
+        this.bgGlass = this.createScene(Assets.Images.SCENE_GLASS);
+        this.bgGlass.visible = true;
+        this.backgroundLayer.addChild(this.bgGlass);
+    },
 
-            this.listenTo(this.simulation.glassPanes, 'reset',          this.glassPanesReset);
-            this.listenTo(this.simulation.glassPanes, 'add',            this.glassPaneAdded);
-            this.listenTo(this.simulation.glassPanes, 'remove destroy', this.glassPaneRemoved);
-        },
+    initGlassPanes: function() {
+        this.glassPaneViews = [];
 
-        initGraphics: function() {
-            BaseGreenhouseSceneView.prototype.initGraphics.apply(this, arguments);
+        this.glassPanes = new PIXI.Container();
+        // Add it right before the sunlight photons layer
+        this.backgroundLayer.addChildAt(this.glassPanes, this.backgroundLayer.getChildIndex(this.sunlightPhotons));
 
-            this.initGlassPanes();
-        },
+        this.glassPanesReset(this.simulation.glassPanes);
+    },
 
-        initBackground: function() {
-            this.bgGlass = this.createScene(Assets.Images.SCENE_GLASS);
-            this.bgGlass.visible = true;
-            this.backgroundLayer.addChild(this.bgGlass);
-        },
+    resize: function() {
+        BaseGreenhouseSceneView.prototype.resize.apply(this, arguments);
 
-        initGlassPanes: function() {
-            this.glassPaneViews = [];
+        if (this.initialized)
+            this.setSceneScale(this.bgGlass);
+    },
 
-            this.glassPanes = new PIXI.Container();
-            // Add it right before the sunlight photons layer
-            this.backgroundLayer.addChildAt(this.glassPanes, this.backgroundLayer.getChildIndex(this.sunlightPhotons));
-
-            this.glassPanesReset(this.simulation.glassPanes);
-        },
-
-        resize: function() {
-            BaseGreenhouseSceneView.prototype.resize.apply(this, arguments);
-
-            if (this.initialized)
-                this.setSceneScale(this.bgGlass);
-        },
-
-        glassPanesReset: function(glassPanes) {
-            // Remove old photon views
-            for (var i = this.glassPaneViews.length - 1; i >= 0; i--) {
-                this.glassPaneViews[i].removeFrom(this.glassPanes);
-                this.glassPaneViews.splice(i, 1);
-            }
-
-            // Add new photon views
-            glassPanes.each(function(glassPane) {
-                this.createAndAddGlassPaneView(glassPane);
-            }, this);
-        },
-
-        glassPaneAdded: function(glassPane, glassPanes) {
-            this.createAndAddGlassPaneView(glassPane);
-        },
-
-        glassPaneRemoved: function(glassPane, glassPanes) {
-            for (var i = this.glassPaneViews.length - 1; i >= 0; i--) {
-                if (this.glassPaneViews[i].model === glassPane) {
-                    this.glassPaneViews[i].removeFrom(this.glassPanes);
-                    this.glassPaneViews.splice(i, 1);
-                    break;
-                }
-            }
-        },
-
-        createAndAddGlassPaneView: function(glassPane) {
-            var glassPaneView = new GlassPaneView({
-                model: glassPane,
-                mvt: this.mvt
-            });
-            this.glassPanes.addChild(glassPaneView.displayObject);
-            this.glassPaneViews.push(glassPaneView);
+    glassPanesReset: function(glassPanes) {
+        // Remove old photon views
+        for (var i = this.glassPaneViews.length - 1; i >= 0; i--) {
+            this.glassPaneViews[i].removeFrom(this.glassPanes);
+            this.glassPaneViews.splice(i, 1);
         }
 
-    });
+        // Add new photon views
+        glassPanes.each(function(glassPane) {
+            this.createAndAddGlassPaneView(glassPane);
+        }, this);
+    },
 
-    return GlassLayersSceneView;
+    glassPaneAdded: function(glassPane, glassPanes) {
+        this.createAndAddGlassPaneView(glassPane);
+    },
+
+    glassPaneRemoved: function(glassPane, glassPanes) {
+        for (var i = this.glassPaneViews.length - 1; i >= 0; i--) {
+            if (this.glassPaneViews[i].model === glassPane) {
+                this.glassPaneViews[i].removeFrom(this.glassPanes);
+                this.glassPaneViews.splice(i, 1);
+                break;
+            }
+        }
+    },
+
+    createAndAddGlassPaneView: function(glassPane) {
+        var glassPaneView = new GlassPaneView({
+            model: glassPane,
+            mvt: this.mvt
+        });
+        this.glassPanes.addChild(glassPaneView.displayObject);
+        this.glassPaneViews.push(glassPaneView);
+    }
+
 });
+
+export default GlassLayersSceneView;

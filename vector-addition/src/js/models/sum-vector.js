@@ -1,56 +1,50 @@
-define(function(require) {
+import DraggableArrowView from 'common/v3/pixi/view/arrow-draggable';
+import _ from 'underscore';
 
-  'use strict';
+var SumVectorViewModel = DraggableArrowView.ArrowViewModel.extend({
+  defaults: {
+    originX: 300,
+    originY: 300,
+    targetX: 380,
+    targetY: 220
+  },
 
-  var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
-  var _                  = require('underscore');
+  initialize: function() {
 
-  var SumVectorViewModel = DraggableArrowView.ArrowViewModel.extend({
-    defaults: {
-      originX: 300,
-      originY: 300,
-      targetX: 380,
-      targetY: 220
-    },
+  },
 
-    initialize: function() {
+  sum: function(model, sumVectorView) {
+    var changesX = 0;
+    var changesY = 0;
+    var sumX = 0;
+    var sumY = 0;
+    var rotation = 0;
 
-    },
+    if (model.vectorCollection.length > 0) {
+        var vectors = model.vectorCollection.models;
+      _.each(vectors, function(vector) {
+        changesX = vector.get('targetX') - vector.get('originX');
+        changesY = vector.get('targetY') - vector.get('originY');
+        sumX += changesX;
+        sumY += changesY;
+        rotation += vector.get('rotation');
+      });
 
-    sum: function(model, sumVectorView) {
-      var changesX = 0;
-      var changesY = 0;
-      var sumX = 0;
-      var sumY = 0;
-      var rotation = 0;
-
-      if (model.vectorCollection.length > 0) {
-          var vectors = model.vectorCollection.models;
-        _.each(vectors, function(vector) {
-          changesX = vector.get('targetX') - vector.get('originX');
-          changesY = vector.get('targetY') - vector.get('originY');
-          sumX += changesX;
-          sumY += changesY;
-          rotation += vector.get('rotation');
-        });
-
-        this.set('originX', this.get('originX'));
-        this.set('originY', this.get('originY'));
-        this.set('targetX', this.get('originX') + sumX);
-        this.set('targetY', this.get('originY') + sumY);
-        this.set('rotation', rotation);
-      }
-    },
-
-    resetSumOrigins: function() {
-      this.set('originX', 300);
-      this.set('originY', 300);
-      this.set('targetX', 380);
-      this.set('targetY', 220);
+      this.set('originX', this.get('originX'));
+      this.set('originY', this.get('originY'));
+      this.set('targetX', this.get('originX') + sumX);
+      this.set('targetY', this.get('originY') + sumY);
+      this.set('rotation', rotation);
     }
+  },
 
-  });
-
-  return SumVectorViewModel;
+  resetSumOrigins: function() {
+    this.set('originX', 300);
+    this.set('originY', 300);
+    this.set('targetX', 380);
+    this.set('targetY', 220);
+  }
 
 });
+
+export default SumVectorViewModel;

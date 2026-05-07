@@ -1,61 +1,55 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import CommonArrowView from 'common/v3/pixi/view/arrow';
+import SumVectorYViewModel from 'models/sum-vector-y';
 
-  'use strict';
+var SumVectorYView = PixiView.extend({
 
-  var PIXI = require('pixi');
-  var PixiView = require('common/v3/pixi/view');
-  var CommonArrowView = require('common/v3/pixi/view/arrow');
-  var SumVectorYViewModel = require('models/sum-vector-y');
+  initialize: function(options) {
+    this.sumVectorYViewModel = new SumVectorYViewModel();
+    this.model = options.simModel;
+    this.sumVectorModel = options.sumVectorModel;
 
-  var SumVectorYView = PixiView.extend({
+    this.drawSumVectorY();
 
-    initialize: function(options) {
-      this.sumVectorYViewModel = new SumVectorYViewModel();
-      this.model = options.simModel;
-      this.sumVectorModel = options.sumVectorModel;
+    this.listenTo(this.sumVectorModel, 'change:targetX change:targetY', this.updateSumVectorY);
+  },
 
-      this.drawSumVectorY();
+  drawSumVectorY: function() {
+    this.sumVectorYView = new CommonArrowView({
+        model: this.sumVectorYViewModel,
+        fillColor: this.model.get('lightGreen')
+    });
 
-      this.listenTo(this.sumVectorModel, 'change:targetX change:targetY', this.updateSumVectorY);
-    },
+    this.sumVectorYContainer = new PIXI.Container();
+    this.sumVectorYContainer.addChild(this.sumVectorYView.displayObject);
+    this.displayObject.addChild(this.sumVectorYContainer);
+    this.sumVectorYContainer.visible = false;
 
-    drawSumVectorY: function() {
-      this.sumVectorYView = new CommonArrowView({
-          model: this.sumVectorYViewModel,
-          fillColor: this.model.get('lightGreen')
-      });
+    var model = this.sumVectorYViewModel;
 
-      this.sumVectorYContainer = new PIXI.Container();
-      this.sumVectorYContainer.addChild(this.sumVectorYView.displayObject);
-      this.displayObject.addChild(this.sumVectorYContainer);
-      this.sumVectorYContainer.visible = false;
+    model.set('originX', this.sumVectorModel.get('originX'));
+    model.set('originY', this.sumVectorModel.get('originY'));
+    model.set('targetX', this.sumVectorModel.get('targetX'));
+    model.set('targetY', this.sumVectorModel.get('targetY'));
+    model.set('oldOriginX', model.get('originX'));
+    model.set('oldOriginY', model.get('originY'));
+  },
 
-      var model = this.sumVectorYViewModel;
+  updateSumVectorY: function() {
+    var model = this.sumVectorYViewModel;
 
+    if (this.model.get('componentStyles') !== 3) {
       model.set('originX', this.sumVectorModel.get('originX'));
       model.set('originY', this.sumVectorModel.get('originY'));
       model.set('targetX', this.sumVectorModel.get('targetX'));
       model.set('targetY', this.sumVectorModel.get('targetY'));
-      model.set('oldOriginX', model.get('originX'));
-      model.set('oldOriginY', model.get('originY'));
-    },
-
-    updateSumVectorY: function() {
-      var model = this.sumVectorYViewModel;
-
-      if (this.model.get('componentStyles') !== 3) {
-        model.set('originX', this.sumVectorModel.get('originX'));
-        model.set('originY', this.sumVectorModel.get('originY'));
-        model.set('targetX', this.sumVectorModel.get('targetX'));
-        model.set('targetY', this.sumVectorModel.get('targetY'));
-        model.set('oldOriginX', this.sumVectorModel.get('originX'));
-        model.set('oldOriginY', this.sumVectorModel.get('originY'));
-      }
-
+      model.set('oldOriginX', this.sumVectorModel.get('originX'));
+      model.set('oldOriginY', this.sumVectorModel.get('originY'));
     }
 
-  });
+  }
 
-  return SumVectorYView;
+});
 
-})
+export default SumVectorYView;

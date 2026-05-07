@@ -1,287 +1,271 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import FixedIntervalSimulation from 'common/simulation/fixed-interval-simulation';
+import Vector2 from 'common/math/vector2';
+import Air from 'models/air';
+import Faucet from 'models/energy-source/faucet';
+import Sun from 'models/energy-source/sun';
+import Teapot from 'models/energy-source/teapot';
+import Biker from 'models/energy-source/biker';
+import ElectricalGenerator from 'models/energy-converter/electrical-generator';
+import SolarPanel from 'models/energy-converter/solar-panel';
+import IncandescentLightBulb from 'models/energy-user/incandescent-light-bulb';
+import FluorescentLightBulb from 'models/energy-user/fluorescent-light-bulb';
+import BeakerHeater from 'models/energy-user/beaker-heater';
+import CarouselAnimator from 'models/carousel-animator';
+import Belt from 'models/belt';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var EnergySystemsSimulation = FixedIntervalSimulation.extend({
 
-    // Libraries
-    var _ = require('underscore');
+    defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
+        source: null,
+        converter: null,
+        user: null
+    }),
 
-    // Common dependencies
-    var FixedIntervalSimulation = require('common/simulation/fixed-interval-simulation');
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        options = options || {};
+        options.framesPerSecond = Constants.FRAMES_PER_SECOND;
 
-    // Project dependiencies
-    var Air = require('models/air');
+        FixedIntervalSimulation.prototype.initialize.apply(this, arguments);
 
-    var Faucet = require('models/energy-source/faucet');
-    var Sun    = require('models/energy-source/sun');
-    var Teapot = require('models/energy-source/teapot');
-    var Biker  = require('models/energy-source/biker');
-
-    var ElectricalGenerator = require('models/energy-converter/electrical-generator');
-    var SolarPanel          = require('models/energy-converter/solar-panel');
-
-    var IncandescentLightBulb = require('models/energy-user/incandescent-light-bulb');
-    var FluorescentLightBulb  = require('models/energy-user/fluorescent-light-bulb');
-    var BeakerHeater          = require('models/energy-user/beaker-heater');
-
-    var CarouselAnimator = require('models/carousel-animator');
-    var Belt             = require('models/belt');
-
-    // Constants
-    var Constants = require('constants');
+        this.on('change:source',    this.sourceChanged);
+        this.on('change:converter', this.converterChanged);
+        this.on('change:user',      this.userChanged);
+    },
 
     /**
-     *
+     * Initializes all the model components necessary for the
+     *   simulation to function.
      */
-    var EnergySystemsSimulation = FixedIntervalSimulation.extend({
+    initComponents: function() {
+        // Air
+        this.air = new Air();
 
-        defaults: _.extend(FixedIntervalSimulation.prototype.defaults, {
-            source: null,
-            converter: null,
-            user: null
-        }),
+        // Sources
+        this.faucet = new Faucet();
+        this.sun    = new Sun();
+        this.teapot = new Teapot();
+        this.biker  = new Biker();
 
-        initialize: function(attributes, options) {
-            options = options || {};
-            options.framesPerSecond = Constants.FRAMES_PER_SECOND;
+        // Converters
+        this.electricalGenerator = new ElectricalGenerator();
+        this.solarPanel          = new SolarPanel();
 
-            FixedIntervalSimulation.prototype.initialize.apply(this, arguments);
+        // Users
+        this.incandescentLightBulb = new IncandescentLightBulb();
+        this.fluorescentLightBulb  = new FluorescentLightBulb();
+        this.beakerHeater          = new BeakerHeater();
 
-            this.on('change:source',    this.sourceChanged);
-            this.on('change:converter', this.converterChanged);
-            this.on('change:user',      this.userChanged);
-        },
+        // Belt
+        // Create the belt that interconnects the biker and the generator.
+        //   Some position tweaking was needed in order to get this to
+        //   show up in the right place.  Not entirely sure why.
+        this.belt = new Belt({
+            wheel1Radius: Biker.REAR_WHEEL_RADIUS,
+            wheel1Center: new Vector2(EnergySystemsSimulation.ENERGY_SOURCE_POSITION).add(Biker.CENTER_OF_BACK_WHEEL_OFFSET).add(0.005, 0),
+            wheel2Radius: ElectricalGenerator.WHEEL_RADIUS,
+            wheel2Center: new Vector2(EnergySystemsSimulation.ENERGY_CONVERTER_POSITION).add(ElectricalGenerator.WHEEL_CENTER_OFFSET)
+        });
 
-        /**
-         * Initializes all the model components necessary for the
-         *   simulation to function.
-         */
-        initComponents: function() {
-            // Air
-            this.air = new Air();
+        // Add meaningful cids for debugging
+        this.faucet.cid = 'faucet';
+        this.sun.cid    = 'sun';
+        this.teapot.cid = 'teapot';
+        this.biker.cid  = 'biker';
 
-            // Sources
-            this.faucet = new Faucet();
-            this.sun    = new Sun();
-            this.teapot = new Teapot();
-            this.biker  = new Biker();
+        this.electricalGenerator.cid = 'electrical-generator';
+        this.solarPanel.cid          = 'solar-panel';
 
-            // Converters
-            this.electricalGenerator = new ElectricalGenerator();
-            this.solarPanel          = new SolarPanel();
+        this.incandescentLightBulb.cid = 'incandescent-light-bulb';
+        this.fluorescentLightBulb.cid  = 'fluorescent-light-bulb';
+        this.beakerHeater.cid          = 'beaker-heater';
 
-            // Users
-            this.incandescentLightBulb = new IncandescentLightBulb();
-            this.fluorescentLightBulb  = new FluorescentLightBulb();
-            this.beakerHeater          = new BeakerHeater();
+        // Group lists
+        this.sources = [
+            this.faucet,
+            this.sun,
+            this.teapot,
+            this.biker
+        ];
 
-            // Belt
-            // Create the belt that interconnects the biker and the generator.
-            //   Some position tweaking was needed in order to get this to
-            //   show up in the right place.  Not entirely sure why.
-            this.belt = new Belt({
-                wheel1Radius: Biker.REAR_WHEEL_RADIUS,
-                wheel1Center: new Vector2(EnergySystemsSimulation.ENERGY_SOURCE_POSITION).add(Biker.CENTER_OF_BACK_WHEEL_OFFSET).add(0.005, 0),
-                wheel2Radius: ElectricalGenerator.WHEEL_RADIUS,
-                wheel2Center: new Vector2(EnergySystemsSimulation.ENERGY_CONVERTER_POSITION).add(ElectricalGenerator.WHEEL_CENTER_OFFSET)
-            });
+        this.converters = [
+            this.electricalGenerator,
+            this.solarPanel
+        ];
 
-            // Add meaningful cids for debugging
-            this.faucet.cid = 'faucet';
-            this.sun.cid    = 'sun';
-            this.teapot.cid = 'teapot';
-            this.biker.cid  = 'biker';
+        this.users = [
+            this.beakerHeater,
+            this.incandescentLightBulb,
+            this.fluorescentLightBulb
+        ];
 
-            this.electricalGenerator.cid = 'electrical-generator';
-            this.solarPanel.cid          = 'solar-panel';
+        // List of all models
+        this.models = _.flatten([
+            this.air,
+            this.sources,
+            this.converters,
+            this.users
+        ]);
 
-            this.incandescentLightBulb.cid = 'incandescent-light-bulb';
-            this.fluorescentLightBulb.cid  = 'fluorescent-light-bulb';
-            this.beakerHeater.cid          = 'beaker-heater';
+        // Events
+        this.listenTo(this.electricalGenerator, 'change:active', function(faucet, active) {
+            this.faucet.set('waterPowerableElementInPlace', active);
+            this.teapot.set('steamPowerableElementInPlace', active);
+            this.biker.set('mechanicalPoweredSystemIsNext', active);
 
-            // Group lists
-            this.sources = [
-                this.faucet,
-                this.sun,
-                this.teapot,
-                this.biker
-            ];
-
-            this.converters = [
-                this.electricalGenerator,
-                this.solarPanel
-            ];
-
-            this.users = [
-                this.beakerHeater,
-                this.incandescentLightBulb,
-                this.fluorescentLightBulb
-            ];
-
-            // List of all models
-            this.models = _.flatten([
-                this.air,
-                this.sources,
-                this.converters,
-                this.users
-            ]);
-
-            // Events
-            this.listenTo(this.electricalGenerator, 'change:active', function(faucet, active) {
-                this.faucet.set('waterPowerableElementInPlace', active);
-                this.teapot.set('steamPowerableElementInPlace', active);
-                this.biker.set('mechanicalPoweredSystemIsNext', active);
-
-                this.updateBeltVisibility();
-            });
-
-            this.listenTo(this.biker, 'change:active', function(faucet, active) {
-                this.electricalGenerator.set('directCouplingMode', active);
-
-                this.updateBeltVisibility();
-            });
-
-            // The sun needs a reference to the solar panel
-            this.sun.set('solarPanel', this.solarPanel);
-
-            this.selectDefaultElements();
-            this.get('source').activate();
-            this.get('converter').activate();
-            this.get('user').activate();
-            this.get('source').set('opacity', 1);
-            this.get('converter').set('opacity', 1);
-            this.get('user').set('opacity', 1);
-
-            // Animators
-            this.sourceAnimator = new CarouselAnimator({
-                elements: this.sources,
-                activeElement: this.get('source'),
-                activeElementPosition: EnergySystemsSimulation.ENERGY_SOURCE_POSITION
-            });
-            this.converterAnimator = new CarouselAnimator({
-                elements: this.converters,
-                activeElement: this.get('converter'),
-                activeElementPosition: EnergySystemsSimulation.ENERGY_CONVERTER_POSITION
-            });
-            this.userAnimator = new CarouselAnimator({
-                elements: this.users,
-                activeElement: this.get('user'),
-                activeElementPosition: EnergySystemsSimulation.ENERGY_USER_POSITION
-            });
-
-            var activateElement = function(activeElement) {
-                activeElement.activate();
-            };
-
-            this.listenTo(this.sourceAnimator,    'destination-reached', activateElement);
-            this.listenTo(this.converterAnimator, 'destination-reached', activateElement);
-            this.listenTo(this.userAnimator,      'destination-reached', activateElement);
-        },
-
-        selectDefaultElements: function() {
-            this.set('source',    this.faucet);
-            this.set('converter', this.electricalGenerator);
-            this.set('user',      this.beakerHeater);
-        },
-
-        /**
-         * This is called on a reset to set the simulation
-         *   components back to defaults.  The inherited
-         *   behavior is to just call initComponents, but
-         *   since we want to manually reset each component
-         *   in this simulation instead of clearing them
-         *   out and starting over, we override this
-         *   function.
-         */
-        resetComponents: function() {
-            /* We could have a case where one of the
-             *   currently selected items is one of
-             *   defaults, so just selecting it again
-             *   wouldn't properly deactivate it first.
-             */
-            _.each(_.flatten([
-                this.sources,
-                this.converters,
-                this.users
-            ]), function(element) {
-                if (element.active())
-                    element.deactivate();
-            });
-
-            this.faucet.set('waterPowerableElementInPlace', true);
-            this.teapot.set('steamPowerableElementInPlace', true);
-            this.biker.set('mechanicalPoweredSystemIsNext', true);
-            this.electricalGenerator.set('directCouplingMode', false);
             this.updateBeltVisibility();
+        });
 
-            this.selectDefaultElements();
+        this.listenTo(this.biker, 'change:active', function(faucet, active) {
+            this.electricalGenerator.set('directCouplingMode', active);
 
-            this.get('source').activate();
-            this.get('converter').activate();
-            this.get('user').activate();
+            this.updateBeltVisibility();
+        });
 
-            this.sourceAnimator.reset();
-            this.converterAnimator.reset();
-            this.userAnimator.reset();
-        },
+        // The sun needs a reference to the solar panel
+        this.sun.set('solarPanel', this.solarPanel);
 
-        preloadEnergyChunks: function() {
-            this.get('source').preloadEnergyChunks();
-            this.get('converter').preloadEnergyChunks();
-            this.get('user').preloadEnergyChunks();
-        },
+        this.selectDefaultElements();
+        this.get('source').activate();
+        this.get('converter').activate();
+        this.get('user').activate();
+        this.get('source').set('opacity', 1);
+        this.get('converter').set('opacity', 1);
+        this.get('user').set('opacity', 1);
 
-        /**
-         * Internal update that is called on each fixed-time step
-         *   because it's a fixed-interval simulation model.
+        // Animators
+        this.sourceAnimator = new CarouselAnimator({
+            elements: this.sources,
+            activeElement: this.get('source'),
+            activeElementPosition: EnergySystemsSimulation.ENERGY_SOURCE_POSITION
+        });
+        this.converterAnimator = new CarouselAnimator({
+            elements: this.converters,
+            activeElement: this.get('converter'),
+            activeElementPosition: EnergySystemsSimulation.ENERGY_CONVERTER_POSITION
+        });
+        this.userAnimator = new CarouselAnimator({
+            elements: this.users,
+            activeElement: this.get('user'),
+            activeElementPosition: EnergySystemsSimulation.ENERGY_USER_POSITION
+        });
+
+        var activateElement = function(activeElement) {
+            activeElement.activate();
+        };
+
+        this.listenTo(this.sourceAnimator,    'destination-reached', activateElement);
+        this.listenTo(this.converterAnimator, 'destination-reached', activateElement);
+        this.listenTo(this.userAnimator,      'destination-reached', activateElement);
+    },
+
+    selectDefaultElements: function() {
+        this.set('source',    this.faucet);
+        this.set('converter', this.electricalGenerator);
+        this.set('user',      this.beakerHeater);
+    },
+
+    /**
+     * This is called on a reset to set the simulation
+     *   components back to defaults.  The inherited
+     *   behavior is to just call initComponents, but
+     *   since we want to manually reset each component
+     *   in this simulation instead of clearing them
+     *   out and starting over, we override this
+     *   function.
+     */
+    resetComponents: function() {
+        /* We could have a case where one of the
+         *   currently selected items is one of
+         *   defaults, so just selecting it again
+         *   wouldn't properly deactivate it first.
          */
-        _update: function(time, deltaTime) {
-            // For the time slider and anything else relying on time
-            // this.set('time', time);
+        _.each(_.flatten([
+            this.sources,
+            this.converters,
+            this.users
+        ]), function(element) {
+            if (element.active())
+                element.deactivate();
+        });
 
-            this.sourceAnimator.update(time, deltaTime);
-            this.converterAnimator.update(time, deltaTime);
-            this.userAnimator.update(time, deltaTime);
+        this.faucet.set('waterPowerableElementInPlace', true);
+        this.teapot.set('steamPowerableElementInPlace', true);
+        this.biker.set('mechanicalPoweredSystemIsNext', true);
+        this.electricalGenerator.set('directCouplingMode', false);
+        this.updateBeltVisibility();
 
-            // Update the active elements to produce, convert, and use energy.
-            var energyFromSource    = this.get('source').update(time, deltaTime);
-            var energyFromConverter = this.get('converter').update(time, deltaTime, energyFromSource);
-                                      this.get('user').update(time, deltaTime, energyFromConverter);
+        this.selectDefaultElements();
 
-            // Transfer energy chunks between elements
-            var sourceOutput = this.get('source').extractOutgoingEnergyChunks();
-            this.get('converter').injectEnergyChunks(sourceOutput);
-            var converterOutput = this.get('converter').extractOutgoingEnergyChunks();
-            this.get('user').injectEnergyChunks(converterOutput);
+        this.get('source').activate();
+        this.get('converter').activate();
+        this.get('user').activate();
 
-            //console.log('source output: ' + sourceOutput.length + ', converter output: ' + converterOutput.length +', bulb output: ' + this.get('user').radiatedEnergyChunkMovers.length);
-        },
+        this.sourceAnimator.reset();
+        this.converterAnimator.reset();
+        this.userAnimator.reset();
+    },
 
-        sourceChanged: function(simulation, source) {
-            this.activeElementChanged(source, this.previous('source'));
-            this.sourceAnimator.set('activeElement', source);
-        },
+    preloadEnergyChunks: function() {
+        this.get('source').preloadEnergyChunks();
+        this.get('converter').preloadEnergyChunks();
+        this.get('user').preloadEnergyChunks();
+    },
 
-        converterChanged: function(simulation, converter) {
-            this.activeElementChanged(converter, this.previous('converter'));
-            this.converterAnimator.set('activeElement', converter);
-        },
+    /**
+     * Internal update that is called on each fixed-time step
+     *   because it's a fixed-interval simulation model.
+     */
+    _update: function(time, deltaTime) {
+        // For the time slider and anything else relying on time
+        // this.set('time', time);
 
-        userChanged: function(simulation, user) {
-            this.activeElementChanged(user, this.previous('user'));
-            this.userAnimator.set('activeElement', user);
-        },
+        this.sourceAnimator.update(time, deltaTime);
+        this.converterAnimator.update(time, deltaTime);
+        this.userAnimator.update(time, deltaTime);
 
-        activeElementChanged: function(activeElement, previousElement) {
-            if (previousElement)
-                previousElement.deactivate();
-        },
+        // Update the active elements to produce, convert, and use energy.
+        var energyFromSource    = this.get('source').update(time, deltaTime);
+        var energyFromConverter = this.get('converter').update(time, deltaTime, energyFromSource);
+                                  this.get('user').update(time, deltaTime, energyFromConverter);
 
-        updateBeltVisibility: function() {
-            this.belt.set('visible', this.electricalGenerator.active() && this.biker.active());
-        }
+        // Transfer energy chunks between elements
+        var sourceOutput = this.get('source').extractOutgoingEnergyChunks();
+        this.get('converter').injectEnergyChunks(sourceOutput);
+        var converterOutput = this.get('converter').extractOutgoingEnergyChunks();
+        this.get('user').injectEnergyChunks(converterOutput);
 
-    }, Constants.EnergySystemsSimulation);
+        //console.log('source output: ' + sourceOutput.length + ', converter output: ' + converterOutput.length +', bulb output: ' + this.get('user').radiatedEnergyChunkMovers.length);
+    },
 
-    return EnergySystemsSimulation;
-});
+    sourceChanged: function(simulation, source) {
+        this.activeElementChanged(source, this.previous('source'));
+        this.sourceAnimator.set('activeElement', source);
+    },
+
+    converterChanged: function(simulation, converter) {
+        this.activeElementChanged(converter, this.previous('converter'));
+        this.converterAnimator.set('activeElement', converter);
+    },
+
+    userChanged: function(simulation, user) {
+        this.activeElementChanged(user, this.previous('user'));
+        this.userAnimator.set('activeElement', user);
+    },
+
+    activeElementChanged: function(activeElement, previousElement) {
+        if (previousElement)
+            previousElement.deactivate();
+    },
+
+    updateBeltVisibility: function() {
+        this.belt.set('visible', this.electricalGenerator.active() && this.biker.active());
+    }
+
+}, Constants.EnergySystemsSimulation);
+
+export default EnergySystemsSimulation;

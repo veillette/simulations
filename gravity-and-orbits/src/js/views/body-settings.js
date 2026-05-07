@@ -1,95 +1,86 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import Backbone from 'backbone';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import Vector2 from 'common/math/vector2';
+import range from 'common/math/range';
+import Assets from 'assets';
+import 'nouislider';
+import templateHtml from 'templates/body-settings-item.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var BodySettingsView = Backbone.View.extend({
 
-    var _        = require('underscore');
-    var $        = require('jquery');
-    var Backbone = require('backbone');
+    tagName: 'tr',
+    className: 'body-settings-view',
+    template: _.template(templateHtml),
 
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-    var Vector2                = require('common/math/vector2');
-    var range                  = require('common/math/range');
+    events: {
+        'slide .mass-slider': 'changeMass',
+    },
 
-    var Assets = require('assets');
+    initialize: function(options) {
+        this.simulation = options.simulation;
 
-    require('nouislider');
+        this._position = new Vector2();
 
-    var templateHtml = require('text!templates/body-settings-item.html');
+        this.listenTo(this.model, 'change:mass', this.massChanged);
+    },
 
     /**
-     *
+     * Renders content and canvas for heatmap
      */
-    var BodySettingsView = Backbone.View.extend({
+    render: function() {
+        var data = this.model.toJSON();
+        data.src = Assets.ImageFromModel(this.model);
+        data.Assets = Assets;
 
-        tagName: 'tr',
-        className: 'body-settings-view',
-        template: _.template(templateHtml),
+        this.$el.html(this.template(data));
 
-        events: {
-            'slide .mass-slider': 'changeMass',
-        },
+        var massRange = range({ min: this.model.get('minMass'), max: this.model.get('maxMass') });
+        var referenceMassPercent = massRange.percent(this.model.get('referenceMass')) * 100 + '%';
 
-        initialize: function(options) {
-            this.simulation = options.simulation;
+        var sliderRange = {
+            'min': this.model.get('minMass'),
+            'max': this.model.get('maxMass')
+        };
+        sliderRange[referenceMassPercent] = this.model.get('referenceMass');
 
-            this._position = new Vector2();
+        this.$('.mass-slider').noUiSlider({
+            start: this.model.get('mass'),
+            connect: 'lower',
+            range: sliderRange
+        });
 
-            this.listenTo(this.model, 'change:mass', this.massChanged);
-        },
+        return this;
+    },
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            var data = this.model.toJSON();
-            data.src = Assets.ImageFromModel(this.model);
-            data.Assets = Assets;
+    massChanged: function(ball, mass) {
+        this.updateLock(function() {
+            if (this.moreDataMode)
+                this.$('.mass').val(mass.toFixed(2));
+            else
+                this.$('.mass').val(mass.toFixed(1));
+            this.$('.mass-slider').val(mass);
+        });
+    },
 
-            this.$el.html(this.template(data));
-
-            var massRange = range({ min: this.model.get('minMass'), max: this.model.get('maxMass') });
-            var referenceMassPercent = massRange.percent(this.model.get('referenceMass')) * 100 + '%';
-
-            var sliderRange = {
-                'min': this.model.get('minMass'),
-                'max': this.model.get('maxMass')
-            };
-            sliderRange[referenceMassPercent] = this.model.get('referenceMass');
-
-            this.$('.mass-slider').noUiSlider({
-                start: this.model.get('mass'),
-                connect: 'lower',
-                range: sliderRange
+    changeMass: function(event) {
+        var mass = parseFloat($(event.target).val());
+        if (!isNaN(mass)) {
+            this.inputLock(function() {
+                this.model.set('mass', mass);
+                if (this.simulation.get('paused'))
+                    this.simulation.updateForceVectors();
             });
-
-            return this;
-        },
-
-        massChanged: function(ball, mass) {
-            this.updateLock(function() {
-                if (this.moreDataMode)
-                    this.$('.mass').val(mass.toFixed(2));
-                else
-                    this.$('.mass').val(mass.toFixed(1));
-                this.$('.mass-slider').val(mass);
-            });
-        },
-
-        changeMass: function(event) {
-            var mass = parseFloat($(event.target).val());
-            if (!isNaN(mass)) {
-                this.inputLock(function() {
-                    this.model.set('mass', mass);
-                    if (this.simulation.get('paused'))
-                        this.simulation.updateForceVectors();
-                });
-            }
         }
+    }
 
-    });
-
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(BodySettingsView);
-
-    return BodySettingsView;
 });
+
+// Add input/update locking functionality to the prototype
+defineInputUpdateLocks(BodySettingsView);
+
+export default BodySettingsView;

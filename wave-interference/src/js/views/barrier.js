@@ -1,210 +1,203 @@
 
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import HeatmapDraggable from './heatmap-draggable';
+import html from '../../templates/barrier.html?raw';
 
-	'use strict';
+var xSpacing,
+    ySpacing,
+    halfYSpacing,
+    //padding,
+    //height,
+    //i,
+    //j,
+    x,
+    y,
+    dx,
+    dy,
+    range,
+    topBox,
+    middleBox,
+    bottomBox;
 
-	var $ = require('jquery');
-	var _ = require('underscore');
+var BarrierView = HeatmapDraggable.extend({
 
-	var HeatmapDraggable = require('./heatmap-draggable');
+    template: _.template(html),
 
-	var html = require('text!../../templates/barrier.html');
+    tagName: 'div',
+    className: 'barrier-view',
 
-	var xSpacing,
-	    ySpacing,
-	    halfYSpacing,
-	    //padding,
-	    //height,
-	    //i,
-	    //j,
-	    x,
-	    y,
-	    dx,
-	    dy,
-	    range,
-	    topBox,
-	    middleBox,
-	    bottomBox;
+    events: {
+        'mousedown  .width-handle' : 'widthHandleDown',
+        'touchstart .width-handle' : 'widthHandleDown',
+        'mousedown' : 'barrierDown',
+        'touchstart': 'barrierDown'
+    },
 
-	var BarrierView = HeatmapDraggable.extend({
+    initialize: function(options) {
+        HeatmapDraggable.prototype.initialize.apply(this, [options]);
 
-		template: _.template(html),
+        if (options.barrier)
+            this.barrier = options.barrier;
+        else
+            throw 'BarrierView requires a Barrier model.';
 
-		tagName: 'div',
-		className: 'barrier-view',
+        this.listenTo(this.waveSimulation, 'change:barrierStyle change:barrierX change:barrierSlitWidth change:barrierSlitSeparation', function(){
+            this.updateOnNextFrame = true;
+        });
+    },
 
-		events: {
-			'mousedown  .width-handle' : 'widthHandleDown',
-			'touchstart .width-handle' : 'widthHandleDown',
-			'mousedown' : 'barrierDown',
-			'touchstart': 'barrierDown'
-		},
+    render: function() {
+        this.renderBoxes();
+        this.bindDragEvents();
+        this.resize();
+        this.update(0, 0);
+    },
 
-		initialize: function(options) {
-			HeatmapDraggable.prototype.initialize.apply(this, [options]);
+    renderBoxes: function() {
+        this.$el.html(this.template());
 
-			if (options.barrier)
-				this.barrier = options.barrier;
-			else
-				throw 'BarrierView requires a Barrier model.';
+        this.$topBox = this.$('.barrier-top');
+        this.$middleBox = this.$('.barrier-middle');
+        this.$bottomBox = this.$('.barrier-bottom');
+    },
 
-			this.listenTo(this.waveSimulation, 'change:barrierStyle change:barrierX change:barrierSlitWidth change:barrierSlitSeparation', function(){
-				this.updateOnNextFrame = true;
-			});
-		},
+    widthHandleDown: function(event) {
+        event.preventDefault();
 
-		render: function() {
-			this.renderBoxes();
-			this.bindDragEvents();
-			this.resize();
-			this.update(0, 0);
-		},
+        if ($(event.target).hasClass('width-handle-top'))
+            this.draggingTopHandle = true;
+        else
+            this.draggingBottomHandle = true;
 
-		renderBoxes: function() {
-			this.$el.html(this.template());
+        this.fixTouchEvents(event);
 
-			this.$topBox = this.$('.barrier-top');
-			this.$middleBox = this.$('.barrier-middle');
-			this.$bottomBox = this.$('.barrier-bottom');
-		},
+        this.dragY = event.pageY;
 
-		widthHandleDown: function(event) {
-			event.preventDefault();
+        this.$el.addClass('dragging-handles');
+    },
 
-			if ($(event.target).hasClass('width-handle-top'))
-				this.draggingTopHandle = true;
-			else
-				this.draggingBottomHandle = true;
+    barrierDown: function(event) {
+        if ($(event.target).hasClass('barrier-box')) {
+            event.preventDefault();
 
-			this.fixTouchEvents(event);
+            this.draggingBarrier = true;
 
-			this.dragY = event.pageY;
+            this.fixTouchEvents(event);
 
-			this.$el.addClass('dragging-handles');
-		},
+            this.dragX = event.pageX;
 
-		barrierDown: function(event) {
-			if ($(event.target).hasClass('barrier-box')) {
-				event.preventDefault();
+            this.$el.addClass('dragging-barrier');
+        }
+    },
 
-				this.draggingBarrier = true;
+    drag: function(event) {
+        if (this.draggingTopHandle || this.draggingBottomHandle) {
 
-				this.fixTouchEvents(event);
+            this.fixTouchEvents(event);
 
-				this.dragX = event.pageX;
+            dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
 
-				this.$el.addClass('dragging-barrier');
-			}
-		},
+            if (this.draggingTopHandle)
+                dy *= -1;
 
-		drag: function(event) {
-			if (this.draggingTopHandle || this.draggingBottomHandle) {
+            if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
+                range = this.waveSimulation.get('barrierSlitWidthRange');
 
-				this.fixTouchEvents(event);
+                y = this.waveSimulation.get('barrierSlitWidth') + (dy / this.waveSimulation.heightRatio);
 
-				dy = this.toLatticeYScale(event.pageY - this.dragY) / this.zoom;
+                if (y >= range.min && y <= range.max) {
+                    this.waveSimulation.set('barrierSlitWidth', y);
+                }
+            }
+            // else
+            // 	this.dragEnd();
 
-				if (this.draggingTopHandle)
-					dy *= -1;
+            this.dragY = event.pageY;
 
-				if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
-					range = this.waveSimulation.get('barrierSlitWidthRange');
+            this.updateOnNextFrame = true;
+        }
+        else if (this.draggingBarrier) {
 
-					y = this.waveSimulation.get('barrierSlitWidth') + (dy / this.waveSimulation.heightRatio);
+            this.fixTouchEvents(event);
 
-					if (y >= range.min && y <= range.max) {
-						this.waveSimulation.set('barrierSlitWidth', y);
-					}
-				}
-				// else
-				// 	this.dragEnd();
+            dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
 
-				this.dragY = event.pageY;
+            if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
+                topBox    = this.barrier.topBox;
+                middleBox = this.barrier.middleBox;
+                bottomBox = this.barrier.bottomBox;
 
-				this.updateOnNextFrame = true;
-			}
-			else if (this.draggingBarrier) {
+                if (this.waveSimulation.isValidPoint(topBox.x + dx + 1, 30, 1)) {
 
-				this.fixTouchEvents(event);
+                    x = topBox.x + dx;
 
-				dx = this.toLatticeXScale(event.pageX - this.dragX) / this.zoom;
+                    this.waveSimulation.set('barrierX', x / this.waveSimulation.widthRatio);
+                }
+            }
+            // else
+            // 	this.dragEnd();
 
-				if (!this.wayOutOfBounds(event.pageX, event.pageY)) {
-					topBox    = this.barrier.topBox;
-					middleBox = this.barrier.middleBox;
-					bottomBox = this.barrier.bottomBox;
+            this.dragX = event.pageX;
 
-					if (this.waveSimulation.isValidPoint(topBox.x + dx + 1, 30, 1)) {
+            this.updateOnNextFrame = true;
+        }
+    },
 
-						x = topBox.x + dx;
+    dragEnd: function(event) {
+        if (this.draggingTopHandle || this.draggingBottomHandle) {
+            this.draggingTopHandle    = false;
+            this.draggingBottomHandle = false;
+            this.$el.removeClass('dragging-handles');
+        }
+        else if (this.draggingBarrier) {
+            this.draggingBarrier = false;
+            this.$el.removeClass('dragging-barrier');
+        }
+    },
 
-						this.waveSimulation.set('barrierX', x / this.waveSimulation.widthRatio);
-					}
-				}
-				// else
-				// 	this.dragEnd();
+    update: function(time, delta) {
+        // If there aren't any changes, don't do anything.
+        if (!this.updateOnNextFrame)
+            return;
 
-				this.dragX = event.pageX;
+        this.updateOnNextFrame = false;
 
-				this.updateOnNextFrame = true;
-			}
-		},
+        if (this.barrier.style > 0) {
+            topBox    = this.barrier.topBox;
+            middleBox = this.barrier.middleBox;
+            bottomBox = this.barrier.bottomBox;
 
-		dragEnd: function(event) {
-			if (this.draggingTopHandle || this.draggingBottomHandle) {
-				this.draggingTopHandle    = false;
-				this.draggingBottomHandle = false;
-				this.$el.removeClass('dragging-handles');
-			}
-			else if (this.draggingBarrier) {
-				this.draggingBarrier = false;
-				this.$el.removeClass('dragging-barrier');
-			}
-		},
+            xSpacing = this.heatmapView.xSpacing;
+            ySpacing = this.heatmapView.ySpacing;
+            halfYSpacing = ySpacing / 2.0;
 
-		update: function(time, delta) {
-			// If there aren't any changes, don't do anything.
-			if (!this.updateOnNextFrame)
-				return;
+            // The width should be the same size on all of them, so which one is arbitrary.
+            this.$el.css({
+                width: xSpacing * topBox.width,
+                left:  xSpacing * topBox.x/* - halfXSpacing*/,
+                display: 'block'
+            });
 
-			this.updateOnNextFrame = false;
+            this.$topBox.height(   ySpacing * topBox.height);
+            this.$bottomBox.height(ySpacing * bottomBox.height);
 
-			if (this.barrier.style > 0) {
-				topBox    = this.barrier.topBox;
-				middleBox = this.barrier.middleBox;
-				bottomBox = this.barrier.bottomBox;
+            if (this.barrier.style == 2) {
+                this.$middleBox.css({
+                    'height': ySpacing * middleBox.height + 'px',
+                    'margin-top': -(halfYSpacing * middleBox.height) + 'px',
+                    'display': 'block'
+                });
+            }
+            else
+                this.$middleBox.hide();
+        }
+        else {
+            this.$el.hide();
+        }
+    }
 
-				xSpacing = this.heatmapView.xSpacing;
-				ySpacing = this.heatmapView.ySpacing;
-				halfYSpacing = ySpacing / 2.0;
-
-				// The width should be the same size on all of them, so which one is arbitrary.
-				this.$el.css({
-					width: xSpacing * topBox.width,
-					left:  xSpacing * topBox.x/* - halfXSpacing*/,
-					display: 'block'
-				});
-
-				this.$topBox.height(   ySpacing * topBox.height);
-				this.$bottomBox.height(ySpacing * bottomBox.height);
-
-				if (this.barrier.style == 2) {
-					this.$middleBox.css({
-						'height': ySpacing * middleBox.height + 'px',
-						'margin-top': -(halfYSpacing * middleBox.height) + 'px',
-						'display': 'block'
-					});
-				}
-				else
-					this.$middleBox.hide();
-			}
-			else {
-				this.$el.hide();
-			}
-		}
-
-	});
-
-	return BarrierView;
 });
+
+export default BarrierView;
 

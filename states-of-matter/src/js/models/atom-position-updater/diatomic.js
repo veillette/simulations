@@ -1,43 +1,38 @@
-define(function (require) {
+var HALF_DIATOMIC_PARTICLE_DISTANCE = require('constants').DIATOMIC_PARTICLE_DISTANCE / 2;
 
-    'use strict';
+var DiatomicAtomPositionUpdater = {
 
-    var HALF_DIATOMIC_PARTICLE_DISTANCE = require('constants').DIATOMIC_PARTICLE_DISTANCE / 2;
+    updateAtomPositions: function(moleculeDataSet) {
+        // Make sure this is not being used on an inappropriate data set.
+        if (moleculeDataSet.atomsPerMolecule !== 2)
+            return;
 
-    var DiatomicAtomPositionUpdater = {
+        // Get direct references to the data in the data set.
+        var atomPositions = moleculeDataSet.atomPositions;
+        var moleculeCenterOfMassPositions = moleculeDataSet.moleculeCenterOfMassPositions;
+        var moleculeRotationAngles = moleculeDataSet.moleculeRotationAngles;
+        var numberOfMolecules = moleculeDataSet.getNumberOfMolecules();
 
-        updateAtomPositions: function(moleculeDataSet) {
-            // Make sure this is not being used on an inappropriate data set.
-            if (moleculeDataSet.atomsPerMolecule !== 2)
-                return;
+        var xPos;
+        var yPos;
+        var cosineTheta;
+        var sineTheta;
 
-            // Get direct references to the data in the data set.
-            var atomPositions = moleculeDataSet.atomPositions;
-            var moleculeCenterOfMassPositions = moleculeDataSet.moleculeCenterOfMassPositions;
-            var moleculeRotationAngles = moleculeDataSet.moleculeRotationAngles;
-            var numberOfMolecules = moleculeDataSet.getNumberOfMolecules();
+        // Position the atoms to match the position of the molecules.
+        for (var i = 0; i < numberOfMolecules; i++) {
+            cosineTheta = Math.cos(moleculeRotationAngles[i]);
+            sineTheta   = Math.sin(moleculeRotationAngles[i]);
 
-            var xPos;
-            var yPos;
-            var cosineTheta;
-            var sineTheta;
+            xPos = moleculeCenterOfMassPositions[i].x + cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
+            yPos = moleculeCenterOfMassPositions[i].y + sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
+            atomPositions[i * 2].set(xPos, yPos);
 
-            // Position the atoms to match the position of the molecules.
-            for (var i = 0; i < numberOfMolecules; i++) {
-                cosineTheta = Math.cos(moleculeRotationAngles[i]);
-                sineTheta   = Math.sin(moleculeRotationAngles[i]);
-
-                xPos = moleculeCenterOfMassPositions[i].x + cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
-                yPos = moleculeCenterOfMassPositions[i].y + sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
-                atomPositions[i * 2].set(xPos, yPos);
-
-                xPos = moleculeCenterOfMassPositions[i].x - cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
-                yPos = moleculeCenterOfMassPositions[i].y - sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
-                atomPositions[i * 2 + 1].set(xPos, yPos);
-            }
+            xPos = moleculeCenterOfMassPositions[i].x - cosineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
+            yPos = moleculeCenterOfMassPositions[i].y - sineTheta * HALF_DIATOMIC_PARTICLE_DISTANCE;
+            atomPositions[i * 2 + 1].set(xPos, yPos);
         }
+    }
 
-    };
+};
 
-    return DiatomicAtomPositionUpdater;
-});
+export default DiatomicAtomPositionUpdater;

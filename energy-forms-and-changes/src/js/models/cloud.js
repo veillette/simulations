@@ -1,67 +1,60 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import PiecewiseCurve from 'common/math/piecewise-curve';
+import PositionableObject from 'common/models/positionable-object';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var Cloud = PositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        existenceStrength: 1,
+        relativePosition: null,
+        width:  Constants.Cloud.CLOUD_WIDTH,
+        height: Constants.Cloud.CLOUD_HEIGHT
+    }),
 
-    var Vector2            = require('common/math/vector2');
-    var PiecewiseCurve     = require('common/math/piecewise-curve');
-    var PositionableObject = require('common/models/positionable-object');
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, [attributes, options]);
 
-    var Constants = require('constants');
+        if (!options.parentPosition || !this.get('relativePosition'))
+            throw 'Cloud model constructor requires a starting relativePosition as well as the parent position passed as an option.';
 
-    /**
-     *
-     */
-    var Cloud = PositionableObject.extend({
+        this.setPosition(options.parentPosition.clone().add(this.get('relativePosition')));
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            existenceStrength: 1,
-            relativePosition: null,
-            width:  Constants.Cloud.CLOUD_WIDTH,
-            height: Constants.Cloud.CLOUD_HEIGHT
-        }),
+        this.shape         = this.createShape(this.get('position'));
+        this.relativeShape = this.createShape(this.get('relativePosition'));
+    },
 
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, [attributes, options]);
+    createShape: function(position) {
+        var x = position.x - this.get('width') / 2;
+        var y = position.y - this.get('height') / 2;
+        var h = this.get('height');
+        var w = this.get('width');
 
-            if (!options.parentPosition || !this.get('relativePosition'))
-                throw 'Cloud model constructor requires a starting relativePosition as well as the parent position passed as an option.';
+        // Create an ellipse
+        return PiecewiseCurve.createEllipse(x, y, w, h);
+    },
 
-            this.setPosition(options.parentPosition.clone().add(this.get('relativePosition')));
+    getShape: function() {
+        return this.shape;
+    },
 
-            this.shape         = this.createShape(this.get('position'));
-            this.relativeShape = this.createShape(this.get('relativePosition'));
-        },
+    getRelativelyPositionedShape: function() {
+        return this.relativeShape;
+    },
 
-        createShape: function(position) {
-            var x = position.x - this.get('width') / 2;
-            var y = position.y - this.get('height') / 2;
-            var h = this.get('height');
-            var w = this.get('width');
+    translate: function(x, y) {
+        if (x instanceof Vector2)
+            this.shape.translate(x);
+        else
+            this.shape.translate(x, y);
 
-            // Create an ellipse
-            return PiecewiseCurve.createEllipse(x, y, w, h);
-        },
+        PositionableObject.prototype.translate.apply(this, [x, y]);
+    }
 
-        getShape: function() {
-            return this.shape;
-        },
+}, Constants.Cloud);
 
-        getRelativelyPositionedShape: function() {
-            return this.relativeShape;
-        },
-
-        translate: function(x, y) {
-            if (x instanceof Vector2)
-                this.shape.translate(x);
-            else
-                this.shape.translate(x, y);
-
-            PositionableObject.prototype.translate.apply(this, [x, y]);
-        }
-
-    }, Constants.Cloud);
-
-    return Cloud;
-});
+export default Cloud;

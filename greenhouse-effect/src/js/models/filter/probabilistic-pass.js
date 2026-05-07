@@ -1,34 +1,28 @@
-define(function (require) {
+import _ from 'underscore';
+import Filter from 'models/filter';
 
-    'use strict';
+/**
+ * A filter that is based purely off of a specified probability.
+ */
+var ProbabilisticPassFilter = function(probability) {
+    Filter.apply(this, arguments);
 
-    var _ = require('underscore');
+    this.probability = probability;
+};
 
-    var Filter = require('models/filter');
+/**
+ * Instance functions/properties
+ */
+_.extend(ProbabilisticPassFilter.prototype, Filter.prototype, {
 
     /**
-     * A filter that is based purely off of a specified probability.
+     * Returns whether or not a certain value passes
+     *   through the filter.
      */
-    var ProbabilisticPassFilter = function(probability) {
-        Filter.apply(this, arguments);
+    passes: function(value) {
+        return Math.random() <= this.probability;
+    }
 
-        this.probability = probability;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(ProbabilisticPassFilter.prototype, Filter.prototype, {
-
-        /**
-         * Returns whether or not a certain value passes
-         *   through the filter.
-         */
-        passes: function(value) {
-            return Math.random() <= this.probability;
-        }
-
-    });
-
-    return ProbabilisticPassFilter;
 });
+
+export default ProbabilisticPassFilter;

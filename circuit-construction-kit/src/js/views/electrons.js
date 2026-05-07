@@ -1,96 +1,88 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Constants from 'constants';
+import Assets from 'assets';
 
-    'use strict';
-
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-
-    var Constants = require('constants');
-
-    var Assets = require('assets');
+/**
+ * A view that represents a circuit
+ */
+var ElectronsView = PixiView.extend({
 
     /**
-     * A view that represents a circuit
+     * Initializes the new ElectronsView.
      */
-    var ElectronsView = PixiView.extend({
+    initialize: function(options) {
+        this.electronSet = options.electronSet;
 
-        /**
-         * Initializes the new ElectronsView.
-         */
-        initialize: function(options) {
-            this.electronSet = options.electronSet;
+        this.texture = Assets.Texture(Assets.Images.ELECTRON);
+        this.sprites = [];
 
-            this.texture = Assets.Texture(Assets.Images.ELECTRON);
-            this.sprites = [];
+        this.updateMVT(options.mvt);
+    },
 
-            this.updateMVT(options.mvt);
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        var targetWidth = this.mvt.modelToViewDeltaX(ElectronsView.RADIUS * 2);
+        this.spriteScale = targetWidth / this.texture.width;
 
-            var targetWidth = this.mvt.modelToViewDeltaX(ElectronsView.RADIUS * 2);
-            this.spriteScale = targetWidth / this.texture.width;
+        this.update();
+    },
 
-            this.update();
-        },
+    update: function() {
+        if (!this.displayObject.visible)
+            return;
 
-        update: function() {
-            if (!this.displayObject.visible)
-                return;
+        var mvt = this.mvt;
+        var sprites = this.sprites;
+        var electrons = this.electronSet.particles.models;
+        for (var i = 0; i < electrons.length; i++) {
+            var pos = electrons[i].get('position');
+            var x = mvt.modelToViewX(pos.x);
+            var y = mvt.modelToViewY(pos.y);
 
-            var mvt = this.mvt;
-            var sprites = this.sprites;
-            var electrons = this.electronSet.particles.models;
-            for (var i = 0; i < electrons.length; i++) {
-                var pos = electrons[i].get('position');
-                var x = mvt.modelToViewX(pos.x);
-                var y = mvt.modelToViewY(pos.y);
+            if (i === sprites.length)
+                this.createSprite();
 
-                if (i === sprites.length)
-                    this.createSprite();
-
-                sprites[i].visible = true;
-                sprites[i].x = x;
-                sprites[i].y = y;
-                sprites[i].scale.x = this.spriteScale;
-                sprites[i].scale.y = this.spriteScale;
-            }
-
-            if (sprites.length > electrons.length) {
-                for (var i = electrons.length; i < sprites.length; i++)
-                    sprites[i].visible = false;
-            }
-        },
-
-        createSprite: function() {
-            var sprite = new PIXI.Sprite(this.texture);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            this.sprites.push(sprite);
-            this.displayObject.addChild(sprite);
-            return sprite;
-        },
-
-        show: function() {
-            this.update();
-            this.displayObject.visible = true;
-        },
-
-        hide: function() {
-            this.displayObject.visible = false;
-        },
-
-        visible: function() {
-            return this.displayObject.visible;
+            sprites[i].visible = true;
+            sprites[i].x = x;
+            sprites[i].y = y;
+            sprites[i].scale.x = this.spriteScale;
+            sprites[i].scale.y = this.spriteScale;
         }
 
-    }, Constants.ElectronsView);
+        if (sprites.length > electrons.length) {
+            for (var i = electrons.length; i < sprites.length; i++)
+                sprites[i].visible = false;
+        }
+    },
 
-    return ElectronsView;
-});
+    createSprite: function() {
+        var sprite = new PIXI.Sprite(this.texture);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        this.sprites.push(sprite);
+        this.displayObject.addChild(sprite);
+        return sprite;
+    },
+
+    show: function() {
+        this.update();
+        this.displayObject.visible = true;
+    },
+
+    hide: function() {
+        this.displayObject.visible = false;
+    },
+
+    visible: function() {
+        return this.displayObject.visible;
+    }
+
+}, Constants.ElectronsView);
+
+export default ElectronsView;

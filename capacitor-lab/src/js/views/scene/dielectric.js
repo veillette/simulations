@@ -1,151 +1,142 @@
-define(function(require) {
+import _ from 'underscore';
+import AppView from 'common/v3/app/app';
+import DielectricSimulation from 'models/simulation/dielectric';
+import CapacitorLabSceneView from 'views/scene';
+import DielectricCircuitView from 'views/circuit/dielectric';
+import EFieldDetectorView from 'views/e-field-detector';
+import batteryButtonsHtml from 'templates/battery-buttons.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var DielectricSceneView = CapacitorLabSceneView.extend({
 
-    var _ = require('underscore');
+    events: {
 
-    var AppView = require('common/v3/app/app');
+    },
 
-    var DielectricSimulation = require('models/simulation/dielectric');
+    initialize: function(options) {
+        CapacitorLabSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    var CapacitorLabSceneView = require('views/scene');
-    var DielectricCircuitView = require('views/circuit/dielectric');
-    var EFieldDetectorView    = require('views/e-field-detector');
+    initEFieldDetector: function() {
+        this.eFieldDetectorView = new EFieldDetectorView({
+            model: this.simulation,
+            mvt: this.mvt,
+            scene: this,
+            dielectric: true
+        });
+        this.eFieldDetectorView.hide();
 
-    var batteryButtonsHtml = require('text!templates/battery-buttons.html');
+        this.toolsLayer.addChild(this.eFieldDetectorView.displayObject);
+    },
+
+    renderContent: function() {
+        this.$ui.append(batteryButtonsHtml);
+
+        this.$connectBtn    = this.$ui.find('.connect-battery-btn');
+        this.$disconnectBtn = this.$ui.find('.disconnect-battery-btn');
+
+        this.$connectBtn.click(_.bind(this.connectBattery, this));
+        this.$disconnectBtn.click(_.bind(this.disconnectBattery, this));
+
+        this.$connectBtn.hide();
+    },
+
+    postRender: function() {
+        CapacitorLabSceneView.prototype.postRender.apply(this, arguments);
+
+        var $btns = this.$ui.find('.connect-battery-btn, .disconnect-battery-btn');
+
+        if (AppView.windowIsShort()) {
+            $btns.css('top', Math.round(this.height * 0.110) + 'px');
+            $btns.css('left', '15px');
+        }
+        else {
+            $btns.css('top', Math.round(this.height * 0.183) + 'px');
+        }
+    },
+
+    initGraphics: function() {
+        CapacitorLabSceneView.prototype.initGraphics.apply(this, arguments);
+
+        this.circuitView = new DielectricCircuitView({
+            model: this.simulation.circuit,
+            mvt: this.mvt,
+            maxDielectricEField:            DielectricSimulation.getMaxDielectricEField(),
+            maxPlateCharge:                 DielectricSimulation.getMaxPlateCharge(),
+            maxExcessDielectricPlateCharge: DielectricSimulation.getMaxExcessDielectricPlateCharge(),
+            maxEffectiveEField:             DielectricSimulation.getMaxEffectiveEField()
+        });
+
+        this.circuitLayer.addChild(this.circuitView.displayObject);
+    },
+
+    _update: function(time, deltaTime, paused, timeScale) {
+        CapacitorLabSceneView.prototype._update.apply(this, arguments);
+
+        this.circuitView.update(time, deltaTime);
+    },
+
+    /**
+     * Returns the view of the circuit component that intersects with the
+     *   given polygon in view space.
+     */
+    getIntersectingComponentView: function(polygon) {
+        return this.circuitView.getIntersectingComponentView(polygon);
+    },
 
     /**
      *
      */
-    var DielectricSceneView = CapacitorLabSceneView.extend({
+    getIntersectingCapacitorView: function(point) {
+        return this.circuitView.getIntersectingCapacitorView(point);
+    },
 
-        events: {
+    connectBattery: function() {
+        this.$connectBtn.hide();
+        this.$disconnectBtn.show();
+        this.simulation.connectBattery();
+    },
 
-        },
+    disconnectBattery: function() {
+        this.$disconnectBtn.hide();
+        this.$connectBtn.show();
+        this.simulation.disconnectBattery();
+    },
 
-        initialize: function(options) {
-            CapacitorLabSceneView.prototype.initialize.apply(this, arguments);
-        },
+    showExcessDielectricCharges: function() {
+        this.circuitView.showExcessDielectricCharges();
+    },
 
-        initEFieldDetector: function() {
-            this.eFieldDetectorView = new EFieldDetectorView({
-                model: this.simulation,
-                mvt: this.mvt,
-                scene: this,
-                dielectric: true
-            });
-            this.eFieldDetectorView.hide();
+    hideExcessDielectricCharges: function() {
+        this.circuitView.hideExcessDielectricCharges();
+    },
 
-            this.toolsLayer.addChild(this.eFieldDetectorView.displayObject);
-        },
+    showTotalDielectricCharges: function() {
+        this.circuitView.showTotalDielectricCharges();
+    },
 
-        renderContent: function() {
-            this.$ui.append(batteryButtonsHtml);
+    hideTotalDielectricCharges: function() {
+        this.circuitView.hideTotalDielectricCharges();
+    },
 
-            this.$connectBtn    = this.$ui.find('.connect-battery-btn');
-            this.$disconnectBtn = this.$ui.find('.disconnect-battery-btn');
+    showPlateCharges: function() {
+        this.circuitView.showPlateCharges();
+    },
 
-            this.$connectBtn.click(_.bind(this.connectBattery, this));
-            this.$disconnectBtn.click(_.bind(this.disconnectBattery, this));
+    hidePlateCharges: function() {
+        this.circuitView.hidePlateCharges();
+    },
 
-            this.$connectBtn.hide();
-        },
+    showEFieldLines: function() {
+        this.circuitView.showEFieldLines();
+    },
 
-        postRender: function() {
-            CapacitorLabSceneView.prototype.postRender.apply(this, arguments);
+    hideEFieldLines: function() {
+        this.circuitView.hideEFieldLines();
+    }
 
-            var $btns = this.$ui.find('.connect-battery-btn, .disconnect-battery-btn');
-
-            if (AppView.windowIsShort()) {
-                $btns.css('top', Math.round(this.height * 0.110) + 'px');
-                $btns.css('left', '15px');
-            }
-            else {
-                $btns.css('top', Math.round(this.height * 0.183) + 'px');
-            }
-        },
-
-        initGraphics: function() {
-            CapacitorLabSceneView.prototype.initGraphics.apply(this, arguments);
-
-            this.circuitView = new DielectricCircuitView({
-                model: this.simulation.circuit,
-                mvt: this.mvt,
-                maxDielectricEField:            DielectricSimulation.getMaxDielectricEField(),
-                maxPlateCharge:                 DielectricSimulation.getMaxPlateCharge(),
-                maxExcessDielectricPlateCharge: DielectricSimulation.getMaxExcessDielectricPlateCharge(),
-                maxEffectiveEField:             DielectricSimulation.getMaxEffectiveEField()
-            });
-
-            this.circuitLayer.addChild(this.circuitView.displayObject);
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            CapacitorLabSceneView.prototype._update.apply(this, arguments);
-
-            this.circuitView.update(time, deltaTime);
-        },
-
-        /**
-         * Returns the view of the circuit component that intersects with the
-         *   given polygon in view space.
-         */
-        getIntersectingComponentView: function(polygon) {
-            return this.circuitView.getIntersectingComponentView(polygon);
-        },
-
-        /**
-         *
-         */
-        getIntersectingCapacitorView: function(point) {
-            return this.circuitView.getIntersectingCapacitorView(point);
-        },
-
-        connectBattery: function() {
-            this.$connectBtn.hide();
-            this.$disconnectBtn.show();
-            this.simulation.connectBattery();
-        },
-
-        disconnectBattery: function() {
-            this.$disconnectBtn.hide();
-            this.$connectBtn.show();
-            this.simulation.disconnectBattery();
-        },
-
-        showExcessDielectricCharges: function() {
-            this.circuitView.showExcessDielectricCharges();
-        },
-
-        hideExcessDielectricCharges: function() {
-            this.circuitView.hideExcessDielectricCharges();
-        },
-
-        showTotalDielectricCharges: function() {
-            this.circuitView.showTotalDielectricCharges();
-        },
-
-        hideTotalDielectricCharges: function() {
-            this.circuitView.hideTotalDielectricCharges();
-        },
-
-        showPlateCharges: function() {
-            this.circuitView.showPlateCharges();
-        },
-
-        hidePlateCharges: function() {
-            this.circuitView.hidePlateCharges();
-        },
-
-        showEFieldLines: function() {
-            this.circuitView.showEFieldLines();
-        },
-
-        hideEFieldLines: function() {
-            this.circuitView.hideEFieldLines();
-        }
-
-    });
-
-    return DielectricSceneView;
 });
+
+export default DielectricSceneView;

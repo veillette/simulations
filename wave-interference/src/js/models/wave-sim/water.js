@@ -1,38 +1,32 @@
-define(function (require) {
+import _ from 'underscore';
+import WaveSimulation from '../wave-sim';
 
-	'use strict';
+/**
+ *
+ */
+var WaterSimulation = WaveSimulation.extend({
 
-	var _ = require('underscore');
+    defaults: _.extend({}, WaveSimulation.prototype.defaults, {
 
-	var WaveSimulation = require('../wave-sim');
+        // Values from PhET's WaterModule class
 
-	/**
-	 *
-	 */
-	var WaterSimulation = WaveSimulation.extend({
+        dimensions: {
+            width: 10,
+            height: 10
+        },
+        units: {
+            distance: 'cm',
+            time: 'sec'
+        },
 
-		defaults: _.extend({}, WaveSimulation.prototype.defaults, {
+        oscillatorName: 'Faucet',
+        oscillatorNamePlural: 'Faucets',
+    }),
 
-			// Values from PhET's WaterModule class
+    // update: function(time, delta) {
+    // 	WaveSimulation.prototype.update.apply(this, [time, delta]);
+    // },
 
-			dimensions: {
-				width: 10,
-				height: 10
-			},
-			units: {
-				distance: 'cm',
-				time: 'sec'
-			},
-
-			oscillatorName: 'Faucet',
-			oscillatorNamePlural: 'Faucets',
-		}),
-
-		// update: function(time, delta) {
-		// 	WaveSimulation.prototype.update.apply(this, [time, delta]);
-		// },
-
-	});
-
-	return WaterSimulation;
 });
+
+export default WaterSimulation;

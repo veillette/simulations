@@ -1,32 +1,26 @@
-define(function (require) {
+import _ from 'underscore';
+import VanillaPositionableObject from 'common/models/positionable-object-vanilla';
 
-    'use strict';
+/**
+ * MovingObject is an object that has mutable position, orientation and speed.
+ */
+var MovingObject = VanillaPositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, VanillaPositionableObject.prototype.defaults, {
+        // Distance moved per deltaTime
+        speed: 0,
+        // Orientation in radians
+        orientation: 0
+    }),
 
-    var VanillaPositionableObject = require('common/models/positionable-object-vanilla');
+    getOrientation: function() {
+        return this.get('orientation');
+    },
 
-    /**
-     * MovingObject is an object that has mutable position, orientation and speed.
-     */
-    var MovingObject = VanillaPositionableObject.extend({
+    getSpeed: function() {
+        return this.get('speed');
+    }
 
-        defaults: _.extend({}, VanillaPositionableObject.prototype.defaults, {
-            // Distance moved per deltaTime
-            speed: 0,
-            // Orientation in radians
-            orientation: 0
-        }),
-
-        getOrientation: function() {
-            return this.get('orientation');
-        },
-
-        getSpeed: function() {
-            return this.get('speed');
-        }
-
-    });
-
-    return MovingObject;
 });
+
+export default MovingObject;

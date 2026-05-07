@@ -1,202 +1,193 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import CircuitComponent from 'models/components/circuit-component';
+import Filament from 'models/components/filament';
+import BranchSet from 'models/branch-set';
+import LightBulbView from 'views/components/light-bulb';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A bulb
+ */
+var Bulb = CircuitComponent.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, CircuitComponent.prototype.defaults, {
+        width: 0,
+        resistance: 10,
+        isSchematic: false,
+        connectAtLeft: true,
+        circuit: undefined
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        this.filament = new Filament({
+            startJunction: this.get('startJunction'),
+            endJunction: this.get('endJunction'),
+            numPeaks: 3,
+            pivotToResistorDY: this.get('height') * 0.8,
+            resistorWidth: this.get('width') * 0.8,
+            zigHeight: this.get('height') * 0.061
+        });
 
-    var CircuitComponent = require('models/components/circuit-component');
-    var Filament         = require('models/components/filament');
-    var BranchSet        = require('models/branch-set');
+        CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
 
-    var LightBulbView = require('views/components/light-bulb');
+        this.branchSet = new BranchSet();
 
-    var Constants = require('constants');
+        // Cached objects
+        this._delta = new Vector2();
+        this._vec   = new Vector2();
 
-    /**
-     * A bulb
-     */
-    var Bulb = CircuitComponent.extend({
+        this.on('change:isSchematic',   this.isSchematicChanged);
+        this.on('change:connectAtLeft', this.connectAtLeftChanged);
+    },
 
-        defaults: _.extend({}, CircuitComponent.prototype.defaults, {
-            width: 0,
-            resistance: 10,
-            isSchematic: false,
-            connectAtLeft: true,
-            circuit: undefined
-        }),
+    getPosition: function(x) {
+        if (this.get('isSchematic')) {
+            return CircuitComponent.prototype.apply.getPosition(this, [x]);
+        }
+        if (this.containsScalarLocation(x)) {
+            return this.filament.getPosition(x);
+        }
+        else {
+            if (isNaN(this.getLength()))
+                throw 'Length was NaN.';
 
-        initialize: function(attributes, options) {
-            this.filament = new Filament({
-                startJunction: this.get('startJunction'),
-                endJunction: this.get('endJunction'),
-                numPeaks: 3,
-                pivotToResistorDY: this.get('height') * 0.8,
-                resistorWidth: this.get('width') * 0.8,
-                zigHeight: this.get('height') * 0.061
-            });
+            // This occurs when dragging the bulb after splitting.  maybe splitting needs to relayout.
+            throw 'Position not within bulb: x=' + x + ', length=' + this.getLength();
+        }
+    },
 
-            CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
+    getLength: function() {
+        if (this.get('isSchematic'))
+            return this.get('startJunction').get('position').distance(this.get('endJunction').get('position'));
+        return this.filament.getLength();
+    },
 
-            this.branchSet = new BranchSet();
+    getComponentLength: function() {
+        if (this.get('isSchematic'))
+            return this.getLength();
+        else
+            return CircuitComponent.prototype.getLength.apply(this);
+    },
 
-            // Cached objects
-            this._delta = new Vector2();
-            this._vec   = new Vector2();
+    getIntensity: function() {
+        var power = Math.abs(this.get('current') * this.getVoltageDrop());
+        var maxPower = 60;
+        if (power > maxPower)
+            power = maxPower;
 
-            this.on('change:isSchematic',   this.isSchematicChanged);
-            this.on('change:connectAtLeft', this.connectAtLeftChanged);
-        },
+        return Math.pow(power / maxPower, 0.354);
+    },
 
-        getPosition: function(x) {
-            if (this.get('isSchematic')) {
-                return CircuitComponent.prototype.apply.getPosition(this, [x]);
-            }
-            if (this.containsScalarLocation(x)) {
-                return this.filament.getPosition(x);
-            }
-            else {
-                if (isNaN(this.getLength()))
-                    throw 'Length was NaN.';
+    flip: function(circuit) {
+        this.set('connectAtLeft', !this.get('connectAtLeft'));
 
-                // This occurs when dragging the bulb after splitting.  maybe splitting needs to relayout.
-                throw 'Position not within bulb: x=' + x + ', length=' + this.getLength();
-            }
-        },
+        if (circuit) {
+            var tilt = LightBulbView.getRotationOffset(this.get('connectAtLeft'));
+            var vector = this.getDirectionVector().rotate(tilt * 2);
+            var target = vector.add(this.get('startJunction').get('position'));
+            var delta = this._delta.set(target).sub(this.get('endJunction').get('position'));
 
-        getLength: function() {
-            if (this.get('isSchematic'))
-                return this.get('startJunction').get('position').distance(this.get('endJunction').get('position'));
-            return this.filament.getLength();
-        },
+            var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
 
-        getComponentLength: function() {
-            if (this.get('isSchematic'))
-                return this.getLength();
-            else
-                return CircuitComponent.prototype.getLength.apply(this);
-        },
+            this.branchSet
+                .clear()
+                .setCircuit(circuit)
+                .addBranches(strongConnections)
+                .addJunction(this.get('endJunction'))
+                .translate(delta);
+        }
+    },
 
-        getIntensity: function() {
-            var power = Math.abs(this.get('current') * this.getVoltageDrop());
-            var maxPower = 60;
-            if (power > maxPower)
-                power = maxPower;
+    startJunctionChanged: function(model, startJunction) {
+        CircuitComponent.prototype.startJunctionChanged.apply(this, arguments);
+        this.filament.set('startJunction', startJunction);
+    },
 
-            return Math.pow(power / maxPower, 0.354);
-        },
+    endJunctionChanged: function(model, endJunction) {
+        CircuitComponent.prototype.endJunctionChanged.apply(this, arguments);
+        this.filament.set('endJunction', endJunction);
+    },
 
-        flip: function(circuit) {
-            this.set('connectAtLeft', !this.get('connectAtLeft'));
+    _startJunctionChanged: function(model, startJunction) {
+        CircuitComponent.prototype._startJunctionChanged.apply(this, arguments);
+        this.updateFilament();
+    },
 
-            if (circuit) {
-                var tilt = LightBulbView.getRotationOffset(this.get('connectAtLeft'));
-                var vector = this.getDirectionVector().rotate(tilt * 2);
-                var target = vector.add(this.get('startJunction').get('position'));
-                var delta = this._delta.set(target).sub(this.get('endJunction').get('position'));
+    _endJunctionChanged: function(model, endJunction) {
+        CircuitComponent.prototype._endJunctionChanged.apply(this, arguments);
+        this.updateFilament();
+    },
 
-                var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
+    connectAtLeftChanged: function(model, connectAtLeft) {
+        this.filament.set('connectAtRight', connectAtLeft);
+    },
 
-                this.branchSet
-                    .clear()
-                    .setCircuit(circuit)
-                    .addBranches(strongConnections)
-                    .addJunction(this.get('endJunction'))
-                    .translate(delta);
-            }
-        },
+    updateFilament: function() {
+        this.filament.recompute();
+    },
 
-        startJunctionChanged: function(model, startJunction) {
-            CircuitComponent.prototype.startJunctionChanged.apply(this, arguments);
-            this.filament.set('startJunction', startJunction);
-        },
+    isSchematicChanged: function(model, isSchematic) {
+        // Move junctions if necessary.
+        if (isSchematic)
+            this.expandToSchematic();
+        else
+            this.collaspeToLifelike();
+    },
 
-        endJunctionChanged: function(model, endJunction) {
-            CircuitComponent.prototype.endJunctionChanged.apply(this, arguments);
-            this.filament.set('endJunction', endJunction);
-        },
+    collaspeToLifelike: function() {
+        var circuit = this.get('circuit');
+        var distBetweenJ = Constants.BULB_DISTANCE_BETWEEN_JUNCTIONS;
+        var vector = this.getDirectionVector().normalize().scale(distBetweenJ);
+        var dest = vector.add(this.get('startJunction').get('position'));
+        var delta = this._delta.set(dest).sub(this.get('endJunction').get('position'));
 
-        _startJunctionChanged: function(model, startJunction) {
-            CircuitComponent.prototype._startJunctionChanged.apply(this, arguments);
-            this.updateFilament();
-        },
+        if (circuit) {
+            var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
 
-        _endJunctionChanged: function(model, endJunction) {
-            CircuitComponent.prototype._endJunctionChanged.apply(this, arguments);
-            this.updateFilament();
-        },
-
-        connectAtLeftChanged: function(model, connectAtLeft) {
-            this.filament.set('connectAtRight', connectAtLeft);
-        },
-
-        updateFilament: function() {
-            this.filament.recompute();
-        },
-
-        isSchematicChanged: function(model, isSchematic) {
-            // Move junctions if necessary.
-            if (isSchematic)
-                this.expandToSchematic();
-            else
-                this.collaspeToLifelike();
-        },
-
-        collaspeToLifelike: function() {
-            var circuit = this.get('circuit');
-            var distBetweenJ = Constants.BULB_DISTANCE_BETWEEN_JUNCTIONS;
-            var vector = this.getDirectionVector().normalize().scale(distBetweenJ);
-            var dest = vector.add(this.get('startJunction').get('position'));
-            var delta = this._delta.set(dest).sub(this.get('endJunction').get('position'));
-
-            if (circuit) {
-                var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
-
-                this.branchSet
-                    .clear()
-                    .setCircuit(circuit)
-                    .addBranches(strongConnections)
-                    .addJunction(this.get('endJunction'))
-                    .translate(delta);
-            }
-            else {
-                this.get('endJunction').setPosition(dest.x, dest.y);
-            }
-
-            return delta;
-        },
-
-        expandToSchematic: function() {
-            var circuit = this.get('circuit');
-            var vec = this._vec
-                .set(this.get('endJunction').get('position'))
-                .sub(this.get('startJunction').get('position'));
-            var dest = vec
-                .normalize()
-                .scale(Constants.SCH_BULB_DIST)
-                .add(this.get('startJunction').get('position'));
-            var delta = this._delta
-                .set(dest)
-                .sub(this.get('endJunction')
-                .get('position'));
-
-            if (circuit) {
-                var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
-
-                this.branchSet
-                    .clear()
-                    .setCircuit(circuit)
-                    .addBranches(strongConnections)
-                    .addJunction(this.get('endJunction'))
-                    .translate(delta);
-            }
-            else {
-                this.get('endJunction').setPosition(dest.x, dest.y);
-            }
+            this.branchSet
+                .clear()
+                .setCircuit(circuit)
+                .addBranches(strongConnections)
+                .addJunction(this.get('endJunction'))
+                .translate(delta);
+        }
+        else {
+            this.get('endJunction').setPosition(dest.x, dest.y);
         }
 
-    });
+        return delta;
+    },
 
-    return Bulb;
+    expandToSchematic: function() {
+        var circuit = this.get('circuit');
+        var vec = this._vec
+            .set(this.get('endJunction').get('position'))
+            .sub(this.get('startJunction').get('position'));
+        var dest = vec
+            .normalize()
+            .scale(Constants.SCH_BULB_DIST)
+            .add(this.get('startJunction').get('position'));
+        var delta = this._delta
+            .set(dest)
+            .sub(this.get('endJunction')
+            .get('position'));
+
+        if (circuit) {
+            var strongConnections = circuit.getStrongConnections(this, this.get('endJunction'));
+
+            this.branchSet
+                .clear()
+                .setCircuit(circuit)
+                .addBranches(strongConnections)
+                .addJunction(this.get('endJunction'))
+                .translate(delta);
+        }
+        else {
+            this.get('endJunction').setPosition(dest.x, dest.y);
+        }
+    }
+
 });
+
+export default Bulb;

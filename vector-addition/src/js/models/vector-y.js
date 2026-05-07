@@ -1,25 +1,19 @@
-define(function(require) {
+import DraggableArrowView from 'common/v3/pixi/view/arrow-draggable';
 
-  'use strict';
+var VectorYViewModel = DraggableArrowView.ArrowViewModel.extend({
+  defaults: {
+    originX: 0,
+    originY: 0,
+    targetX: 0,
+    targetY: 0,
+    oldOriginX: 0,
+    oldOriginY: 0
+  },
 
-  var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
+  initialize: function() {
 
-  var VectorYViewModel = DraggableArrowView.ArrowViewModel.extend({
-    defaults: {
-      originX: 0,
-      originY: 0,
-      targetX: 0,
-      targetY: 0,
-      oldOriginX: 0,
-      oldOriginY: 0
-    },
-
-    initialize: function() {
-
-    }
-
-  });
-
-  return VectorYViewModel;
+  }
 
 });
+
+export default VectorYViewModel;

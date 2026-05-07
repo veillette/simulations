@@ -1,153 +1,142 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimView from 'common/v3/app/sim';
+import VectorAdditionSimulation from 'models/simulation';
+import VectorAdditionSceneView from 'views/scene';
+import 'styles/sim.less';
+import 'common/styles/radio.less';
+import simHtml from 'templates/sim.html?raw';
 
-    'use strict';
+var VectorAdditionSimView = SimView.extend({
 
-    var $ = require('jquery');
-    var _ = require('underscore');
-    var SimView = require('common/v3/app/sim');
-    var VectorAdditionSimulation = require('models/simulation');
-    var VectorAdditionSceneView = require('views/scene');
+    tagName:   'section',
+    className: 'sim-view',
+    template: _.template(simHtml),
 
-    require('bootstrap');
+    events: {
+      'change #show-grid' : 'showGrid',
+      'click .btn-clear': 'clearArrows',
+      'change #show-sum': 'showSum',
+      'change #component-style': 'componentStyles'
+    },
 
-    // CSS
-    require('less!styles/sim');
-    require('less!common/styles/radio');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Vector Addition',
+            name: 'vector-addition',
+            link: 'vector-addition',
+        }, options);
 
-    // HTML
-    var simHtml = require('text!templates/sim.html');
+        SimView.prototype.initialize.apply(this, [options]);
+        this.listenTo(this.simulation, 'change:rText change:thetaText change:rXText change:rYText', this.updateReadouts);
+        this.listenTo(this.simulation, 'change:sumVectorVisible', this.sumVectorVisible);
+        this.listenTo(this.simulation, 'change:sumVectorVisible', this.showSum);
+        this.initSceneView();
+    },
 
-    var VectorAdditionSimView = SimView.extend({
+    initSimulation: function() {
+        this.simulation = new VectorAdditionSimulation();
+    },
 
-        tagName:   'section',
-        className: 'sim-view',
-        template: _.template(simHtml),
+    initSceneView: function() {
+        this.sceneView = new VectorAdditionSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        events: {
-          'change #show-grid' : 'showGrid',
-          'click .btn-clear': 'clearArrows',
-          'change #show-sum': 'showSum',
-          'change #component-style': 'componentStyles'
-        },
+    render: function() {
+        this.$el.empty();
+        this.renderScaffolding();
+        this.renderSceneView();
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Vector Addition',
-                name: 'vector-addition',
-                link: 'vector-addition',
-            }, options);
+        return this;
+    },
 
-            SimView.prototype.initialize.apply(this, [options]);
-            this.listenTo(this.simulation, 'change:rText change:thetaText change:rXText change:rYText', this.updateReadouts);
-            this.listenTo(this.simulation, 'change:sumVectorVisible', this.sumVectorVisible);
-            this.listenTo(this.simulation, 'change:sumVectorVisible', this.showSum);
-            this.initSceneView();
-        },
+    renderScaffolding: function() {
+        this.$el.html(this.template(this.simulation.attributes));
+        this.$('select');
+    },
 
-        initSimulation: function() {
-            this.simulation = new VectorAdditionSimulation();
-        },
+    renderSceneView: function() {
+        this.sceneView.render();
+        this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
+    },
 
-        initSceneView: function() {
-            this.sceneView = new VectorAdditionSceneView({
-                simulation: this.simulation
-            });
-        },
+    postRender: function() {
+        this.sceneView.postRender();
+    },
 
-        render: function() {
-            this.$el.empty();
-            this.renderScaffolding();
-            this.renderSceneView();
+    resetComponents: function() {
+        SimView.prototype.resetComponents.apply(this);
+        this.initSceneView();
+    },
 
-            return this;
-        },
+    update: function(time, delta) {
+        // Update the model
+        this.simulation.update(time, delta);
+        // Update the scene
+        this.sceneView.update(time, delta);
+    },
 
-        renderScaffolding: function() {
-            this.$el.html(this.template(this.simulation.attributes));
-            this.$('select');
-        },
+    showGrid: function(e) {
+      if ($(e.target).is(':checked')) {
+        this.simulation.set('showGrid', true);
+      }
+      else {
+        this.simulation.set('showGrid', false);
+      }
+    },
 
-        renderSceneView: function() {
-            this.sceneView.render();
-            this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-        },
+    clearArrows: function() {
+      if (this.simulation.vectorCollection !== undefined) {
+        this.simulation.vectorCollection.remove(this.arrows);
+        this.simulation.set('sumVectorVisible', false);
+        this.simulation.set('emptyStage', true);
+        this.$el.find('label').removeClass('green');
+      }
+    },
 
-        postRender: function() {
-            this.sceneView.postRender();
-        },
+    clearAll: function() {
+      this.simulation.set('emptyStage', true);
+    },
 
-        resetComponents: function() {
-            SimView.prototype.resetComponents.apply(this);
-            this.initSceneView();
-        },
+    updateReadouts: function() {
+      this.$el.find('input.rText').val(this.simulation.get('rText'));
+      this.$el.find('input.thetaText').val(this.simulation.get('thetaText'));
+      this.$el.find('input.rXText').val(this.simulation.get('rXText'));
+      this.$el.find('input.rYText').val(this.simulation.get('rYText'));
+    },
 
-        update: function(time, delta) {
-            // Update the model
-            this.simulation.update(time, delta);
-            // Update the scene
-            this.sceneView.update(time, delta);
-        },
+    updateSumReadouts: function() {
+      this.$el.find('input.rText').val(this.simulation.get('sumVectorRText'));
+      this.$el.find('input.thetaText').val(this.simulation.get('sumVectorThetaText'));
+      this.$el.find('input.rXText').val(this.simulation.get('sumVectorRXText'));
+      this.$el.find('input.rYText').val(this.simulation.get('sumVectorRYText'));
+    },
 
-        showGrid: function(e) {
-          if ($(e.target).is(':checked')) {
-            this.simulation.set('showGrid', true);
-          }
-          else {
-            this.simulation.set('showGrid', false);
-          }
-        },
+    showSum: function() {
+      var sumBox = this.$el.find('#show-sum');
+      if (sumBox.is(':checked')) {
+        this.simulation.set('sumVectorVisible', true);
+      }
+      else {
+        this.simulation.set('sumVectorVisible', false);
+      }
+    },
 
-        clearArrows: function() {
-          if (this.simulation.vectorCollection !== undefined) {
-            this.simulation.vectorCollection.remove(this.arrows);
-            this.simulation.set('sumVectorVisible', false);
-            this.simulation.set('emptyStage', true);
-            this.$el.find('label').removeClass('green');
-          }
-        },
+    sumVectorVisible: function() {
+      if (this.simulation.get('sumVectorVisible')) {
+        this.$el.find('#show-sum').prop('checked', true);
+      }
+      else {
+        this.$el.find('#show-sum').prop('checked', false);
+      }
+    },
 
-        clearAll: function() {
-          this.simulation.set('emptyStage', true);
-        },
-
-        updateReadouts: function() {
-          this.$el.find('input.rText').val(this.simulation.get('rText'));
-          this.$el.find('input.thetaText').val(this.simulation.get('thetaText'));
-          this.$el.find('input.rXText').val(this.simulation.get('rXText'));
-          this.$el.find('input.rYText').val(this.simulation.get('rYText'));
-        },
-
-        updateSumReadouts: function() {
-          this.$el.find('input.rText').val(this.simulation.get('sumVectorRText'));
-          this.$el.find('input.thetaText').val(this.simulation.get('sumVectorThetaText'));
-          this.$el.find('input.rXText').val(this.simulation.get('sumVectorRXText'));
-          this.$el.find('input.rYText').val(this.simulation.get('sumVectorRYText'));
-        },
-
-        showSum: function() {
-          var sumBox = this.$el.find('#show-sum');
-          if (sumBox.is(':checked')) {
-            this.simulation.set('sumVectorVisible', true);
-          }
-          else {
-            this.simulation.set('sumVectorVisible', false);
-          }
-        },
-
-        sumVectorVisible: function() {
-          if (this.simulation.get('sumVectorVisible')) {
-            this.$el.find('#show-sum').prop('checked', true);
-          }
-          else {
-            this.$el.find('#show-sum').prop('checked', false);
-          }
-        },
-
-        componentStyles: function(event) {
-          var style = parseInt($(event.target).val());
-          this.simulation.set('componentStyles', style);
-        }
-    });
-
-    return VectorAdditionSimView;
+    componentStyles: function(event) {
+      var style = parseInt($(event.target).val());
+      this.simulation.set('componentStyles', style);
+    }
 });
+
+export default VectorAdditionSimView;

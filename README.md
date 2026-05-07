@@ -1,71 +1,97 @@
 OpenStax Simulations
 ===========
 
-This repository holds all simulations that will be embedded into OpenStax textbooks.
+A collection of web-based physics simulations embedded in OpenStax textbooks, built with [Vite](https://vitejs.dev/), [Backbone.js](https://backbonejs.org/), and [PixiJS v7](https://pixijs.com/).
 
 [Demo here](http://veillette.github.io/simulations/)
 
-## <a name="deploying-and-building"></a>Building and Deploying
+## Requirements
 
-### <a name="pre-build-setup"></a>Pre-Build Setup
-  * Install root dependencies: `npm install`
-  * Install dependencies for simulation packages:
-    * Changed-only sims: `npm run npm-install`
-    * All sims: `npm run npm-install:all`
+- [Node.js](https://nodejs.org/) 18 or later and npm
 
-### Building
-  * Build changed simulations and assemble a top-level `dist` folder: `npm run dist`
-  * Force-build all simulations: `npm run dist:all`
+## Building
 
-### Linting
-  * Lint all sims from the repository root: `npm run lint`
-  * Auto-fix fixable lint issues across all sims: `npm run lint:fix`
-  * Lint only changed sims: `npm run lint:changed`
-  * Auto-fix only changed sims: `npm run lint:changed:fix`
+### Build all simulations
 
-### Deploying
-  * Build and deploy all simulations to GitHub Pages: `npm run deploy`
+From the repository root:
+
+```sh
+npm install          # install root tooling and all per-sim dependencies
+npm run build:all    # build every sim into its own dist/ folder
+```
+
+### Build only changed simulations
+
+```sh
+npm run build        # builds sims with uncommitted changes (same as npm run dist)
+```
+
+### Build a single simulation
+
+```sh
+cd wave-interference
+npm run build        # outputs to wave-interference/dist/
+```
 
 ## Development
 
-### Hosting
+Each simulation has its own Vite dev server with hot-module replacement.
 
-The simulations can be hosted for development with any web host, but two options are documented here:
+```sh
+cd wave-interference
+npm run dev          # starts at http://localhost:5173
+```
 
-1. [Using Node.js](#node-hosting)
-2. [Using Nginx](#nginx-hosting)
+To browse an index of all simulations without a dev server:
 
-Both methods will create a server whose web root is this repository root; therefore, to access a specific simulation in dev mode, simply point your browser to
+```sh
+npm run dev          # from the repository root — serves static files at http://localhost:8080
+```
 
-    http://localhost:PORT/simulations/SIM-NAME/src
+## Linting
 
-where PORT and SIM-NAME are replaced by appropriate values.  Example:
+```sh
+npm run lint              # lint all sims
+npm run lint:fix          # auto-fix all sims
+npm run lint:changed      # lint only changed sims
+npm run lint:changed:fix  # auto-fix only changed sims
+```
 
-    http://localhost:8080/simulations/wave-interference/src
+## Deploying
 
-#### <a name="node-hosting"></a>Node.js Hosting
+```sh
+npm run deploy    # build all sims and publish to GitHub Pages
+```
 
-1. Follow the [Pre-Build Setup](#pre-build-setup) under [Building and Deploying](#deploying-and-building)
-2. Run `npm run dev` from the repository root.
-3. Open up [http://localhost:8080](http://localhost:8080) in your browser to view a list of simulations.
+## Repository Structure
 
-#### <a name="nginx-hosting"></a>Nginx Hosting
+```
+simulations/
+├── common/               # shared utilities, views, and styles
+├── <sim-name>/
+│   ├── src/
+│   │   ├── index.html    # Vite entry point
+│   │   ├── js/           # ES module source
+│   │   │   └── main.js
+│   │   ├── styles/       # Less stylesheets
+│   │   └── templates/    # Underscore HTML templates
+│   ├── vite.config.js    # per-sim Vite configuration
+│   ├── package.json
+│   └── dist/             # built output (git-ignored)
+└── scripts/              # root-level build/deploy helpers
+```
 
-1. Install [nginx](http://nginx.org/)
-2. Set up a virtual host pointing to your `moving-man/src` directory. You can follow a tutorial like [this one](http://gerardmcgarry.com/2010/setting-up-a-virtual-host-in-nginx/), but when you get to the part where you're defining a server config, do something like this (replacing `path-to-simulations` appropriately):
+## Tech Stack
 
-        server {
-          listen 8080;
-          server_name $hostname;
-          root /path-to-simulations/simulations/;
-          index index.html;
-          try_files $uri $uri/ /index.html;
-        }
+| Layer | Library |
+|-------|---------|
+| Module bundler | Vite 8 + Rolldown |
+| Rendering | PixiJS 7 |
+| MVC | Backbone.js + Underscore |
+| DOM / AJAX | jQuery |
+| Styles | Less → LightningCSS |
+| UI components | Bootstrap 5 |
 
-3. Run `sudo nginx` to start the server.
-4. Open up [http://localhost:8080](http://localhost:8080) in your browser to view a list of simulations.
-
-License
--------
+## License
 
 This software is subject to the provisions of the GNU Affero General Public License Version 3.0 (AGPL). See license.txt for details. Copyright (c) 2013 Rice University.

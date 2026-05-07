@@ -1,60 +1,54 @@
-define(function(require) {
+import ParticleGraphicsGenerator from 'views/particle-graphics-generator';
+import AtomicModelView from 'hydrogen-atom/views/atomic-model';
 
-    'use strict';
-
-    var ParticleGraphicsGenerator = require('views/particle-graphics-generator');
-
-    var AtomicModelView = require('hydrogen-atom/views/atomic-model');
+/**
+ * Represents the scene for the DeBroglieModel
+ */
+var DeBroglieModelSubView = AtomicModelView.extend({
 
     /**
-     * Represents the scene for the DeBroglieModel
+     * Initializes the new DeBroglieModelSubView.
      */
-    var DeBroglieModelSubView = AtomicModelView.extend({
+    initialize: function(options) {
+        AtomicModelView.prototype.initialize.apply(this, arguments);
+    },
 
-        /**
-         * Initializes the new DeBroglieModelSubView.
-         */
-        initialize: function(options) {
-            AtomicModelView.prototype.initialize.apply(this, arguments);
-        },
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        AtomicModelView.prototype.initGraphics.apply(this, arguments);
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            AtomicModelView.prototype.initGraphics.apply(this, arguments);
+        this.initOrbitalGraphics();
+    },
 
-            this.initOrbitalGraphics();
-        },
+    initProton: function() {
+        if (this.protonSprite)
+            this.displayObject.removeChild(this.protonSprite);
 
-        initProton: function() {
-            if (this.protonSprite)
-                this.displayObject.removeChild(this.protonSprite);
+        this.protonSprite = ParticleGraphicsGenerator.generateProton(this.particleMVT);
 
-            this.protonSprite = ParticleGraphicsGenerator.generateProton(this.particleMVT);
+        var atomPosition = this.getViewPosition();
+        this.protonSprite.x = atomPosition.x;
+        this.protonSprite.y = atomPosition.y;
 
-            var atomPosition = this.getViewPosition();
-            this.protonSprite.x = atomPosition.x;
-            this.protonSprite.y = atomPosition.y;
+        this.displayObject.addChild(this.protonSprite);
+    },
 
-            this.displayObject.addChild(this.protonSprite);
-        },
+    /**
+     * Updates the model-view-transform and anything that relies on it.
+     */
+    updateMVT: function(mvt) {
+        AtomicModelView.prototype.updateMVT.apply(this, arguments);
 
-        /**
-         * Updates the model-view-transform and anything that relies on it.
-         */
-        updateMVT: function(mvt) {
-            AtomicModelView.prototype.updateMVT.apply(this, arguments);
+        this.initProton();
+    },
 
-            this.initProton();
-        },
+    update: function(time, deltaTime, paused) {
+        AtomicModelView.prototype.update.apply(this, arguments);
+    }
 
-        update: function(time, deltaTime, paused) {
-            AtomicModelView.prototype.update.apply(this, arguments);
-        }
-
-    });
-
-
-    return DeBroglieModelSubView;
 });
+
+
+export default DeBroglieModelSubView;

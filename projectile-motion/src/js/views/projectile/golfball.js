@@ -1,31 +1,24 @@
-define(function(require) {
+import Golfball from 'models/projectile/golfball';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var GolfballView = ProjectileView.extend({
 
-    var Golfball = require('models/projectile/golfball');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.GOLFBALL);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        return this.createProjectileSprite();
+    }
 
-    var Assets = require('assets');
-
-    var GolfballView = ProjectileView.extend({
-
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.GOLFBALL);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            return this.createProjectileSprite();
-        }
-
-    }, {
-        getModelClass: function() {
-            return Golfball;
-        }
-    });
-
-    return GolfballView;
+}, {
+    getModelClass: function() {
+        return Golfball;
+    }
 });
+
+export default GolfballView;

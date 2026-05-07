@@ -1,72 +1,62 @@
-define(function(require) {
+import _ from 'underscore';
+import MovingManSimulation from 'models/moving-man-simulation';
+import MovingManSimView from 'views/sim';
+import playbackControlsHtml from 'templates/intro-controls.html?raw';
+import 'styles/playback-controls.css';
 
-    'use strict';
+/**
+ * Extends the functionality of the MovingManSimView to create
+ *   the Intro tab. This one is a very simple view, so not much
+ *   additional functionality is needed.
+ */
+var IntroSimView = MovingManSimView.extend({
 
-    var _ = require('underscore');
+    events: _.extend(MovingManSimView.prototype.events, {
 
-    var MovingManSimulation = require('models/moving-man-simulation');
-    var MovingManSimView    = require('views/sim');
+    }),
 
-    // HTML
-    var playbackControlsHtml = require('text!templates/intro-controls.html');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Introduction',
+            name:  'intro'
+        }, options);
 
-    // CSS
-    require('css!styles/playback-controls');
+        MovingManSimView.prototype.initialize.apply(this, [ options ]);
+
+        this.listenTo(this.simulation, 'change:paused', this.pausedChanged);
+    },
 
     /**
-     * Extends the functionality of the MovingManSimView to create
-     *   the Intro tab. This one is a very simple view, so not much
-     *   additional functionality is needed.
+     * Initializes the Simulation.
      */
-    var IntroSimView = MovingManSimView.extend({
+    initSimulation: function() {
+        this.simulation = new MovingManSimulation({
+            paused: true
+        }, {
+            noRecording: true
+        });
+    },
 
-        events: _.extend(MovingManSimView.prototype.events, {
+    /**
+     * Renders everything
+     */
+    render: function() {
+        MovingManSimView.prototype.render.apply(this);
 
-        }),
+        this.renderPlaybackControls();
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Introduction',
-                name:  'intro'
-            }, options);
+        this.simulation.trigger('change:paused');
 
-            MovingManSimView.prototype.initialize.apply(this, [ options ]);
+        return this;
+    },
 
-            this.listenTo(this.simulation, 'change:paused', this.pausedChanged);
-        },
+    /**
+     * Renders the playback controls
+     */
+    renderPlaybackControls: function() {
+        this.$('.playback-controls-placeholder').replaceWith(playbackControlsHtml);
+    }
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new MovingManSimulation({
-                paused: true
-            }, {
-                noRecording: true
-            });
-        },
-
-        /**
-         * Renders everything
-         */
-        render: function() {
-            MovingManSimView.prototype.render.apply(this);
-
-            this.renderPlaybackControls();
-
-            this.simulation.trigger('change:paused');
-
-            return this;
-        },
-
-        /**
-         * Renders the playback controls
-         */
-        renderPlaybackControls: function() {
-            this.$('.playback-controls-placeholder').replaceWith(playbackControlsHtml);
-        }
-
-    });
-
-    return IntroSimView;
 });
+
+export default IntroSimView;

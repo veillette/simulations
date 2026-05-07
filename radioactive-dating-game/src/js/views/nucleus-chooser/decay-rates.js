@@ -1,25 +1,20 @@
-define(function(require) {
+import HalfLifeNucleusChooserView from 'radioactive-dating-game/views/nucleus-chooser/half-life';
 
-    'use strict';
-
-    var HalfLifeNucleusChooserView = require('radioactive-dating-game/views/nucleus-chooser/half-life');
+/**
+ *
+ */
+var DecayRatesNucleusChooserView = HalfLifeNucleusChooserView.extend({
 
     /**
-     *
+     * Creates the views and labels that will be used to render the list
      */
-    var DecayRatesNucleusChooserView = HalfLifeNucleusChooserView.extend({
+    initItems: function() {
+        HalfLifeNucleusChooserView.prototype.initItems.apply(this, arguments);
 
-        /**
-         * Creates the views and labels that will be used to render the list
-         */
-        initItems: function() {
-            HalfLifeNucleusChooserView.prototype.initItems.apply(this, arguments);
+        // Remove the custom nucleus option
+        this.items.pop();
+    }
 
-            // Remove the custom nucleus option
-            this.items.pop();
-        }
-
-    });
-
-    return DecayRatesNucleusChooserView;
 });
+
+export default DecayRatesNucleusChooserView;

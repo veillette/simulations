@@ -1,35 +1,29 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import BlockView from 'views/element/block';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A view that represents a brick model
+ */
+var BrickView = BlockView.extend({
 
-    var PIXI = require('pixi');
+    createFrontFace: function(points) {
+        return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_FRONT));
+    },
 
-    var BlockView = require('views/element/block');
-    var Assets    = require('assets');
-    var Constants = require('constants');
+    createTopFace: function(points) {
+        return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_TOP));
+    },
 
-    /**
-     * A view that represents a brick model
-     */
-    var BrickView = BlockView.extend({
+    createRightFace: function(points) {
+        return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_RIGHT));
+    },
 
-        createFrontFace: function(points) {
-            return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_FRONT));
-        },
+    getColor: function() {
+        return BrickView.FILL_COLOR;
+    }
 
-        createTopFace: function(points) {
-            return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_TOP));
-        },
+}, Constants.BrickView);
 
-        createRightFace: function(points) {
-            return PIXI.createTexturedPolygonFromPoints(points, Assets.Texture(Assets.Images.BRICK_TEXTURE_RIGHT));
-        },
-
-        getColor: function() {
-            return BrickView.FILL_COLOR;
-        }
-
-    }, Constants.BrickView);
-
-    return BrickView;
-});
+export default BrickView;

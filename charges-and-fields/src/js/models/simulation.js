@@ -1,172 +1,161 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Simulation from 'common/simulation/simulation';
+import Vector2 from 'common/math/vector2';
+import Charge from 'models/charge';
+import Sensor from 'models/sensor';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * The simulation model here is based on the ChargeGroup class from the
+ *   original sim.  All functionality of ChargeGroup is contained in
+ *   this class as well as any additionally needed functionality.
+ */
+var ChargesAndFieldsSimulation = Simulation.extend({
 
-    var _        = require('underscore');
-    var Backbone = require('backbone');
+    defaults: _.extend(Simulation.prototype.defaults, {
+        k: Constants.K,    // To be used in E-field equation: E = k*Q/r^2
+        maxVoltage: 20000, // Voltage at which we would show total color saturation
+        width:  100,
+        height: 100
+    }),
 
-    var Simulation = require('common/simulation/simulation');
-    var Vector2    = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        Simulation.prototype.initialize.apply(this, [attributes, options]);
 
-    var Charge = require('models/charge');
-    var Sensor = require('models/sensor');
+        // Collections
+        this.charges = new Backbone.Collection([], { model: Charge });
+        this.sensors = new Backbone.Collection([], { model: Sensor });
+
+        // Object caches
+        this._efieldVec  = new Vector2();
+        this._voltageLoc = new Vector2();
+        this._nextPoint  = new Vector2();
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+
+    },
 
     /**
-     * The simulation model here is based on the ChargeGroup class from the
-     *   original sim.  All functionality of ChargeGroup is contained in
-     *   this class as well as any additionally needed functionality.
+     * Sets the simulation bounds' dimensions.
      */
-    var ChargesAndFieldsSimulation = Simulation.extend({
+    setBoundsDimensions: function(width, height) {
+        this.set('width', width);
+        this.set('height', height);
+    },
 
-        defaults: _.extend(Simulation.prototype.defaults, {
-            k: Constants.K,    // To be used in E-field equation: E = k*Q/r^2
-            maxVoltage: 20000, // Voltage at which we would show total color saturation
-            width:  100,
-            height: 100
-        }),
+    /**
+     * This simulation does not make use of time and updates only when
+     *   things change.  The view should listen for change events to
+     *   trigger rendering.
+     */
+    update: function(time, deltaTime) {},
 
-        initialize: function(attributes, options) {
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
+    /**
+     * Adds a charge to the simulation
+     */
+    addCharge: function(charge) {
+        this.charges.add(charge);
+    },
 
-            // Collections
-            this.charges = new Backbone.Collection([], { model: Charge });
-            this.sensors = new Backbone.Collection([], { model: Sensor });
+    /**
+     * Removes a charge from the simulation
+     */
+    removeCharge: function(charge) {
+        this.charges.remove(charge);
+    },
 
-            // Object caches
-            this._efieldVec  = new Vector2();
-            this._voltageLoc = new Vector2();
-            this._nextPoint  = new Vector2();
-        },
+    /**
+     * Returns whether or not there are any charges
+     */
+    hasCharges: function() {
+        return this.charges.length !== 0;
+    },
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
+    /**
+     * Adds a sensor to the simulation
+     */
+    addSensor: function(sensor) {
+        this.sensors.add(sensor);
+    },
 
-        },
+    /**
+     * Removes a sensor from the simulation
+     */
+    removeSensor: function(sensor) {
+        this.sensors.remove(sensor);
+    },
 
-        /**
-         * Sets the simulation bounds' dimensions.
-         */
-        setBoundsDimensions: function(width, height) {
-            this.set('width', width);
-            this.set('height', height);
-        },
+    /**
+     * Returns the E-field vector at the given point
+     */
+    getE: function(x, y) {
+        var sumX = 0;
+        var sumY = 0;
+        var charges = this.charges.models;
 
-        /**
-         * This simulation does not make use of time and updates only when
-         *   things change.  The view should listen for change events to
-         *   trigger rendering.
-         */
-        update: function(time, deltaTime) {},
+        var pos;
+        var distSq;
+        var distPow;
 
-        /**
-         * Adds a charge to the simulation
-         */
-        addCharge: function(charge) {
-            this.charges.add(charge);
-        },
-
-        /**
-         * Removes a charge from the simulation
-         */
-        removeCharge: function(charge) {
-            this.charges.remove(charge);
-        },
-
-        /**
-         * Returns whether or not there are any charges
-         */
-        hasCharges: function() {
-            return this.charges.length !== 0;
-        },
-
-        /**
-         * Adds a sensor to the simulation
-         */
-        addSensor: function(sensor) {
-            this.sensors.add(sensor);
-        },
-
-        /**
-         * Removes a sensor from the simulation
-         */
-        removeSensor: function(sensor) {
-            this.sensors.remove(sensor);
-        },
-
-        /**
-         * Returns the E-field vector at the given point
-         */
-        getE: function(x, y) {
-            var sumX = 0;
-            var sumY = 0;
-            var charges = this.charges.models;
-
-            var pos;
-            var distSq;
-            var distPow;
-
-            for (var i = 0; i < charges.length; i++) {
-                pos = charges[i].get('position');
-                distSq = (x - pos.x) * (x - pos.x) + (y - pos.y) * (y - pos.y);
-                distPow = Math.pow(distSq, 1.5);
-                sumX += charges[i].get('q') * (x - pos.x) / distPow;
-                sumY += charges[i].get('q') * (y - pos.y) / distPow;
-            }
-
-            this._efieldVec.x = this.get('k') * sumX;
-            this._efieldVec.y = this.get('k') * sumY;
-
-            return this._efieldVec;
-        },
-
-        /**
-         * Returns the voltage at the given point
-         */
-        getV: function(x, y) {
-            var sumV = 0;
-            var charges = this.charges.models;
-
-            var location = this._voltageLoc.set(x, y);
-            var dist;
-
-            for (var i = 0; i < charges.length; i++) {
-                dist = location.distance(charges[i].get('position'));
-                sumV += charges[i].get('q') / dist;
-            }
-
-            sumV *= this.get('k');
-
-            return sumV;
-        },
-
-        /**
-         * Starting at the given (x, y), move along the equipotential curve
-         *   as far as the given displacement.
-         */
-        getNextEqualVoltagePoint: function(voltage, startX, startY, displacement) {
-            var eVec = this.getE(startX, startY); // E-field vector
-            var eMag = eVec.length();             // Magnitude of the e-field vector
-            var xMid = startX - displacement * eVec.y / eMag; // eVec.y is not a mistake
-            var yMid = startY + displacement * eVec.x / eMag;
-
-            var eMidVec = this.getE(xMid, yMid);
-            var vMid = this.getV(xMid, yMid);
-
-            var dx = (vMid - voltage) * eMidVec.x / eMidVec.lengthSq();
-            var xFinal = xMid + dx;
-            var yFinal = yMid + dx * eMidVec.y / eMidVec.x;
-
-            return this._nextPoint.set(xFinal, yFinal);
+        for (var i = 0; i < charges.length; i++) {
+            pos = charges[i].get('position');
+            distSq = (x - pos.x) * (x - pos.x) + (y - pos.y) * (y - pos.y);
+            distPow = Math.pow(distSq, 1.5);
+            sumX += charges[i].get('q') * (x - pos.x) / distPow;
+            sumY += charges[i].get('q') * (y - pos.y) / distPow;
         }
 
-    });
+        this._efieldVec.x = this.get('k') * sumX;
+        this._efieldVec.y = this.get('k') * sumY;
 
-    return ChargesAndFieldsSimulation;
+        return this._efieldVec;
+    },
+
+    /**
+     * Returns the voltage at the given point
+     */
+    getV: function(x, y) {
+        var sumV = 0;
+        var charges = this.charges.models;
+
+        var location = this._voltageLoc.set(x, y);
+        var dist;
+
+        for (var i = 0; i < charges.length; i++) {
+            dist = location.distance(charges[i].get('position'));
+            sumV += charges[i].get('q') / dist;
+        }
+
+        sumV *= this.get('k');
+
+        return sumV;
+    },
+
+    /**
+     * Starting at the given (x, y), move along the equipotential curve
+     *   as far as the given displacement.
+     */
+    getNextEqualVoltagePoint: function(voltage, startX, startY, displacement) {
+        var eVec = this.getE(startX, startY); // E-field vector
+        var eMag = eVec.length();             // Magnitude of the e-field vector
+        var xMid = startX - displacement * eVec.y / eMag; // eVec.y is not a mistake
+        var yMid = startY + displacement * eVec.x / eMag;
+
+        var eMidVec = this.getE(xMid, yMid);
+        var vMid = this.getV(xMid, yMid);
+
+        var dx = (vMid - voltage) * eMidVec.x / eMidVec.lengthSq();
+        var xFinal = xMid + dx;
+        var yFinal = yMid + dx * eMidVec.y / eMidVec.x;
+
+        return this._nextPoint.set(xFinal, yFinal);
+    }
+
 });
+
+export default ChargesAndFieldsSimulation;

@@ -1,139 +1,124 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import AppView from 'common/v3/app/app';
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import TubeView from 'lasers/views/tube';
+import CircuitView from 'views/circuit';
+import BeamView from 'views/beam';
+import PhotonCollectionView from 'views/photon-collection';
+import ElectronCollectionView from 'views/electron-collection';
+import PEffectSimulation from 'models/simulation';
+import 'styles/scene.less';
 
-    'use strict';
+/**
+ *
+ */
+var PEffectSceneView = PixiSceneView.extend({
 
-    var PIXI = require('pixi');
+    events: {
 
-    var AppView            = require('common/v3/app/app');
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+    },
 
-    var TubeView = require('lasers/views/tube');
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    var CircuitView            = require('views/circuit');
-    var BeamView               = require('views/beam');
-    var PhotonCollectionView   = require('views/photon-collection');
-    var ElectronCollectionView = require('views/electron-collection');
+    renderContent: function() {
 
-    var PEffectSimulation = require('models/simulation');
+    },
 
+    initGraphics: function() {
+        PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
-    // Constants
+        this.initMVT();
+        this.initLayers();
+        this.initBackground();
+        this.initPhotons();
+        this.initElectrons();
+    },
 
+    initMVT: function() {
+        var scale;
 
-    // CSS
-    require('less!styles/scene');
+        if (AppView.windowIsShort()) {
+            this.viewOriginX = 50;
+            this.viewOriginY = 0;
+            scale = 0.75;
+        }
+        else {
+            this.viewOriginX = 4;
+            this.viewOriginY = 30;
+            scale = 1;
+        }
 
-    /**
-     *
-     */
-    var PEffectSceneView = PixiSceneView.extend({
+        this.mvt = ModelViewTransform.createSinglePointScaleMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            scale
+        );
+    },
 
-        events: {
+    initLayers: function() {
+        this.photonElectronLayer = new PIXI.Container();
+        this.backgroundLayer = new PIXI.Container();
+        this.foregroundLayer = new PIXI.Container();
 
-        },
+        this.stage.addChild(this.photonElectronLayer);
+        this.stage.addChild(this.backgroundLayer);
+        this.stage.addChild(this.foregroundLayer);
+    },
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
-        },
+    initBackground: function() {
+        this.beamView = new BeamView({
+            model: this.simulation.beam,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
+        this.backgroundLayer.addChild(this.beamView.displayObject);
 
-        renderContent: function() {
+        this.circuitView = new CircuitView({
+            model: this.simulation.circuit,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
+        this.backgroundLayer.addChild(this.circuitView.displayObject);
 
-        },
+        this.tubeView = new TubeView({
+            model: this.simulation.tube,
+            mvt: this.mvt
+        });
+        this.backgroundLayer.addChild(this.tubeView.displayObject);
+    },
 
-        initGraphics: function() {
-            PixiSceneView.prototype.initGraphics.apply(this, arguments);
+    initPhotons: function() {
+        this.photonsView = new PhotonCollectionView({
+            collection: this.simulation.photons,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
 
-            this.initMVT();
-            this.initLayers();
-            this.initBackground();
-            this.initPhotons();
-            this.initElectrons();
-        },
+        this.photonElectronLayer.addChild(this.photonsView.displayObject);
+    },
 
-        initMVT: function() {
-            var scale;
+    initElectrons: function() {
+        this.electronsView = new ElectronCollectionView({
+            collection: this.simulation.electrons,
+            simulation: this.simulation,
+            mvt: this.mvt
+        });
 
-            if (AppView.windowIsShort()) {
-                this.viewOriginX = 50;
-                this.viewOriginY = 0;
-                scale = 0.75;
-            }
-            else {
-                this.viewOriginX = 4;
-                this.viewOriginY = 30;
-                scale = 1;
-            }
+        this.photonElectronLayer.addChild(this.electronsView.displayObject);
+    },
 
-            this.mvt = ModelViewTransform.createSinglePointScaleMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-        },
+    _update: function(time, deltaTime, paused, timeScale) {
+        if (this.simulation.updated()) {
+            if (this.simulation.get('viewMode') === PEffectSimulation.PHOTON_VIEW)
+                this.photonsView.update();
+            this.electronsView.update();
+        }
+    },
 
-        initLayers: function() {
-            this.photonElectronLayer = new PIXI.Container();
-            this.backgroundLayer = new PIXI.Container();
-            this.foregroundLayer = new PIXI.Container();
-
-            this.stage.addChild(this.photonElectronLayer);
-            this.stage.addChild(this.backgroundLayer);
-            this.stage.addChild(this.foregroundLayer);
-        },
-
-        initBackground: function() {
-            this.beamView = new BeamView({
-                model: this.simulation.beam,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-            this.backgroundLayer.addChild(this.beamView.displayObject);
-
-            this.circuitView = new CircuitView({
-                model: this.simulation.circuit,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-            this.backgroundLayer.addChild(this.circuitView.displayObject);
-
-            this.tubeView = new TubeView({
-                model: this.simulation.tube,
-                mvt: this.mvt
-            });
-            this.backgroundLayer.addChild(this.tubeView.displayObject);
-        },
-
-        initPhotons: function() {
-            this.photonsView = new PhotonCollectionView({
-                collection: this.simulation.photons,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-
-            this.photonElectronLayer.addChild(this.photonsView.displayObject);
-        },
-
-        initElectrons: function() {
-            this.electronsView = new ElectronCollectionView({
-                collection: this.simulation.electrons,
-                simulation: this.simulation,
-                mvt: this.mvt
-            });
-
-            this.photonElectronLayer.addChild(this.electronsView.displayObject);
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            if (this.simulation.updated()) {
-                if (this.simulation.get('viewMode') === PEffectSimulation.PHOTON_VIEW)
-                    this.photonsView.update();
-                this.electronsView.update();
-            }
-        },
-
-    });
-
-    return PEffectSceneView;
 });
+
+export default PEffectSceneView;

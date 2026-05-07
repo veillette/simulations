@@ -1,16 +1,11 @@
-define(function (require) {
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.Images = {
+    VECTOR_BOX:     'vector-box.png',
+    TRASH_CAN:      'garbage-bin.png',
+    TRASH_CAN_OPEN: 'garbage-bin-open.png'
+};
 
-    Assets.Path = 'img/';
-
-    Assets.Images = {
-        VECTOR_BOX:     'vector-box.png',
-        TRASH_CAN:      'garbage-bin.png',
-        TRASH_CAN_OPEN: 'garbage-bin-open.png'
-    };
-
-    return Assets;
-});
+export default Assets;

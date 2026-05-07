@@ -1,71 +1,63 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import HelpLabelView from 'common/v3/help-label/help-label-pixi';
+import 'common/v3/pixi/draw-stick-arrow';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var HelpLabelView = require('common/v3/help-label/help-label-pixi');
-                        require('common/v3/pixi/draw-stick-arrow');
-    var Colors        = require('common/colors/colors');
-
-    var Constants = require('constants');
+/**
+ * Hovers by the wire icon in the toolbox until the user starts dragging a component
+ */
+var GrabAWireHelpView = HelpLabelView.extend({
 
     /**
-     * Hovers by the wire icon in the toolbox until the user starts dragging a component
+     * Initializes the new GrabAWireHelpView.
      */
-    var GrabAWireHelpView = HelpLabelView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            color: Constants.HELP_LABEL_COLOR,
+            font:  Constants.HELP_LABEL_FONT,
+            anchor: {
+                x: 0,
+                y: 0.55
+            },
+            style: {
+                align: 'left'
+            },
+            title : 'Grab a wire'
+        }, options);
 
-        /**
-         * Initializes the new GrabAWireHelpView.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                color: Constants.HELP_LABEL_COLOR,
-                font:  Constants.HELP_LABEL_FONT,
-                anchor: {
-                    x: 0,
-                    y: 0.55
-                },
-                style: {
-                    align: 'left'
-                },
-                title : 'Grab a wire'
-            }, options);
+        HelpLabelView.prototype.initialize.apply(this, [options]);
 
-            HelpLabelView.prototype.initialize.apply(this, [options]);
+        this.simulation = options.simulation;
 
-            this.simulation = options.simulation;
+        this.listenTo(this.simulation.circuit.branches, 'add', this.hide);
 
-            this.listenTo(this.simulation.circuit.branches, 'add', this.hide);
+        this.render();
+    },
 
-            this.render();
-        },
+    render: function() {
+        HelpLabelView.prototype.render.apply(this, arguments);
 
-        render: function() {
-            HelpLabelView.prototype.render.apply(this, arguments);
+        var graphics = new PIXI.Graphics();
+        graphics.lineStyle(Constants.HELP_LABEL_ARROW_LINE_WIDTH, Colors.parseHex(Constants.HELP_LABEL_COLOR), 1);
+        graphics.drawStickArrow(-6, 0, -50 + 12, 0, Constants.HELP_LABEL_ARROW_HEAD_WIDTH, Constants.HELP_LABEL_ARROW_HEAD_LENGTH);
 
-            var graphics = new PIXI.Graphics();
-            graphics.lineStyle(Constants.HELP_LABEL_ARROW_LINE_WIDTH, Colors.parseHex(Constants.HELP_LABEL_COLOR), 1);
-            graphics.drawStickArrow(-6, 0, -50 + 12, 0, Constants.HELP_LABEL_ARROW_HEAD_WIDTH, Constants.HELP_LABEL_ARROW_HEAD_LENGTH);
+        this.displayObject.addChild(graphics);
+    },
 
-            this.displayObject.addChild(graphics);
-        },
+    show: function(){
+        if (!this.displayObject.parent && this.attachTarget)
+            this._attach();
+        this.displayObject.visible = true;
+        this.showing = true;
+    },
 
-        show: function(){
-            if (!this.displayObject.parent && this.attachTarget)
-                this._attach();
-            this.displayObject.visible = true;
-            this.showing = true;
-        },
+    hide: function() {
+        this.displayObject.visible = false;
+        this.showing = false;
+    }
 
-        hide: function() {
-            this.displayObject.visible = false;
-            this.showing = false;
-        }
-
-    });
-
-    return GrabAWireHelpView;
 });
+
+export default GrabAWireHelpView;

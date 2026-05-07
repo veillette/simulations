@@ -1,61 +1,54 @@
-define(function (require) {
+import _ from 'underscore';
+import ElementProperties from 'common/quantum/models/element-properties';
+import LevelSpecificEnergyEmissionStrategy from './level-specific-energy-emission-strategy';
+import EqualLikelihoodAbsorptionStrategy from './equal-likelihood-absorption-strategy';
+import DischargeLampAtom from './atom';
 
-    'use strict';
+/**
+ * A place to store element properties
+ */
+var DischargeLampElementProperties = ElementProperties.extend({
 
-    var _ = require('underscore');
-
-    var ElementProperties = require('common/quantum/models/element-properties');
-
-    var LevelSpecificEnergyEmissionStrategy = require('./level-specific-energy-emission-strategy');
-    var EqualLikelihoodAbsorptionStrategy   = require('./equal-likelihood-absorption-strategy');
-    var DischargeLampAtom                   = require('./atom');
+    defaults: _.extend({}, ElementProperties.prototype.defaults, {
+        energyAbsorptionStrategy: null,
+        meanStateLifetime: DischargeLampAtom.DEFAULT_STATE_LIFETIME
+    }),
 
     /**
-     * A place to store element properties
+     *
      */
-    var DischargeLampElementProperties = ElementProperties.extend({
+    initialize: function(attributes, options) {
+        options = _.extend({
+            transitionEntries: []
+        }, options);
 
-        defaults: _.extend({}, ElementProperties.prototype.defaults, {
-            energyAbsorptionStrategy: null,
-            meanStateLifetime: DischargeLampAtom.DEFAULT_STATE_LIFETIME
-        }),
+        ElementProperties.prototype.initialize.apply(this, [attributes, options]);
 
-        /**
-         *
-         */
-        initialize: function(attributes, options) {
-            options = _.extend({
-                transitionEntries: []
-            }, options);
+        var emissionStrategy = new LevelSpecificEnergyEmissionStrategy(options.transitionEntries);
+        emissionStrategy.setStates(this.getStates());
 
-            ElementProperties.prototype.initialize.apply(this, [attributes, options]);
+        if (!this.get('energyEmissionStrategy'))
+            this.set('energyEmissionStrategy', emissionStrategy);
+        if (!this.get('energyAbsorptionStrategy'))
+            this.set('energyAbsorptionStrategy', new EqualLikelihoodAbsorptionStrategy());
+    },
 
-            var emissionStrategy = new LevelSpecificEnergyEmissionStrategy(options.transitionEntries);
-            emissionStrategy.setStates(this.getStates());
+    getEnergyAbsorptionStrategy: function() {
+        return this.get('energyAbsorptionStrategy');
+    },
 
-            if (!this.get('energyEmissionStrategy'))
-                this.set('energyEmissionStrategy', emissionStrategy);
-            if (!this.get('energyAbsorptionStrategy'))
-                this.set('energyAbsorptionStrategy', new EqualLikelihoodAbsorptionStrategy());
-        },
+    setEnergyAbsorptionStrategy: function(energyAbsorptionStrategy) {
+        this.set('energyAbsorptionStrategy', energyAbsorptionStrategy);
+    }
 
-        getEnergyAbsorptionStrategy: function() {
-            return this.get('energyAbsorptionStrategy');
-        },
-
-        setEnergyAbsorptionStrategy: function(energyAbsorptionStrategy) {
-            this.set('energyAbsorptionStrategy', energyAbsorptionStrategy);
-        }
-
-    });
-
-
-    DischargeLampElementProperties.TransitionEntry = function(sourceStateIndex, targetStateIndex, txStrength) {
-        this.sourceStateIndex = sourceStateIndex;
-        this.targetStateIndex = targetStateIndex;
-        this.txStrength = txStrength;
-    };
-
-
-    return DischargeLampElementProperties;
 });
+
+
+DischargeLampElementProperties.TransitionEntry = function(sourceStateIndex, targetStateIndex, txStrength) {
+    this.sourceStateIndex = sourceStateIndex;
+    this.targetStateIndex = targetStateIndex;
+    this.txStrength = txStrength;
+};
+
+
+export default DischargeLampElementProperties;

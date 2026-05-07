@@ -1,47 +1,40 @@
-define(function (require) {
+import _ from 'underscore';
+import Branch from 'models/branch';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A wire
+ */
+var Wire = Branch.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Branch.prototype.defaults, {
+        thickness: Constants.Wire.LIFELIKE_THICKNESS
+    }),
 
-    var Branch = require('models/branch');
+    initialize: function(attributes, options) {
+        Branch.prototype.initialize.apply(this, [attributes, options]);
 
-    var Constants = require('constants');
+        this.initShape(this.getDirectionVector().length(), this.get('thickness'));
+    },
 
-    /**
-     * A wire
-     */
-    var Wire = Branch.extend({
+    updateShape: function() {
+        var height = this.get('thickness') * Constants.SAT_SCALE;
+        var length = this.getDirectionVector().length() * Constants.SAT_SCALE;
 
-        defaults: _.extend({}, Branch.prototype.defaults, {
-            thickness: Constants.Wire.LIFELIKE_THICKNESS
-        }),
+        this.shape.points[0].x = 0;
+        this.shape.points[0].y = height / 2;
+        this.shape.points[1].x = length;
+        this.shape.points[1].y = height / 2;
+        this.shape.points[2].x = length;
+        this.shape.points[2].y = -height / 2;
+        this.shape.points[3].x = 0;
+        this.shape.points[3].y = -height / 2;
 
-        initialize: function(attributes, options) {
-            Branch.prototype.initialize.apply(this, [attributes, options]);
+        this.shape.setPoints(this.shape.points);
 
-            this.initShape(this.getDirectionVector().length(), this.get('thickness'));
-        },
+        Branch.prototype.updateShape.apply(this, arguments);
+    },
 
-        updateShape: function() {
-            var height = this.get('thickness') * Constants.SAT_SCALE;
-            var length = this.getDirectionVector().length() * Constants.SAT_SCALE;
+}, Constants.Wire);
 
-            this.shape.points[0].x = 0;
-            this.shape.points[0].y = height / 2;
-            this.shape.points[1].x = length;
-            this.shape.points[1].y = height / 2;
-            this.shape.points[2].x = length;
-            this.shape.points[2].y = -height / 2;
-            this.shape.points[3].x = 0;
-            this.shape.points[3].y = -height / 2;
-
-            this.shape.setPoints(this.shape.points);
-
-            Branch.prototype.updateShape.apply(this, arguments);
-        },
-
-    }, Constants.Wire);
-
-    return Wire;
-});
+export default Wire;

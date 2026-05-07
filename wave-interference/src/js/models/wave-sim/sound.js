@@ -1,35 +1,29 @@
-define(function (require) {
+import _ from 'underscore';
+import WaveSimulation from '../wave-sim';
 
-	'use strict';
+/**
+ *
+ */
+var SoundSimulation = WaveSimulation.extend({
 
-	var _ = require('underscore');
+    defaults: _.extend({}, WaveSimulation.prototype.defaults, {
 
-	var WaveSimulation = require('../wave-sim');
+        // Values from PhET's SoundModule class
 
-	/**
-	 *
-	 */
-	var SoundSimulation = WaveSimulation.extend({
+        dimensions: {
+            width: 100,
+            height: 100
+        },
+        units: {
+            distance: 'cm',
+            time: 'ms'
+        },
+        timeScale: 1.0 / 1.42,
 
-		defaults: _.extend({}, WaveSimulation.prototype.defaults, {
+        oscillatorName: 'Speaker',
+        oscillatorNamePlural: 'Speakers',
+    })
 
-			// Values from PhET's SoundModule class
-
-			dimensions: {
-				width: 100,
-				height: 100
-			},
-			units: {
-				distance: 'cm',
-				time: 'ms'
-			},
-			timeScale: 1.0 / 1.42,
-
-			oscillatorName: 'Speaker',
-			oscillatorNamePlural: 'Speakers',
-		})
-
-	});
-
-	return SoundSimulation;
 });
+
+export default SoundSimulation;

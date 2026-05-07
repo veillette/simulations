@@ -1,20 +1,15 @@
-define(function (require) {
+import Projectile from 'models/projectile';
 
-    'use strict';
+var Pumpkin = Projectile.extend({
 
-    var Projectile = require('models/projectile');
+    defaults: {
+        mass:            5,
+        diameter:        0.37,
+        dragCoefficient: 0.6
+    }
 
-    var Pumpkin = Projectile.extend({
-
-        defaults: {
-            mass:            5,
-            diameter:        0.37,
-            dragCoefficient: 0.6
-        }
-
-    }, {
-        getName: function() { return 'pumpkin'; }
-    });
-
-    return Pumpkin;
+}, {
+    getName: function() { return 'pumpkin'; }
 });
+
+export default Pumpkin;

@@ -1,98 +1,89 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import ArrowView from 'common/v3/pixi/view/arrow';
+import ReservoirObjectView from 'views/reservoir-object';
+import Constants from 'constants';
+var RAD_TO_DEG = 180 / Math.PI;
 
-    'use strict';
+/**
+ *
+ */
+var SensorView = ReservoirObjectView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            radius: 9
+        }, options);
 
-    var PIXI = require('pixi');
+        this.simulation = options.simulation;
 
-    var ArrowView = require('common/v3/pixi/view/arrow');
+        ReservoirObjectView.prototype.initialize.apply(this, [options]);
 
-    var ReservoirObjectView = require('views/reservoir-object');
+        if (this.interactive) {
+            this.listenTo(this.simulation.charges, 'change add remove reset',  this.chargesChanged);
+            this.listenTo(this.model, 'change:position', this.updateInfo);
 
-    var Constants = require('constants');
-    var RAD_TO_DEG = 180 / Math.PI;
-
-    /**
-     *
-     */
-    var SensorView = ReservoirObjectView.extend({
-
-        initialize: function(options) {
-            options = _.extend({
-                radius: 9
-            }, options);
-
-            this.simulation = options.simulation;
-
-            ReservoirObjectView.prototype.initialize.apply(this, [options]);
-
-            if (this.interactive) {
-                this.listenTo(this.simulation.charges, 'change add remove reset',  this.chargesChanged);
-                this.listenTo(this.model, 'change:position', this.updateInfo);
-
-                this.updateInfo();
-            }
-        },
-
-        initGraphics: function() {
-            if (this.interactive) {
-                // Add arrow
-                this.arrowViewModel = new ArrowView.ArrowViewModel();
-                this.arrowView = new ArrowView({
-                    model: this.arrowViewModel,
-                    tailWidth:  6,
-                    headWidth:  18,
-                    headLength: 18
-                });
-                this.displayObject.addChild(this.arrowView.displayObject);
-
-                // Add text
-                var textSettings = {
-                    font: '12px Helvetica Neue',
-                    fill: '#000',
-                    align: 'center'
-                };
-                this.text = new PIXI.Text('', textSettings);
-                this.text.resolution = this.getResolution();
-                this.text.anchor.x = 0.5;
-                this.text.anchor.y = -0.4;
-                this.text.visible = false;
-                this.displayObject.addChild(this.text);
-            }
-
-            ReservoirObjectView.prototype.initGraphics.apply(this, arguments);
-        },
-
-        updateInfo: function() {
-            var efield = this.simulation.getE(
-                this.mvt.viewToModelX(this.displayObject.x),
-                this.mvt.viewToModelY(this.displayObject.y)
-            );
-
-            // Update arrow
-            this.arrowViewModel.set('targetX', this.mvt.modelToViewDeltaX(efield.x * SensorView.E_VECTOR_SCALE_FACTOR) * 0.01);
-            this.arrowViewModel.set('targetY', this.mvt.modelToViewDeltaX(efield.y * SensorView.E_VECTOR_SCALE_FACTOR) * 0.01);
-
-            // Update text
-            var magnitude = efield.length() * Constants.EFAC * 0.01;
-            var angle = (Math.atan2(-efield.y, efield.x) * RAD_TO_DEG);
-            this.text.text = magnitude.toFixed(1) + ' V/m' + '\n' + angle.toFixed(1) + ' deg';
-        },
-
-        chargesChanged: function() {
             this.updateInfo();
-        },
+        }
+    },
 
-        showNumbers: function() {
-            this.text.visible = true;
-        },
+    initGraphics: function() {
+        if (this.interactive) {
+            // Add arrow
+            this.arrowViewModel = new ArrowView.ArrowViewModel();
+            this.arrowView = new ArrowView({
+                model: this.arrowViewModel,
+                tailWidth:  6,
+                headWidth:  18,
+                headLength: 18
+            });
+            this.displayObject.addChild(this.arrowView.displayObject);
 
-        hideNumbers: function() {
+            // Add text
+            var textSettings = {
+                font: '12px Helvetica Neue',
+                fill: '#000',
+                align: 'center'
+            };
+            this.text = new PIXI.Text('', textSettings);
+            this.text.resolution = this.getResolution();
+            this.text.anchor.x = 0.5;
+            this.text.anchor.y = -0.4;
             this.text.visible = false;
+            this.displayObject.addChild(this.text);
         }
 
-    }, Constants.SensorView);
+        ReservoirObjectView.prototype.initGraphics.apply(this, arguments);
+    },
 
-    return SensorView;
-});
+    updateInfo: function() {
+        var efield = this.simulation.getE(
+            this.mvt.viewToModelX(this.displayObject.x),
+            this.mvt.viewToModelY(this.displayObject.y)
+        );
+
+        // Update arrow
+        this.arrowViewModel.set('targetX', this.mvt.modelToViewDeltaX(efield.x * SensorView.E_VECTOR_SCALE_FACTOR) * 0.01);
+        this.arrowViewModel.set('targetY', this.mvt.modelToViewDeltaX(efield.y * SensorView.E_VECTOR_SCALE_FACTOR) * 0.01);
+
+        // Update text
+        var magnitude = efield.length() * Constants.EFAC * 0.01;
+        var angle = (Math.atan2(-efield.y, efield.x) * RAD_TO_DEG);
+        this.text.text = magnitude.toFixed(1) + ' V/m' + '\n' + angle.toFixed(1) + ' deg';
+    },
+
+    chargesChanged: function() {
+        this.updateInfo();
+    },
+
+    showNumbers: function() {
+        this.text.visible = true;
+    },
+
+    hideNumbers: function() {
+        this.text.visible = false;
+    }
+
+}, Constants.SensorView);
+
+export default SensorView;

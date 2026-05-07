@@ -1,28 +1,20 @@
-define(function(require) {
+import NuclearPhysicsAppView from 'views/app';
+import OneNucleusSimView from 'nuclear-fission/views/sim/one-nucleus';
+import ChainReactionSimView from 'nuclear-fission/views/sim/chain-reaction';
+import NuclearReactorSimView from 'nuclear-fission/views/sim/nuclear-reactor';
+import Assets from 'assets';
+import 'nuclear-fission/styles/font-awesome.less';
 
-    'use strict';
+var NuclearFissionAppView = NuclearPhysicsAppView.extend({
 
-    var NuclearPhysicsAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var OneNucleusSimView     = require('nuclear-fission/views/sim/one-nucleus');
-    var ChainReactionSimView  = require('nuclear-fission/views/sim/chain-reaction');
-    var NuclearReactorSimView = require('nuclear-fission/views/sim/nuclear-reactor');
+    simViewConstructors: [
+        OneNucleusSimView,
+        ChainReactionSimView,
+        NuclearReactorSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!nuclear-fission/styles/font-awesome');
-
-    var NuclearFissionAppView = NuclearPhysicsAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            OneNucleusSimView,
-            ChainReactionSimView,
-            NuclearReactorSimView
-        ]
-
-    });
-
-    return NuclearFissionAppView;
 });
+
+export default NuclearFissionAppView;

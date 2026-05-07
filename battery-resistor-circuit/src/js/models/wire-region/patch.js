@@ -1,34 +1,28 @@
-define(function (require) {
+import _ from 'underscore';
+import WireRegion from 'models/wire-region';
 
-    'use strict';
+/**
+ *
+ */
+var PatchWireRegion = function(min, max, wirePatch) {
+    this.min = min;
+    this.max = max;
+    this.wirePatch = wirePatch;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(PatchWireRegion.prototype, WireRegion.prototype, {
 
-    var WireRegion = require('models/wire-region');
+    contains: function(wireParticle) {
+        return (
+            wireParticle.wirePatch === this.wirePatch &&
+            this.max >= wireParticle.position &&
+            this.min <= wireParticle.position
+        );
+    }
 
-    /**
-     *
-     */
-    var PatchWireRegion = function(min, max, wirePatch) {
-        this.min = min;
-        this.max = max;
-        this.wirePatch = wirePatch;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(PatchWireRegion.prototype, WireRegion.prototype, {
-
-        contains: function(wireParticle) {
-            return (
-                wireParticle.wirePatch === this.wirePatch &&
-                this.max >= wireParticle.position &&
-                this.min <= wireParticle.position
-            );
-        }
-
-    });
-
-    return PatchWireRegion;
 });
+
+export default PatchWireRegion;

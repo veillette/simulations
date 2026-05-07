@@ -1,16 +1,11 @@
-define(function (require) {
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.Images = {
+    // THE_IMAGE: 'the-image.png'
+};
 
-    Assets.Path = 'img/';
+Assets.SpriteSheets = {};
 
-    Assets.Images = {
-        // THE_IMAGE: 'the-image.png'
-    };
-
-    Assets.SpriteSheets = {};
-
-    return Assets;
-});
+export default Assets;

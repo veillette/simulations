@@ -1,20 +1,15 @@
-define(function (require) {
+import Projectile from 'models/projectile';
 
-    'use strict';
+var Piano = Projectile.extend({
 
-    var Projectile = require('models/projectile');
+    defaults: {
+        mass:          400,
+        diameter:        2,
+        dragCoefficient: 1.2
+    }
 
-    var Piano = Projectile.extend({
-
-        defaults: {
-            mass:          400,
-            diameter:        2,
-            dragCoefficient: 1.2
-        }
-
-    }, {
-        getName: function() { return 'piano'; }
-    });
-
-    return Piano;
+}, {
+    getName: function() { return 'piano'; }
 });
+
+export default Piano;

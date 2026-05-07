@@ -1,49 +1,43 @@
-define(function(require) {
+import BodyView from 'views/body';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a planet.
+ */
+var PlanetView = BodyView.extend({
 
-    var BodyView = require('views/body');
+    textureBodyWidthRatio: 0.7,
 
-    var Assets = require('assets');
+    initialize: function(options) {
+        this.lowMass  = this.model.get('referenceMass') * (1 - BodyView.GENERIC_BODY_THRESHOLD * 2);
+        this.highMass = this.model.get('referenceMass') * (1 + BodyView.GENERIC_BODY_THRESHOLD);
 
-    /**
-     * A view that represents a planet.
-     */
-    var PlanetView = BodyView.extend({
+        BodyView.prototype.initialize.apply(this, arguments);
+    },
 
-        textureBodyWidthRatio: 0.7,
+    initGraphics: function() {
+        BodyView.prototype.initGraphics.apply(this);
 
-        initialize: function(options) {
-            this.lowMass  = this.model.get('referenceMass') * (1 - BodyView.GENERIC_BODY_THRESHOLD * 2);
-            this.highMass = this.model.get('referenceMass') * (1 + BodyView.GENERIC_BODY_THRESHOLD);
+        this.genericPlanet = Assets.createSprite(Assets.Images.PLANET);
+        this.genericPlanet.anchor.x = 0.5;
+        this.genericPlanet.anchor.y = 0.5;
+        this.genericPlanet.visible = false;
+        this.bodyContainer.addChild(this.genericPlanet);
+    },
 
-            BodyView.prototype.initialize.apply(this, arguments);
-        },
+    updateMass: function(body, mass) {
+        BodyView.prototype.updateMass.apply(this, arguments);
 
-        initGraphics: function() {
-            BodyView.prototype.initGraphics.apply(this);
-
-            this.genericPlanet = Assets.createSprite(Assets.Images.PLANET);
-            this.genericPlanet.anchor.x = 0.5;
-            this.genericPlanet.anchor.y = 0.5;
-            this.genericPlanet.visible = false;
-            this.bodyContainer.addChild(this.genericPlanet);
-        },
-
-        updateMass: function(body, mass) {
-            BodyView.prototype.updateMass.apply(this, arguments);
-
-            if (mass > this.highMass || mass < this.lowMass) {
-                this.genericPlanet.visible = true;
-                this.body.visible = false;
-            }
-            else {
-                this.genericPlanet.visible = false;
-                this.body.visible = true;
-            }
+        if (mass > this.highMass || mass < this.lowMass) {
+            this.genericPlanet.visible = true;
+            this.body.visible = false;
         }
+        else {
+            this.genericPlanet.visible = false;
+            this.body.visible = true;
+        }
+    }
 
-    });
-
-    return PlanetView;
 });
+
+export default PlanetView;

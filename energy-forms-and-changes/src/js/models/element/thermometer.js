@@ -1,67 +1,57 @@
-define(function (require) {
+import _ from 'underscore';
+import MovableElement from 'models/element/movable';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var Thermometer = MovableElement.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, MovableElement.prototype.defaults, {
+        sensedTemperature: Constants.ROOM_TEMPERATURE,
+        sensedElement: null,
 
-    var MovableElement = require('models/element/movable');
+        // Used primarily to control visibility in the view
+        active: false,
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+        // If it's attached to an object, we just ask for the object's overall
+        //   temperature, but if it's unattached, we make sure to request the
+        //   temperature at a specific location.
+        attached: false
+    }),
 
-    /**
-     *
-     */
-    var Thermometer = MovableElement.extend({
+    initialize: function(attributes, options) {
+        options = options || {};
 
-        defaults: _.extend({}, MovableElement.prototype.defaults, {
-            sensedTemperature: Constants.ROOM_TEMPERATURE,
-            sensedElement: null,
+        if (typeof options.elementLocator.getElementAtLocation === 'function')
+            this.elementLocator = options.elementLocator;
+        else
+            throw 'Thermometer model requires an element locator.';
 
-            // Used primarily to control visibility in the view
-            active: false,
+        MovableElement.prototype.initialize.apply(this, arguments);
 
-            // If it's attached to an object, we just ask for the object's overall
-            //   temperature, but if it's unattached, we make sure to request the
-            //   temperature at a specific location.
-            attached: false
-        }),
+        this.initiallyActive = this.get('active');
+    },
 
-        initialize: function(attributes, options) {
-            options = options || {};
-
-            if (typeof options.elementLocator.getElementAtLocation === 'function')
-                this.elementLocator = options.elementLocator;
+    update: function(time, deltaTime) {
+        this.set('sensedElement', this.elementLocator.getElementAtLocation(this.get('position')));
+        if (this.get('sensedElement')) {
+            if (this.get('attached'))
+                this.set('sensedTemperature', this.get('sensedElement').getTemperature());
             else
-                throw 'Thermometer model requires an element locator.';
-
-            MovableElement.prototype.initialize.apply(this, arguments);
-
-            this.initiallyActive = this.get('active');
-        },
-
-        update: function(time, deltaTime) {
-            this.set('sensedElement', this.elementLocator.getElementAtLocation(this.get('position')));
-            if (this.get('sensedElement')) {
-                if (this.get('attached'))
-                    this.set('sensedTemperature', this.get('sensedElement').getTemperature());
-                else
-                    this.set('sensedTemperature', this.get('sensedElement').getTemperatureAtLocation(this.get('position')));
-            }
-        },
-
-        reset: function() {
-            this.set('active', this.initiallyActive);
-        },
-
-        getBottomSurface: function() {
-            // Doesn't have a bottom surface, and can't be set on anything.
-            return null;
+                this.set('sensedTemperature', this.get('sensedElement').getTemperatureAtLocation(this.get('position')));
         }
+    },
 
-    });
+    reset: function() {
+        this.set('active', this.initiallyActive);
+    },
 
-    return Thermometer;
+    getBottomSurface: function() {
+        // Doesn't have a bottom surface, and can't be set on anything.
+        return null;
+    }
+
 });
+
+export default Thermometer;

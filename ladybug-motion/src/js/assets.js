@@ -1,22 +1,17 @@
-define(function (require) {
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.Images = {
+    LADYBUG: 'ladybug',
+    LADYBUG_OPEN_WINGS: 'ladybug-open-wings'
+};
 
-    Assets.Path = 'img/';
+Assets.SpriteSheets = {
+    'ladybug.json': [
+        Assets.Images.LADYBUG,
+        Assets.Images.LADYBUG_OPEN_WINGS,
+    ]
+};
 
-    Assets.Images = {
-        LADYBUG: 'ladybug',
-        LADYBUG_OPEN_WINGS: 'ladybug-open-wings'
-    };
-
-    Assets.SpriteSheets = {
-        'ladybug.json': [
-            Assets.Images.LADYBUG,
-            Assets.Images.LADYBUG_OPEN_WINGS,
-        ]
-    };
-
-    return Assets;
-});
+export default Assets;

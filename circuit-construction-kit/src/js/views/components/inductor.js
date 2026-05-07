@@ -1,36 +1,28 @@
-define(function(require) {
+import RectangularComponentView from 'views/components/rectangular';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a resistor
+ */
+var InductorView = RectangularComponentView.extend({
 
+    imagePath:     Assets.Images.INDUCTOR,
+    maskImagePath: Assets.Images.INDUCTOR_MASK,
 
-
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Assets    = require('assets');
+    schematicImagePath:     Assets.Images.SCHEMATIC_INDUCTOR,
+    schematicMaskImagePath: Assets.Images.SCHEMATIC_INDUCTOR_MASK,
 
     /**
-     * A view that represents a resistor
+     * Initializes the new InductorView.
      */
-    var InductorView = RectangularComponentView.extend({
+    initialize: function(options) {
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
+    },
 
-        imagePath:     Assets.Images.INDUCTOR,
-        maskImagePath: Assets.Images.INDUCTOR_MASK,
+    getLabelText: function() {
+        return this.model.get('inductance').toFixed(2) + ' Henries';
+    }
 
-        schematicImagePath:     Assets.Images.SCHEMATIC_INDUCTOR,
-        schematicMaskImagePath: Assets.Images.SCHEMATIC_INDUCTOR_MASK,
-
-        /**
-         * Initializes the new InductorView.
-         */
-        initialize: function(options) {
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
-        },
-
-        getLabelText: function() {
-            return this.model.get('inductance').toFixed(2) + ' Henries';
-        }
-
-    });
-
-    return InductorView;
 });
+
+export default InductorView;

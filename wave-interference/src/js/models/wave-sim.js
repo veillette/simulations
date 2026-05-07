@@ -1,304 +1,298 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Lattice2D from './lattice2d';
+import Oscillator from './oscillator';
+import WavePropagator from './wave-propagator';
+import Barrier from './barrier';
+import CompositePotential from './potential/composite';
+import SegmentPotential from './potential/segment';
+Backbone.$ = $;
 
-	'use strict';
+var i;
 
-	var $              = require('jquery');
-	var _              = require('underscore');
-	var Backbone       = require('backbone'); Backbone.$ = $;
+/**
+ * The WaveSimulation contains all necessary components to model a wave-interference
+ *   simulation independent of a graphical representation.  It's implemented as a
+ *   Backbone model and uses Backbone's built-in events system to respond to input
+ *   from the views and give feedback.
+ */
+var WaveSimulation = Backbone.Model.extend({
+    defaults: {
+        latticeSize: {
+            width: 60,
+            height: 60
+        },
+        damping: {
+            x: 20,
+            y: 20
+        },
+        dimensions: {
+            width: 100,
+            height: 100
+        },
+        units: {
+            distance: 'm',
+            time: 's'
+        },
+        time: 0,
+        timeScale: 1.0,
 
-	var Lattice2D      = require('./lattice2d');
-	var Oscillator     = require('./oscillator');
-	var WavePropagator = require('./wave-propagator');
-	var Barrier        = require('./barrier');
+        oscillatorName: 'Oscillator',
+        oscillatorNamePlural: 'Oscillators',
 
-	var CompositePotential = require('./potential/composite');
-	var SegmentPotential   = require('./potential/segment');
+        oscillatorCount: 1,
+        oscillatorSpacing: 0.5,
+        frequency: 0.5,
+        amplitude: 1.0,
+        minFrequency: 0.01,
+        maxFrequency: 3,
+        minAmplitude: 0,
+        maxAmplitude: 2,
 
-	var i;
+        barrierX: null,
+        barrierSlitWidth: null,
+        barrierSlitSeparation: null,
+        barrierStyle: 0,
 
-	/**
-	 * The WaveSimulation contains all necessary components to model a wave-interference
-	 *   simulation independent of a graphical representation.  It's implemented as a
-	 *   Backbone model and uses Backbone's built-in events system to respond to input
-	 *   from the views and give feedback.
-	 */
-	var WaveSimulation = Backbone.Model.extend({
-		defaults: {
-			latticeSize: {
-				width: 60,
-				height: 60
-			},
-			damping: {
-				x: 20,
-				y: 20
-			},
-			dimensions: {
-				width: 100,
-				height: 100
-			},
-			units: {
-				distance: 'm',
-				time: 's'
-			},
-			time: 0,
-			timeScale: 1.0,
+        crossSectionY: null
+    },
 
-			oscillatorName: 'Oscillator',
-			oscillatorNamePlural: 'Oscillators',
+    initialize: function(options) {
 
-			oscillatorCount: 1,
-			oscillatorSpacing: 0.5,
-			frequency: 0.5,
-			amplitude: 1.0,
-			minFrequency: 0.01,
-			maxFrequency: 3,
-			minAmplitude: 0,
-			maxAmplitude: 2,
+        // Event listeners
+        this.on('change:oscillatorCount',   this.calculateOscillatorSpacing);
+        this.on('change:oscillatorSpacing', this.calculateOscillatorSpacing);
 
-			barrierX: null,
-			barrierSlitWidth: null,
-			barrierSlitSeparation: null,
-			barrierStyle: 0,
+        this.on('change:frequency',       this.changeFrequency);
+        this.on('change:amplitude',       this.changeAmplitude);
+        this.on('change:dimensions change:latticeSize', this.resize);
 
-			crossSectionY: null
-		},
+        this.timestep = 1000 / 30; // milliseconds, from PhET's WaveInterferenceClock
+        this.accumulator = 0;
+        this.time = 0;
 
-		initialize: function(options) {
+        // Set default barrier properties
+        if (this.get('barrierX') === null)
+            this.set('barrierX', this.get('dimensions').width * 0.75);
+        if (this.get('barrierSlitWidth') === null)
+            this.set('barrierSlitWidth', this.get('dimensions').height / 5);
+        if (this.get('barrierSlitSeparation') === null)
+            this.set('barrierSlitSeparation', this.get('dimensions').height / 5);
 
-			// Event listeners
-			this.on('change:oscillatorCount',   this.calculateOscillatorSpacing);
-			this.on('change:oscillatorSpacing', this.calculateOscillatorSpacing);
+        // Ranges
+        this.set('barrierSlitWidthRange', {
+            min: 0,
+            max: this.get('dimensions').height * 0.5
+        });
+        this.set('barrierXRange', {
+            min: 0,
+            max: this.get('dimensions').width
+        });
+        this.set('barrierSlitSeparationRange', {
+            min: 0,
+            max: this.get('dimensions').height * 0.75
+        });
 
-			this.on('change:frequency',       this.changeFrequency);
-			this.on('change:amplitude',       this.changeAmplitude);
-			this.on('change:dimensions change:latticeSize', this.resize);
+        if (this.get('crossSectionY') === null)
+            this.set('crossSectionY', this.get('dimensions').height / 2);
 
-			this.timestep = 1000 / 30; // milliseconds, from PhET's WaveInterferenceClock
-			this.accumulator = 0;
-			this.time = 0;
+        // Set latticeSize:dimensions ratio
+        this.resize();
 
-			// Set default barrier properties
-			if (this.get('barrierX') === null)
-				this.set('barrierX', this.get('dimensions').width * 0.75);
-			if (this.get('barrierSlitWidth') === null)
-				this.set('barrierSlitWidth', this.get('dimensions').height / 5);
-			if (this.get('barrierSlitSeparation') === null)
-				this.set('barrierSlitSeparation', this.get('dimensions').height / 5);
+        this.initComponents();
+    },
 
-			// Ranges
-			this.set('barrierSlitWidthRange', {
-				min: 0,
-				max: this.get('dimensions').height * 0.5
-			});
-			this.set('barrierXRange', {
-				min: 0,
-				max: this.get('dimensions').width
-			});
-			this.set('barrierSlitSeparationRange', {
-				min: 0,
-				max: this.get('dimensions').height * 0.75
-			});
+    initComponents: function() {
+        // Composite Potential
+        this.potential = new CompositePotential();
 
-			if (this.get('crossSectionY') === null)
-				this.set('crossSectionY', this.get('dimensions').height / 2);
+        // Lattice
+        this.initLattice();
 
-			// Set latticeSize:dimensions ratio
-			this.resize();
+        // Wave propagator
+        this.initPropagator();
 
-			this.initComponents();
-		},
+        // Barrier
+        this.initBarrier();
 
-		initComponents: function() {
-			// Composite Potential
-			this.potential = new CompositePotential();
+        // Oscillators
+        this.initOscillators();
+    },
 
-			// Lattice
-			this.initLattice();
+    initLattice: function() {
+        this.lattice = new Lattice2D({
+            width:  this.get('latticeSize').width,
+            height: this.get('latticeSize').height,
+            initialValue: 0
+        });
+    },
 
-			// Wave propagator
-			this.initPropagator();
+    initPropagator: function() {
+        this.propagator = new WavePropagator({
+            lattice: this.lattice,
+            potential: this.potential
+        });
+    },
 
-			// Barrier
-			this.initBarrier();
+    initBarrier: function() {
+        this.barrier = new Barrier({
+            waveSimulation: this
+        });
+    },
 
-			// Oscillators
-			this.initOscillators();
-		},
+    initOscillators: function() {
+        this.oscillators = [];
 
-		initLattice: function() {
-			this.lattice = new Lattice2D({
-				width:  this.get('latticeSize').width,
-				height: this.get('latticeSize').height,
-				initialValue: 0
-			});
-		},
+        for (i = 0; i < 2; i++) {
+            this.oscillators.push(new Oscillator({
+                frequency: this.get('frequency'),
+                amplitude: this.get('amplitude'),
+                x: 4,
+                y: 0,
+                radius: 2
+            }, {
+                waveSimulation: this,
+            }));
+        }
 
-		initPropagator: function() {
-			this.propagator = new WavePropagator({
-				lattice: this.lattice,
-				potential: this.potential
-			});
-		},
+        this.calculateOscillatorSpacing();
+    },
 
-		initBarrier: function() {
-			this.barrier = new Barrier({
-				waveSimulation: this
-			});
-		},
+    /**
+     * This function finds the y positions for oscillators given the
+     *   percent spacing between them and the height of the lattice.
+     *   It's a generalized solution that takes any oscillator count
+     *   greater than zero. It basically finds the maximum distance
+     *   between each point and multiplies that by the spacing
+     *   modifier and offsets each of them from the vertical center
+     *   (and if there are an odd number of oscillators, one is in
+     *   the center).
+     */
+    calculateOscillatorSpacing: function() {
+        var count = this.get('oscillatorCount');
+        var maxDistance = count > 1 ? this.lattice.height / (count - (count % 2)) : 0;
+        var percentMaxDistance = this.get('oscillatorSpacing');
+        var midpoint = this.lattice.height / 2;
 
-		initOscillators: function() {
-			this.oscillators = [];
+        var middleIndex = (count - 1) / 2;
+        var distanceFromMiddleIndex;
 
-			for (i = 0; i < 2; i++) {
-				this.oscillators.push(new Oscillator({
-					frequency: this.get('frequency'),
-					amplitude: this.get('amplitude'),
-					x: 4,
-					y: 0,
-					radius: 2
-				}, {
-					waveSimulation: this,
-				}));
-			}
+        for (i = 0; i < count; i++) {
+            distanceFromMiddleIndex = Math.ceil(Math.abs(i - middleIndex));
 
-			this.calculateOscillatorSpacing();
-		},
+            if (i - middleIndex > 0)
+                this.oscillators[i].set('y', parseInt(midpoint + (maxDistance * percentMaxDistance * distanceFromMiddleIndex)));
+            else
+                this.oscillators[i].set('y', parseInt(midpoint - (maxDistance * percentMaxDistance * distanceFromMiddleIndex)));
+        }
 
-		/**
-		 * This function finds the y positions for oscillators given the
-		 *   percent spacing between them and the height of the lattice.
-		 *   It's a generalized solution that takes any oscillator count
-		 *   greater than zero. It basically finds the maximum distance
-		 *   between each point and multiplies that by the spacing
-		 *   modifier and offsets each of them from the vertical center
-		 *   (and if there are an odd number of oscillators, one is in
-		 *   the center).
-		 */
-		calculateOscillatorSpacing: function() {
-			var count = this.get('oscillatorCount');
-			var maxDistance = count > 1 ? this.lattice.height / (count - (count % 2)) : 0;
-			var percentMaxDistance = this.get('oscillatorSpacing');
-			var midpoint = this.lattice.height / 2;
+        this.trigger('oscillators-changed');
+    },
 
-			var middleIndex = (count - 1) / 2;
-			var distanceFromMiddleIndex;
+    /**
+     * Because we need to update the simulation on a fixed interval
+     *   for accuracy--especially since the propagator isn't based
+     *   off of time but acts in discrete steps--we need a way to
+     *   keep track of step intervals independent of the varying
+     *   intervals created by window.requestAnimationFrame. This
+     *   clever solution was found here:
+     *
+     *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
+     */
+    update: function(time, delta) {
 
-			for (i = 0; i < count; i++) {
-				distanceFromMiddleIndex = Math.ceil(Math.abs(i - middleIndex));
+        if (!this.paused) {
+            this.accumulator += delta;
 
-				if (i - middleIndex > 0)
-					this.oscillators[i].set('y', parseInt(midpoint + (maxDistance * percentMaxDistance * distanceFromMiddleIndex)));
-				else
-					this.oscillators[i].set('y', parseInt(midpoint - (maxDistance * percentMaxDistance * distanceFromMiddleIndex)));
-			}
+            while (this.accumulator >= this.timestep) {
+                this.time += this.timestep;
 
-			this.trigger('oscillators-changed');
-		},
+                this._update();
 
-		/**
-		 * Because we need to update the simulation on a fixed interval
-		 *   for accuracy--especially since the propagator isn't based
-		 *   off of time but acts in discrete steps--we need a way to
-		 *   keep track of step intervals independent of the varying
-		 *   intervals created by window.requestAnimationFrame. This
-		 *   clever solution was found here:
-		 *
-		 *   http://gamesfromwithin.com/casey-and-the-clearly-deterministic-contraptions
-		 */
-		update: function(time, delta) {
+                this.accumulator -= this.timestep;
+            }
+        }
 
-			if (!this.paused) {
-				this.accumulator += delta;
+    },
 
-				while (this.accumulator >= this.timestep) {
-					this.time += this.timestep;
+    /**
+     * Inside the fixed-interval loop
+     */
+    _update: function() {
+        this.propagator.propagate();
 
-					this._update();
+        for (i = 0; i < this.get('oscillatorCount'); i++)
+            this.oscillators[i].update(this.time);
+    },
 
-					this.accumulator -= this.timestep;
-				}
-			}
+    play: function() {
+        this.paused = false;
+        this.trigger('play');
+    },
 
-		},
+    pause: function() {
+        this.paused = true;
+        this.trigger('pause');
+    },
 
-		/**
-		 * Inside the fixed-interval loop
-		 */
-		_update: function() {
-			this.propagator.propagate();
+    reset: function() {
+        this.initComponents();
+    },
 
-			for (i = 0; i < this.get('oscillatorCount'); i++)
-				this.oscillators[i].update(this.time);
-		},
+    resize: function() {
+        this.widthRatio  = this.get('latticeSize').width / this.get('dimensions').width;
+        this.heightRatio = this.get('latticeSize').height / this.get('dimensions').height;
+    },
 
-		play: function() {
-			this.paused = false;
-			this.trigger('play');
-		},
+    isValidPoint: function(x, y, padding) {
+        if (padding === undefined)
+            return this.lattice.contains(x, y);
+        else {
+            return this.lattice.contains(x - padding, y - padding) &&
+                   this.lattice.contains(x + padding, y + padding);
+        }
+    },
 
-		pause: function() {
-			this.paused = true;
-			this.trigger('pause');
-		},
+    setSourceValue: function(x, y, val) {
+        this.propagator.setSourceValue(x, y, val);
+    },
 
-		reset: function() {
-			this.initComponents();
-		},
+    addSegmentPotential: function() {
+        var segment = new SegmentPotential({
+            start: {
+                x: 11,
+                y: 49
+            },
+            end: {
+                x: 49,
+                y: 11
+            },
+            thickness: 3
+        });
+        this.potential.add(segment);
+        this.trigger('segment-potential-added', segment);
+    },
 
-		resize: function() {
-			this.widthRatio  = this.get('latticeSize').width / this.get('dimensions').width;
-			this.heightRatio = this.get('latticeSize').height / this.get('dimensions').height;
-		},
+    changeFrequency: function(model, value) {
+        _.each(this.oscillators, function(oscillator) {
+            oscillator.set('frequency', value);
+        }, this);
+    },
 
-		isValidPoint: function(x, y, padding) {
-			if (padding === undefined)
-				return this.lattice.contains(x, y);
-			else {
-				return this.lattice.contains(x - padding, y - padding) &&
-				       this.lattice.contains(x + padding, y + padding);
-			}
-		},
+    changeAmplitude: function(model, value) {
+        _.each(this.oscillators, function(oscillator) {
+            oscillator.set('amplitude', value);
+        }, this);
+    },
 
-		setSourceValue: function(x, y, val) {
-			this.propagator.setSourceValue(x, y, val);
-		},
+    addPotential: function(potential) {
+        this.potential.add(potential);
+    },
 
-		addSegmentPotential: function() {
-			var segment = new SegmentPotential({
-				start: {
-					x: 11,
-					y: 49
-				},
-				end: {
-					x: 49,
-					y: 11
-				},
-				thickness: 3
-			});
-			this.potential.add(segment);
-			this.trigger('segment-potential-added', segment);
-		},
-
-		changeFrequency: function(model, value) {
-			_.each(this.oscillators, function(oscillator) {
-				oscillator.set('frequency', value);
-			}, this);
-		},
-
-		changeAmplitude: function(model, value) {
-			_.each(this.oscillators, function(oscillator) {
-				oscillator.set('amplitude', value);
-			}, this);
-		},
-
-		addPotential: function(potential) {
-			this.potential.add(potential);
-		},
-
-		removePotential: function(potential) {
-			this.potential.remove(potential);
-		}
-	});
-
-	return WaveSimulation;
+    removePotential: function(potential) {
+        this.potential.remove(potential);
+    }
 });
+
+export default WaveSimulation;

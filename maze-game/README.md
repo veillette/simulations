@@ -1,45 +1,43 @@
 Maze Game
 ===========
 
+A web-based physics simulation built with [Vite](https://vitejs.dev/), [Backbone.js](https://backbonejs.org/), and [PixiJS v7](https://pixijs.com/).
+
+## Requirements
+
+- [Node.js](https://nodejs.org/) 18 or later and npm
+
 ## Installing
 
-1. If necessary, install [Node.js](http://nodejs.org) and npm (included with Node.js).
-2. Run `npm install -g grunt-cli` in the command line to install [grunt-cli](https://github.com/gruntjs/grunt-cli).
-3. From the root `maze-game` directory, run `npm install` in the command line to install test and build dependencies.
-  * `npm install` fetches npm dependencies found in package.json and runs `bower install` as well which fetches front-end dependencies.
+From the repository root (installs all dependencies for every simulation at once):
 
-## Building & Testing
+```sh
+npm install
+```
 
-### Building
+Or install only this simulation's dependencies:
 
-From the root `maze-game` directory, run `grunt dist`.
-
-The `dist` directory containing the built site will be added to the root `maze-game` directory.
-
-### Testing
-
-To run command-line tests, run `grunt test` from the root `maze-game` directory.
-
-To view tests in a browser, you first need to
-
-1. set up a server (check out the Hosting section below)
-2. build the test index file by running `grunt build_tests` or `grunt test` (which runs `build_tests`) 
-3. then go to [http://localhost:8080/maze-game/test/](http://localhost:8080/maze-game/test/). 
+```sh
+cd maze-game
+npm install
+```
 
 ## Development
 
-### Hosting
+Start the Vite dev server with hot-module replacement:
 
-To host a development server for this project, follow the instructions found in the repository root's README.
+```sh
+cd maze-game
+npm run dev   # http://localhost:5173
+```
 
-### Updating
+## Building
 
-From the root `maze-game` directory, run `npm run-script upgrade`, which executes the following commands:
+```sh
+cd maze-game
+npm run build   # outputs to maze-game/dist/
+```
 
-1. `npm update`
-2. `bower update`
-
-License
--------
+## License
 
 This software is subject to the provisions of the GNU Affero General Public License Version 3.0 (AGPL). See license.txt for details. Copyright (c) 2013 Rice University.

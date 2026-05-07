@@ -1,42 +1,35 @@
-define(function (require) {
+import _ from 'underscore';
+import Disk from 'models/disk';
+import Constants from 'constants';
 
-    'use strict';
+var Photon = Disk.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Disk.prototype.defaults, {
+        mass:   Constants.Photon.MASS,
+        radius: Constants.Photon.RADIUS,
 
-    var Disk = require('models/disk');
+        wavelength: 1,
+        energy:     0, // Calculated from the wavelength on initialization
+        source:     null
+    }),
 
-    var Constants = require('constants');
+    initialize: function(attributes, options) {
+        Disk.prototype.initialize.apply(this, [attributes, options]);
 
-    var Photon = Disk.extend({
+        this.set('energy', Constants.h * Constants.C / this.get('wavelength'));
+    },
 
-        defaults: _.extend({}, Disk.prototype.defaults, {
-            mass:   Constants.Photon.MASS,
-            radius: Constants.Photon.RADIUS,
+    /**
+     * Points the velocity towards the angle theta with
+     *   a magnitude of the speed of light.
+     */
+    setDirection: function(theta) {
+        this.setVelocity(
+            Constants.SPEED_OF_LIGHT * Math.cos(theta),
+            Constants.SPEED_OF_LIGHT * Math.sin(theta)
+        );
+    }
 
-            wavelength: 1,
-            energy:     0, // Calculated from the wavelength on initialization
-            source:     null
-        }),
+}, Constants.Photon);
 
-        initialize: function(attributes, options) {
-            Disk.prototype.initialize.apply(this, [attributes, options]);
-
-            this.set('energy', Constants.h * Constants.C / this.get('wavelength'));
-        },
-
-        /**
-         * Points the velocity towards the angle theta with
-         *   a magnitude of the speed of light.
-         */
-        setDirection: function(theta) {
-            this.setVelocity(
-                Constants.SPEED_OF_LIGHT * Math.cos(theta),
-                Constants.SPEED_OF_LIGHT * Math.sin(theta)
-            );
-        }
-
-    }, Constants.Photon);
-
-    return Photon;
-});
+export default Photon;

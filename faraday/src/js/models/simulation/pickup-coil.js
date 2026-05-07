@@ -1,121 +1,111 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import FaradaySimulation from 'models/simulation';
+import BarMagnet from 'models/magnet/bar';
+import Compass from 'models/compass';
+import FieldMeter from 'models/field-meter';
+import PickupCoil from 'models/coil/pickup';
+import Lightbulb from 'models/lightbulb';
+import Voltmeter from 'models/voltmeter';
+import SamplePointsStrategy from 'models/sample-points-strategy';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Simulation model for the bar magnet tab
+ */
+var PickupCoilSimulation = FaradaySimulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(FaradaySimulation.prototype.defaults, {
 
-    var FaradaySimulation    = require('models/simulation');
-    var BarMagnet            = require('models/magnet/bar');
-    var Compass              = require('models/compass');
-    var FieldMeter           = require('models/field-meter');
-    var PickupCoil           = require('models/coil/pickup');
-    var Lightbulb            = require('models/lightbulb');
-    var Voltmeter            = require('models/voltmeter');
-    var SamplePointsStrategy = require('models/sample-points-strategy');
+    }),
+
+    initialize: function(attributes, options) {
+        FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        FaradaySimulation.prototype.initComponents.apply(this, arguments);
 
-    /**
-     * Simulation model for the bar magnet tab
-     */
-    var PickupCoilSimulation = FaradaySimulation.extend({
+        // Bar Magnet
+        this.barMagnet = new BarMagnet({
+            width:       PickupCoilSimulation.BAR_MAGNET_SIZE.width,
+            height:      PickupCoilSimulation.BAR_MAGNET_SIZE.height,
+            strength:    PickupCoilSimulation.BAR_MAGNET_STRENGTH,
+            minStrength: Constants.BAR_MAGNET_STRENGTH_MIN,
+            maxStrength: Constants.BAR_MAGNET_STRENGTH_MAX,
+            position:    PickupCoilSimulation.BAR_MAGNET_LOCATION,
+            direction:   PickupCoilSimulation.BAR_MAGNET_DIRECTION
+        });
 
-        defaults: _.extend(FaradaySimulation.prototype.defaults, {
+        // Compass model
+        this.compass = new Compass({
+            position: PickupCoilSimulation.COMPASS_LOCATION,
+            behavior: Compass.KINEMATIC_BEHAVIOR
+        }, {
+            magnetModel: this.barMagnet
+        });
 
-        }),
+        // Field Meter
+        this.fieldMeter = new FieldMeter({
+            position: PickupCoilSimulation.FIELD_METER_LOCATION,
+            enabled: false
+        }, {
+            magnetModel: this.barMagnet
+        });
 
-        initialize: function(attributes, options) {
-            FaradaySimulation.prototype.initialize.apply(this, [attributes, options]);
+        // Pickup Coil
+        var ySpacing = this.barMagnet.get('height') / 10;
+        this.pickupCoil = new PickupCoil({
+            position:                 PickupCoilSimulation.PICKUP_COIL_LOCATION,
+            direction:                PickupCoilSimulation.PICKUP_COIL_DIRECTION,
+            numberOfLoops:            PickupCoilSimulation.PICKUP_COIL_NUMBER_OF_LOOPS,
+            transitionSmoothingScale: PickupCoilSimulation.PICKUP_COIL_TRANSITION_SMOOTHING_SCALE,
+            loopArea:                 PickupCoilSimulation.PICKUP_COIL_LOOP_AREA,
+            samplePointsStrategy:     new SamplePointsStrategy.VariableNumberOfSamplePointsStrategy(ySpacing),
+        }, {
+            magnetModel: this.barMagnet,
+            calibrationEmf: PickupCoilSimulation.CALIBRATION_EMF
+        });
 
-        },
+        // Lightbulb
+        this.lightbulb = new Lightbulb({
+            enabled: true
+        }, {
+            pickupCoilModel: this.pickupCoil
+        });
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            FaradaySimulation.prototype.initComponents.apply(this, arguments);
+        // Voltmeter
+        this.voltmeter = new Voltmeter({
+            enabled: false,
+            jiggleEnabled: true
+        }, {
+            pickupCoilModel: this.pickupCoil
+        });
+    },
 
-            // Bar Magnet
-            this.barMagnet = new BarMagnet({
-                width:       PickupCoilSimulation.BAR_MAGNET_SIZE.width,
-                height:      PickupCoilSimulation.BAR_MAGNET_SIZE.height,
-                strength:    PickupCoilSimulation.BAR_MAGNET_STRENGTH,
-                minStrength: Constants.BAR_MAGNET_STRENGTH_MIN,
-                maxStrength: Constants.BAR_MAGNET_STRENGTH_MAX,
-                position:    PickupCoilSimulation.BAR_MAGNET_LOCATION,
-                direction:   PickupCoilSimulation.BAR_MAGNET_DIRECTION
-            });
+    resetComponents: function() {
+        FaradaySimulation.prototype.resetComponents.apply(this, arguments);
 
-            // Compass model
-            this.compass = new Compass({
-                position: PickupCoilSimulation.COMPASS_LOCATION,
-                behavior: Compass.KINEMATIC_BEHAVIOR
-            }, {
-                magnetModel: this.barMagnet
-            });
+        this.barMagnet.reset();
+        this.compass.reset();
+        this.fieldMeter.reset();
+        this.pickupCoil.reset();
+        this.lightbulb.reset();
+        this.voltmeter.reset();
+    },
 
-            // Field Meter
-            this.fieldMeter = new FieldMeter({
-                position: PickupCoilSimulation.FIELD_METER_LOCATION,
-                enabled: false
-            }, {
-                magnetModel: this.barMagnet
-            });
+    _update: function(time, deltaTime) {
+        FaradaySimulation.prototype._update.apply(this, arguments);
 
-            // Pickup Coil
-            var ySpacing = this.barMagnet.get('height') / 10;
-            this.pickupCoil = new PickupCoil({
-                position:                 PickupCoilSimulation.PICKUP_COIL_LOCATION,
-                direction:                PickupCoilSimulation.PICKUP_COIL_DIRECTION,
-                numberOfLoops:            PickupCoilSimulation.PICKUP_COIL_NUMBER_OF_LOOPS,
-                transitionSmoothingScale: PickupCoilSimulation.PICKUP_COIL_TRANSITION_SMOOTHING_SCALE,
-                loopArea:                 PickupCoilSimulation.PICKUP_COIL_LOOP_AREA,
-                samplePointsStrategy:     new SamplePointsStrategy.VariableNumberOfSamplePointsStrategy(ySpacing),
-            }, {
-                magnetModel: this.barMagnet,
-                calibrationEmf: PickupCoilSimulation.CALIBRATION_EMF
-            });
+        this.compass.update(time, deltaTime);
+        this.pickupCoil.update(time, deltaTime);
+        this.lightbulb.update(time, deltaTime);
+        this.voltmeter.update(time, deltaTime);
+    }
 
-            // Lightbulb
-            this.lightbulb = new Lightbulb({
-                enabled: true
-            }, {
-                pickupCoilModel: this.pickupCoil
-            });
+}, Constants.PickupCoilSimulation);
 
-            // Voltmeter
-            this.voltmeter = new Voltmeter({
-                enabled: false,
-                jiggleEnabled: true
-            }, {
-                pickupCoilModel: this.pickupCoil
-            });
-        },
-
-        resetComponents: function() {
-            FaradaySimulation.prototype.resetComponents.apply(this, arguments);
-
-            this.barMagnet.reset();
-            this.compass.reset();
-            this.fieldMeter.reset();
-            this.pickupCoil.reset();
-            this.lightbulb.reset();
-            this.voltmeter.reset();
-        },
-
-        _update: function(time, deltaTime) {
-            FaradaySimulation.prototype._update.apply(this, arguments);
-
-            this.compass.update(time, deltaTime);
-            this.pickupCoil.update(time, deltaTime);
-            this.lightbulb.update(time, deltaTime);
-            this.voltmeter.update(time, deltaTime);
-        }
-
-    }, Constants.PickupCoilSimulation);
-
-    return PickupCoilSimulation;
-});
+export default PickupCoilSimulation;

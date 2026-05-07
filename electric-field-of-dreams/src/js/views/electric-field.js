@@ -1,98 +1,91 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import 'common/v3/pixi/draw-arrow';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
 
-    'use strict';
+var ElectricFieldView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    /**
+     * Overrides PixiView's initializeDisplayObject function
+     */
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-    var PixiView = require('common/v3/pixi/view');
-                   require('common/v3/pixi/draw-arrow');
-    var Colors   = require('common/colors/colors');
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-    var Constants = require('constants');
+        this.arrowColor = Colors.parseHex(ElectricFieldView.ARROW_COLOR);
+        this.arrowAlpha = ElectricFieldView.ARROW_ALPHA;
+        this.minComponentSize = 4;
 
-    var ElectricFieldView = PixiView.extend({
+        this.updateMVT(this.mvt);
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+        this.listenTo(this.simulation, 'change:fieldLatticeWidth', this.draw);
+    },
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+    draw: function() {
+        var x = Math.round(this.mvt.modelToViewX(this.simulation.minX));
+        var y = Math.round(this.mvt.modelToViewY(this.simulation.minY));
+        var w = Math.round(this.mvt.modelToViewDeltaX(this.simulation.width));
+        var h = Math.round(this.mvt.modelToViewDeltaY(this.simulation.height));
 
-            this.arrowColor = Colors.parseHex(ElectricFieldView.ARROW_COLOR);
-            this.arrowAlpha = ElectricFieldView.ARROW_ALPHA;
-            this.minComponentSize = 4;
+        var tailWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_TAIL_WIDTH));
+        var headWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_WIDTH));
+        var headLength = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_LENGTH));
 
-            this.updateMVT(this.mvt);
+        var n = this.simulation.get('fieldLatticeWidth');
+        var xStep = w / n;
+        var yStep = h / n;
+        var ox = x + xStep / 2; // Origin x
+        var oy = y + yStep / 2; // Origin y
+        var tx; // Target x
+        var ty; // Target y
+        var minSize = this.minComponentSize;
 
-            this.listenTo(this.simulation, 'change:fieldLatticeWidth', this.draw);
-        },
+        var graphics = this.displayObject;
+        graphics.clear();
+        graphics.beginFill(this.arrowColor, this.arrowAlpha);
 
-        draw: function() {
-            var x = Math.round(this.mvt.modelToViewX(this.simulation.minX));
-            var y = Math.round(this.mvt.modelToViewY(this.simulation.minY));
-            var w = Math.round(this.mvt.modelToViewDeltaX(this.simulation.width));
-            var h = Math.round(this.mvt.modelToViewDeltaY(this.simulation.height));
+        for (var i = 0; i < n; i++) {
+            for (var j = 0; j < n; j++) {
+                var field = this.simulation.getFieldAt(this.mvt.viewToModelX(ox), this.mvt.viewToModelY(oy));
+                tx = this.mvt.modelToViewDeltaX(field.x);
+                ty = this.mvt.modelToViewDeltaY(field.y);
 
-            var tailWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_TAIL_WIDTH));
-            var headWidth  = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_WIDTH));
-            var headLength = Math.round(this.mvt.modelToViewDeltaX(ElectricFieldView.ARROW_HEAD_LENGTH));
-
-            var n = this.simulation.get('fieldLatticeWidth');
-            var xStep = w / n;
-            var yStep = h / n;
-            var ox = x + xStep / 2; // Origin x
-            var oy = y + yStep / 2; // Origin y
-            var tx; // Target x
-            var ty; // Target y
-            var minSize = this.minComponentSize;
-
-            var graphics = this.displayObject;
-            graphics.clear();
-            graphics.beginFill(this.arrowColor, this.arrowAlpha);
-
-            for (var i = 0; i < n; i++) {
-                for (var j = 0; j < n; j++) {
-                    var field = this.simulation.getFieldAt(this.mvt.viewToModelX(ox), this.mvt.viewToModelY(oy));
-                    tx = this.mvt.modelToViewDeltaX(field.x);
-                    ty = this.mvt.modelToViewDeltaY(field.y);
-
-                    if (Math.abs(tx) < minSize && Math.abs(ty) < minSize) {
-                        graphics.drawCircle(Math.floor(ox), Math.floor(oy), minSize / 2);
-                    }
-                    else {
-                        graphics.drawArrow(
-                            Math.floor(ox), Math.floor(oy),
-                            Math.floor(ox + tx), Math.floor(oy + ty),
-                            tailWidth, headWidth, headLength
-                        );
-                    }
-
-                    oy += yStep;
+                if (Math.abs(tx) < minSize && Math.abs(ty) < minSize) {
+                    graphics.drawCircle(Math.floor(ox), Math.floor(oy), minSize / 2);
+                }
+                else {
+                    graphics.drawArrow(
+                        Math.floor(ox), Math.floor(oy),
+                        Math.floor(ox + tx), Math.floor(oy + ty),
+                        tailWidth, headWidth, headLength
+                    );
                 }
 
-                ox += xStep;
-                oy = y + yStep / 2;
+                oy += yStep;
             }
 
-            graphics.endFill();
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-        },
-
-        update: function(time, deltaTime) {
-            this.draw();
+            ox += xStep;
+            oy = y + yStep / 2;
         }
 
-    }, Constants.ElectricFieldView);
+        graphics.endFill();
+    },
 
-    return ElectricFieldView;
-});
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+
+        this.draw();
+    },
+
+    update: function(time, deltaTime) {
+        this.draw();
+    }
+
+}, Constants.ElectricFieldView);
+
+export default ElectricFieldView;

@@ -1,8 +1,3 @@
-define(function (require) {
+export default {
 
-    'use strict';
-
-    return {
-
-    };
-});
+};

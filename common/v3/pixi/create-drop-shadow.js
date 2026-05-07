@@ -2,10 +2,7 @@ import * as PIXI from 'pixi.js';
 import 'common/v3/pixi/extensions';
 import PiecewiseCurve from 'common/math/piecewise-curve';
 
-/**
- * 
- */
-PIXI.createDropShadow = function(rectangle, width, blur, color, alpha) {
+export function createDropShadow(rectangle, width, blur, color, alpha) {
     if (alpha === undefined)
         alpha = 0.25;
     if (color === undefined)
@@ -53,4 +50,4 @@ PIXI.createDropShadow = function(rectangle, width, blur, color, alpha) {
     return container;
 };
 
-export default PIXI;
+export default createDropShadow;

@@ -1,166 +1,154 @@
-define(function(require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import PixiAppView from 'common/v3/pixi/view/app';
+import QuantumConfig from 'common/quantum/config';
+import AtomicState from 'common/quantum/models/atomic-state';
+import StimulatedPhoton from 'common/quantum/models/stimulated-photon';
+import OneAtomSimView from 'views/sim/one-atom';
+import MultipleAtomsSimView from 'views/sim/multiple-atoms';
+import PhotonCollectionView from 'views/photon-collection';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
+import settingsDialogHtml from 'templates/settings-dialog.html?raw';
 
-    'use strict';
+/**
+ * AppView for the Lasers simulation
+ */
+var LasersAppView = PixiAppView.extend({
 
-    var _ = require('underscore');
-    var $ = require('jquery');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView      = require('common/v3/pixi/view/app');
-    var QuantumConfig    = require('common/quantum/config');
-    var AtomicState      = require('common/quantum/models/atomic-state');
-    var StimulatedPhoton = require('common/quantum/models/stimulated-photon');
+    simViewConstructors: [
+        OneAtomSimView,
+        MultipleAtomsSimView
+    ],
 
-    var OneAtomSimView       = require('views/sim/one-atom');
-    var MultipleAtomsSimView = require('views/sim/multiple-atoms');
-    var PhotonCollectionView = require('views/photon-collection');
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click .help-btn' : 'toggleHelp',
+        'slide .stimulation-probability-slider' : 'changeStimulationProbability',
+        'slide .pair-separation-slider' : 'changePairSeparation',
+        'slide .photon-diameter-slider' : 'changePhotonDiameter',
+        'click .show-all-stimulated-emissions-check' : 'toggleShowAllStimulatedEmissions',
+        'click .show-comets-check' : 'toggleShowComets'
+    }),
 
-    var Assets = require('assets');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    // Styles
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+        this.$el.append(settingsDialogHtml);
 
-    // HTML
-    var settingsDialogHtml = require('text!templates/settings-dialog.html');
+        this.$stimulationProbabilityValue  = this.$('.stimulation-probability-value');
+        this.$stimulationProbabilitySlider = this.$('.stimulation-probability-slider');
+        this.$pairSeparationValue          = this.$('.pair-separation-value');
+        this.$pairSeparationSlider         = this.$('.pair-separation-slider');
+        this.$photonDiameterValue          = this.$('.photon-diameter-value');
+        this.$photonDiameterSlider         = this.$('.photon-diameter-slider');
 
-    /**
-     * AppView for the Lasers simulation
-     */
-    var LasersAppView = PixiAppView.extend({
+        this.$stimulationProbabilitySlider.noUiSlider({
+            start: AtomicState.STIMULATION_LIKELIHOOD,
+            range: {
+                min: 0,
+                max: 1
+            },
+            connect: 'lower'
+        });
 
-        assets: Assets.getAssetList(),
+        this.$pairSeparationSlider.noUiSlider({
+            start: StimulatedPhoton.separation,
+            range: {
+                min: 0,
+                max: 100
+            },
+            connect: 'lower'
+        });
 
-        simViewConstructors: [
-            OneAtomSimView,
-            MultipleAtomsSimView
-        ],
+        this.$photonDiameterSlider.noUiSlider({
+            start: PhotonCollectionView.modelSize,
+            range: {
+                min: 8,
+                max: 50
+            },
+            connect: 'lower'
+        });
 
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click .help-btn' : 'toggleHelp',
-            'slide .stimulation-probability-slider' : 'changeStimulationProbability',
-            'slide .pair-separation-slider' : 'changePairSeparation',
-            'slide .photon-diameter-slider' : 'changePhotonDiameter',
-            'click .show-all-stimulated-emissions-check' : 'toggleShowAllStimulatedEmissions',
-            'click .show-comets-check' : 'toggleShowComets'
-        }),
+        this.updateStimulationProbabilityValue();
+        this.updatePairSeparationValue();
+        this.updatePhotonDiameterValue();
+    },
 
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
+    __TODO_settingSet: function(event) {
+        _.each(this.simViews, function(simView) {
 
-            this.$el.append(settingsDialogHtml);
+        });
+    },
 
-            this.$stimulationProbabilityValue  = this.$('.stimulation-probability-value');
-            this.$stimulationProbabilitySlider = this.$('.stimulation-probability-slider');
-            this.$pairSeparationValue          = this.$('.pair-separation-value');
-            this.$pairSeparationSlider         = this.$('.pair-separation-slider');
-            this.$photonDiameterValue          = this.$('.photon-diameter-value');
-            this.$photonDiameterSlider         = this.$('.photon-diameter-slider');
+    updateStimulationProbabilityValue: function() {
+        this.$stimulationProbabilityValue.text(AtomicState.STIMULATION_LIKELIHOOD.toFixed(2));
+    },
 
-            this.$stimulationProbabilitySlider.noUiSlider({
-                start: AtomicState.STIMULATION_LIKELIHOOD,
-                range: {
-                    min: 0,
-                    max: 1
-                },
-                connect: 'lower'
-            });
+    updatePairSeparationValue: function() {
+        this.$pairSeparationValue.text(StimulatedPhoton.separation);
+    },
 
-            this.$pairSeparationSlider.noUiSlider({
-                start: StimulatedPhoton.separation,
-                range: {
-                    min: 0,
-                    max: 100
-                },
-                connect: 'lower'
-            });
+    updatePhotonDiameterValue: function() {
+        this.$photonDiameterValue.text(PhotonCollectionView.modelSize);
+    },
 
-            this.$photonDiameterSlider.noUiSlider({
-                start: PhotonCollectionView.modelSize,
-                range: {
-                    min: 8,
-                    max: 50
-                },
-                connect: 'lower'
-            });
+    changeStimulationProbability: function(event) {
+        var probability = parseFloat(this.$stimulationProbabilitySlider.val());
+        AtomicState.STIMULATION_LIKELIHOOD = probability;
+        this.updateStimulationProbabilityValue();
+    },
 
-            this.updateStimulationProbabilityValue();
-            this.updatePairSeparationValue();
-            this.updatePhotonDiameterValue();
-        },
+    changePairSeparation: function(event) {
+        var separation = parseInt(this.$pairSeparationSlider.val());
+        StimulatedPhoton.separation = separation;
+        this.updatePairSeparationValue();
+    },
 
-        __TODO_settingSet: function(event) {
-            _.each(this.simViews, function(simView) {
+    changePhotonDiameter: function(event) {
+        var diameter = parseInt(this.$photonDiameterSlider.val());
+        PhotonCollectionView.modelSize = diameter;
+        this.updatePhotonDiameterValue();
+        _.each(this.simViews, function(simView) {
+            simView.photonSizeChanged();
+        });
+    },
 
-            });
-        },
+    toggleShowAllStimulatedEmissions: function() {
+        if ($(event.target).is(':checked'))
+            QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
+        else
+            QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = false;
+    },
 
-        updateStimulationProbabilityValue: function() {
-            this.$stimulationProbabilityValue.text(AtomicState.STIMULATION_LIKELIHOOD.toFixed(2));
-        },
+    toggleShowComets: function() {
+        if ($(event.target).is(':checked'))
+            PhotonCollectionView.displayAsComets = true;
+        else
+            PhotonCollectionView.displayAsComets = false;
+    },
 
-        updatePairSeparationValue: function() {
-            this.$pairSeparationValue.text(StimulatedPhoton.separation);
-        },
+    toggleHelp: function() {
+        this.$('.help-btn').toggleClass('active');
 
-        updatePhotonDiameterValue: function() {
-            this.$photonDiameterValue.text(PhotonCollectionView.modelSize);
-        },
+        if (this.$('.help-btn').hasClass('active'))
+            this.showHelp();
+        else
+            this.hideHelp();
+    },
 
-        changeStimulationProbability: function(event) {
-            var probability = parseFloat(this.$stimulationProbabilitySlider.val());
-            AtomicState.STIMULATION_LIKELIHOOD = probability;
-            this.updateStimulationProbabilityValue();
-        },
+    showHelp: function() {
+        for (var i = 0; i < this.simViews.length; i++)
+            this.simViews[i].showHelp();
+    },
 
-        changePairSeparation: function(event) {
-            var separation = parseInt(this.$pairSeparationSlider.val());
-            StimulatedPhoton.separation = separation;
-            this.updatePairSeparationValue();
-        },
+    hideHelp: function() {
+        for (var i = 0; i < this.simViews.length; i++)
+            this.simViews[i].hideHelp();
+    }
 
-        changePhotonDiameter: function(event) {
-            var diameter = parseInt(this.$photonDiameterSlider.val());
-            PhotonCollectionView.modelSize = diameter;
-            this.updatePhotonDiameterValue();
-            _.each(this.simViews, function(simView) {
-                simView.photonSizeChanged();
-            });
-        },
-
-        toggleShowAllStimulatedEmissions: function() {
-            if ($(event.target).is(':checked'))
-                QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = true;
-            else
-                QuantumConfig.ENABLE_ALL_STIMULATED_EMISSIONS = false;
-        },
-
-        toggleShowComets: function() {
-            if ($(event.target).is(':checked'))
-                PhotonCollectionView.displayAsComets = true;
-            else
-                PhotonCollectionView.displayAsComets = false;
-        },
-
-        toggleHelp: function() {
-            this.$('.help-btn').toggleClass('active');
-
-            if (this.$('.help-btn').hasClass('active'))
-                this.showHelp();
-            else
-                this.hideHelp();
-        },
-
-        showHelp: function() {
-            for (var i = 0; i < this.simViews.length; i++)
-                this.simViews[i].showHelp();
-        },
-
-        hideHelp: function() {
-            for (var i = 0; i < this.simViews.length; i++)
-                this.simViews[i].hideHelp();
-        }
-
-    });
-
-    return LasersAppView;
 });
+
+export default LasersAppView;

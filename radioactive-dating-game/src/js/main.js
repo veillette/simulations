@@ -1,21 +1,9 @@
-(function () {
-    'use strict';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import $ from 'jquery';
+import AppView from 'radioactive-dating-game/views/app';
 
-    // Load the config
-    require(['config'], function () {
-        require(['jquery', 'radioactive-dating-game/views/app'], function($, RadioactiveDatingGameAppView) {
-
-            $(function(){
-                var appView = new RadioactiveDatingGameAppView();
-
-                // Append to body
-                $('body').append(appView.el);
-
-                // Render main app view
-                appView.load();
-            });
-
-        });
-    });
-
-})();
+$(function() {
+    var appView = new AppView();
+    $('body').append(appView.el);
+    appView.load();
+});

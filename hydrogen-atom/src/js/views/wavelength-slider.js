@@ -1,132 +1,127 @@
-define(function(require) {
+import WavelengthSliderView from 'common/controls/wavelength-slider';
 
-    'use strict';
+var THUMB_HIGHLIGHT_THRESHOLD = 3; // nm
 
-    var WavelengthSliderView = require('common/controls/wavelength-slider');
+/**
+ *
+ */
+var HydrogenAtomWavelengthSliderView = WavelengthSliderView.extend({
 
-    var THUMB_HIGHLIGHT_THRESHOLD = 3; // nm
+    initialize: function(options) {
+        WavelengthSliderView.prototype.initialize.apply(this, arguments);
+    },
 
-    /**
-     *
-     */
-    var HydrogenAtomWavelengthSliderView = WavelengthSliderView.extend({
+    render: function() {
+        WavelengthSliderView.prototype.render.apply(this, arguments);
 
-        initialize: function(options) {
-            WavelengthSliderView.prototype.initialize.apply(this, arguments);
-        },
+        // Add another canvas as the sibling of the spectrum canvas
+        var canvas = document.createElement('canvas');
+        this.$wavelengthSliderCanvas.parent().append(canvas);
+        this.absorptionWavelengthsCanvas = canvas;
+        this.$absorptionWavelengthsCanvas = $(canvas);
+    },
 
-        render: function() {
-            WavelengthSliderView.prototype.render.apply(this, arguments);
+    postRender: function() {
+        WavelengthSliderView.prototype.postRender.apply(this, arguments);
 
-            // Add another canvas as the sibling of the spectrum canvas
-            var canvas = document.createElement('canvas');
-            this.$wavelengthSliderCanvas.parent().append(canvas);
-            this.absorptionWavelengthsCanvas = canvas;
-            this.$absorptionWavelengthsCanvas = $(canvas);
-        },
+        var wavelengthCanvas = this.$wavelengthSliderCanvas[0];
+        var canvas = this.absorptionWavelengthsCanvas;
+        canvas.width = wavelengthCanvas.width;
+        canvas.height = wavelengthCanvas.height;
+        canvas.style.width = wavelengthCanvas.clientWidth + 'px';
+        canvas.style.height = wavelengthCanvas.clientHeight + 'px';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '-7px';
+        canvas.style.left = '-7px';
+        canvas.style.borderRadius = '8px';
+    },
 
-        postRender: function() {
-            WavelengthSliderView.prototype.postRender.apply(this, arguments);
+    setTransitionWavelengths: function(transitionWavelengths) {
+        this.transitionWavelengths = transitionWavelengths;
+        this.drawTransitionWavelengths();
+        this.updateColor();
+    },
 
-            var wavelengthCanvas = this.$wavelengthSliderCanvas[0];
-            var canvas = this.absorptionWavelengthsCanvas;
-            canvas.width = wavelengthCanvas.width;
-            canvas.height = wavelengthCanvas.height;
-            canvas.style.width = wavelengthCanvas.clientWidth + 'px';
-            canvas.style.height = wavelengthCanvas.clientHeight + 'px';
-            canvas.style.position = 'absolute';
-            canvas.style.top = '-7px';
-            canvas.style.left = '-7px';
-            canvas.style.borderRadius = '8px';
-        },
+    drawTransitionWavelengths: function() {
+        var canvas = this.absorptionWavelengthsCanvas;
+        var ctx = canvas.getContext('2d');
+        var wavelengths = this.transitionWavelengths;
 
-        setTransitionWavelengths: function(transitionWavelengths) {
-            this.transitionWavelengths = transitionWavelengths;
-            this.drawTransitionWavelengths();
-            this.updateColor();
-        },
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        drawTransitionWavelengths: function() {
-            var canvas = this.absorptionWavelengthsCanvas;
-            var ctx = canvas.getContext('2d');
-            var wavelengths = this.transitionWavelengths;
+        if (wavelengths) {
+            var offset = 7;
+            var minWavelength = this.minWavelength;
+            var maxWavelength = this.maxWavelength;
+            var width = canvas.width - offset * 2;
+            var height = canvas.height;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (wavelengths) {
-                var offset = 7;
-                var minWavelength = this.minWavelength;
-                var maxWavelength = this.maxWavelength;
-                var width = canvas.width - offset * 2;
-                var height = canvas.height;
-
-                for (var i = 0; i < wavelengths.length; i++) {
-                    var wavelength = wavelengths[i];
-                    var x = offset + (width * (wavelength - minWavelength) / (maxWavelength - minWavelength));
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, height);
-                }
-
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = '#fff';
-                ctx.stroke();
+            for (var i = 0; i < wavelengths.length; i++) {
+                var wavelength = wavelengths[i];
+                var x = offset + (width * (wavelength - minWavelength) / (maxWavelength - minWavelength));
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
             }
-        },
 
-        updateColor: function() {
-            var match = this.getTransitionWavelengthMatch(this.val());
-            if (match && this._absorptionWavelengthsVisible)
-                this.$wavelengthSliderHandle.css('background-color', '#fff');
-            else
-                WavelengthSliderView.prototype.updateColor.apply(this, arguments);
-        },
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+        }
+    },
 
-        getTransitionWavelengthMatch: function(wavelength) {
-            var bestMatch = null;
-            var difference = 0;
-            var prevDifference = 1000000000;
-            var wavelengths = this.transitionWavelengths;
+    updateColor: function() {
+        var match = this.getTransitionWavelengthMatch(this.val());
+        if (match && this._absorptionWavelengthsVisible)
+            this.$wavelengthSliderHandle.css('background-color', '#fff');
+        else
+            WavelengthSliderView.prototype.updateColor.apply(this, arguments);
+    },
 
-            // Find the best match for the current wavelength
-            if (wavelengths && wavelengths.length !== 0) {
-                for (var i = 0; i < wavelengths.length; i++) {
-                    if (this.isClose(wavelength, wavelengths[i])) {
-                        difference = Math.abs(wavelengths[i] - wavelength);
-                        if (difference < prevDifference) {
-                            prevDifference = difference;
-                            bestMatch = wavelengths[i];
-                        }
+    getTransitionWavelengthMatch: function(wavelength) {
+        var bestMatch = null;
+        var difference = 0;
+        var prevDifference = 1000000000;
+        var wavelengths = this.transitionWavelengths;
+
+        // Find the best match for the current wavelength
+        if (wavelengths && wavelengths.length !== 0) {
+            for (var i = 0; i < wavelengths.length; i++) {
+                if (this.isClose(wavelength, wavelengths[i])) {
+                    difference = Math.abs(wavelengths[i] - wavelength);
+                    if (difference < prevDifference) {
+                        prevDifference = difference;
+                        bestMatch = wavelengths[i];
                     }
                 }
             }
-
-            return bestMatch;
-        },
-
-        /*
-         * Determines whether some wavelength is sufficiently
-         *   close to some transition wavelength.
-         */
-        isClose: function(wavelength, transitionWavelength) {
-            var min = transitionWavelength - THUMB_HIGHLIGHT_THRESHOLD;
-            var max = transitionWavelength + THUMB_HIGHLIGHT_THRESHOLD;
-            return ((wavelength >= min) && (wavelength <= max));
-        },
-
-        showAbsorptionWavelengths: function() {
-            this.$absorptionWavelengthsCanvas.show();
-            this._absorptionWavelengthsVisible = true;
-            this.updateColor();
-        },
-
-        hideAbsorptionWavelengths: function() {
-            this.$absorptionWavelengthsCanvas.hide();
-            this._absorptionWavelengthsVisible = false;
-            this.updateColor();
         }
 
-    });
+        return bestMatch;
+    },
 
+    /*
+     * Determines whether some wavelength is sufficiently
+     *   close to some transition wavelength.
+     */
+    isClose: function(wavelength, transitionWavelength) {
+        var min = transitionWavelength - THUMB_HIGHLIGHT_THRESHOLD;
+        var max = transitionWavelength + THUMB_HIGHLIGHT_THRESHOLD;
+        return ((wavelength >= min) && (wavelength <= max));
+    },
 
-    return HydrogenAtomWavelengthSliderView;
+    showAbsorptionWavelengths: function() {
+        this.$absorptionWavelengthsCanvas.show();
+        this._absorptionWavelengthsVisible = true;
+        this.updateColor();
+    },
+
+    hideAbsorptionWavelengths: function() {
+        this.$absorptionWavelengthsCanvas.hide();
+        this._absorptionWavelengthsVisible = false;
+        this.updateColor();
+    }
+
 });
+
+
+export default HydrogenAtomWavelengthSliderView;

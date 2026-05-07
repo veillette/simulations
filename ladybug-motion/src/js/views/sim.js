@@ -1,321 +1,306 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimView from 'common/v3/app/sim';
+import LadybugMotionSimulation from 'models/simulation';
+import LadybugMover from 'models/ladybug-mover';
+import LadybugMotionSceneView from 'views/scene';
+import SeekBarView from 'views/seek-bar';
+import Constants from 'constants';
+import 'nouislider';
+import 'styles/sim.less';
+import 'styles/playback-controls.less';
+import 'common/styles/slider.less';
+import 'common/styles/radio.less';
+import simHtml from 'templates/sim.html?raw';
+import playbackControlsHtml from 'templates/playback-controls.html?raw';
 
-    'use strict';
+/**
+ * A view that determines the contents of the one and only tab
+ */
+var LadybugMotionSimView = SimView.extend({
 
-    var $ = require('jquery');
-    var _ = require('underscore');
-
-    var SimView = require('common/v3/app/sim');
-
-    var LadybugMotionSimulation = require('models/simulation');
-    var LadybugMover            = require('models/ladybug-mover');
-
-    var LadybugMotionSceneView = require('views/scene');
-    var SeekBarView            = require('views/seek-bar');
-
-    var Constants = require('constants');
-
-    require('nouislider');
-    require('bootstrap');
-
-    // CSS
-    require('less!styles/sim');
-    require('less!styles/playback-controls');
-    require('less!common/styles/slider');
-    require('less!common/styles/radio');
-
-    // HTML
-    var simHtml              = require('text!templates/sim.html');
-    var playbackControlsHtml = require('text!templates/playback-controls.html');
+    runUpdateOnReset: true,
 
     /**
-     * A view that determines the contents of the one and only tab
+     * Root element properties
      */
-    var LadybugMotionSimView = SimView.extend({
+    tagName:   'section',
+    className: 'sim-view record-mode',
 
-        runUpdateOnReset: true,
+    /**
+     * Template for rendering the basic scaffolding
+     */
+    template: _.template(simHtml),
 
-        /**
-         * Root element properties
-         */
-        tagName:   'section',
-        className: 'sim-view record-mode',
+    /**
+     * Dom event listeners
+     */
+    events: {
+        'click .play-btn'   : 'play',
+        'click .record-btn' : 'play',
+        'click .pause-btn'  : 'pause',
+        'click .step-btn'   : 'step',
+        'click .rewind-btn' : 'rewind',
+        'click .reset-btn'  : 'reset',
+        'click .clear-btn'  : 'clear',
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
+        'change #record-mode'   : 'recordModeClicked',
+        'change #playback-mode' : 'playbackModeClicked',
 
-        /**
-         * Dom event listeners
-         */
-        events: {
-            'click .play-btn'   : 'play',
-            'click .record-btn' : 'play',
-            'click .pause-btn'  : 'pause',
-            'click .step-btn'   : 'step',
-            'click .rewind-btn' : 'rewind',
-            'click .reset-btn'  : 'reset',
-            'click .clear-btn'  : 'clear',
+        'click .motion-type' : 'motionTypeClicked',
 
-            'change #record-mode'   : 'recordModeClicked',
-            'change #playback-mode' : 'playbackModeClicked',
+        'click #trace-line' : 'traceLineClicked',
+        'click #trace-dots' : 'traceDotsClicked',
+        'click #trace-off'  : 'traceOffClicked',
 
-            'click .motion-type' : 'motionTypeClicked',
+        'click #show-velocity-check'     : 'showVelocityClicked',
+        'click #show-acceleration-check' : 'showAccelerationClicked'
+    },
 
-            'click #trace-line' : 'traceLineClicked',
-            'click #trace-dots' : 'traceDotsClicked',
-            'click #trace-off'  : 'traceOffClicked',
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Ladybug Motion',
+            name: 'ladybug-motion',
+            link: 'ladybug-motion-2d'
+        }, options);
 
-            'click #show-velocity-check'     : 'showVelocityClicked',
-            'click #show-acceleration-check' : 'showAccelerationClicked'
-        },
+        SimView.prototype.initialize.apply(this, [options]);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Ladybug Motion',
-                name: 'ladybug-motion',
-                link: 'ladybug-motion-2d'
-            }, options);
+        this.initSceneView();
+        this.initSeekBarView();
 
-            SimView.prototype.initialize.apply(this, [options]);
+        this.listenTo(this.simulation, 'change:motionType', this.motionTypeChanged);
+        this.listenTo(this.simulation, 'change:recording', this.recordingChanged);
+        this.listenTo(this.simulation, 'change:paused',    this.pausedChanged);
+        this.pausedChanged(this.simulation, this.simulation.get('paused'));
+    },
 
-            this.initSceneView();
-            this.initSeekBarView();
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new LadybugMotionSimulation();
+    },
 
-            this.listenTo(this.simulation, 'change:motionType', this.motionTypeChanged);
-            this.listenTo(this.simulation, 'change:recording', this.recordingChanged);
-            this.listenTo(this.simulation, 'change:paused',    this.pausedChanged);
-            this.pausedChanged(this.simulation, this.simulation.get('paused'));
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new LadybugMotionSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new LadybugMotionSimulation();
-        },
+    initSeekBarView: function() {
+        this.seekBarView = new SeekBarView({
+            model: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new LadybugMotionSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders everything
+     */
+    render: function() {
+        this.$el.empty();
 
-        initSeekBarView: function() {
-            this.seekBarView = new SeekBarView({
-                model: this.simulation
-            });
-        },
+        this.renderScaffolding();
+        this.renderSceneView();
+        this.renderSeekBarView();
 
-        /**
-         * Renders everything
-         */
-        render: function() {
-            this.$el.empty();
+        return this;
+    },
 
-            this.renderScaffolding();
-            this.renderSceneView();
-            this.renderSeekBarView();
+    /**
+     * Renders page content. Should be overriden by child classes
+     */
+    renderScaffolding: function() {
+        var data = {
+            Constants: Constants,
+            simulation: this.simulation,
+            motions: _.keys(LadybugMover.MOTION_TYPES)
+        };
+        this.$el.html(this.template(data));
 
-            return this;
-        },
+        this.$el.append(playbackControlsHtml);
 
-        /**
-         * Renders page content. Should be overriden by child classes
-         */
-        renderScaffolding: function() {
-            var data = {
-                Constants: Constants,
-                simulation: this.simulation,
-                motions: _.keys(LadybugMover.MOTION_TYPES)
-            };
-            this.$el.html(this.template(data));
+        this.$('select');
+    },
 
-            this.$el.append(playbackControlsHtml);
+    /**
+     * Renders the scene view
+     */
+    renderSceneView: function() {
+        this.sceneView.render();
+        this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
+        this.$el.append(this.sceneView.ui);
+    },
 
-            this.$('select');
-        },
+    renderSeekBarView: function() {
+        this.seekBarView.render();
+        this.$('.playback-controls-wrapper').append(this.seekBarView.el);
+    },
 
-        /**
-         * Renders the scene view
-         */
-        renderSceneView: function() {
-            this.sceneView.render();
-            this.$('.scene-view-placeholder').replaceWith(this.sceneView.el);
-            this.$el.append(this.sceneView.ui);
-        },
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        this.sceneView.postRender();
+        this.seekBarView.postRender();
+        this.sceneView.ladybugView.hideVelocityArrow();
+        this.sceneView.ladybugView.hideAccelerationArrow();
+    },
 
-        renderSeekBarView: function() {
-            this.seekBarView.render();
-            this.$('.playback-controls-wrapper').append(this.seekBarView.el);
-        },
+    /**
+     * Overrides so that we don't rerender on a reset.
+     */
+    rerender: function() {
+        this.sceneView.reset();
+    },
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            this.sceneView.postRender();
-            this.seekBarView.postRender();
-            this.sceneView.ladybugView.hideVelocityArrow();
-            this.sceneView.ladybugView.hideAccelerationArrow();
-        },
+    /**
+     * Overrides to remove the confirmation dialog because it's
+     *   not important in this sim.
+     */
+    reset: function() {
+        this.resetSimulation();
+        this.simulation.pause();
+        this.$('#trace-line').click();
+        this.$('#show-velocity-check').prop('checked', true);
+        this.$('#show-acceleration-check').prop('checked', true);
+    },
 
-        /**
-         * Overrides so that we don't rerender on a reset.
-         */
-        rerender: function() {
-            this.sceneView.reset();
-        },
+    /**
+     * Rewinds the simulation.
+     */
+    rewind: function() {
+        this.pause();
+        this.simulation.rewind();
+        this.seekBarView.update();
+    },
 
-        /**
-         * Overrides to remove the confirmation dialog because it's
-         *   not important in this sim.
-         */
-        reset: function() {
-            this.resetSimulation();
-            this.simulation.pause();
-            this.$('#trace-line').click();
-            this.$('#show-velocity-check').prop('checked', true);
-            this.$('#show-acceleration-check').prop('checked', true);
-        },
+    /**
+     * Clears the sim's history.
+     */
+    clear: function() {
+        this.simulation.clear();
+        this.seekBarView.update();
+    },
 
-        /**
-         * Rewinds the simulation.
-         */
-        rewind: function() {
-            this.pause();
-            this.simulation.rewind();
-            this.seekBarView.update();
-        },
+    /**
+     * This is run every tick of the updater.  It updates the wave
+     *   simulation and the views.
+     */
+    update: function(time, deltaTime) {
+        // Update the model
+        this.simulation.update(time, deltaTime);
 
-        /**
-         * Clears the sim's history.
-         */
-        clear: function() {
-            this.simulation.clear();
-            this.seekBarView.update();
-        },
+        var timeSeconds = time / 1000;
+        var dtSeconds   = deltaTime / 1000;
 
-        /**
-         * This is run every tick of the updater.  It updates the wave
-         *   simulation and the views.
-         */
-        update: function(time, deltaTime) {
-            // Update the model
-            this.simulation.update(time, deltaTime);
+        // Update the scene
+        this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
+    },
 
-            var timeSeconds = time / 1000;
-            var dtSeconds   = deltaTime / 1000;
+    /**
+     * Sets sim to record mode
+     */
+    recordModeClicked: function() {
+        this.inputLock(function() {
+            this.simulation.set('recording', true);
+        });
+    },
 
-            // Update the scene
-            this.sceneView.update(timeSeconds, dtSeconds, this.simulation.get('paused'));
-        },
+    /**
+     * Sets sim to playback mode
+     */
+    playbackModeClicked: function() {
+        this.inputLock(function() {
+            this.simulation.set('recording', false);
+        });
+    },
 
-        /**
-         * Sets sim to record mode
-         */
-        recordModeClicked: function() {
-            this.inputLock(function() {
-                this.simulation.set('recording', true);
-            });
-        },
-
-        /**
-         * Sets sim to playback mode
-         */
-        playbackModeClicked: function() {
-            this.inputLock(function() {
-                this.simulation.set('recording', false);
-            });
-        },
-
-        /**
-         * The simulation changed its recording state.
-         */
-        recordingChanged: function() {
-            if (this.simulation.get('recording')) {
-                this.$el.addClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#record-mode').click();
-                });
-            }
-            else {
-                this.$el.removeClass('record-mode');
-                this.updateLock(function() {
-                    this.$('#playback-mode').click();
-                });
-            }
-        },
-
-        /**
-         * The simulation changed its paused state.
-         */
-        pausedChanged: function() {
-            if (this.simulation.get('paused'))
-                this.$el.removeClass('playing');
-            else
-                this.$el.addClass('playing');
-        },
-
-        /**
-         * Sets the simulation's automated motion type
-         */
-        motionTypeClicked: function(event) {
-            var key = $(event.target).val();
-            this.inputLock(function() {
-                this.simulation.set('motionType', key);
-            });
-        },
-
-        /**
-         * Responds to changes in simulation's automated motion type
-         */
-        motionTypeChanged: function(simulation, motionTypeKey) {
+    /**
+     * The simulation changed its recording state.
+     */
+    recordingChanged: function() {
+        if (this.simulation.get('recording')) {
+            this.$el.addClass('record-mode');
             this.updateLock(function() {
-                this.$('.motion-type').each(function() {
-                    if ($(this).val() === motionTypeKey)
-                        $(this).click();
-                })
+                this.$('#record-mode').click();
             });
-        },
-
-        traceLineClicked: function() {
-            this.sceneView.ladybugTraceView.showLines();
-        },
-
-        traceDotsClicked: function() {
-            this.sceneView.ladybugTraceView.showDots();
-        },
-
-        traceOffClicked: function() {
-            this.sceneView.ladybugTraceView.hide();
-        },
-
-        showVelocityClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showVelocityArrow();
-            else
-                this.sceneView.ladybugView.hideVelocityArrow();
-        },
-
-        showAccelerationClicked: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.ladybugView.showAccelerationArrow();
-            else
-                this.sceneView.ladybugView.hideAccelerationArrow();
         }
+        else {
+            this.$el.removeClass('record-mode');
+            this.updateLock(function() {
+                this.$('#playback-mode').click();
+            });
+        }
+    },
 
-    });
+    /**
+     * The simulation changed its paused state.
+     */
+    pausedChanged: function() {
+        if (this.simulation.get('paused'))
+            this.$el.removeClass('playing');
+        else
+            this.$el.addClass('playing');
+    },
 
-    return LadybugMotionSimView;
+    /**
+     * Sets the simulation's automated motion type
+     */
+    motionTypeClicked: function(event) {
+        var key = $(event.target).val();
+        this.inputLock(function() {
+            this.simulation.set('motionType', key);
+        });
+    },
+
+    /**
+     * Responds to changes in simulation's automated motion type
+     */
+    motionTypeChanged: function(simulation, motionTypeKey) {
+        this.updateLock(function() {
+            this.$('.motion-type').each(function() {
+                if ($(this).val() === motionTypeKey)
+                    $(this).click();
+            })
+        });
+    },
+
+    traceLineClicked: function() {
+        this.sceneView.ladybugTraceView.showLines();
+    },
+
+    traceDotsClicked: function() {
+        this.sceneView.ladybugTraceView.showDots();
+    },
+
+    traceOffClicked: function() {
+        this.sceneView.ladybugTraceView.hide();
+    },
+
+    showVelocityClicked: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.ladybugView.showVelocityArrow();
+        else
+            this.sceneView.ladybugView.hideVelocityArrow();
+    },
+
+    showAccelerationClicked: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.ladybugView.showAccelerationArrow();
+        else
+            this.sceneView.ladybugView.hideAccelerationArrow();
+    }
+
 });
+
+export default LadybugMotionSimView;

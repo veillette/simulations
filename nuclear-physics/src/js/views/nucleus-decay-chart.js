@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import * as PIXI from 'pixi.js';
-import 'common/v3/pixi/create-drop-shadow';
+import { createDropShadow } from 'common/v3/pixi/create-drop-shadow';
 import 'common/v3/pixi/draw-stick-arrow';
 import 'common/v3/pixi/draw-arrow';
 import 'common/v3/pixi/dash-to';
@@ -109,7 +109,7 @@ var NucleusDecayChart = PixiView.extend({
 
     initPanel: function() {
         var rectangle = new Rectangle(0, 0, this.width, this.height);
-        var shadow = PIXI.createDropShadow(rectangle);
+        var shadow = createDropShadow(rectangle);
         this.displayObject.addChild(shadow);
 
         // Draw the panel

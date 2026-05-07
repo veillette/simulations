@@ -1,57 +1,52 @@
 
-define(function(require) {
+import _ from 'underscore';
+import Potential from '../potential';
 
-	'use strict';
+/**
+ * From PhET's CompositePotential
+ */
+var CompositePotential = function() {
 
-	var _         = require('underscore');
-	var Potential = require('../potential');
+    Potential.apply(this);
 
-	/**
-	 * From PhET's CompositePotential
-	 */
-	var CompositePotential = function() {
+    this.potentials = [];
 
-		Potential.apply(this);
+};
 
-		this.potentials = [];
+var sum,
+    i;
 
-	};
+_.extend(CompositePotential.prototype, Potential.prototype, {
 
-	var sum,
-	    i;
+    /**
+     * Returns the sum of all the potentials
+     */
+    getPotential: function(x, y, time) {
+        sum = 0;
+        for (i = 0; i < this.potentials.length; i++)
+            sum += this.potentials[i].getPotential(x, y, time);
+        return sum;
+    },
 
-	_.extend(CompositePotential.prototype, Potential.prototype, {
+    /**
+     *
+     */
+    add: function(potential) {
+        this.potentials.push(potential);
+    },
 
-		/**
-		 * Returns the sum of all the potentials
-		 */
-		getPotential: function(x, y, time) {
-			sum = 0;
-			for (i = 0; i < this.potentials.length; i++)
-				sum += this.potentials[i].getPotential(x, y, time);
-			return sum;
-		},
+    /**
+     *
+     */
+    remove: function(potential) {
+        for (i = 0; i < this.potentials.lenth; i++) {
+            if (this.potentials[i] == potential) {
+                this.potentials.splice(i, 1);
+                break;
+            }
+        }
+    },
 
-		/**
-		 *
-		 */
-		add: function(potential) {
-			this.potentials.push(potential);
-		},
-
-		/**
-		 *
-		 */
-		remove: function(potential) {
-			for (i = 0; i < this.potentials.lenth; i++) {
-				if (this.potentials[i] == potential) {
-					this.potentials.splice(i, 1);
-					break;
-				}
-			}
-		},
-
-	});
-
-	return CompositePotential;
 });
+
+export default CompositePotential;

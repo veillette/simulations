@@ -1,35 +1,29 @@
-define(function (require) {
+import _ from 'underscore';
+import Body from 'models/body';
 
-    'use strict';
+var Disk = Body.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Body.prototype.defaults, {
+        radius: 0
+    }),
 
-    var Body = require('models/body');
+    /**
+     * Returns center of mass of the disk.
+     */
+    getCenterOfMass: function() {
+        return this.get('position');
+    },
 
-    var Disk = Body.extend({
+    /**
+     * Calculates and returns the moment of inertia.
+     */
+    getMomentOfInertia: function() {
+        // PhET: MR^2 / 2. We assume mass is equal to area
+        var radius = this.get('radius');
+        var mass = radius * radius * Math.PI;
+        return radius * radius * mass / 2;
+    }
 
-        defaults: _.extend({}, Body.prototype.defaults, {
-            radius: 0
-        }),
-
-        /**
-         * Returns center of mass of the disk.
-         */
-        getCenterOfMass: function() {
-            return this.get('position');
-        },
-
-        /**
-         * Calculates and returns the moment of inertia.
-         */
-        getMomentOfInertia: function() {
-            // PhET: MR^2 / 2. We assume mass is equal to area
-            var radius = this.get('radius');
-            var mass = radius * radius * Math.PI;
-            return radius * radius * mass / 2;
-        }
-
-    });
-
-    return Disk;
 });
+
+export default Disk;

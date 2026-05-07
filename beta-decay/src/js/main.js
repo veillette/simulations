@@ -1,21 +1,9 @@
-(function () {
-    'use strict';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import $ from 'jquery';
+import BetaDecayAppView from 'beta-decay/views/app';
 
-    // Load the config
-    require(['config'], function () {
-        require(['jquery', 'beta-decay/views/app'], function($, BetaDecayAppView) {
-
-            $(function(){
-                var appView = new BetaDecayAppView();
-
-                // Append to body
-                $('body').append(appView.el);
-
-                // Render main app view
-                appView.load();
-            });
-
-        });
-    });
-
-})();
+$(function() {
+    var appView = new BetaDecayAppView();
+    $('body').append(appView.el);
+    appView.load();
+});

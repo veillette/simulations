@@ -1,55 +1,45 @@
-define(function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PixiAppView = require('common/v3/pixi/view/app');
-
-    var SolidLiquidGasSimView = require('views/sim/solid-liquid-gas');
-    var PhaseChangesSimView   = require('views/sim/phase-changes');
-
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-    require('less!styles/app');
-
-    var settingsDialogHtml = require('text!templates/settings-dialog.html');
+import _ from 'underscore';
+import PixiAppView from 'common/v3/pixi/view/app';
+import SolidLiquidGasSimView from 'views/sim/solid-liquid-gas';
+import PhaseChangesSimView from 'views/sim/phase-changes';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
+import settingsDialogHtml from 'templates/settings-dialog.html?raw';
 
 
-    var SOMAppView = PixiAppView.extend({
+var SOMAppView = PixiAppView.extend({
 
-        assets: Assets.getAssetList(),
+    assets: Assets.getAssetList(),
 
-        simViewConstructors: [
-            SolidLiquidGasSimView,
-            PhaseChangesSimView
-        ],
+    simViewConstructors: [
+        SolidLiquidGasSimView,
+        PhaseChangesSimView
+    ],
 
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click #temperature-kelvin'  : 'kelvinSelected',
-            'click #temperature-celsius' : 'celsiusSelected'
-        }),
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click #temperature-kelvin'  : 'kelvinSelected',
+        'click #temperature-celsius' : 'celsiusSelected'
+    }),
 
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-            this.$el.append(settingsDialogHtml);
-        },
+        this.$el.append(settingsDialogHtml);
+    },
 
-        kelvinSelected: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.useKelvin();
-            });
-        },
+    kelvinSelected: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.useKelvin();
+        });
+    },
 
-        celsiusSelected: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.useCelsius();
-            });
-        }
+    celsiusSelected: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.useCelsius();
+        });
+    }
 
-    });
-
-    return SOMAppView;
 });
+
+export default SOMAppView;

@@ -1,97 +1,93 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+Backbone.$ = $;
 
-	'use strict';
+var SimDraggable = Backbone.View.extend({
 
-	var $        = require('jquery');
-	var _        = require('underscore');
-	var Backbone = require('backbone'); Backbone.$ = $;
+    initialize: function(options) {
 
-	var SimDraggable = Backbone.View.extend({
+        if (options.dragFrame)
+            this.$dragFrame = $(options.dragFrame);
+        else
+            throw 'SimDraggable requires an element to be used as a drag frame.';
 
-		initialize: function(options) {
+        if (options.heatmapView)
+            this.heatmapView = options.heatmapView;
+        else
+            throw 'SimDraggable requires a HeatmapView to render.';
 
-			if (options.dragFrame)
-				this.$dragFrame = $(options.dragFrame);
-			else
-				throw 'SimDraggable requires an element to be used as a drag frame.';
+        this.waveSimulation = this.heatmapView.waveSimulation;
 
-			if (options.heatmapView)
-				this.heatmapView = options.heatmapView;
-			else
-				throw 'SimDraggable requires a HeatmapView to render.';
+        this.visible = false;
 
-			this.waveSimulation = this.heatmapView.waveSimulation;
+        this.listenTo(this.heatmapView, 'resized', this.resize);
+    },
 
-			this.visible = false;
+    bindDragEvents: function() {
+        this.$dragFrame
+            .bind('mousemove touchmove', _.bind(this.drag,    this))
+            .bind('mouseup touchend',    _.bind(this.dragEnd, this))
+            .bind('mouseleave',          _.bind(this.dragEnd, this));
+    },
 
-			this.listenTo(this.heatmapView, 'resized', this.resize);
-		},
+    resize: function(){
+        this.updateOnNextFrame = true;
 
-		bindDragEvents: function() {
-			this.$dragFrame
-				.bind('mousemove touchmove', _.bind(this.drag,    this))
-				.bind('mouseup touchend',    _.bind(this.dragEnd, this))
-				.bind('mouseleave',          _.bind(this.dragEnd, this));
-		},
+        this.dragOffset = this.$dragFrame.offset();
+        this.dragBounds = {
+            width:  this.$dragFrame.width(),
+            height: this.$dragFrame.height()
+        };
 
-		resize: function(){
-			this.updateOnNextFrame = true;
+        this.width  = this.$el.width();
+        this.height = this.$el.height();
+    },
 
-			this.dragOffset = this.$dragFrame.offset();
-			this.dragBounds = {
-				width:  this.$dragFrame.width(),
-				height: this.$dragFrame.height()
-			};
+    drag: function(event) {},
 
-			this.width  = this.$el.width();
-			this.height = this.$el.height();
-		},
+    dragEnd: function(event) {},
 
-		drag: function(event) {},
+    fixTouchEvents: function(event) {
+        if (event.pageX === undefined) {
+            event.pageX = event.originalEvent.touches[0].pageX;
+            event.pageY = event.originalEvent.touches[0].pageY;
+        }
+    },
 
-		dragEnd: function(event) {},
+    toSimXScale: function(x) {
+        return (x / this.heatmapView.xSpacing) / this.waveSimulation.widthRatio;
+    },
 
-		fixTouchEvents: function(event) {
-			if (event.pageX === undefined) {
-				event.pageX = event.originalEvent.touches[0].pageX;
-				event.pageY = event.originalEvent.touches[0].pageY;
-			}
-		},
+    toSimYScale: function(y) {
+        return (y / this.heatmapView.ySpacing) / this.waveSimulation.heightRatio;
+    },
 
-		toSimXScale: function(x) {
-			return (x / this.heatmapView.xSpacing) / this.waveSimulation.widthRatio;
-		},
+    outOfBounds: function(x, y, dimensions) {
+        if (dimensions) {
+            return (x + dimensions.width  > this.dragBounds.width  || x < 0 ||
+                    y + dimensions.height > this.dragBounds.height || y < 0);
+        }
+        else {
+            return (x > this.dragBounds.width  || x < 0 ||
+                    y > this.dragBounds.height || y < 0);
+        }
+    },
 
-		toSimYScale: function(y) {
-			return (y / this.heatmapView.ySpacing) / this.waveSimulation.heightRatio;
-		},
+    boxOutOfBounds: function(x, y) {
+        return this.outOfBounds(x, y, this);
+    },
 
-		outOfBounds: function(x, y, dimensions) {
-			if (dimensions) {
-				return (x + dimensions.width  > this.dragBounds.width  || x < 0 ||
-					    y + dimensions.height > this.dragBounds.height || y < 0);
-			}
-			else {
-				return (x > this.dragBounds.width  || x < 0 ||
-					    y > this.dragBounds.height || y < 0);
-			}
-		},
+    show: function() {
+        this.$el.show();
+        this.visible = true;
+    },
 
-		boxOutOfBounds: function(x, y) {
-			return this.outOfBounds(x, y, this);
-		},
+    hide: function() {
+        this.$el.hide();
+        this.visible = false;
+    }
 
-		show: function() {
-			this.$el.show();
-			this.visible = true;
-		},
-
-		hide: function() {
-			this.$el.hide();
-			this.visible = false;
-		}
-
-	});
-
-	return SimDraggable;
 });
+
+export default SimDraggable;

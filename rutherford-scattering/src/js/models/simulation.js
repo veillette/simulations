@@ -1,78 +1,67 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Simulation from 'common/simulation/simulation';
+import RayGun from './gun';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var RutherfordScatteringSimulation = Simulation.extend({
 
-    var _ = require('underscore');
-
-    var Simulation = require('common/simulation/simulation');
-
-    var RayGun = require('./gun');
+    defaults: _.extend(Simulation.prototype.defaults, {
+        alphaEnergy: Constants.DEFAULT_ALPHA_ENERGY,
+        protonCount: Constants.DEFAULT_PROTON_COUNT,
+        neutronCount: Constants.DEFAULT_NEUTRON_COUNT,
+        trace: false
+    }),
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        this.initBounds();
+        this.initParticles();
+        this.initialRayGun();
+    },
 
-    /**
-     * Wraps the update function in
-     */
-    var RutherfordScatteringSimulation = Simulation.extend({
+    _update: function(time, deltaTime) {
+        this.alphaParticles.cullParticles();
 
-        defaults: _.extend(Simulation.prototype.defaults, {
-            alphaEnergy: Constants.DEFAULT_ALPHA_ENERGY,
-            protonCount: Constants.DEFAULT_PROTON_COUNT,
-            neutronCount: Constants.DEFAULT_NEUTRON_COUNT,
-            trace: false
-        }),
+        this.alphaParticles.moveParticles(deltaTime, this.get('protonCount'));
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            this.initBounds();
-            this.initParticles();
-            this.initialRayGun();
-        },
+        this.rayGun.update(deltaTime, this.boundWidth, this.get('alphaEnergy'));
+    },
 
-        _update: function(time, deltaTime) {
-            this.alphaParticles.cullParticles();
+    initBounds: function() {
+        this.bounds = {
+            x: - this.boundWidth/2,
+            y: - this.boundWidth/2,
+            w: this.boundWidth,
+            h: this.boundWidth
+        };
+    },
 
-            this.alphaParticles.moveParticles(deltaTime, this.get('protonCount'));
+    initParticles: function() {},
 
-            this.rayGun.update(deltaTime, this.boundWidth, this.get('alphaEnergy'));
-        },
+    initialRayGun: function() {
+        this.rayGun = new RayGun({particles: this.alphaParticles});
+    },
 
-        initBounds: function() {
-            this.bounds = {
-                x: - this.boundWidth/2,
-                y: - this.boundWidth/2,
-                w: this.boundWidth,
-                h: this.boundWidth
-            };
-        },
+    resetAlphaParticles: function() {
+        this.alphaParticles.reset();
+    },
 
-        initParticles: function() {},
+    pauseRayGun: function() {
+        this.rayGun.set('hold', true);
+        this.resetAlphaParticles();
+    },
 
-        initialRayGun: function() {
-            this.rayGun = new RayGun({particles: this.alphaParticles});
-        },
-
-        resetAlphaParticles: function() {
-            this.alphaParticles.reset();
-        },
-
-        pauseRayGun: function() {
-            this.rayGun.set('hold', true);
-            this.resetAlphaParticles();
-        },
-
-        restartRayGun: function() {
-            if(this.rayGun.get('hold')){
-                this.rayGun.set('hold', false);
-            }
+    restartRayGun: function() {
+        if(this.rayGun.get('hold')){
+            this.rayGun.set('hold', false);
         }
+    }
 
-    });
-
-    return RutherfordScatteringSimulation;
 });
+
+export default RutherfordScatteringSimulation;

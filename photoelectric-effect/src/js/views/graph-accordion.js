@@ -1,233 +1,224 @@
-define(function(require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import AppView from 'common/app/app';
+import PEffectSimulation from 'models/simulation';
+import CurrentVsVoltageGraphView from 'views/graph/current-vs-voltage';
+import CurrentVsIntensityGraphView from 'views/graph/current-vs-intensity';
+import EnergyVsFrequencyGraphView from 'views/graph/energy-vs-frequency';
+import html from 'templates/graph-accordion.html?raw';
+import 'styles/graph-accordion.less';
+Backbone.$ = $;
 
-    'use strict';
+/**
+ *
+ */
+var GraphAccordionView = Backbone.View.extend({
 
-    var $        = require('jquery');
-    var _        = require('underscore');
-    var Backbone = require('backbone'); Backbone.$ = $;
+    className: 'graph-accordion-view',
 
-    var AppView = require('common/app/app');
+    template: _.template(html),
 
-    var PEffectSimulation = require('models/simulation');
+    events: {
+        'click .graph-accordion-title': 'titleClicked'
+    },
 
-    var CurrentVsVoltageGraphView   = require('views/graph/current-vs-voltage');
-    var CurrentVsIntensityGraphView = require('views/graph/current-vs-intensity');
-    var EnergyVsFrequencyGraphView  = require('views/graph/energy-vs-frequency');
+    initialize: function(options) {
+        this.simulation = options.simulation;
 
-    var html = require('text!templates/graph-accordion.html');
+        if (!options || !options.graphs)
+            this.initDefaultGraphViews();
+        else
+            this.graphs = options.graphs;
+    },
 
-    require('less!styles/graph-accordion');
+    initDefaultGraphViews: function() {
+        this.graphs = [];
+
+        this.graphs.push(new CurrentVsVoltageGraphView({   simulation: this.simulation }));
+        this.graphs.push(new CurrentVsIntensityGraphView({ simulation: this.simulation }));
+        this.graphs.push(new EnergyVsFrequencyGraphView({  simulation: this.simulation }));
+    },
 
     /**
-     *
+     * Renders content and canvas for heatmap
      */
-    var GraphAccordionView = Backbone.View.extend({
+    render: function() {
+        var data = {
+            graphs: this.graphs
+        };
 
-        className: 'graph-accordion-view',
+        // Render the template
+        this.$el.html(this.template(data));
 
-        template: _.template(html),
+        // Populate the item contents with the elements from the rendered graph views
+        this.$('.graph-accordion-content').each(function(index, element) {
+            $(element).html(data.graphs[index].render().el);
+        });
 
-        events: {
-            'click .graph-accordion-title': 'titleClicked'
-        },
+        return this;
+    },
 
-        initialize: function(options) {
-            this.simulation = options.simulation;
+    postRender: function() {
+        for (var i = 0; i < this.graphs.length; i++)
+            this.graphs[i].postRender();
+    },
 
-            if (!options || !options.graphs)
-                this.initDefaultGraphViews();
-            else
-                this.graphs = options.graphs;
-        },
+    resize: function() {
+        this.closeItemsAsNecessary();
+    },
 
-        initDefaultGraphViews: function() {
-            this.graphs = [];
+    takeSnapshot: function(linkElement) {
+        // To create the snapshot, update all graph views and then get images
+        //   from the canvases and composite them together with the tabular
+        //   data.  This way, it'll show all of the canvases even if we can't
+        //   view all of them at once on the screen.
 
-            this.graphs.push(new CurrentVsVoltageGraphView({   simulation: this.simulation }));
-            this.graphs.push(new CurrentVsIntensityGraphView({ simulation: this.simulation }));
-            this.graphs.push(new EnergyVsFrequencyGraphView({  simulation: this.simulation }));
-        },
+        var headerHeight = 100;
+        var graphMargin = 30;
+        var graphWidth  = this.graphs[0].elementWidth;
+        var graphHeight = this.graphs[0].elementHeight;
+        var y;
 
-        /**
-         * Renders content and canvas for heatmap
-         */
-        render: function() {
-            var data = {
-                graphs: this.graphs
-            };
+        if (!this._snapshotCtx) {
+            this._snapshotCanvas = document.createElement('canvas');
+            this._snapshotCanvas.width = graphWidth;
+            this._snapshotCanvas.height = this.graphs.length * (graphHeight + graphMargin) + headerHeight;
 
-            // Render the template
-            this.$el.html(this.template(data));
+            this._snapshotCtx = this._snapshotCanvas.getContext('2d');
+        }
 
-            // Populate the item contents with the elements from the rendered graph views
-            this.$('.graph-accordion-content').each(function(index, element) {
-                $(element).html(data.graphs[index].render().el);
-            });
+        var canvas = this._snapshotCanvas;
+        var ctx = this._snapshotCtx;
+        var width  = canvas.width;
+        var height = canvas.height;
+        var leftPadding = 8;
+        var bottomPadding = 2;
 
-            return this;
-        },
+        ctx.clearRect(0, 0, width, height);
 
-        postRender: function() {
-            for (var i = 0; i < this.graphs.length; i++)
-                this.graphs[i].postRender();
-        },
+        // Draw the titles and graphs
+        ctx.font = 'bold 12px Helvetica Neue';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#777';
 
-        resize: function() {
-            this.closeItemsAsNecessary();
-        },
+        ctx.textBaseline = 'bottom';
+        for (var i = 0; i < this.graphs.length; i++) {
+            y = headerHeight + i * (graphHeight + graphMargin) + graphMargin;
 
-        takeSnapshot: function(linkElement) {
-            // To create the snapshot, update all graph views and then get images
-            //   from the canvases and composite them together with the tabular
-            //   data.  This way, it'll show all of the canvases even if we can't
-            //   view all of them at once on the screen.
+            ctx.fillText(this.graphs[i].title, leftPadding, y - bottomPadding);
+            ctx.drawImage(
+                this.graphs[i].canvas,
+                0, 0,                                                      // Source (x, y)
+                this.graphs[i].canvas.width, this.graphs[i].canvas.height, // Source width, height
+                0, y,                                                      // Dest (x, y)
+                graphWidth, graphHeight                                    // Dest width, height
+            );
+        }
 
-            var headerHeight = 100;
-            var graphMargin = 30;
-            var graphWidth  = this.graphs[0].elementWidth;
-            var graphHeight = this.graphs[0].elementHeight;
-            var y;
+        // Draw the experimental parameters
+        ctx.textBaseline = 'top';
+        ctx.fillText('Experimental Parameters', leftPadding, leftPadding);
 
-            if (!this._snapshotCtx) {
-                this._snapshotCanvas = document.createElement('canvas');
-                this._snapshotCanvas.width = graphWidth;
-                this._snapshotCanvas.height = this.graphs.length * (graphHeight + graphMargin) + headerHeight;
+        ctx.fillStyle = '#000';
 
-                this._snapshotCtx = this._snapshotCanvas.getContext('2d');
-            }
+        var intensityTitle;
+        var intensityPercent;
 
-            var canvas = this._snapshotCanvas;
-            var ctx = this._snapshotCtx;
-            var width  = canvas.width;
-            var height = canvas.height;
-            var leftPadding = 8;
-            var bottomPadding = 2;
+        if (this.simulation.get('controlMode') === PEffectSimulation.INTENSITY) {
+            intensityTitle = 'Intensity';
+            intensityPercent = this.simulation.photonRateToIntensity(
+                this.simulation.beam.get('photonsPerSecond') / PEffectSimulation.MAX_PHOTONS_PER_SECOND,
+                this.simulation.getWavelength()
+            );
+        }
+        else {
+            intensityTitle = 'Photon Rate';
+            intensityPercent = this.simulation.beam.get('photonsPerSecond') / PEffectSimulation.MAX_PHOTONS_PER_SECOND;
+        }
 
-            ctx.clearRect(0, 0, width, height);
+        var params = [
+            ['Material', this.simulation.target.getMaterial().get('name')],
+            ['Wavelength', this.simulation.getWavelength() + 'nm'],
+            [intensityTitle, Math.round(intensityPercent * 100) + '%'],
+            ['Voltage', this.simulation.getVoltage().toFixed(2) + 'V']
+        ];
+        var paramLineHeight = 18;
+        var paramsStartY = 26;
 
-            // Draw the titles and graphs
-            ctx.font = 'bold 12px Helvetica Neue';
+        for (var j = 0; j < params.length; j++) {
+            y = paramsStartY + (j * paramLineHeight);
+
+            ctx.font = 'bold 14px Helvetica Neue';
             ctx.textAlign = 'left';
-            ctx.fillStyle = '#777';
+            ctx.fillText(params[j][0], leftPadding, y);
 
-            ctx.textBaseline = 'bottom';
-            for (var i = 0; i < this.graphs.length; i++) {
-                y = headerHeight + i * (graphHeight + graphMargin) + graphMargin;
+            ctx.font = '14px Helvetica Neue';
+            ctx.textAlign = 'right';
+            ctx.fillText(params[j][1], width - leftPadding, y);
+        }
 
-                ctx.fillText(this.graphs[i].title, leftPadding, y - bottomPadding);
-                ctx.drawImage(
-                    this.graphs[i].canvas,
-                    0, 0,                                                      // Source (x, y)
-                    this.graphs[i].canvas.width, this.graphs[i].canvas.height, // Source width, height
-                    0, y,                                                      // Dest (x, y)
-                    graphWidth, graphHeight                                    // Dest width, height
-                );
-            }
+        // Then download it
+        linkElement.href = canvas.toDataURL();
+        linkElement.download = 'Photoelectric Effect - Snapshot ' + this.simulation.time + '.png';
+    },
 
-            // Draw the experimental parameters
-            ctx.textBaseline = 'top';
-            ctx.fillText('Experimental Parameters', leftPadding, leftPadding);
+    titleClicked: function(event) {
+        var $item = $(event.target).closest('.graph-accordion-item');
 
-            ctx.fillStyle = '#000';
+        // Open or close the graph whose title was clicked on
+        if ($item.hasClass('open')) {
+            // Close it
+            $item.removeClass('open');
+        }
+        else {
+            // Get the item index and update the graph view before we show it
+            this.graphs[$item.index()].update();
 
-            var intensityTitle;
-            var intensityPercent;
+            // Open it
+            $item.addClass('open');
 
-            if (this.simulation.get('controlMode') === PEffectSimulation.INTENSITY) {
-                intensityTitle = 'Intensity';
-                intensityPercent = this.simulation.photonRateToIntensity(
-                    this.simulation.beam.get('photonsPerSecond') / PEffectSimulation.MAX_PHOTONS_PER_SECOND,
-                    this.simulation.getWavelength()
-                );
-            }
-            else {
-                intensityTitle = 'Photon Rate';
-                intensityPercent = this.simulation.beam.get('photonsPerSecond') / PEffectSimulation.MAX_PHOTONS_PER_SECOND;
-            }
+            // // See if we need to close any graphs because of a lack of vertical space
+            var itemBeingOpened = $item[0];
+            this.closeItemsAsNecessary(itemBeingOpened);
 
-            var params = [
-                ['Material', this.simulation.target.getMaterial().get('name')],
-                ['Wavelength', this.simulation.getWavelength() + 'nm'],
-                [intensityTitle, Math.round(intensityPercent * 100) + '%'],
-                ['Voltage', this.simulation.getVoltage().toFixed(2) + 'V']
-            ];
-            var paramLineHeight = 18;
-            var paramsStartY = 26;
+            // Remember that this is the last one we opened for next time
+            this.lastItemOpened = itemBeingOpened;
+        }
+    },
 
-            for (var j = 0; j < params.length; j++) {
-                y = paramsStartY + (j * paramLineHeight);
+    closeItemsAsNecessary: function(itemBeingOpened) {
+        // See if we need to close any graphs because of a lack of vertical space
+        var numItemsToShow = AppView.windowIsShort() ? 1 : 2;
+        var openItems = this.$('.graph-accordion-item.open').toArray();
+        while (openItems.length > numItemsToShow) {
+            // If we've got more than one too many open, we aren't going to keep the last one we opened open
+            var lastItemOpened = ((openItems.length - 1) === numItemsToShow) ? null : this.lastItemOpened;
 
-                ctx.font = 'bold 14px Helvetica Neue';
-                ctx.textAlign = 'left';
-                ctx.fillText(params[j][0], leftPadding, y);
-
-                ctx.font = '14px Helvetica Neue';
-                ctx.textAlign = 'right';
-                ctx.fillText(params[j][1], width - leftPadding, y);
-            }
-
-            // Then download it
-            linkElement.href = canvas.toDataURL();
-            linkElement.download = 'Photoelectric Effect - Snapshot ' + this.simulation.time + '.png';
-        },
-
-        titleClicked: function(event) {
-            var $item = $(event.target).closest('.graph-accordion-item');
-
-            // Open or close the graph whose title was clicked on
-            if ($item.hasClass('open')) {
-                // Close it
-                $item.removeClass('open');
-            }
-            else {
-                // Get the item index and update the graph view before we show it
-                this.graphs[$item.index()].update();
-
-                // Open it
-                $item.addClass('open');
-
-                // // See if we need to close any graphs because of a lack of vertical space
-                var itemBeingOpened = $item[0];
-                this.closeItemsAsNecessary(itemBeingOpened);
-
-                // Remember that this is the last one we opened for next time
-                this.lastItemOpened = itemBeingOpened;
-            }
-        },
-
-        closeItemsAsNecessary: function(itemBeingOpened) {
-            // See if we need to close any graphs because of a lack of vertical space
-            var numItemsToShow = AppView.windowIsShort() ? 1 : 2;
-            var openItems = this.$('.graph-accordion-item.open').toArray();
-            while (openItems.length > numItemsToShow) {
-                // If we've got more than one too many open, we aren't going to keep the last one we opened open
-                var lastItemOpened = ((openItems.length - 1) === numItemsToShow) ? null : this.lastItemOpened;
-
-                // Find which graph we need to close
-                var $graphToClose;
-                for (var i = 0; i < openItems.length; i++) {
-                    // Don't close the one we're trying to open, and don't open the
-                    //   last one we opened, because that's more likely the one we
-                    //   want to keep open if we have to choose
-                    if (openItems[i] !== itemBeingOpened && openItems[i] !== lastItemOpened) {
-                        $graphToClose = $(openItems[i]);
-                        openItems.splice(i, 1);
-                        break;
-                    }
-                }
-
-                // And close it
-                if ($graphToClose)
-                    $graphToClose.removeClass('open');
-                else {
-                    console.warn('Couldn\'t find an item to close');
+            // Find which graph we need to close
+            var $graphToClose;
+            for (var i = 0; i < openItems.length; i++) {
+                // Don't close the one we're trying to open, and don't open the
+                //   last one we opened, because that's more likely the one we
+                //   want to keep open if we have to choose
+                if (openItems[i] !== itemBeingOpened && openItems[i] !== lastItemOpened) {
+                    $graphToClose = $(openItems[i]);
+                    openItems.splice(i, 1);
                     break;
                 }
             }
+
+            // And close it
+            if ($graphToClose)
+                $graphToClose.removeClass('open');
+            else {
+                console.warn('Couldn\'t find an item to close');
+                break;
+            }
         }
+    }
 
-    });
-
-
-    return GraphAccordionView;
 });
+
+
+export default GraphAccordionView;

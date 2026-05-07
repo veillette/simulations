@@ -1,274 +1,263 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Tube from 'common/quantum/models/tube';
+import Photon from 'common/quantum/models/photon';
+import Atom from 'common/quantum/models/atom';
+import Beam from 'common/quantum/models/beam';
+import PhysicsUtil from 'common/quantum/models/physics-util';
+import QuantumConfig from 'common/quantum/config';
+import Vector2 from 'common/math/vector2';
+import Rectangle from 'common/math/rectangle';
+import LasersSimulation from 'models/simulation';
+import BandPassReflectionStrategy from 'models/reflection-strategy/band-pass';
+import LeftReflectionStrategy from 'models/reflection-strategy/left';
+import RightReflectionStrategy from 'models/reflection-strategy/right';
+import PartialMirror from 'models/partial-mirror';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ *
+ */
+var BaseLasersSimulation = LasersSimulation.extend({
 
-    var _ = require('underscore');
+    origin: Constants.ORIGIN,
+    boxHeight: 120,
+    boxWidth: 300,
+    laserOffsetX: 50,
+    defaultMiddleStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME,
+    defaultHighStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME / 4,
 
-    var Tube          = require('common/quantum/models/tube');
-    var Photon        = require('common/quantum/models/photon');
-    var Atom          = require('common/quantum/models/atom');
-    var Beam          = require('common/quantum/models/beam');
-    var PhysicsUtil   = require('common/quantum/models/physics-util');
-    var QuantumConfig = require('common/quantum/config');
-    var Vector2       = require('common/math/vector2');
-    var Rectangle     = require('common/math/rectangle');
+    defaults: _.extend({}, LasersSimulation.prototype.defaults, {
+        lasingPhotonViewMode:  Constants.PHOTON_DISCRETE,
+        pumpingPhotonViewMode: Constants.PHOTON_CURTAIN,
+        displayHighLevelEmissions: false,
+        mirrorsEnabled: false,
+        exploded: false
+    }),
 
-    var LasersSimulation           = require('models/simulation');
-    var BandPassReflectionStrategy = require('models/reflection-strategy/band-pass');
-    var LeftReflectionStrategy     = require('models/reflection-strategy/left');
-    var RightReflectionStrategy    = require('models/reflection-strategy/right');
-    var PartialMirror              = require('models/partial-mirror');
+    initialize: function(attributes, options) {
+        options = _.extend({
+            silentReset: false
+        }, options);
+
+        LasersSimulation.prototype.initialize.apply(this, [attributes, options]);
+
+        this.on('change:mirrorsEnabled', this.mirrorsEnabledChanged);
+        this.on('change:elementProperties', this.elementPropertiesChanged);
+        this.on('change:pumpingPhotonViewMode', this.pumpingPhotonViewModeChanged);
+        this.on('change:lasingPhotonViewMode', this.lasingPhotonViewModeChanged);
+
+        this.listenTo(this.lasingPhotons, 'add remove', this.numLasingPhotonsChanged);
+    },
 
     /**
-     * Constants
+     * Initializes the models used in the simulation
      */
-    var Constants = require('constants');
+    initComponents: function() {
+        LasersSimulation.prototype.initComponents.apply(this, arguments);
 
-    /**
-     *
-     */
-    var BaseLasersSimulation = LasersSimulation.extend({
+        this.setBounds(new Rectangle(-300, -100, 1300, 900));
 
-        origin: Constants.ORIGIN,
-        boxHeight: 120,
-        boxWidth: 300,
-        laserOffsetX: 50,
-        defaultMiddleStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME,
-        defaultHighStateMeanLifetime: Constants.MAXIMUM_STATE_LIFETIME / 4,
+        this.laserOrigin = new Vector2(this.origin.x + this.laserOffsetX, this.origin.y);
+        this.seedBeamOrigin = new Vector2();
+        this.pumpingBeamOrigin = new Vector2();
 
-        defaults: _.extend({}, LasersSimulation.prototype.defaults, {
-            lasingPhotonViewMode:  Constants.PHOTON_DISCRETE,
-            pumpingPhotonViewMode: Constants.PHOTON_CURTAIN,
-            displayHighLevelEmissions: false,
-            mirrorsEnabled: false,
-            exploded: false
-        }),
+        this.initTube();
+        this.initBeams();
+        this.initMirrors();
 
-        initialize: function(attributes, options) {
-            options = _.extend({
-                silentReset: false
-            }, options);
+        this.listenTo(this.atoms, 'photon-emitted', this.photonEmitted);
 
-            LasersSimulation.prototype.initialize.apply(this, [attributes, options]);
+        this.elementPropertiesChanged(this, this.get('elementProperties'));
+    },
 
-            this.on('change:mirrorsEnabled', this.mirrorsEnabledChanged);
-            this.on('change:elementProperties', this.elementPropertiesChanged);
-            this.on('change:pumpingPhotonViewMode', this.pumpingPhotonViewModeChanged);
-            this.on('change:lasingPhotonViewMode', this.lasingPhotonViewModeChanged);
+    resetComponents: function() {
+        LasersSimulation.prototype.resetComponents.apply(this, arguments);
 
-            this.listenTo(this.lasingPhotons, 'add remove', this.numLasingPhotonsChanged);
-        },
+        this.seedBeam.set('wavelength', Photon.RED);
+        this.pumpingBeam.set('wavelength',Photon.BLUE);
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            LasersSimulation.prototype.initComponents.apply(this, arguments);
+        this.rightMirror.setReflectivity(1);
 
-            this.setBounds(new Rectangle(-300, -100, 1300, 900));
+        this.setNumEnergyLevels(2);
+    },
 
-            this.laserOrigin = new Vector2(this.origin.x + this.laserOffsetX, this.origin.y);
-            this.seedBeamOrigin = new Vector2();
-            this.pumpingBeamOrigin = new Vector2();
+    initTube: function() {
+        this.addModel(new Tube({
+            origin: this.laserOrigin,
+            width: this.boxWidth,
+            height: this.boxHeight
+        }));
+    },
 
-            this.initTube();
-            this.initBeams();
-            this.initMirrors();
+    initBeams: function() {
+        var seedBeam = new Beam({
+            wavelength:          Photon.RED,
+            position:            this.getSeedBeamOrigin(),
+            length:              this.boxWidth + this.laserOffsetX * 2,
+            beamWidth:           this.boxHeight - Photon.RADIUS,
+            maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
+            fanout:              Constants.SEED_BEAM_FANOUT,
+            speed:               this.get('photonSpeedScale'),
+            enabled:             true
+        }, {
+            direction: new Vector2(1, 0)
+        });
 
-            this.listenTo(this.atoms, 'photon-emitted', this.photonEmitted);
+        var pumpingBeam = new Beam({
+            wavelength:          Photon.BLUE,
+            position:            this.getPumpingBeamOrigin(),
+            length:              1000,
+            beamWidth:           this.tube.get('width'),
+            maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
+            fanout:              Constants.PUMPING_BEAM_FANOUT,
+            speed:               this.get('photonSpeedScale'),
+            enabled:             true
+        }, {
+            direction: new Vector2(0, 1)
+        });
 
-            this.elementPropertiesChanged(this, this.get('elementProperties'));
-        },
+        this.setSeedBeam(seedBeam);
+        this.setPumpingBeam(pumpingBeam);
 
-        resetComponents: function() {
-            LasersSimulation.prototype.resetComponents.apply(this, arguments);
+        this.listenTo(seedBeam,    'photon-emitted', this.photonEmitted);
+        this.listenTo(pumpingBeam, 'photon-emitted', this.photonEmitted);
+    },
 
-            this.seedBeam.set('wavelength', Photon.RED);
-            this.pumpingBeam.set('wavelength',Photon.BLUE);
+    initMirrors: function() {
+        // If there already mirrors in the model, get rid of them
+        for (var i = this.mirrors.length - 1; i >= 0; i--)
+            this.removeModel(this.mirrors[i]);
 
-            this.rightMirror.setReflectivity(1);
+        // The right mirror is a partial mirror
+        var p1 = new Vector2(
+            this.tube.getX() + this.tube.get('width'),
+            this.tube.getY()
+        );
+        var p2 = new Vector2(
+            this.tube.getX() + this.tube.get('width'),
+            this.tube.getY() + this.tube.get('height')
+        );
+        var bandPass = new BandPassReflectionStrategy(QuantumConfig.MIN_WAVELENGTH, QuantumConfig.MAX_WAVELENGTH);
+        this.rightMirror = new PartialMirror({}, {
+            start: p1,
+            end:   p2
+        });
+        this.rightMirror.addReflectionStrategy(bandPass);
+        this.rightMirror.addReflectionStrategy(new LeftReflectionStrategy());
 
-            this.setNumEnergyLevels(2);
-        },
+        // The left mirror is 100% reflecting
+        var p3 = new Vector2(
+            this.tube.getX(),
+            this.tube.getY()
+        );
+        var p4 = new Vector2(
+            this.tube.getX(),
+            this.tube.getY() + this.tube.get('height')
+        );
+        this.leftMirror = new PartialMirror({}, {
+            start: p3,
+            end:   p4
+        });
+        this.leftMirror.addReflectionStrategy(bandPass);
+        this.leftMirror.addReflectionStrategy(new RightReflectionStrategy());
+        this.leftMirror.setReflectivity(1);
+    },
 
-        initTube: function() {
-            this.addModel(new Tube({
-                origin: this.laserOrigin,
-                width: this.boxWidth,
-                height: this.boxHeight
-            }));
-        },
+    getSeedBeamOrigin: function() {
+        return this.seedBeamOrigin.set(this.origin);
+    },
 
-        initBeams: function() {
-            var seedBeam = new Beam({
-                wavelength:          Photon.RED,
-                position:            this.getSeedBeamOrigin(),
-                length:              this.boxWidth + this.laserOffsetX * 2,
-                beamWidth:           this.boxHeight - Photon.RADIUS,
-                maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
-                fanout:              Constants.SEED_BEAM_FANOUT,
-                speed:               this.get('photonSpeedScale'),
-                enabled:             true
-            }, {
-                direction: new Vector2(1, 0)
-            });
+    getPumpingBeamOrigin: function() {
+        return this.pumpingBeamOrigin.set(this.origin.x + this.laserOffsetX, this.origin.y - this.laserOffsetX);
+    },
 
-            var pumpingBeam = new Beam({
-                wavelength:          Photon.BLUE,
-                position:            this.getPumpingBeamOrigin(),
-                length:              1000,
-                beamWidth:           this.tube.get('width'),
-                maxPhotonsPerSecond: Constants.MAXIMUM_SEED_PHOTON_RATE,
-                fanout:              Constants.PUMPING_BEAM_FANOUT,
-                speed:               this.get('photonSpeedScale'),
-                enabled:             true
-            }, {
-                direction: new Vector2(0, 1)
-            });
+    setPhotonVisibility: function(visibility, wavelength) {
+        for (var i = 0; i < this.photons.length; i++) {
+            if (this.photons.at(i).get('wavelength') === wavelength)
+                this.photons.at(i).set('visible', visibility);
+        }
+    },
 
-            this.setSeedBeam(seedBeam);
-            this.setPumpingBeam(pumpingBeam);
+    photonEmitted: function(source, photon) {
+        this.addPhoton(photon);
+        var photonVisible = true;
 
-            this.listenTo(seedBeam,    'photon-emitted', this.photonEmitted);
-            this.listenTo(pumpingBeam, 'photon-emitted', this.photonEmitted);
-        },
-
-        initMirrors: function() {
-            // If there already mirrors in the model, get rid of them
-            for (var i = this.mirrors.length - 1; i >= 0; i--)
-                this.removeModel(this.mirrors[i]);
-
-            // The right mirror is a partial mirror
-            var p1 = new Vector2(
-                this.tube.getX() + this.tube.get('width'),
-                this.tube.getY()
-            );
-            var p2 = new Vector2(
-                this.tube.getX() + this.tube.get('width'),
-                this.tube.getY() + this.tube.get('height')
-            );
-            var bandPass = new BandPassReflectionStrategy(QuantumConfig.MIN_WAVELENGTH, QuantumConfig.MAX_WAVELENGTH);
-            this.rightMirror = new PartialMirror({}, {
-                start: p1,
-                end:   p2
-            });
-            this.rightMirror.addReflectionStrategy(bandPass);
-            this.rightMirror.addReflectionStrategy(new LeftReflectionStrategy());
-
-            // The left mirror is 100% reflecting
-            var p3 = new Vector2(
-                this.tube.getX(),
-                this.tube.getY()
-            );
-            var p4 = new Vector2(
-                this.tube.getX(),
-                this.tube.getY() + this.tube.get('height')
-            );
-            this.leftMirror = new PartialMirror({}, {
-                start: p3,
-                end:   p4
-            });
-            this.leftMirror.addReflectionStrategy(bandPass);
-            this.leftMirror.addReflectionStrategy(new RightReflectionStrategy());
-            this.leftMirror.setReflectivity(1);
-        },
-
-        getSeedBeamOrigin: function() {
-            return this.seedBeamOrigin.set(this.origin);
-        },
-
-        getPumpingBeamOrigin: function() {
-            return this.pumpingBeamOrigin.set(this.origin.x + this.laserOffsetX, this.origin.y - this.laserOffsetX);
-        },
-
-        setPhotonVisibility: function(visibility, wavelength) {
-            for (var i = 0; i < this.photons.length; i++) {
-                if (this.photons.at(i).get('wavelength') === wavelength)
-                    this.photons.at(i).set('visible', visibility);
+        // Was the photon emitted by an atom?
+        if (source instanceof Atom) {
+            // Don't show certain photons
+            if (source.getStates().length > 2 &&
+                source.getCurrentState().equals(source.getStates()[2]) &&
+                !this.get('displayHighLevelEmissions')
+            ) {
+                photonVisible = false;
             }
-        },
-
-        photonEmitted: function(source, photon) {
-            this.addPhoton(photon);
-            var photonVisible = true;
-
-            // Was the photon emitted by an atom?
-            if (source instanceof Atom) {
-                // Don't show certain photons
-                if (source.getStates().length > 2 &&
-                    source.getCurrentState().equals(source.getStates()[2]) &&
-                    !this.get('displayHighLevelEmissions')
-                ) {
-                    photonVisible = false;
-                }
-                else {
-                    var middleEnergyLevel = this.getMiddleEnergyState().getEnergyLevel();
-                    var groundEnergyLevel = this.getGroundState().getEnergyLevel();
-                    var energyLevelDiff = middleEnergyLevel - groundEnergyLevel;
-                    if (Math.abs(photon.getEnergy() - energyLevelDiff) <= QuantumConfig.ENERGY_TOLERANCE)
-                        photonVisible = (this.get('lasingPhotonViewMode') === Constants.PHOTON_DISCRETE);
-                }
-            }
-
-            // Is it a photon from the seed beam?
-            if (source === this.seedBeam)
-                photonVisible = true;
-
-            // Is it a pumping beam photon, and are we viewing discrete photons?
-            if (source === this.pumpingBeam)
-                photonVisible = (this.get('pumpingPhotonViewMode') === Constants.PHOTON_DISCRETE);
-
-            // Set whether the photon's view will be visible
-            photon.set('visible', photonVisible);
-        },
-
-        mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
-            // Regardless of the value of mirrorsEnabled, we should remove the model
-            // elements.  If mirrorsEnabled is true, we want to try remove them
-            // first, so they don't get added twice if they were already there
-            this.removeModel(this.leftMirror);
-            this.removeModel(this.rightMirror);
-
-            if (mirrorsEnabled) {
-                this.addModel(this.leftMirror);
-                this.addModel(this.rightMirror);
-            }
-
-            this.seedBeam.set('enabled', !mirrorsEnabled);
-        },
-
-        elementPropertiesChanged: function(simulation, elementProperties) {
-            if (elementProperties) {
-                this.getMiddleEnergyState().set('meanLifetime', this.defaultMiddleStateMeanLifetime);
-                this.getHighEnergyState().set('meanLifetime', this.defaultHighStateMeanLifetime);
-            }
-        },
-
-        pumpingPhotonViewModeChanged: function(simulation, pumpingPhotonViewMode) {
-            var visible = (pumpingPhotonViewMode === Constants.PHOTON_DISCRETE) ? true : false;
-            var wavelength = this.pumpingBeam.get('wavelength');
-
-            this.setPhotonVisibility(visible, wavelength);
-        },
-
-        lasingPhotonViewModeChanged: function(simulation, lasingPhotonViewMode) {
-            var deltaEnergy = this.getMiddleEnergyState().getEnergyLevel() - this.getGroundState().getEnergyLevel();
-            var wavelength = PhysicsUtil.energyToWavelength(deltaEnergy);
-
-            if (lasingPhotonViewMode === Constants.PHOTON_DISCRETE)
-                this.setPhotonVisibility(true, wavelength);
-            else if (lasingPhotonViewMode === Constants.PHOTON_WAVE)
-                this.setPhotonVisibility(false, wavelength);
-        },
-
-        numLasingPhotonsChanged: function() {
-            if (this.lasingPhotons.length > Constants.KABOOM_THRESHOLD) {
-                this.set('exploded', true);
-                this.pause();
+            else {
+                var middleEnergyLevel = this.getMiddleEnergyState().getEnergyLevel();
+                var groundEnergyLevel = this.getGroundState().getEnergyLevel();
+                var energyLevelDiff = middleEnergyLevel - groundEnergyLevel;
+                if (Math.abs(photon.getEnergy() - energyLevelDiff) <= QuantumConfig.ENERGY_TOLERANCE)
+                    photonVisible = (this.get('lasingPhotonViewMode') === Constants.PHOTON_DISCRETE);
             }
         }
 
-    }, Constants.BaseLasersSimulation);
+        // Is it a photon from the seed beam?
+        if (source === this.seedBeam)
+            photonVisible = true;
 
-    return BaseLasersSimulation;
-});
+        // Is it a pumping beam photon, and are we viewing discrete photons?
+        if (source === this.pumpingBeam)
+            photonVisible = (this.get('pumpingPhotonViewMode') === Constants.PHOTON_DISCRETE);
+
+        // Set whether the photon's view will be visible
+        photon.set('visible', photonVisible);
+    },
+
+    mirrorsEnabledChanged: function(simulation, mirrorsEnabled) {
+        // Regardless of the value of mirrorsEnabled, we should remove the model
+        // elements.  If mirrorsEnabled is true, we want to try remove them
+        // first, so they don't get added twice if they were already there
+        this.removeModel(this.leftMirror);
+        this.removeModel(this.rightMirror);
+
+        if (mirrorsEnabled) {
+            this.addModel(this.leftMirror);
+            this.addModel(this.rightMirror);
+        }
+
+        this.seedBeam.set('enabled', !mirrorsEnabled);
+    },
+
+    elementPropertiesChanged: function(simulation, elementProperties) {
+        if (elementProperties) {
+            this.getMiddleEnergyState().set('meanLifetime', this.defaultMiddleStateMeanLifetime);
+            this.getHighEnergyState().set('meanLifetime', this.defaultHighStateMeanLifetime);
+        }
+    },
+
+    pumpingPhotonViewModeChanged: function(simulation, pumpingPhotonViewMode) {
+        var visible = (pumpingPhotonViewMode === Constants.PHOTON_DISCRETE) ? true : false;
+        var wavelength = this.pumpingBeam.get('wavelength');
+
+        this.setPhotonVisibility(visible, wavelength);
+    },
+
+    lasingPhotonViewModeChanged: function(simulation, lasingPhotonViewMode) {
+        var deltaEnergy = this.getMiddleEnergyState().getEnergyLevel() - this.getGroundState().getEnergyLevel();
+        var wavelength = PhysicsUtil.energyToWavelength(deltaEnergy);
+
+        if (lasingPhotonViewMode === Constants.PHOTON_DISCRETE)
+            this.setPhotonVisibility(true, wavelength);
+        else if (lasingPhotonViewMode === Constants.PHOTON_WAVE)
+            this.setPhotonVisibility(false, wavelength);
+    },
+
+    numLasingPhotonsChanged: function() {
+        if (this.lasingPhotons.length > Constants.KABOOM_THRESHOLD) {
+            this.set('exploded', true);
+            this.pause();
+        }
+    }
+
+}, Constants.BaseLasersSimulation);
+
+export default BaseLasersSimulation;

@@ -1,25 +1,15 @@
-define(function (require) {
+import Backbone from 'backbone';
+import Constants from 'constants';
 
-    'use strict';
+var BeamControl = Backbone.Model.extend({
+    defaults: {
+        wavelength: 400,
+        intensity: 100
+    },
 
-    var Backbone = require('backbone');
+    initialize: function(attributes, options) {
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+    }
+}, Constants.BeamControl);
 
-    var BeamControl = Backbone.Model.extend({
-        defaults: {
-            wavelength: 400,
-            intensity: 100
-        },
-
-        initialize: function(attributes, options) {
-
-        }
-    }, Constants.BeamControl);
-
-    return BeamControl;
-
-});
+export default BeamControl;

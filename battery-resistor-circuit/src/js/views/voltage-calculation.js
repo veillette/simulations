@@ -1,190 +1,182 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/sprite-from-new-canvas-context';
+import PixiView from 'common/v3/pixi/view';
+import AppView from 'common/v3/app/app';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Constants from 'constants';
+var CONNECTOR_LINE_COLOR = Colors.parseHex(Constants.VoltageCalculationView.CONNECTOR_LINE_COLOR);
+var CALCULATION_COLOR    = Colors.parseHex(Constants.VoltageCalculationView.CALCULATION_COLOR);
+var ELLIPSE_COLOR        = Colors.parseHex(Constants.VoltageCalculationView.ELLIPSE_COLOR);
 
-    'use strict';
-
-    var PIXI = require('pixi');
-
-                   require('common/v3/pixi/sprite-from-new-canvas-context');
-    var PixiView = require('common/v3/pixi/view');
-    var AppView  = require('common/v3/app/app');
-    var Colors   = require('common/colors/colors');
-    var Vector2  = require('common/math/vector2');
-
-
-    var Constants = require('constants');
-    var CONNECTOR_LINE_COLOR = Colors.parseHex(Constants.VoltageCalculationView.CONNECTOR_LINE_COLOR);
-    var CALCULATION_COLOR    = Colors.parseHex(Constants.VoltageCalculationView.CALCULATION_COLOR);
-    var ELLIPSE_COLOR        = Colors.parseHex(Constants.VoltageCalculationView.ELLIPSE_COLOR);
+/**
+ * A view that represents an electron
+ */
+var VoltageCalculationView = PixiView.extend({
 
     /**
-     * A view that represents an electron
+     * Initializes the new VoltageCalculationView.
      */
-    var VoltageCalculationView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
+        this.width = options.width;
+        this.height = options.height;
+        this.battery = this.simulation.battery;
 
-        /**
-         * Initializes the new VoltageCalculationView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
-            this.width = options.width;
-            this.height = options.height;
-            this.battery = this.simulation.battery;
+        this._leftCenter  = new Vector2();
+        this._rightCenter = new Vector2();
 
-            this._leftCenter  = new Vector2();
-            this._rightCenter = new Vector2();
+        this.initGraphics();
+    },
 
-            this.initGraphics();
-        },
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.highlights = new PIXI.Graphics();
+        this.calculation = new PIXI.Container();
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.highlights = new PIXI.Graphics();
-            this.calculation = new PIXI.Container();
+        this.displayObject.addChild(this.highlights);
+        this.displayObject.addChild(this.calculation);
 
-            this.displayObject.addChild(this.highlights);
-            this.displayObject.addChild(this.calculation);
+        this.initCalculation();
 
-            this.initCalculation();
+        this.updateMVT(this.mvt);
+    },
 
-            this.updateMVT(this.mvt);
-        },
+    initCalculation: function() {
+        var settings = {
+            font: '18px Helvetica Neue',
+            fill: VoltageCalculationView.CALCULATION_COLOR
+        };
 
-        initCalculation: function() {
-            var settings = {
-                font: '18px Helvetica Neue',
-                fill: VoltageCalculationView.CALCULATION_COLOR
-            };
+        this.minuend    = new PIXI.Text(   '4', settings);
+        this.subtrahend = new PIXI.Text('- 12', settings);
+        this.difference = new PIXI.Text(  '-8', settings);
+        var totalLine = new PIXI.Graphics();
 
-            this.minuend    = new PIXI.Text(   '4', settings);
-            this.subtrahend = new PIXI.Text('- 12', settings);
-            this.difference = new PIXI.Text(  '-8', settings);
-            var totalLine = new PIXI.Graphics();
+        this.minuend.anchor.x = this.subtrahend.anchor.x = this.difference.anchor.x = 1;
 
-            this.minuend.anchor.x = this.subtrahend.anchor.x = this.difference.anchor.x = 1;
+        this.minuend.addChild(   new PIXI.Text('electrons', settings));
+        this.subtrahend.addChild(new PIXI.Text('electrons', settings));
+        this.difference.addChild(new PIXI.Text('"Volts"',   settings));
 
-            this.minuend.addChild(   new PIXI.Text('electrons', settings));
-            this.subtrahend.addChild(new PIXI.Text('electrons', settings));
-            this.difference.addChild(new PIXI.Text('"Volts"',   settings));
+        var padding = 8;
+        this.minuend.getChildAt(0).x    = padding;
+        this.subtrahend.getChildAt(0).x = padding;
+        this.difference.getChildAt(0).x = padding;
 
-            var padding = 8;
-            this.minuend.getChildAt(0).x    = padding;
-            this.subtrahend.getChildAt(0).x = padding;
-            this.difference.getChildAt(0).x = padding;
+        this.calculation.addChild(this.minuend);
+        this.calculation.addChild(this.subtrahend);
+        this.calculation.addChild(this.difference);
+        this.calculation.addChild(totalLine);
 
-            this.calculation.addChild(this.minuend);
-            this.calculation.addChild(this.subtrahend);
-            this.calculation.addChild(this.difference);
-            this.calculation.addChild(totalLine);
+        var minuendYOffset     = VoltageCalculationView.MINUEND_Y_OFFSET;
+        var subtrahendYOffset  = VoltageCalculationView.SUBTRAHEND_Y_OFFSET;
+        var totalLineYOffset   = VoltageCalculationView.TOTAL_LINE_Y_OFFSET;
+        var differenceYOffset  = VoltageCalculationView.DIFFERENCE_Y_OFFSET;
+        var leftMargin         = VoltageCalculationView.CALCULATION_LEFT_MARGIN;
+        var rightMargin        = VoltageCalculationView.CALCULATION_RIGHT_MARGIN;
 
-            var minuendYOffset     = VoltageCalculationView.MINUEND_Y_OFFSET;
-            var subtrahendYOffset  = VoltageCalculationView.SUBTRAHEND_Y_OFFSET;
-            var totalLineYOffset   = VoltageCalculationView.TOTAL_LINE_Y_OFFSET;
-            var differenceYOffset  = VoltageCalculationView.DIFFERENCE_Y_OFFSET;
-            var leftMargin         = VoltageCalculationView.CALCULATION_LEFT_MARGIN;
-            var rightMargin        = VoltageCalculationView.CALCULATION_RIGHT_MARGIN;
+        this.minuend.y    = Math.round(minuendYOffset - this.minuend.height / 2);
+        this.subtrahend.y = Math.round(subtrahendYOffset - this.subtrahend.height / 2);
+        this.difference.y = Math.round(differenceYOffset - this.difference.height / 2);
+        totalLine.y = totalLineYOffset;
+        totalLine.lineStyle(2, CALCULATION_COLOR, 1);
+        totalLine.moveTo(-leftMargin + 12, 0);
+        totalLine.lineTo(rightMargin - 12, 0);
+    },
 
-            this.minuend.y    = Math.round(minuendYOffset - this.minuend.height / 2);
-            this.subtrahend.y = Math.round(subtrahendYOffset - this.subtrahend.height / 2);
-            this.difference.y = Math.round(differenceYOffset - this.difference.height / 2);
-            totalLine.y = totalLineYOffset;
-            totalLine.lineStyle(2, CALCULATION_COLOR, 1);
-            totalLine.moveTo(-leftMargin + 12, 0);
-            totalLine.lineTo(rightMargin - 12, 0);
-        },
+    drawHighlights: function() {
+        var graphics = this.highlights;
 
-        drawHighlights: function() {
-            var graphics = this.highlights;
+        // Draw ellipses highlighting each side of the circuit
+        var leftCenter  = this._leftCenter.set(this.mvt.modelToView(VoltageCalculationView.LEFT_CENTER)).round();
+        var rightCenter = this._rightCenter.set(this.mvt.modelToView(VoltageCalculationView.RIGHT_CENTER)).round();
+        var ellipseWidth  = Math.round(this.mvt.modelToViewDeltaX(VoltageCalculationView.ELLIPSE_WIDTH)  / 2);
+        var ellipseHeight = Math.round(this.mvt.modelToViewDeltaY(VoltageCalculationView.ELLIPSE_HEIGHT) / 2);
+        graphics.lineStyle(VoltageCalculationView.ELLIPSE_LINE_WIDTH, ELLIPSE_COLOR, 1);
+        graphics.drawEllipse(leftCenter.x,  leftCenter.y,  ellipseWidth, ellipseHeight);
+        graphics.drawEllipse(rightCenter.x, rightCenter.y, ellipseWidth, ellipseHeight);
 
-            // Draw ellipses highlighting each side of the circuit
-            var leftCenter  = this._leftCenter.set(this.mvt.modelToView(VoltageCalculationView.LEFT_CENTER)).round();
-            var rightCenter = this._rightCenter.set(this.mvt.modelToView(VoltageCalculationView.RIGHT_CENTER)).round();
-            var ellipseWidth  = Math.round(this.mvt.modelToViewDeltaX(VoltageCalculationView.ELLIPSE_WIDTH)  / 2);
-            var ellipseHeight = Math.round(this.mvt.modelToViewDeltaY(VoltageCalculationView.ELLIPSE_HEIGHT) / 2);
-            graphics.lineStyle(VoltageCalculationView.ELLIPSE_LINE_WIDTH, ELLIPSE_COLOR, 1);
-            graphics.drawEllipse(leftCenter.x,  leftCenter.y,  ellipseWidth, ellipseHeight);
-            graphics.drawEllipse(rightCenter.x, rightCenter.y, ellipseWidth, ellipseHeight);
+        // Draw lines connecting to numbers
+        var calculationTopY = AppView.windowIsShort() ?
+            Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
+            Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
+        var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
+        var leftMargin         = VoltageCalculationView.CALCULATION_LEFT_MARGIN;
+        var rightMargin        = VoltageCalculationView.CALCULATION_RIGHT_MARGIN;
+        var minuendYOffset     = VoltageCalculationView.MINUEND_Y_OFFSET;
+        var subtrahendYOffset  = VoltageCalculationView.SUBTRAHEND_Y_OFFSET;
+        var connectorEndRadius = VoltageCalculationView.CONNECTOR_END_RADIUS;
 
-            // Draw lines connecting to numbers
-            var calculationTopY = AppView.windowIsShort() ?
-                Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
-                Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
-            var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
-            var leftMargin         = VoltageCalculationView.CALCULATION_LEFT_MARGIN;
-            var rightMargin        = VoltageCalculationView.CALCULATION_RIGHT_MARGIN;
-            var minuendYOffset     = VoltageCalculationView.MINUEND_Y_OFFSET;
-            var subtrahendYOffset  = VoltageCalculationView.SUBTRAHEND_Y_OFFSET;
-            var connectorEndRadius = VoltageCalculationView.CONNECTOR_END_RADIUS;
+        // Left connector line
+        graphics.lineStyle(VoltageCalculationView.CONNECTOR_LINE_WIDTH, CONNECTOR_LINE_COLOR, 1);
+        graphics.moveTo(leftCenter.x, leftCenter.y + ellipseHeight);
+        graphics.lineTo(leftCenter.x, calculationTopY + subtrahendYOffset);
+        graphics.lineTo(calculationX - leftMargin - connectorEndRadius, calculationTopY + subtrahendYOffset);
+        if (graphics.currentPath && graphics.currentPath.shape)
+            graphics.currentPath.shape.closed = false;
+        graphics.drawCircle(calculationX - leftMargin, calculationTopY + subtrahendYOffset, connectorEndRadius);
+        if (graphics.currentPath && graphics.currentPath.shape)
+            graphics.currentPath.shape.closed = false;
 
-            // Left connector line
-            graphics.lineStyle(VoltageCalculationView.CONNECTOR_LINE_WIDTH, CONNECTOR_LINE_COLOR, 1);
-            graphics.moveTo(leftCenter.x, leftCenter.y + ellipseHeight);
-            graphics.lineTo(leftCenter.x, calculationTopY + subtrahendYOffset);
-            graphics.lineTo(calculationX - leftMargin - connectorEndRadius, calculationTopY + subtrahendYOffset);
-            if (graphics.currentPath && graphics.currentPath.shape)
-                graphics.currentPath.shape.closed = false;
-            graphics.drawCircle(calculationX - leftMargin, calculationTopY + subtrahendYOffset, connectorEndRadius);
-            if (graphics.currentPath && graphics.currentPath.shape)
-                graphics.currentPath.shape.closed = false;
+        // Right connector line
+        graphics.lineStyle(VoltageCalculationView.CONNECTOR_LINE_WIDTH, CONNECTOR_LINE_COLOR, 1);
+        graphics.moveTo(rightCenter.x, rightCenter.y + ellipseHeight);
+        graphics.lineTo(rightCenter.x, calculationTopY + minuendYOffset);
+        graphics.lineTo(calculationX + rightMargin + connectorEndRadius, calculationTopY + minuendYOffset);
+        if (graphics.currentPath && graphics.currentPath.shape)
+            graphics.currentPath.shape.closed = false;
+        graphics.drawCircle(calculationX + rightMargin, calculationTopY + minuendYOffset, connectorEndRadius);
+        if (graphics.currentPath && graphics.currentPath.shape)
+            graphics.currentPath.shape.closed = false;
+    },
 
-            // Right connector line
-            graphics.lineStyle(VoltageCalculationView.CONNECTOR_LINE_WIDTH, CONNECTOR_LINE_COLOR, 1);
-            graphics.moveTo(rightCenter.x, rightCenter.y + ellipseHeight);
-            graphics.lineTo(rightCenter.x, calculationTopY + minuendYOffset);
-            graphics.lineTo(calculationX + rightMargin + connectorEndRadius, calculationTopY + minuendYOffset);
-            if (graphics.currentPath && graphics.currentPath.shape)
-                graphics.currentPath.shape.closed = false;
-            graphics.drawCircle(calculationX + rightMargin, calculationTopY + minuendYOffset, connectorEndRadius);
-            if (graphics.currentPath && graphics.currentPath.shape)
-                graphics.currentPath.shape.closed = false;
-        },
+    updateCalculationPosition: function() {
+        var calculationTopY = AppView.windowIsShort() ?
+            Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
+            Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
+        var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
 
-        updateCalculationPosition: function() {
-            var calculationTopY = AppView.windowIsShort() ?
-                Math.round(this.mvt.modelToViewY(VoltageCalculationView.SHORT_SCREEN_CALCULATION_TOP_Y)) :
-                Math.round(this.mvt.modelToViewY(VoltageCalculationView.CALCULATION_TOP_Y));
-            var calculationX       = Math.round(this.mvt.modelToViewX(VoltageCalculationView.CALCULATION_X));
+        this.calculation.x = calculationX;
+        this.calculation.y = calculationTopY;
+    },
 
-            this.calculation.x = calculationX;
-            this.calculation.y = calculationTopY;
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.drawHighlights();
+        this.updateCalculationPosition();
 
-            this.drawHighlights();
-            this.updateCalculationPosition();
+        this.update();
+    },
 
-            this.update();
-        },
+    /**
+     * Updates the actual text of the calculation
+     */
+    update: function() {
+        var right = this.battery.countRight();
+        var left  = this.battery.countLeft();
+        this.minuend.text = right;
+        this.subtrahend.text = '- ' + left;
+        this.difference.text = (right - left);
+    },
 
-        /**
-         * Updates the actual text of the calculation
-         */
-        update: function() {
-            var right = this.battery.countRight();
-            var left  = this.battery.countLeft();
-            this.minuend.text = right;
-            this.subtrahend.text = '- ' + left;
-            this.difference.text = (right - left);
-        },
+    show: function() {
+        this.displayObject.visible = true;
+    },
 
-        show: function() {
-            this.displayObject.visible = true;
-        },
+    hide: function() {
+        this.displayObject.visible = false;
+    }
 
-        hide: function() {
-            this.displayObject.visible = false;
-        }
-
-    }, Constants.VoltageCalculationView);
+}, Constants.VoltageCalculationView);
 
 
-    return VoltageCalculationView;
-});
+export default VoltageCalculationView;

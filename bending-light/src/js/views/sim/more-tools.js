@@ -1,117 +1,109 @@
-define(function(require) {
+import _ from 'underscore';
+import MoreToolsSimulation from 'models/simulation/more-tools';
+import IntroSimView from 'views/sim/intro';
+import MoreToolsSceneView from 'views/scene/more-tools';
+import LaserControlsView from 'views/laser-controls';
+import simHtml from 'templates/sim/more-tools.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var MoreToolsSimView = IntroSimView.extend({
 
-    var _        = require('underscore');
+    template: _.template(simHtml),
 
-    var MoreToolsSimulation = require('models/simulation/more-tools');
+    events: _.extend(IntroSimView.prototype.events, {
 
-    var IntroSimView        = require('views/sim/intro');
-    var MoreToolsSceneView  = require('views/scene/more-tools');
-    var LaserControlsView   = require('views/laser-controls');
+    }),
 
-    var simHtml = require('text!templates/sim/more-tools.html');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'MoreTools',
+            name:  'more-tools'
+        }, options);
+
+        IntroSimView.prototype.initialize.apply(this, [ options ]);
+
+        this.listenTo(this.simulation.waveSensor, 'change:enabled', this.showHidePlaybackControls);
+    },
 
     /**
-     *
+     * Initializes the Simulation.
      */
-    var MoreToolsSimView = IntroSimView.extend({
+    initSimulation: function() {
+        this.simulation = new MoreToolsSimulation();
+    },
 
-        template: _.template(simHtml),
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new MoreToolsSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        events: _.extend(IntroSimView.prototype.events, {
+    initLaserControls: function() {
+        this.laserControlsView = new LaserControlsView({
+            model: this.simulation.laser,
+            simulation: this.simulation,
+            showWavelengthControls: true
+        });
+    },
 
-        }),
+    getToolboxConfig: function() {
+        var config = IntroSimView.prototype.getToolboxConfig.apply(this);
+        var sceneView = this.sceneView;
+        var simulation = this.simulation;
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'MoreTools',
-                name:  'more-tools'
-            }, options);
-
-            IntroSimView.prototype.initialize.apply(this, [ options ]);
-
-            this.listenTo(this.simulation.waveSensor, 'change:enabled', this.showHidePlaybackControls);
-        },
-
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new MoreToolsSimulation();
-        },
-
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new MoreToolsSceneView({
-                simulation: this.simulation
-            });
-        },
-
-        initLaserControls: function() {
-            this.laserControlsView = new LaserControlsView({
-                model: this.simulation.laser,
-                simulation: this.simulation,
-                showWavelengthControls: true
-            });
-        },
-
-        getToolboxConfig: function() {
-            var config = IntroSimView.prototype.getToolboxConfig.apply(this);
-            var sceneView = this.sceneView;
-            var simulation = this.simulation;
-
-            config.tools = {
-                protractor: config.tools.protractor,
-                velocitySensor: {
-                    title: 'Velocity Sensor',
-                    label: '',
-                    img: sceneView.getVelocitySensorIcon(),
-                    activate: function() {
-                        simulation.velocitySensor.set('enabled', true);
-                    },
-                    deactivate: function() {
-                        simulation.velocitySensor.set('enabled', false);
-                    }
+        config.tools = {
+            protractor: config.tools.protractor,
+            velocitySensor: {
+                title: 'Velocity Sensor',
+                label: '',
+                img: sceneView.getVelocitySensorIcon(),
+                activate: function() {
+                    simulation.velocitySensor.set('enabled', true);
                 },
-                waveSensor: {
-                    title: 'Wave Sensor',
-                    label: '',
-                    img: sceneView.getWaveSensorIcon(),
-                    activate: function() {
-                        simulation.waveSensor.set('enabled', true);
-                    },
-                    deactivate: function() {
-                        simulation.waveSensor.set('enabled', false);
-                    }
+                deactivate: function() {
+                    simulation.velocitySensor.set('enabled', false);
+                }
+            },
+            waveSensor: {
+                title: 'Wave Sensor',
+                label: '',
+                img: sceneView.getWaveSensorIcon(),
+                activate: function() {
+                    simulation.waveSensor.set('enabled', true);
                 },
-                intensityMeter: config.tools.intensityMeter,
-                normal: config.tools.normal
-            };
+                deactivate: function() {
+                    simulation.waveSensor.set('enabled', false);
+                }
+            },
+            intensityMeter: config.tools.intensityMeter,
+            normal: config.tools.normal
+        };
 
-            return config;
-        },
+        return config;
+    },
 
-        render: function() {
-            IntroSimView.prototype.render.apply(this);
+    render: function() {
+        IntroSimView.prototype.render.apply(this);
 
-            return this;
-        },
+        return this;
+    },
 
-        laserBeamTypeChanged: function(laser, wave) {
-            this.showHidePlaybackControls();
-        },
+    laserBeamTypeChanged: function(laser, wave) {
+        this.showHidePlaybackControls();
+    },
 
-        showHidePlaybackControls: function() {
-            if (this.simulation.laser.get('wave') || this.simulation.waveSensor.get('enabled'))
-                this.$playbackControls.show();
-            else
-                this.$playbackControls.hide();
-        }
+    showHidePlaybackControls: function() {
+        if (this.simulation.laser.get('wave') || this.simulation.waveSensor.get('enabled'))
+            this.$playbackControls.show();
+        else
+            this.$playbackControls.hide();
+    }
 
-    });
-
-    return MoreToolsSimView;
 });
+
+export default MoreToolsSimView;

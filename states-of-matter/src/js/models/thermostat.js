@@ -1,36 +1,30 @@
-define(function (require) {
+import _ from 'underscore';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Used to adjust the temperature of a system.
+ */
+var Thermostat = function(moleculeDataSet, minTemperature) {
+    this.moleculeDataSet = moleculeDataSet;
+    this.targetTemperature = Constants.SOMSimulation.INITIAL_TEMPERATURE;
+    this.minModelTemperature = minTemperature;
 
-    var _ = require('underscore');
+    // Set up references to the various arrays within the data set so that
+    //   the calculations can be performed as fast as is possible.
+    this.moleculeVelocities    = moleculeDataSet.moleculeVelocities;
+    this.moleculeRotationRates = moleculeDataSet.moleculeRotationRates;
+};
 
-    var Constants = require('constants');
+/**
+ * Instance functions/properties
+ */
+_.extend(Thermostat.prototype, {
 
-    /**
-     * Used to adjust the temperature of a system.
-     */
-    var Thermostat = function(moleculeDataSet, minTemperature) {
-        this.moleculeDataSet = moleculeDataSet;
-        this.targetTemperature = Constants.SOMSimulation.INITIAL_TEMPERATURE;
-        this.minModelTemperature = minTemperature;
+    setTargetTemperature: function(temperature) {},
 
-        // Set up references to the various arrays within the data set so that
-        //   the calculations can be performed as fast as is possible.
-        this.moleculeVelocities    = moleculeDataSet.moleculeVelocities;
-        this.moleculeRotationRates = moleculeDataSet.moleculeRotationRates;
-    };
+    adjustTemperature: function() {}
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Thermostat.prototype, {
-
-        setTargetTemperature: function(temperature) {},
-
-        adjustTemperature: function() {}
-
-    });
-
-
-    return Thermostat;
 });
+
+
+export default Thermostat;

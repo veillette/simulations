@@ -1,45 +1,40 @@
-define(function (require) {
+import Molecule from 'models/molecule';
+import OxygenAtom from 'models/atom/oxygen';
+import AtomicBond from 'models/atomic-bond';
 
-    'use strict';
+var INITIAL_OXYGEN_OXYGEN_DISTANCE = 170; // In picometers
 
-    var Molecule   = require('models/molecule');
-    var OxygenAtom = require('models/atom/oxygen');
-    var AtomicBond = require('models/atomic-bond');
+/**
+ * Class that represents O2 (oxygen) in the model.
+ */
+var O2 = Molecule.extend({
 
-    var INITIAL_OXYGEN_OXYGEN_DISTANCE = 170; // In picometers
+    initialize: function(attributes, options) {
+        Molecule.prototype.initialize.apply(this, arguments);
+
+        // Create and add atoms
+        this.oxygenAtom1 = this.addAtom(new OxygenAtom());
+        this.oxygenAtom2 = this.addAtom(new OxygenAtom());
+
+        // Create and add bonds
+        this.addAtomicBond(new AtomicBond(this.atoms[this.oxygenAtom1], this.atoms[this.oxygenAtom2], 2));
+
+        // Set the initial offsets.
+        this.initAtomOffsets();
+    },
 
     /**
-     * Class that represents O2 (oxygen) in the model.
+     * Initialize sthe offsets from the center of gravity for each atom
+     *   within this molecule.  This should be in the "relaxed" (i.e.
+     *   non-vibrating) state.
      */
-    var O2 = Molecule.extend({
+    initAtomOffsets: function() {
+        this.getInitialAtomCogOffset(this.oxygenAtom1).set(-INITIAL_OXYGEN_OXYGEN_DISTANCE / 2, 0);
+        this.getInitialAtomCogOffset(this.oxygenAtom2).set( INITIAL_OXYGEN_OXYGEN_DISTANCE / 2, 0);
 
-        initialize: function(attributes, options) {
-            Molecule.prototype.initialize.apply(this, arguments);
+        this.updateAtomPositions();
+    }
 
-            // Create and add atoms
-            this.oxygenAtom1 = this.addAtom(new OxygenAtom());
-            this.oxygenAtom2 = this.addAtom(new OxygenAtom());
-
-            // Create and add bonds
-            this.addAtomicBond(new AtomicBond(this.atoms[this.oxygenAtom1], this.atoms[this.oxygenAtom2], 2));
-
-            // Set the initial offsets.
-            this.initAtomOffsets();
-        },
-
-        /**
-         * Initialize sthe offsets from the center of gravity for each atom
-         *   within this molecule.  This should be in the "relaxed" (i.e.
-         *   non-vibrating) state.
-         */
-        initAtomOffsets: function() {
-            this.getInitialAtomCogOffset(this.oxygenAtom1).set(-INITIAL_OXYGEN_OXYGEN_DISTANCE / 2, 0);
-            this.getInitialAtomCogOffset(this.oxygenAtom2).set( INITIAL_OXYGEN_OXYGEN_DISTANCE / 2, 0);
-
-            this.updateAtomPositions();
-        }
-
-    });
-
-    return O2;
 });
+
+export default O2;

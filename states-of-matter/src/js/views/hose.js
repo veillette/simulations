@@ -1,108 +1,101 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/extensions';
+import PixiView from 'common/v3/pixi/view';
+import Vector2 from 'common/math/vector2';
+import PiecewiseCurve from 'common/math/piecewise-curve';
+import Colors from 'common/colors/colors';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents the particle tank
+ */
+var HoseView = PixiView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
+    initialize: function(options) {
+        options = _.extend({
+            color: '#3b3b3b'
+        }, options);
 
-    var PixiView       = require('common/v3/pixi/view');
-    var Vector2        = require('common/math/vector2');
-    var PiecewiseCurve = require('common/math/piecewise-curve');
-    var Colors         = require('common/colors/colors');
+        this.color = Colors.parseHex(options.color);
+        this.loopHeight = 100;
 
-    var Assets = require('assets');
+        this.initGraphics();
+    },
 
-    /**
-     * A view that represents the particle tank
-     */
-    var HoseView = PixiView.extend({
+    initGraphics: function() {
+        // Hose graphics
+        this.hose = new PIXI.Graphics();
+        this.displayObject.addChild(this.hose);
 
-        initialize: function(options) {
-            options = _.extend({
-                color: '#3b3b3b'
-            }, options);
+        // Connector sprites
+        this.connector1 = Assets.createSprite(Assets.Images.HOSE_CONNECTOR);
+        this.connector2 = Assets.createSprite(Assets.Images.HOSE_CONNECTOR);
 
-            this.color = Colors.parseHex(options.color);
-            this.loopHeight = 100;
+        this.connector1.anchor.y = 0.5;
+        this.connector2.anchor.y = 0.5;
 
-            this.initGraphics();
-        },
+        this.connector2.scale.x = -1;
 
-        initGraphics: function() {
-            // Hose graphics
-            this.hose = new PIXI.Graphics();
-            this.displayObject.addChild(this.hose);
+        this.displayObject.addChild(this.connector1);
+        this.displayObject.addChild(this.connector2);
+    },
 
-            // Connector sprites
-            this.connector1 = Assets.createSprite(Assets.Images.HOSE_CONNECTOR);
-            this.connector2 = Assets.createSprite(Assets.Images.HOSE_CONNECTOR);
+    drawHose: function() {
+        var curve = new PiecewiseCurve();
 
-            this.connector1.anchor.y = 0.5;
-            this.connector2.anchor.y = 0.5;
+        var start = new Vector2(this.connector1.x, this.connector1.y);
+        var end   = new Vector2(this.connector2.x, this.connector2.y);
 
-            this.connector2.scale.x = -1;
+        var delta = end.clone().sub(start);
+        var dx = delta.x;
+        var dy = delta.y;
+        var height = this.loopHeight;
 
-            this.displayObject.addChild(this.connector1);
-            this.displayObject.addChild(this.connector2);
-        },
+        var A  = new Vector2(start).add(this.connector1.width, 0);
+        var A2 = new Vector2(start).add(dx * 0.33, dy * 0.33);
 
-        drawHose: function() {
-            var curve = new PiecewiseCurve();
+        var B1 = new Vector2(start).add(dx * 0.58, dy * 0.67 + height * 0.12);
+        var B  = new Vector2(start).add(dx * 0.67, dy * 0.67 + height * 0.33);
+        var B2 = new Vector2(start).add(dx * 0.77, dy * 0.67 + height * 0.63);
 
-            var start = new Vector2(this.connector1.x, this.connector1.y);
-            var end   = new Vector2(this.connector2.x, this.connector2.y);
+        var C1 = new Vector2(start).add(dx * 0.67, dy * 0.5 + height);
+        var C  = new Vector2(start).add(dx * 0.50, dy * 0.5 + height);
+        var C2 = new Vector2(start).add(dx * 0.33, dy * 0.5 + height);
 
-            var delta = end.clone().sub(start);
-            var dx = delta.x;
-            var dy = delta.y;
-            var height = this.loopHeight;
+        var D1 = new Vector2(start).add(dx * 0.23, dy * 0.33 + height * 0.63);
+        var D  = new Vector2(start).add(dx * 0.33, dy * 0.33 + height * 0.33);
+        var D2 = new Vector2(start).add(dx * 0.42, dy * 0.33 + height * 0.12);
 
-            var A  = new Vector2(start).add(this.connector1.width, 0);
-            var A2 = new Vector2(start).add(dx * 0.33, dy * 0.33);
+        var E1 = new Vector2(start).add(dx * 0.67, dy * 0.67);
+        var E  = new Vector2(end).sub(Math.abs(this.connector2.width), 0);
 
-            var B1 = new Vector2(start).add(dx * 0.58, dy * 0.67 + height * 0.12);
-            var B  = new Vector2(start).add(dx * 0.67, dy * 0.67 + height * 0.33);
-            var B2 = new Vector2(start).add(dx * 0.77, dy * 0.67 + height * 0.63);
+        curve
+            .moveTo(start)
+            .lineTo(A)
+            .curveTo(A2, B1, B)
+            .curveTo(B2, C1, C)
+            .curveTo(C2, D1, D)
+            .curveTo(D2, E1, E)
+            .lineTo(end);
 
-            var C1 = new Vector2(start).add(dx * 0.67, dy * 0.5 + height);
-            var C  = new Vector2(start).add(dx * 0.50, dy * 0.5 + height);
-            var C2 = new Vector2(start).add(dx * 0.33, dy * 0.5 + height);
+        this.hose.clear();
+        this.hose.lineStyle(13, this.color, 1);
+        this.hose.drawPiecewiseCurve(curve);
+    },
 
-            var D1 = new Vector2(start).add(dx * 0.23, dy * 0.33 + height * 0.63);
-            var D  = new Vector2(start).add(dx * 0.33, dy * 0.33 + height * 0.33);
-            var D2 = new Vector2(start).add(dx * 0.42, dy * 0.33 + height * 0.12);
+    connect1: function(connectorPosition) {
+        this.connector1.x = connectorPosition.x;
+        this.connector1.y = connectorPosition.y;
+        this.drawHose();
+    },
 
-            var E1 = new Vector2(start).add(dx * 0.67, dy * 0.67);
-            var E  = new Vector2(end).sub(Math.abs(this.connector2.width), 0);
+    connect2: function(connectorPosition) {
+        this.connector2.x = connectorPosition.x;
+        this.connector2.y = connectorPosition.y;
+        this.drawHose();
+    }
 
-            curve
-                .moveTo(start)
-                .lineTo(A)
-                .curveTo(A2, B1, B)
-                .curveTo(B2, C1, C)
-                .curveTo(C2, D1, D)
-                .curveTo(D2, E1, E)
-                .lineTo(end);
-
-            this.hose.clear();
-            this.hose.lineStyle(13, this.color, 1);
-            this.hose.drawPiecewiseCurve(curve);
-        },
-
-        connect1: function(connectorPosition) {
-            this.connector1.x = connectorPosition.x;
-            this.connector1.y = connectorPosition.y;
-            this.drawHose();
-        },
-
-        connect2: function(connectorPosition) {
-            this.connector2.x = connectorPosition.x;
-            this.connector2.y = connectorPosition.y;
-            this.drawHose();
-        }
-
-    });
-
-    return HoseView;
 });
+
+export default HoseView;

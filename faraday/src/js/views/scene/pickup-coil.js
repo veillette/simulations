@@ -1,48 +1,42 @@
-define(function(require) {
+import FaradaySceneView from 'views/scene';
 
-    'use strict';
+// Constants
 
+/**
+ *
+ */
+var PickupCoilSceneView = FaradaySceneView.extend({
 
-    var FaradaySceneView  = require('views/scene');
+    initialize: function(options) {
+        FaradaySceneView.prototype.initialize.apply(this, arguments);
 
-    // Constants
+        this.magnetModel = this.simulation.barMagnet;
+    },
 
-    /**
-     *
-     */
-    var PickupCoilSceneView = FaradaySceneView.extend({
+    initGraphics: function() {
+        FaradaySceneView.prototype.initGraphics.apply(this, arguments);
 
-        initialize: function(options) {
-            FaradaySceneView.prototype.initialize.apply(this, arguments);
+        this.initCompass();
+        this.initBarMagnet();
+        this.initInsideBField();
+        this.initPickupCoil();
 
-            this.magnetModel = this.simulation.barMagnet;
-        },
+        this.hideCompass();
+    },
 
-        initGraphics: function() {
-            FaradaySceneView.prototype.initGraphics.apply(this, arguments);
+    reset: function() {
+        FaradaySceneView.prototype.reset.apply(this, arguments);
 
-            this.initCompass();
-            this.initBarMagnet();
-            this.initInsideBField();
-            this.initPickupCoil();
+        this.pickupCoilView.reset();
+        this.hideCompass();
+    },
 
-            this.hideCompass();
-        },
+    _update: function(time, deltaTime, paused, timeScale) {
+        FaradaySceneView.prototype._update.apply(this, arguments);
 
-        reset: function() {
-            FaradaySceneView.prototype.reset.apply(this, arguments);
+        this.pickupCoilView.update(time, deltaTime, paused);
+    }
 
-            this.pickupCoilView.reset();
-            this.hideCompass();
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            FaradaySceneView.prototype._update.apply(this, arguments);
-
-            this.pickupCoilView.update(time, deltaTime, paused);
-        }
-
-    });
-
-    return PickupCoilSceneView;
 });
+
+export default PickupCoilSceneView;

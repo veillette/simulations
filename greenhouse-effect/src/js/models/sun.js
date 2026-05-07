@@ -1,33 +1,25 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import HorizontalPhotonEmitter from 'models/photon-emitter/horizontal';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Represents a photon-emitting sun.
+ */
+var Sun = HorizontalPhotonEmitter.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, HorizontalPhotonEmitter.prototype.defaults, {
+        wavelength: Constants.SUNLIGHT_WAVELENGTH,
+        radius: 0,
+        position: null
+    }),
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        HorizontalPhotonEmitter.prototype.initialize.apply(this, [attributes, options]);
 
-    var HorizontalPhotonEmitter = require('models/photon-emitter/horizontal');
+        this.set('position', new Vector2(this.get('position')));
+    }
 
-    var Constants = require('constants');
+}, Constants.Sun);
 
-    /**
-     * Represents a photon-emitting sun.
-     */
-    var Sun = HorizontalPhotonEmitter.extend({
-
-        defaults: _.extend({}, HorizontalPhotonEmitter.prototype.defaults, {
-            wavelength: Constants.SUNLIGHT_WAVELENGTH,
-            radius: 0,
-            position: null
-        }),
-
-        initialize: function(attributes, options) {
-            HorizontalPhotonEmitter.prototype.initialize.apply(this, [attributes, options]);
-
-            this.set('position', new Vector2(this.get('position')));
-        }
-
-    }, Constants.Sun);
-
-    return Sun;
-});
+export default Sun;

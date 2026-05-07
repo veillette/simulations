@@ -1,180 +1,172 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
+import Assets from 'assets';
+var FOCUS_POINT_COLOR = Colors.parseHex(Constants.LensView.FOCUS_POINT_COLOR);
 
-    'use strict';
+/**
+ * A view that represents an atom
+ */
+var LensView = PixiView.extend({
 
-    var PIXI = require('pixi');
-
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
-
-    var Constants = require('constants');
-    var FOCUS_POINT_COLOR = Colors.parseHex(Constants.LensView.FOCUS_POINT_COLOR);
-
-    var Assets = require('assets');
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd',
+    },
 
     /**
-     * A view that represents an atom
+     * Initializes the new LensView.
      */
-    var LensView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd',
-        },
+        // Cached objects
+        this._dragOffset = new PIXI.Point();
 
-        /**
-         * Initializes the new LensView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        this.initGraphics();
 
-            // Cached objects
-            this._dragOffset = new PIXI.Point();
+        this.listenTo(this.model, 'change:diameter', this.updateDiameter);
+        this.listenTo(this.model, 'change:indexOfRefraction', this.updateIndexOfRefraction);
+        this.listenTo(this.model, 'change:radiusOfCurvature', this.updateRadiusOfCurvature);
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+        this.listenTo(this.model, 'change:focalLength', this.updateFocusPoints);
+    },
 
-            this.initGraphics();
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.initLens();
+        this.initFocusPoints();
 
-            this.listenTo(this.model, 'change:diameter', this.updateDiameter);
-            this.listenTo(this.model, 'change:indexOfRefraction', this.updateIndexOfRefraction);
-            this.listenTo(this.model, 'change:radiusOfCurvature', this.updateRadiusOfCurvature);
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-            this.listenTo(this.model, 'change:focalLength', this.updateFocusPoints);
-        },
+        this.displayObject.buttonMode = true;
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.initLens();
-            this.initFocusPoints();
+        this.updateMVT(this.mvt);
+    },
 
-            this.displayObject.buttonMode = true;
+    initLens: function() {
+        this.lens = new PIXI.Container();
+        this.displayObject.addChild(this.lens);
 
-            this.updateMVT(this.mvt);
-        },
+        this.lensFill = Assets.createSprite(Assets.Images.LENS_FILL);
+        this.lensFill.anchor.x = this.lensFill.anchor.y = 0.5;
+        this.lens.addChild(this.lensFill);
 
-        initLens: function() {
-            this.lens = new PIXI.Container();
-            this.displayObject.addChild(this.lens);
+        this.lensOutline = Assets.createSprite(Assets.Images.LENS_OUTLINE);
+        this.lensOutline.anchor.x = this.lensOutline.anchor.y = 0.5;
+        this.lens.addChild(this.lensOutline);
 
-            this.lensFill = Assets.createSprite(Assets.Images.LENS_FILL);
-            this.lensFill.anchor.x = this.lensFill.anchor.y = 0.5;
-            this.lens.addChild(this.lensFill);
+        this.updateIndexOfRefraction(this.model, this.model.get('indexOfRefraction'));
+        this.updateRadiusOfCurvature(this.model, this.model.get('radiusOfCurvature'));
+        this.updateDiameter(this.model, this.model.get('diameter'));
+    },
 
-            this.lensOutline = Assets.createSprite(Assets.Images.LENS_OUTLINE);
-            this.lensOutline.anchor.x = this.lensOutline.anchor.y = 0.5;
-            this.lens.addChild(this.lensOutline);
+    initFocusPoints: function() {
+        this.focusPoint1 = this.createFocusPoint();
+        this.focusPoint2 = this.createFocusPoint();
 
-            this.updateIndexOfRefraction(this.model, this.model.get('indexOfRefraction'));
-            this.updateRadiusOfCurvature(this.model, this.model.get('radiusOfCurvature'));
-            this.updateDiameter(this.model, this.model.get('diameter'));
-        },
+        this.displayObject.addChild(this.focusPoint1);
+        this.displayObject.addChild(this.focusPoint2);
 
-        initFocusPoints: function() {
-            this.focusPoint1 = this.createFocusPoint();
-            this.focusPoint2 = this.createFocusPoint();
+        this.updateFocusPoints(this.model, this.model.get('focalLength'));
+    },
 
-            this.displayObject.addChild(this.focusPoint1);
-            this.displayObject.addChild(this.focusPoint2);
+    createFocusPoint: function() {
+        var focusPoint = new PIXI.Container();
 
-            this.updateFocusPoints(this.model, this.model.get('focalLength'));
-        },
+        var marker = new PIXI.Graphics();
+        marker.lineStyle(LensView.FOCUS_POINT_LINE_WIDTH, FOCUS_POINT_COLOR, LensView.FOCUS_POINT_ALPHA);
 
-        createFocusPoint: function() {
-            var focusPoint = new PIXI.Container();
+        var halfWidth = LensView.FOCUS_POINT_SIZE / 2;
+        marker.moveTo(-halfWidth, -halfWidth);
+        marker.lineTo( halfWidth,  halfWidth);
+        marker.moveTo( halfWidth, -halfWidth);
+        marker.lineTo(-halfWidth,  halfWidth);
 
-            var marker = new PIXI.Graphics();
-            marker.lineStyle(LensView.FOCUS_POINT_LINE_WIDTH, FOCUS_POINT_COLOR, LensView.FOCUS_POINT_ALPHA);
+        focusPoint.addChild(marker);
 
-            var halfWidth = LensView.FOCUS_POINT_SIZE / 2;
-            marker.moveTo(-halfWidth, -halfWidth);
-            marker.lineTo( halfWidth,  halfWidth);
-            marker.moveTo( halfWidth, -halfWidth);
-            marker.lineTo(-halfWidth,  halfWidth);
+        return focusPoint;
+    },
 
-            focusPoint.addChild(marker);
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-            return focusPoint;
-        },
+        this.updatePosition(this.model, this.model.get('position'));
+        this.updateRadiusOfCurvature(this.model, this.model.get('radiusOfCurvature'));
+        this.updateDiameter(this.model, this.model.get('diameter'));
+    },
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updatePosition: function(lens, position) {
+        this.updateLock(function() {
+            var viewPosition = this.mvt.modelToView(position);
+            this.displayObject.x = viewPosition.x;
+            this.displayObject.y = viewPosition.y;
+        });
+    },
 
-            this.updatePosition(this.model, this.model.get('position'));
-            this.updateRadiusOfCurvature(this.model, this.model.get('radiusOfCurvature'));
-            this.updateDiameter(this.model, this.model.get('diameter'));
-        },
+    updateIndexOfRefraction: function(lens, indexOfRefraction) {
+        this.lensFill.alpha = LensView.INDEX_OF_REFRACTION_RANGE.percent(indexOfRefraction);
+    },
 
-        updatePosition: function(lens, position) {
-            this.updateLock(function() {
-                var viewPosition = this.mvt.modelToView(position);
-                this.displayObject.x = viewPosition.x;
-                this.displayObject.y = viewPosition.y;
+    updateRadiusOfCurvature: function(lens, radiusOfCurvature) {
+        var modelWidth = LensView.radiusToWidth(radiusOfCurvature);
+        var viewWidth = this.mvt.modelToViewDeltaX(modelWidth);
+        this.lens.scale.x = viewWidth / this.lensFill.texture.width;
+    },
+
+    updateDiameter: function(lens, diameter) {
+        var diameterInPixels = Math.abs(this.mvt.modelToViewDeltaY(diameter));
+        this.lens.scale.y = diameterInPixels / this.lensFill.texture.height;
+    },
+
+    updateFocusPoints: function(lens, focalLength) {
+        this.focusPoint1.x = -this.mvt.modelToViewDeltaX(focalLength);
+        this.focusPoint2.x =  this.mvt.modelToViewDeltaX(focalLength);
+    },
+
+    dragStart: function(event) {
+        this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
+    },
+
+    drag: function(event) {
+        if (this.dragging) {
+            var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
+            var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
+
+            this.displayObject.x += dx;
+            this.displayObject.y += dy;
+
+            var mdx = this.mvt.viewToModelDeltaX(dx);
+            var mdy = this.mvt.viewToModelDeltaY(dy);
+
+            this.inputLock(function() {
+                this.model.translate(mdx, mdy);
             });
-        },
+        }
+    },
 
-        updateIndexOfRefraction: function(lens, indexOfRefraction) {
-            this.lensFill.alpha = LensView.INDEX_OF_REFRACTION_RANGE.percent(indexOfRefraction);
-        },
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
-        updateRadiusOfCurvature: function(lens, radiusOfCurvature) {
-            var modelWidth = LensView.radiusToWidth(radiusOfCurvature);
-            var viewWidth = this.mvt.modelToViewDeltaX(modelWidth);
-            this.lens.scale.x = viewWidth / this.lensFill.texture.width;
-        },
-
-        updateDiameter: function(lens, diameter) {
-            var diameterInPixels = Math.abs(this.mvt.modelToViewDeltaY(diameter));
-            this.lens.scale.y = diameterInPixels / this.lensFill.texture.height;
-        },
-
-        updateFocusPoints: function(lens, focalLength) {
-            this.focusPoint1.x = -this.mvt.modelToViewDeltaX(focalLength);
-            this.focusPoint2.x =  this.mvt.modelToViewDeltaX(focalLength);
-        },
-
-        dragStart: function(event) {
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
-
-        drag: function(event) {
-            if (this.dragging) {
-                var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
-                var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
-
-                this.displayObject.x += dx;
-                this.displayObject.y += dy;
-
-                var mdx = this.mvt.viewToModelDeltaX(dx);
-                var mdy = this.mvt.viewToModelDeltaY(dy);
-
-                this.inputLock(function() {
-                    this.model.translate(mdx, mdy);
-                });
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-    }, Constants.LensView);
+}, Constants.LensView);
 
 
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(LensView);
+// Add input/update locking functionality to the prototype
+defineInputUpdateLocks(LensView);
 
 
-    return LensView;
-});
+export default LensView;

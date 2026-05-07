@@ -1,137 +1,130 @@
-define(function(require) {
+import Vector3 from 'common/math/vector3';
+import ChargeView from 'views/charge';
+import Constants from 'constants';
 
-    'use strict';
+var SYMBOL_SPACING = Constants.DielectricTotalChargeView.SYMBOL_SPACING;
+var SYMBOL_SPACING_EXPONENT = Constants.DielectricTotalChargeView.SYMBOL_SPACING_EXPONENT;
+var NEGATIVE_CHARGE_OFFSET_RANGE = Constants.DielectricTotalChargeView.NEGATIVE_CHARGE_OFFSET_RANGE;
 
-    var Vector3   = require('common/math/vector3');
+var Polarity = Constants.Polarity;
 
-    var ChargeView = require('views/charge');
+/**
+ * Shows the total dielectric charge. Spacing of positive and negative charges
+ *   remains constant, and they appear in positive/negative pairs. The spacing
+ *   between the positive/negative pairs changes proportional to E_dielectric.
+ *   Outside the capacitor, the spacing between the pairs is at a minimum to
+ *   represent no charge.
 
-    var Constants = require('constants');
+ * All model coordinates are relative to the dielectric's local coordinate frame,
+ * where the origin is at the 3D geometric center of the dielectric.
+ */
+var DielectricTotalChargeView = ChargeView.extend({
 
-    var SYMBOL_SPACING = Constants.DielectricTotalChargeView.SYMBOL_SPACING;
-    var SYMBOL_SPACING_EXPONENT = Constants.DielectricTotalChargeView.SYMBOL_SPACING_EXPONENT;
-    var NEGATIVE_CHARGE_OFFSET_RANGE = Constants.DielectricTotalChargeView.NEGATIVE_CHARGE_OFFSET_RANGE;
+    initialize: function(options) {
+        this.maxDielectricEField = options.maxDielectricEField;
 
-    var Polarity = Constants.Polarity;
+        // Cached objects
+        this._vec3 = new Vector3();
 
-    /**
-     * Shows the total dielectric charge. Spacing of positive and negative charges
-     *   remains constant, and they appear in positive/negative pairs. The spacing
-     *   between the positive/negative pairs changes proportional to E_dielectric.
-     *   Outside the capacitor, the spacing between the pairs is at a minimum to
-     *   represent no charge.
+        // Call parent initialize
+        ChargeView.prototype.initialize.apply(this, [options]);
 
-     * All model coordinates are relative to the dielectric's local coordinate frame,
-     * where the origin is at the 3D geometric center of the dielectric.
-     */
-    var DielectricTotalChargeView = ChargeView.extend({
+        // Listen for model events
+        this.listenTo(this.model, 'change:position change:dielectricOffset', this.updatePosition);
+        this.listenTo(this.model, 'change', this.draw);
+    },
 
-        initialize: function(options) {
-            this.maxDielectricEField = options.maxDielectricEField;
+    draw: function() {
+        ChargeView.prototype.draw.apply(this, arguments);
 
-            // Cached objects
-            this._vec3 = new Vector3();
+        var capacitor = this.model;
 
-            // Call parent initialize
-            ChargeView.prototype.initialize.apply(this, [options]);
+        // Offset of negative charges
+        var eField = capacitor.getDielectricEField();
+        var negativeChargeOffset = this.getNegativeChargeOffset(eField);
 
-            // Listen for model events
-            this.listenTo(this.model, 'change:position change:dielectricOffset', this.updatePosition);
-            this.listenTo(this.model, 'change', this.draw);
-        },
+        // Spacing between pairs
+        var spacingBetweenPairs = SYMBOL_SPACING;
 
-        draw: function() {
-            ChargeView.prototype.draw.apply(this, arguments);
+        // Rows and columns
+        var dielectricWidth  = capacitor.getDielectricWidth();
+        var dielectricHeight = capacitor.getDielectricHeight();
+        var dielectricDepth  = capacitor.getDielectricDepth();
+        var rows = parseInt(dielectricHeight / spacingBetweenPairs);
+        var cols = parseInt(dielectricWidth  / spacingBetweenPairs);
 
-            var capacitor = this.model;
+        // Margins and offsets
+        var xMargin = (dielectricWidth  - (cols * spacingBetweenPairs)) / 2;
+        var yMargin = (dielectricHeight - (rows * spacingBetweenPairs)) / 2;
+        var zMargin = xMargin;
+        var offset = spacingBetweenPairs / 2;
 
-            // Offset of negative charges
-            var eField = capacitor.getDielectricEField();
-            var negativeChargeOffset = this.getNegativeChargeOffset(eField);
+        // Polarity
+        var polarity = (eField >= 0) ? Polarity.NEGATIVE : Polarity.POSITIVE;
 
-            // Spacing between pairs
-            var spacingBetweenPairs = SYMBOL_SPACING;
+        var xPlateEdge = -(dielectricWidth / 2) + (dielectricWidth - capacitor.get('dielectricOffset'));
 
-            // Rows and columns
-            var dielectricWidth  = capacitor.getDielectricWidth();
-            var dielectricHeight = capacitor.getDielectricHeight();
-            var dielectricDepth  = capacitor.getDielectricDepth();
-            var rows = parseInt(dielectricHeight / spacingBetweenPairs);
-            var cols = parseInt(dielectricWidth  / spacingBetweenPairs);
+        var x, y, z;
+        var pairNegativeChargeOffset;
 
-            // Margins and offsets
-            var xMargin = (dielectricWidth  - (cols * spacingBetweenPairs)) / 2;
-            var yMargin = (dielectricHeight - (rows * spacingBetweenPairs)) / 2;
-            var zMargin = xMargin;
-            var offset = spacingBetweenPairs / 2;
+        for (var row = 0; row < rows; row++) {
+            for (var col = 0; col < cols; col++) {
+                // Front face
+                // Calculate center of the pair
+                x = -(dielectricWidth  / 2) + offset + xMargin + (col * spacingBetweenPairs);
+                y = -(dielectricHeight / 2) + offset + yMargin + (row * spacingBetweenPairs);
+                z = (-dielectricDepth  / 2);
 
-            // Polarity
-            var polarity = (eField >= 0) ? Polarity.NEGATIVE : Polarity.POSITIVE;
+                // Spacing between charges
+                if (x <= xPlateEdge)
+                    pairNegativeChargeOffset = negativeChargeOffset;
+                else
+                    pairNegativeChargeOffset = NEGATIVE_CHARGE_OFFSET_RANGE.min;
+                pairNegativeChargeOffset *= (polarity === Polarity.POSITIVE) ? 1 : -1;
 
-            var xPlateEdge = -(dielectricWidth / 2) + (dielectricWidth - capacitor.get('dielectricOffset'));
+                this.drawNegativeSymbol(x, y + pairNegativeChargeOffset, z);
+                this.drawPositiveSymbol(x, y, z);
 
-            var x, y, z;
-            var pairNegativeChargeOffset;
+                // Side face
+                // Center of the pair
+                x =  (dielectricWidth  / 2);
+                y = -(dielectricHeight / 2) + offset + yMargin + (row * spacingBetweenPairs);
+                z = -(dielectricDepth  / 2) + offset + zMargin + (col * spacingBetweenPairs);
 
-            for (var row = 0; row < rows; row++) {
-                for (var col = 0; col < cols; col++) {
-                    // Front face
-                    // Calculate center of the pair
-                    x = -(dielectricWidth  / 2) + offset + xMargin + (col * spacingBetweenPairs);
-                    y = -(dielectricHeight / 2) + offset + yMargin + (row * spacingBetweenPairs);
-                    z = (-dielectricDepth  / 2);
+                // Spacing between charges
+                if (capacitor.getDielectricOffset() === 0)
+                    pairNegativeChargeOffset = negativeChargeOffset;
+                else
+                    pairNegativeChargeOffset = NEGATIVE_CHARGE_OFFSET_RANGE.min;
+                pairNegativeChargeOffset *= (polarity === Polarity.POSITIVE) ? 1 : -1;
 
-                    // Spacing between charges
-                    if (x <= xPlateEdge)
-                        pairNegativeChargeOffset = negativeChargeOffset;
-                    else
-                        pairNegativeChargeOffset = NEGATIVE_CHARGE_OFFSET_RANGE.min;
-                    pairNegativeChargeOffset *= (polarity === Polarity.POSITIVE) ? 1 : -1;
-
-                    this.drawNegativeSymbol(x, y + pairNegativeChargeOffset, z);
-                    this.drawPositiveSymbol(x, y, z);
-
-                    // Side face
-                    // Center of the pair
-                    x =  (dielectricWidth  / 2);
-                    y = -(dielectricHeight / 2) + offset + yMargin + (row * spacingBetweenPairs);
-                    z = -(dielectricDepth  / 2) + offset + zMargin + (col * spacingBetweenPairs);
-
-                    // Spacing between charges
-                    if (capacitor.getDielectricOffset() === 0)
-                        pairNegativeChargeOffset = negativeChargeOffset;
-                    else
-                        pairNegativeChargeOffset = NEGATIVE_CHARGE_OFFSET_RANGE.min;
-                    pairNegativeChargeOffset *= (polarity === Polarity.POSITIVE) ? 1 : -1;
-
-                    this.drawNegativeSymbol(x, y + pairNegativeChargeOffset, z);
-                    this.drawPositiveSymbol(x, y, z);
-                }
+                this.drawNegativeSymbol(x, y + pairNegativeChargeOffset, z);
+                this.drawPositiveSymbol(x, y, z);
             }
-        },
-
-        getNegativeChargeOffset: function(eField) {
-            var absEField = Math.abs(eField);
-            var percent = Math.pow(absEField / this.maxDielectricEField, SYMBOL_SPACING_EXPONENT);
-            return NEGATIVE_CHARGE_OFFSET_RANGE.min + (percent * NEGATIVE_CHARGE_OFFSET_RANGE.length());
-        },
-
-        updatePosition: function() {
-            var modelPos = this._vec3.set(this.model.get('position'));
-            modelPos.x += this.model.get('dielectricOffset');
-            var viewPos = this.mvt.modelToView(modelPos);
-            this.displayObject.x = viewPos.x;
-            this.displayObject.y = viewPos.y;
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-            this.updatePosition(this.model, this.model.get('position'));
         }
+    },
 
-    });
+    getNegativeChargeOffset: function(eField) {
+        var absEField = Math.abs(eField);
+        var percent = Math.pow(absEField / this.maxDielectricEField, SYMBOL_SPACING_EXPONENT);
+        return NEGATIVE_CHARGE_OFFSET_RANGE.min + (percent * NEGATIVE_CHARGE_OFFSET_RANGE.length());
+    },
 
-    return DielectricTotalChargeView;
+    updatePosition: function() {
+        var modelPos = this._vec3.set(this.model.get('position'));
+        modelPos.x += this.model.get('dielectricOffset');
+        var viewPos = this.mvt.modelToView(modelPos);
+        this.displayObject.x = viewPos.x;
+        this.displayObject.y = viewPos.y;
+    },
+
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+
+        this.draw();
+        this.updatePosition(this.model, this.model.get('position'));
+    }
+
 });
+
+export default DielectricTotalChargeView;

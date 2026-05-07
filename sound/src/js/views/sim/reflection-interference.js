@@ -1,142 +1,133 @@
-define(function (require) {
+import _ from 'underscore';
+import $ from 'jquery';
+import ReflectionInterferenceSimulation from 'models/simulation/reflection-interference';
+import SoundSimView from 'views/sim';
+import ReflectionInterferenceSceneView from 'views/scene/reflection-interference';
+import Constants from 'constants';
+import wallControlsHtml from 'templates/wall-controls.html?raw';
+import modeControlsHtml from 'templates/mode-controls.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var ReflectionInterferenceSimView = SoundSimView.extend({
 
-    var _ = require('underscore');
-    var $ = require('jquery');
+    wallControlsTemplate: _.template(wallControlsHtml),
+    modeControlsTemplate: _.template(modeControlsHtml),
 
-    var ReflectionInterferenceSimulation = require('models/simulation/reflection-interference');
-
-    var SoundSimView                    = require('views/sim');
-    var ReflectionInterferenceSceneView = require('views/scene/reflection-interference');
-
-    var Constants = require('constants');
-
-    var wallControlsHtml = require('text!templates/wall-controls.html');
-    var modeControlsHtml = require('text!templates/mode-controls.html');
+    showHelpBtn: false,
 
     /**
-     *
+     * Dom event listeners
      */
-    var ReflectionInterferenceSimView = SoundSimView.extend({
+    events: _.extend({}, SoundSimView.prototype.events, {
+        'slide .wall-angle'    : 'changeWallAngle',
+        'slide .wall-position' : 'changeWallPosition',
 
-        wallControlsTemplate: _.template(wallControlsHtml),
-        modeControlsTemplate: _.template(modeControlsHtml),
+        'click .mode-continuous' : 'changeModeContinuous',
+        'click .mode-pulse'      : 'changeModePulse',
+        'click .btn-pulse'       : 'pulse'
+    }),
 
-        showHelpBtn: false,
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Interference by Reflection',
+            name: 'reflection-interference',
+        }, options);
 
-        /**
-         * Dom event listeners
-         */
-        events: _.extend({}, SoundSimView.prototype.events, {
-            'slide .wall-angle'    : 'changeWallAngle',
-            'slide .wall-position' : 'changeWallPosition',
+        SoundSimView.prototype.initialize.apply(this, [options]);
+    },
 
-            'click .mode-continuous' : 'changeModeContinuous',
-            'click .mode-pulse'      : 'changeModePulse',
-            'click .btn-pulse'       : 'pulse'
-        }),
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new ReflectionInterferenceSimulation();
+    },
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Interference by Reflection',
-                name: 'reflection-interference',
-            }, options);
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new ReflectionInterferenceSceneView({
+            simulation: this.simulation
+        });
+    },
 
-            SoundSimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Renders page content
+     */
+    renderScaffolding: function() {
+        SoundSimView.prototype.renderScaffolding.apply(this, arguments);
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new ReflectionInterferenceSimulation();
-        },
+        var data = {
+            Constants: Constants,
+            unique: this.cid
+        };
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new ReflectionInterferenceSceneView({
-                simulation: this.simulation
-            });
-        },
+        // Sound mode controls
+        this.$('.sim-controls').append(this.modeControlsTemplate(data));
 
-        /**
-         * Renders page content
-         */
-        renderScaffolding: function() {
-            SoundSimView.prototype.renderScaffolding.apply(this, arguments);
+        // Wall property controls
+        this.$('.sim-controls-column').append(this.wallControlsTemplate(data));
 
-            var data = {
-                Constants: Constants,
-                unique: this.cid
-            };
+        this.$('.sim-controls .wall-angle').noUiSlider({
+            start: Constants.DEFAULT_WALL_ANGLE,
+            connect: 'lower',
+            range: {
+                'min': Constants.MIN_WALL_ANGLE,
+                'max': Constants.MAX_WALL_ANGLE
+            }
+        });
 
-            // Sound mode controls
-            this.$('.sim-controls').append(this.modeControlsTemplate(data));
+        this.$('.sim-controls .wall-position').noUiSlider({
+            start: Constants.DEFAULT_WALL_POSITION,
+            connect: 'lower',
+            range: {
+                'min': Constants.MIN_WALL_POSITION,
+                'max': Constants.MAX_WALL_POSITION
+            }
+        });
 
-            // Wall property controls
-            this.$('.sim-controls-column').append(this.wallControlsTemplate(data));
+        this.$wallAngle    = this.$('.wall-angle-value');
+        this.$wallPosition = this.$('.wall-position-value');
+    },
 
-            this.$('.sim-controls .wall-angle').noUiSlider({
-                start: Constants.DEFAULT_WALL_ANGLE,
-                connect: 'lower',
-                range: {
-                    'min': Constants.MIN_WALL_ANGLE,
-                    'max': Constants.MAX_WALL_ANGLE
-                }
-            });
+    changeModePulse: function() {
+        this.simulation.setPulseMode();
+        this.$('.btn-pulse').removeAttr('disabled');
+    },
 
-            this.$('.sim-controls .wall-position').noUiSlider({
-                start: Constants.DEFAULT_WALL_POSITION,
-                connect: 'lower',
-                range: {
-                    'min': Constants.MIN_WALL_POSITION,
-                    'max': Constants.MAX_WALL_POSITION
-                }
-            });
+    changeModeContinuous: function() {
+        this.simulation.setContinuousMode();
+        this.$('.btn-pulse').prop('disabled', true);
+    },
 
-            this.$wallAngle    = this.$('.wall-angle-value');
-            this.$wallPosition = this.$('.wall-position-value');
-        },
+    pulse: function() {
+        this.simulation.pulse();
+    },
 
-        changeModePulse: function() {
-            this.simulation.setPulseMode();
-            this.$('.btn-pulse').removeAttr('disabled');
-        },
+    changeWallAngle: function(event) {
+        var angle = parseInt($(event.target).val());
+        this.inputLock(function() {
+            this.$wallAngle.html(angle + '&deg;');
+            this.sceneView.setReflectionLineAngle(angle);
+        });
+    },
 
-        changeModeContinuous: function() {
-            this.simulation.setContinuousMode();
-            this.$('.btn-pulse').prop('disabled', true);
-        },
+    changeWallPosition: function(event) {
+        var position = parseFloat($(event.target).val());
+        this.inputLock(function() {
+            this.$wallPosition.html(position.toFixed(1) + 'm');
+            this.sceneView.setReflectionLinePosition(position);
+        });
+    }
 
-        pulse: function() {
-            this.simulation.pulse();
-        },
-
-        changeWallAngle: function(event) {
-            var angle = parseInt($(event.target).val());
-            this.inputLock(function() {
-                this.$wallAngle.html(angle + '&deg;');
-                this.sceneView.setReflectionLineAngle(angle);
-            });
-        },
-
-        changeWallPosition: function(event) {
-            var position = parseFloat($(event.target).val());
-            this.inputLock(function() {
-                this.$wallPosition.html(position.toFixed(1) + 'm');
-                this.sceneView.setReflectionLinePosition(position);
-            });
-        }
-
-    });
-
-    return ReflectionInterferenceSimView;
 });
+
+export default ReflectionInterferenceSimView;

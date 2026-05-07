@@ -1,26 +1,20 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * Resets all particle collisions
+ */
+var ResetElectronPropagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(ResetElectronPropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, particle) {
+        particle.forgetCollision();
+    }
 
-    /**
-     * Resets all particle collisions
-     */
-    var ResetElectronPropagator = function() {};
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(ResetElectronPropagator.prototype, Propagator.prototype, {
-
-        propagate: function(deltaTime, particle) {
-            particle.forgetCollision();
-        }
-
-    });
-
-    return ResetElectronPropagator;
 });
+
+export default ResetElectronPropagator;

@@ -1,178 +1,168 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import Colors from 'common/colors/colors';
+import CircuitInteraction from 'models/circuit-interaction';
+import Draggable from 'views/draggable';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A view that represents a circuit component
+ */
+var JunctionView = Draggable.extend({
 
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var Vector2 = require('common/math/vector2');
-    var Colors  = require('common/colors/colors');
-
-    var CircuitInteraction = require('models/circuit-interaction');
-
-    var Draggable = require('views/draggable');
-
-    var Constants = require('constants');
+    contextMenuContent: '<li><a class="split-btn"><span class="fa fa-chain-broken"></span>&nbsp; Split Junction</a></li>',
 
     /**
-     * A view that represents a circuit component
+     * Overrides Draggable's initializeDisplayObject function
      */
-    var JunctionView = Draggable.extend({
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-        contextMenuContent: '<li><a class="split-btn"><span class="fa fa-chain-broken"></span>&nbsp; Split Junction</a></li>',
+    /**
+     * Initializes the new JunctionView.
+     */
+    initialize: function(options) {
+        this.color = Colors.parseHex(JunctionView.SOLDER_COLOR);
 
-        /**
-         * Overrides Draggable's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+        // Cached objects
+        this._point = new Vector2();
 
-        /**
-         * Initializes the new JunctionView.
-         */
-        initialize: function(options) {
-            this.color = Colors.parseHex(JunctionView.SOLDER_COLOR);
+        Draggable.prototype.initialize.apply(this, arguments);
 
-            // Cached objects
-            this._point = new Vector2();
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+        this.listenTo(this.circuit, 'junctions-collapsed junction-split', this.updateSolder);
+        this.listenTo(this.circuit.branches, 'add remove reset', this.updateSolder);
+        this.listenTo(this.circuit.junctions, 'add remove reset', this.updateSolder);
+    },
 
-            Draggable.prototype.initialize.apply(this, arguments);
+    detach: function() {
+        Draggable.prototype.detach.apply(this, arguments);
 
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-            this.listenTo(this.circuit, 'junctions-collapsed junction-split', this.updateSolder);
-            this.listenTo(this.circuit.branches, 'add remove reset', this.updateSolder);
-            this.listenTo(this.circuit.junctions, 'add remove reset', this.updateSolder);
-        },
+        if (this.solderLayer.parent)
+            this.solderLayer.parent.removeChild(this.solderLayer);
+    },
 
-        detach: function() {
-            Draggable.prototype.detach.apply(this, arguments);
+    initGraphics: function() {
+        this.displayObject.hitArea = new PIXI.Circle(0, 0, 1);
+        this.displayObject.buttonMode = true;
+        this.displayObject.defaultCursor = 'move';
 
-            if (this.solderLayer.parent)
-                this.solderLayer.parent.removeChild(this.solderLayer);
-        },
+        this.schematicGraphics = new PIXI.Graphics();
+        this.schematicGraphics.visible = false;
+        this.displayObject.addChild(this.schematicGraphics);
 
-        initGraphics: function() {
-            this.displayObject.hitArea = new PIXI.Circle(0, 0, 1);
-            this.displayObject.buttonMode = true;
-            this.displayObject.defaultCursor = 'move';
+        this.solderLayer = new PIXI.Graphics();
 
-            this.schematicGraphics = new PIXI.Graphics();
-            this.schematicGraphics.visible = false;
-            this.displayObject.addChild(this.schematicGraphics);
+        this.hoverGraphics = new PIXI.Graphics();
+        this.hoverLayer.addChild(this.hoverGraphics);
 
-            this.solderLayer = new PIXI.Graphics();
+        Draggable.prototype.initGraphics.apply(this, arguments);
+    },
 
-            this.hoverGraphics = new PIXI.Graphics();
-            this.hoverLayer.addChild(this.hoverGraphics);
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        var viewX = viewPosition.x;
+        var viewY = viewPosition.y;
 
-            Draggable.prototype.initGraphics.apply(this, arguments);
-        },
+        this.solderLayer.x = viewX;
+        this.solderLayer.y = viewY;
 
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            var viewX = viewPosition.x;
-            var viewY = viewPosition.y;
+        this.displayObject.x = viewX;
+        this.displayObject.y = viewY;
+        this.displayObject.hitArea.radius = this.getRadius();
 
-            this.solderLayer.x = viewX;
-            this.solderLayer.y = viewY;
+        this.hoverGraphics.x = viewX;
+        this.hoverGraphics.y = viewY;
+    },
 
-            this.displayObject.x = viewX;
-            this.displayObject.y = viewY;
-            this.displayObject.hitArea.radius = this.getRadius();
+    draw: function() {
+        var radius = this.getRadius();
+        var solderRadius = this.getSolderRadius();
 
-            this.hoverGraphics.x = viewX;
-            this.hoverGraphics.y = viewY;
-        },
+        var solderGraphics = this.solderLayer;
+        solderGraphics.clear();
+        solderGraphics.beginFill(this.color, 1);
+        solderGraphics.drawCircle(0, 0, solderRadius);
+        solderGraphics.endFill();
 
-        draw: function() {
-            var radius = this.getRadius();
-            var solderRadius = this.getSolderRadius();
+        var schematicGraphics = this.schematicGraphics;
+        schematicGraphics.clear();
+        schematicGraphics.beginFill();
+        schematicGraphics.drawCircle(0, 0, radius * 0.5);
+        schematicGraphics.endFill();
 
-            var solderGraphics = this.solderLayer;
-            solderGraphics.clear();
-            solderGraphics.beginFill(this.color, 1);
-            solderGraphics.drawCircle(0, 0, solderRadius);
-            solderGraphics.endFill();
+        var hoverGraphics = this.hoverGraphics;
+        hoverGraphics.clear();
+        hoverGraphics.beginFill(this.selectionColor, 1);
+        hoverGraphics.drawCircle(0, 0, radius);
+        hoverGraphics.endFill();
+        hoverGraphics.beginFill(this.selectionColor, Constants.SELECTION_AURA_ALPHA);
+        hoverGraphics.drawCircle(0, 0, radius * 2);
+        hoverGraphics.endFill();
+    },
 
-            var schematicGraphics = this.schematicGraphics;
-            schematicGraphics.clear();
-            schematicGraphics.beginFill();
-            schematicGraphics.drawCircle(0, 0, radius * 0.5);
-            schematicGraphics.endFill();
+    updateMVT: function(mvt) {
+        Draggable.prototype.updateMVT.apply(this, arguments);
 
-            var hoverGraphics = this.hoverGraphics;
-            hoverGraphics.clear();
-            hoverGraphics.beginFill(this.selectionColor, 1);
-            hoverGraphics.drawCircle(0, 0, radius);
-            hoverGraphics.endFill();
-            hoverGraphics.beginFill(this.selectionColor, Constants.SELECTION_AURA_ALPHA);
-            hoverGraphics.drawCircle(0, 0, radius * 2);
-            hoverGraphics.endFill();
-        },
+        this.draw();
+        this.updatePosition(this.model, this.model.get('position'));
+        this.updateSolder();
+    },
 
-        updateMVT: function(mvt) {
-            Draggable.prototype.updateMVT.apply(this, arguments);
+    updateSolder: function(j1, j2, replacement) {
+        if (this.isConnected() && !this.circuit.get('schematic'))
+            this.solderLayer.visible = true;
+        else
+            this.solderLayer.visible = false;
+    },
 
-            this.draw();
-            this.updatePosition(this.model, this.model.get('position'));
-            this.updateSolder();
-        },
+    getRadius: function() {
+        return Math.round(this.mvt.modelToViewDeltaX(JunctionView.RADIUS));
+    },
 
-        updateSolder: function(j1, j2, replacement) {
-            if (this.isConnected() && !this.circuit.get('schematic'))
-                this.solderLayer.visible = true;
-            else
-                this.solderLayer.visible = false;
-        },
+    getSolderRadius: function() {
+        return Math.round(this.mvt.modelToViewDeltaX(JunctionView.SOLDER_RADIUS));
+    },
 
-        getRadius: function() {
-            return Math.round(this.mvt.modelToViewDeltaX(JunctionView.RADIUS));
-        },
+    _drag: function(event) {
+        this._point.set(event.data.global.x, event.data.global.y);
+        var modelPoint = this._point.set(this.mvt.viewToModel(this._point));
 
-        getSolderRadius: function() {
-            return Math.round(this.mvt.modelToViewDeltaX(JunctionView.SOLDER_RADIUS));
-        },
+        CircuitInteraction.dragJunction(this.model, modelPoint);
 
-        _drag: function(event) {
-            this._point.set(event.data.global.x, event.data.global.y);
-            var modelPoint = this._point.set(this.mvt.viewToModel(this._point));
+        this.circuit.clearSelection();
+    },
 
-            CircuitInteraction.dragJunction(this.model, modelPoint);
+    _drop: function(event) {
+        CircuitInteraction.dropJunction(this.model);
+    },
 
-            this.circuit.clearSelection();
-        },
-
-        _drop: function(event) {
-            CircuitInteraction.dropJunction(this.model);
-        },
-
-        initContextMenu: function($contextMenu) {
-            $contextMenu.on('click', '.split-btn', _.bind(this.split, this));
-            if (this.circuit.getAdjacentBranches(this.model).length <= 1) {
-                $contextMenu
-                    .find('.split-btn')
-                    .attr('disabled', 'disabled')
-                    .addClass('disabled');
-            }
-        },
-
-        split: function() {
-            this.circuit.split(this.model);
-            this.hidePopover();
-        },
-
-        isConnected: function() {
-            return (this.circuit.getJunctionNeighbors(this.model).length > 1);
-        },
-
-        schematicModeChanged: function(circuit, schematic) {
-            this.updateSolder();
-            this.schematicGraphics.visible = schematic;
+    initContextMenu: function($contextMenu) {
+        $contextMenu.on('click', '.split-btn', _.bind(this.split, this));
+        if (this.circuit.getAdjacentBranches(this.model).length <= 1) {
+            $contextMenu
+                .find('.split-btn')
+                .attr('disabled', 'disabled')
+                .addClass('disabled');
         }
+    },
 
-    }, Constants.JunctionView);
+    split: function() {
+        this.circuit.split(this.model);
+        this.hidePopover();
+    },
 
-    return JunctionView;
-});
+    isConnected: function() {
+        return (this.circuit.getJunctionNeighbors(this.model).length > 1);
+    },
+
+    schematicModeChanged: function(circuit, schematic) {
+        this.updateSolder();
+        this.schematicGraphics.visible = schematic;
+    }
+
+}, Constants.JunctionView);
+
+export default JunctionView;

@@ -1,15 +1,9 @@
-define(function (require) {
+import PositionableObject from 'common/models/positionable-object';
 
-    'use strict';
-
-
-    var PositionableObject = require('common/models/positionable-object');
-
-    var Sensor = PositionableObject.extend({
+var Sensor = PositionableObject.extend({
 
 
 
-    });
-
-    return Sensor;
 });
+
+export default Sensor;

@@ -1,37 +1,30 @@
-define(function (require) {
+import _ from 'underscore';
+import PositionableObject from 'common/models/positionable-object';
+import Constants from 'constants';
 
-    'use strict';
+var Lens = PositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        indexOfRefraction: Constants.Lens.DEFAULT_INDEX_OF_REFRACTION,
+        radiusOfCurvature: Constants.Lens.DEFAULT_RADIUS_OF_CURVATURE,
+        diameter:          Constants.Lens.DEFAULT_DIAMETER,
+        focalLength: 0
+    }),
 
-    var PositionableObject = require('common/models/positionable-object');
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, arguments);
 
-    var Constants = require('constants');
+        this.on('change:indexOfRefraction change:radiusOfCurvature', this.updateFocalLength);
 
-    var Lens = PositionableObject.extend({
+        this.updateFocalLength();
+    },
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            indexOfRefraction: Constants.Lens.DEFAULT_INDEX_OF_REFRACTION,
-            radiusOfCurvature: Constants.Lens.DEFAULT_RADIUS_OF_CURVATURE,
-            diameter:          Constants.Lens.DEFAULT_DIAMETER,
-            focalLength: 0
-        }),
+    updateFocalLength: function() {
+        this.set('focalLength', this.get('radiusOfCurvature') / (
+            2 * (this.get('indexOfRefraction') - 1)
+        ));
+    }
 
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, arguments);
+}, Constants.Lens);
 
-            this.on('change:indexOfRefraction change:radiusOfCurvature', this.updateFocalLength);
-
-            this.updateFocalLength();
-        },
-
-        updateFocalLength: function() {
-            this.set('focalLength', this.get('radiusOfCurvature') / (
-                2 * (this.get('indexOfRefraction') - 1)
-            ));
-        }
-
-    }, Constants.Lens);
-
-    return Lens;
-});
+export default Lens;

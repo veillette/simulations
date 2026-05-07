@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import BarMagnetSimView from 'views/sim/bar-magnet';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var BarMagnetSimView = require('views/sim/bar-magnet');
+/**
+ * "Generator" version of the original
+ */
+var GeneratorBarMagnetSimView = BarMagnetSimView.extend({
 
     /**
-     * "Generator" version of the original
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var GeneratorBarMagnetSimView = BarMagnetSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            link: 'generator'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'generator'
-            }, options);
+        BarMagnetSimView.prototype.initialize.apply(this, [options]);
+    }
 
-            BarMagnetSimView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return GeneratorBarMagnetSimView;
 });
+
+export default GeneratorBarMagnetSimView;

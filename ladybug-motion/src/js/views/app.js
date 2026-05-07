@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import LadybugMotionSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var LadybugMotionAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var LadybugMotionSimView = require('views/sim');
+    simViewConstructors: [
+        LadybugMotionSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var LadybugMotionAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            LadybugMotionSimView
-        ]
-
-    });
-
-    return LadybugMotionAppView;
 });
+
+export default LadybugMotionAppView;

@@ -1,22 +1,17 @@
-define(function(require) {
+import MultipleNucleusDecayChart from 'views/nucleus-decay-chart/multiple';
 
-    'use strict';
+/**
+ * A panel that contains a chart showing the timeline for decay of nuclei over time.
+ */
+var HalfLifeNucleusDecayChart = MultipleNucleusDecayChart.extend({
 
-    var MultipleNucleusDecayChart = require('views/nucleus-decay-chart/multiple');
+    initYAxis: function() {
+        MultipleNucleusDecayChart.prototype.initYAxis.apply(this, arguments);
 
-    /**
-     * A panel that contains a chart showing the timeline for decay of nuclei over time.
-     */
-    var HalfLifeNucleusDecayChart = MultipleNucleusDecayChart.extend({
+        this.isotopeLabel.x -= 12;
+    }
 
-        initYAxis: function() {
-            MultipleNucleusDecayChart.prototype.initYAxis.apply(this, arguments);
-
-            this.isotopeLabel.x -= 12;
-        }
-
-    });
-
-
-    return HalfLifeNucleusDecayChart;
 });
+
+
+export default HalfLifeNucleusDecayChart;

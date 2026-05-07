@@ -1,304 +1,291 @@
-// I could probably use a second copy of the screen image as a clipping mask
-//   so that the light spots only shine on the screen itself and don't float
-//   oddly in the air.  That or I can make an actual mask image that is just
-//   the screen part of the screen.
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Constants from 'constants';
+import Assets from 'assets';
+var Types = Constants.SourceObject.Types;
 
-define(function(require) {
+/**
+ *
+ */
+var ScreenView = PixiView.extend({
 
-    'use strict';
-
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-
-    var Constants = require('constants');
-    var Types = Constants.SourceObject.Types;
-
-    var Assets = require('assets');
+    events: {
+        'touchstart      .screenBack': 'dragStart',
+        'mousedown       .screenBack': 'dragStart',
+        'touchmove       .screenBack': 'drag',
+        'mousemove       .screenBack': 'drag',
+        'touchend        .screenBack': 'dragEnd',
+        'mouseup         .screenBack': 'dragEnd',
+        'touchendoutside .screenBack': 'dragEnd',
+        'mouseupoutside  .screenBack': 'dragEnd'
+    },
 
     /**
-     *
+     * Initializes the new ScreenView.
      */
-    var ScreenView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-        events: {
-            'touchstart      .screenBack': 'dragStart',
-            'mousedown       .screenBack': 'dragStart',
-            'touchmove       .screenBack': 'drag',
-            'mousemove       .screenBack': 'drag',
-            'touchend        .screenBack': 'dragEnd',
-            'mouseup         .screenBack': 'dragEnd',
-            'touchendoutside .screenBack': 'dragEnd',
-            'mouseupoutside  .screenBack': 'dragEnd'
-        },
+        this.initGraphics();
+        this.updateMVT(this.mvt);
 
-        /**
-         * Initializes the new ScreenView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        this.lastPosition = new PIXI.Point();
 
-            this.initGraphics();
-            this.updateMVT(this.mvt);
+        // Listen for changes in the target image
+        this.listenTo(this.model, 'change:type',        this.typeChanged);
+        this.listenTo(this.model, 'change:position',    this.updatePosition);
+        this.listenTo(this.model, 'change:secondPoint', this.updateSecondPoint);
 
-            this.lastPosition = new PIXI.Point();
+        // Listen for changes in the lens
+        this.listenTo(this.model.lens, 'change:diameter', this.drawLightSpots);
+    },
 
-            // Listen for changes in the target image
-            this.listenTo(this.model, 'change:type',        this.typeChanged);
-            this.listenTo(this.model, 'change:position',    this.updatePosition);
-            this.listenTo(this.model, 'change:secondPoint', this.updateSecondPoint);
+    /**
+     * Initializes all the graphics
+     */
+    initGraphics: function() {
+        this.initTextures();
+        this.initLayers();
+        this.initLightSpots();
 
-            // Listen for changes in the lens
-            this.listenTo(this.model.lens, 'change:diameter', this.drawLightSpots);
-        },
+        this.hide();
+        this.hideSecondPoint();
+    },
 
-        /**
-         * Initializes all the graphics
-         */
-        initGraphics: function() {
-            this.initTextures();
-            this.initLayers();
-            this.initLightSpots();
+    initTextures: function() {
+        var baseTexture = Assets.Texture(Assets.Images.SCREEN).baseTexture;
 
-            this.hide();
-            this.hideSecondPoint();
-        },
+        var width  = baseTexture.width;
+        var height = baseTexture.height;
+        var dividingX = 112; // Pixels (a little less than half the image width)
 
-        initTextures: function() {
-            var baseTexture = Assets.Texture(Assets.Images.SCREEN).baseTexture;
+        this.leftTexture  = new PIXI.Texture(baseTexture, new PIXI.Rectangle(0,         0,         dividingX, height));
+        this.rightTexture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(dividingX, 0, width - dividingX, height));
+    },
 
-            var width  = baseTexture.width;
-            var height = baseTexture.height;
-            var dividingX = 112; // Pixels (a little less than half the image width)
+    initLayers: function() {
+        var screenBack  = new PIXI.Sprite(Assets.Texture(Assets.Images.SCREEN));
+        var screenFront = new PIXI.Sprite(this.rightTexture);
 
-            this.leftTexture  = new PIXI.Texture(baseTexture, new PIXI.Rectangle(0,         0,         dividingX, height));
-            this.rightTexture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(dividingX, 0, width - dividingX, height));
-        },
+        // Center it vertically on the screen part of the graphic
+        screenBack.anchor.y = screenFront.anchor.y = 0.52;
 
-        initLayers: function() {
-            var screenBack  = new PIXI.Sprite(Assets.Texture(Assets.Images.SCREEN));
-            var screenFront = new PIXI.Sprite(this.rightTexture);
+        // The back texture is the full texture but centered on the
+        //   dividing area, whereas the front texture is only the
+        //   right side of the texture on top of the back with some
+        //   transparency, to make it so we can see the rays going
+        //   through it.
+        screenBack.anchor.x = (this.rightTexture.baseTexture.width - this.rightTexture.width) / this.rightTexture.baseTexture.width;
+        screenFront.alpha = 0.9;
 
-            // Center it vertically on the screen part of the graphic
-            screenBack.anchor.y = screenFront.anchor.y = 0.52;
+        // Pointer cursor
+        screenBack.buttonMode = true;
 
-            // The back texture is the full texture but centered on the
-            //   dividing area, whereas the front texture is only the
-            //   right side of the texture on top of the back with some
-            //   transparency, to make it so we can see the rays going
-            //   through it.
-            screenBack.anchor.x = (this.rightTexture.baseTexture.width - this.rightTexture.width) / this.rightTexture.baseTexture.width;
-            screenFront.alpha = 0.9;
+        this.backLayer  = new PIXI.Container();
+        this.frontLayer = new PIXI.Container();
 
-            // Pointer cursor
-            screenBack.buttonMode = true;
+        this.backLayer.addChild(screenBack);
+        this.frontLayer.addChild(screenFront);
 
-            this.backLayer  = new PIXI.Container();
-            this.frontLayer = new PIXI.Container();
+        this.screenBack = screenBack;
+        this.screenFront = screenFront;
+    },
 
-            this.backLayer.addChild(screenBack);
-            this.frontLayer.addChild(screenFront);
+    initLightSpots: function() {
+        // Create masks
+        this.backMask = new PIXI.Graphics();
+        this.frontMask = new PIXI.Graphics();
 
-            this.screenBack = screenBack;
-            this.screenFront = screenFront;
-        },
+        var anchorX = this.screenBack.anchor.x;
+        var anchorY = this.screenBack.anchor.y;
 
-        initLightSpots: function() {
-            // Create masks
-            this.backMask = new PIXI.Graphics();
-            this.frontMask = new PIXI.Graphics();
+        var xOffset = this.screenBack.texture.width * anchorX;
+        var yOffset = this.screenBack.texture.height * anchorY;
 
-            var anchorX = this.screenBack.anchor.x;
-            var anchorY = this.screenBack.anchor.y;
+        var centerPercent = (xOffset - ScreenView.MASK_TL_CORNER.x) / (ScreenView.MASK_TR_CORNER.x - ScreenView.MASK_TL_CORNER.x);
+        var topCenter    = ScreenView.MASK_TL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_TR_CORNER.y * centerPercent;
+        var bottomCenter = ScreenView.MASK_BL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_BR_CORNER.y * centerPercent;
 
-            var xOffset = this.screenBack.texture.width * anchorX;
-            var yOffset = this.screenBack.texture.height * anchorY;
+        this.backMask.beginFill(0xFF0000, 0.8);
+        this.backMask.moveTo(ScreenView.MASK_TL_CORNER.x - xOffset, ScreenView.MASK_TL_CORNER.y - yOffset);
+        this.backMask.lineTo(0, topCenter - yOffset);
+        this.backMask.lineTo(0, bottomCenter - yOffset);
+        this.backMask.lineTo(ScreenView.MASK_BL_CORNER.x - xOffset, ScreenView.MASK_BL_CORNER.y - yOffset);
+        this.backMask.endFill();
 
-            var centerPercent = (xOffset - ScreenView.MASK_TL_CORNER.x) / (ScreenView.MASK_TR_CORNER.x - ScreenView.MASK_TL_CORNER.x);
-            var topCenter    = ScreenView.MASK_TL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_TR_CORNER.y * centerPercent;
-            var bottomCenter = ScreenView.MASK_BL_CORNER.y * (1 - centerPercent) + ScreenView.MASK_BR_CORNER.y * centerPercent;
+        this.frontMask.beginFill(0xFFFF00, 0.8);
+        this.frontMask.moveTo(ScreenView.MASK_TR_CORNER.x - xOffset, ScreenView.MASK_TR_CORNER.y - yOffset);
+        this.frontMask.lineTo(0, topCenter - yOffset);
+        this.frontMask.lineTo(0, bottomCenter - yOffset);
+        this.frontMask.lineTo(ScreenView.MASK_BR_CORNER.x - xOffset, ScreenView.MASK_BR_CORNER.y - yOffset);
+        this.frontMask.endFill();
 
-            this.backMask.beginFill(0xFF0000, 0.8);
-            this.backMask.moveTo(ScreenView.MASK_TL_CORNER.x - xOffset, ScreenView.MASK_TL_CORNER.y - yOffset);
-            this.backMask.lineTo(0, topCenter - yOffset);
-            this.backMask.lineTo(0, bottomCenter - yOffset);
-            this.backMask.lineTo(ScreenView.MASK_BL_CORNER.x - xOffset, ScreenView.MASK_BL_CORNER.y - yOffset);
-            this.backMask.endFill();
+        this.backLayer.addChild(this.backMask);
+        this.frontLayer.addChild(this.frontMask);
 
-            this.frontMask.beginFill(0xFFFF00, 0.8);
-            this.frontMask.moveTo(ScreenView.MASK_TR_CORNER.x - xOffset, ScreenView.MASK_TR_CORNER.y - yOffset);
-            this.frontMask.lineTo(0, topCenter - yOffset);
-            this.frontMask.lineTo(0, bottomCenter - yOffset);
-            this.frontMask.lineTo(ScreenView.MASK_BR_CORNER.x - xOffset, ScreenView.MASK_BR_CORNER.y - yOffset);
-            this.frontMask.endFill();
+        // Create lights
+        this.spot1Back  = new PIXI.Graphics();
+        this.spot1Front = new PIXI.Graphics();
+        this.spot2Back  = new PIXI.Graphics();
+        this.spot2Front = new PIXI.Graphics();
 
-            this.backLayer.addChild(this.backMask);
-            this.frontLayer.addChild(this.frontMask);
+        this.spot1Back.mask = this.backMask;
+        this.spot1Front.mask = this.frontMask;
+        this.spot2Back.mask = this.backMask;
+        this.spot2Front.mask = this.frontMask;
 
-            // Create lights
-            this.spot1Back  = new PIXI.Graphics();
-            this.spot1Front = new PIXI.Graphics();
-            this.spot2Back  = new PIXI.Graphics();
-            this.spot2Front = new PIXI.Graphics();
+        this.backLayer.addChild(this.spot1Back);
+        this.frontLayer.addChild(this.spot1Front);
+        this.backLayer.addChild(this.spot2Back);
+        this.frontLayer.addChild(this.spot2Front);
+    },
 
-            this.spot1Back.mask = this.backMask;
-            this.spot1Front.mask = this.frontMask;
-            this.spot2Back.mask = this.backMask;
-            this.spot2Front.mask = this.frontMask;
+    /**
+     * Draws both light spots
+     */
+    drawLightSpots: function() {
+        this.drawLightSpot(this.spot1Back, this.spot1Front, this.model.get('position'));
+        this.drawLightSpot(this.spot2Back, this.spot2Front, this.model.get('secondPoint'));
+    },
 
-            this.backLayer.addChild(this.spot1Back);
-            this.frontLayer.addChild(this.spot1Front);
-            this.backLayer.addChild(this.spot2Back);
-            this.frontLayer.addChild(this.spot2Front);
-        },
+    /**
+     * Draws a single light spot
+     */
+    drawLightSpot: function(backGraphics, frontGraphics, targetPoint) {
+        var Bx = this.mvt.modelToViewX(this.model.lens.get('position').x);
+        var By = this.mvt.modelToViewY(this.model.lens.get('position').y);
 
-        /**
-         * Draws both light spots
-         */
-        drawLightSpots: function() {
-            this.drawLightSpot(this.spot1Back, this.spot1Front, this.model.get('position'));
-            this.drawLightSpot(this.spot2Back, this.spot2Front, this.model.get('secondPoint'));
-        },
+        var Cx = this.mvt.modelToViewX(targetPoint.x);
+        var Cy = this.mvt.modelToViewY(targetPoint.y);
 
-        /**
-         * Draws a single light spot
-         */
-        drawLightSpot: function(backGraphics, frontGraphics, targetPoint) {
-            var Bx = this.mvt.modelToViewX(this.model.lens.get('position').x);
-            var By = this.mvt.modelToViewY(this.model.lens.get('position').y);
+        var Sx = this.screenBack.x;
 
-            var Cx = this.mvt.modelToViewX(targetPoint.x);
-            var Cy = this.mvt.modelToViewY(targetPoint.y);
+        var h = Math.abs(this.mvt.modelToViewDeltaY(this.model.lens.get('diameter')));
 
-            var Sx = this.screenBack.x;
+        var y = Cy + ((Cy - By) / (Cx - Bx)) * (Sx - Cx);
 
-            var h = Math.abs(this.mvt.modelToViewDeltaY(this.model.lens.get('diameter')));
+        var height = h * Math.abs((Sx - Cx) / (Cx - Bx)) + 4;
+        var width = 0.3 * height;
+        var alpha = Math.min(1, Math.max(0, this.fullBrightSpotHeight / height));
 
-            var y = Cy + ((Cy - By) / (Cx - Bx)) * (Sx - Cx);
+        backGraphics.clear();
+        backGraphics.beginFill(0xFFFFFF, alpha);
+        backGraphics.drawEllipse(Sx, y, width / 2, height / 2);
+        backGraphics.endFill();
 
-            var height = h * Math.abs((Sx - Cx) / (Cx - Bx)) + 4;
-            var width = 0.3 * height;
-            var alpha = Math.min(1, Math.max(0, this.fullBrightSpotHeight / height));
+        frontGraphics.clear();
+        frontGraphics.beginFill(0xFFFFFF, alpha);
+        frontGraphics.drawEllipse(Sx, y, width / 2, height / 2);
+        frontGraphics.endFill();
+    },
 
-            backGraphics.clear();
-            backGraphics.beginFill(0xFFFFFF, alpha);
-            backGraphics.drawEllipse(Sx, y, width / 2, height / 2);
-            backGraphics.endFill();
+    dragStart: function(event) {
+        this.lastPosition.x = event.data.global.x;
+        this.lastPosition.y = event.data.global.y;
 
-            frontGraphics.clear();
-            frontGraphics.beginFill(0xFFFFFF, alpha);
-            frontGraphics.drawEllipse(Sx, y, width / 2, height / 2);
-            frontGraphics.endFill();
-        },
+        this.dragging = true;
+    },
 
-        dragStart: function(event) {
+    drag: function(event) {
+        if (this.dragging) {
+            var dx = event.data.global.x - this.lastPosition.x;
+            var dy = event.data.global.y - this.lastPosition.y;
+
+            this.translate(dx, dy);
+
             this.lastPosition.x = event.data.global.x;
             this.lastPosition.y = event.data.global.y;
+        }
+    },
 
-            this.dragging = true;
-        },
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
-        drag: function(event) {
-            if (this.dragging) {
-                var dx = event.data.global.x - this.lastPosition.x;
-                var dy = event.data.global.y - this.lastPosition.y;
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-                this.translate(dx, dy);
+        var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(ScreenView.SCREEN_HEIGHT_IN_METERS));
+        var scale = targetSpriteHeight / this.rightTexture.height;
+        this.screenBack.scale.x = scale;
+        this.screenBack.scale.y = scale;
+        this.screenFront.scale.x = scale;
+        this.screenFront.scale.y = scale;
+        this.backMask.scale.x = scale;
+        this.backMask.scale.y = scale;
+        this.frontMask.scale.x = scale;
+        this.frontMask.scale.y = scale;
 
-                this.lastPosition.x = event.data.global.x;
-                this.lastPosition.y = event.data.global.y;
-            }
-        },
+        this.fullBrightSpotHeight = this.mvt.modelToViewDeltaX(ScreenView.FULL_BRIGHT_SPOT_HEIGHT);
 
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
+        this.updatePosition(this.model, this.model.get('position'));
+    },
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updatePosition: function(targetImage, position) {
+        this.drawLightSpot(this.spot1Back, this.spot1Front, position);
+    },
 
-            var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(ScreenView.SCREEN_HEIGHT_IN_METERS));
-            var scale = targetSpriteHeight / this.rightTexture.height;
-            this.screenBack.scale.x = scale;
-            this.screenBack.scale.y = scale;
-            this.screenFront.scale.x = scale;
-            this.screenFront.scale.y = scale;
-            this.backMask.scale.x = scale;
-            this.backMask.scale.y = scale;
-            this.frontMask.scale.x = scale;
-            this.frontMask.scale.y = scale;
+    updateSecondPoint: function(targetImage, secondPoint) {
+        this.drawLightSpot(this.spot2Back, this.spot2Front, secondPoint);
+    },
 
-            this.fullBrightSpotHeight = this.mvt.modelToViewDeltaX(ScreenView.FULL_BRIGHT_SPOT_HEIGHT);
+    typeChanged: function(targetImage, type) {
+        if (type === Types.LIGHT)
+            this.show();
+        else
+            this.hide();
+    },
 
-            this.updatePosition(this.model, this.model.get('position'));
-        },
+    show: function() {
+        this.backLayer.visible = true;
+        this.frontLayer.visible = true;
+    },
 
-        updatePosition: function(targetImage, position) {
-            this.drawLightSpot(this.spot1Back, this.spot1Front, position);
-        },
+    hide: function() {
+        this.backLayer.visible = false;
+        this.frontLayer.visible = false;
+    },
 
-        updateSecondPoint: function(targetImage, secondPoint) {
-            this.drawLightSpot(this.spot2Back, this.spot2Front, secondPoint);
-        },
+    showSecondPoint: function() {
+        this.spot2Back.visible = true;
+        this.spot2Front.visible = true;
+    },
 
-        typeChanged: function(targetImage, type) {
-            if (type === Types.LIGHT)
-                this.show();
-            else
-                this.hide();
-        },
+    hideSecondPoint: function() {
+        this.spot2Back.visible = false;
+        this.spot2Front.visible = false;
+    },
 
-        show: function() {
-            this.backLayer.visible = true;
-            this.frontLayer.visible = true;
-        },
+    setPosition: function(x, y) {
+        this.screenBack.x = x;
+        this.screenBack.y = y;
+        this.screenFront.x = x;
+        this.screenFront.y = y;
+        this.backMask.x = x;
+        this.backMask.y = y;
+        this.frontMask.x = x;
+        this.frontMask.y = y;
 
-        hide: function() {
-            this.backLayer.visible = false;
-            this.frontLayer.visible = false;
-        },
+        this.drawLightSpots();
+    },
 
-        showSecondPoint: function() {
-            this.spot2Back.visible = true;
-            this.spot2Front.visible = true;
-        },
+    translate: function(dx, dy) {
+        this.screenBack.x += dx;
+        this.screenBack.y += dy;
+        this.screenFront.x += dx;
+        this.screenFront.y += dy;
+        this.backMask.x += dx;
+        this.backMask.y += dy;
+        this.frontMask.x += dx;
+        this.frontMask.y += dy;
 
-        hideSecondPoint: function() {
-            this.spot2Back.visible = false;
-            this.spot2Front.visible = false;
-        },
+        this.drawLightSpots();
+    },
 
-        setPosition: function(x, y) {
-            this.screenBack.x = x;
-            this.screenBack.y = y;
-            this.screenFront.x = x;
-            this.screenFront.y = y;
-            this.backMask.x = x;
-            this.backMask.y = y;
-            this.frontMask.x = x;
-            this.frontMask.y = y;
+}, Constants.ScreenView);
 
-            this.drawLightSpots();
-        },
-
-        translate: function(dx, dy) {
-            this.screenBack.x += dx;
-            this.screenBack.y += dy;
-            this.screenFront.x += dx;
-            this.screenFront.y += dy;
-            this.backMask.x += dx;
-            this.backMask.y += dy;
-            this.frontMask.x += dx;
-            this.frontMask.y += dy;
-
-            this.drawLightSpots();
-        },
-
-    }, Constants.ScreenView);
-
-    return ScreenView;
-});
+export default ScreenView;

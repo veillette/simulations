@@ -1,36 +1,31 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+/**
+ * Represents an atomic bond between two atoms.
+ */
+var AtomicBond = function(atom1, atom2, bondCount) {
+    this.atom1 = atom1;
+    this.atom2 = atom2;
+    this.bondCount = bondCount;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(AtomicBond.prototype, {
 
-    /**
-     * Represents an atomic bond between two atoms.
-     */
-    var AtomicBond = function(atom1, atom2, bondCount) {
-        this.atom1 = atom1;
-        this.atom2 = atom2;
-        this.bondCount = bondCount;
-    };
+    getAtom1: function() {
+        return this.atom1;
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(AtomicBond.prototype, {
+    getAtom2: function() {
+        return this.atom2;
+    },
 
-        getAtom1: function() {
-            return this.atom1;
-        },
+    getBondCount: function() {
+        return this.bondCount;
+    }
 
-        getAtom2: function() {
-            return this.atom2;
-        },
-
-        getBondCount: function() {
-            return this.bondCount;
-        }
-
-    });
-
-    return AtomicBond;
 });
+
+export default AtomicBond;

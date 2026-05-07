@@ -1,76 +1,69 @@
-define(function(require) {
+import _ from 'underscore';
+import RutherfordScatteringSimView from 'rutherford-scattering/views/sim';
+import RutherfordAtomSceneView from 'rutherford-scattering/views/scene/rutherford';
+import RutherfordAtomSimulation from 'rutherford-scattering/models/simulation/rutherford-atom';
 
-    'use strict';
+/**
+ * Extends the functionality of the RutherfordScattering to create
+ *   the Rutherford Atom tab.
+ */
+var RutherfordAtomView = RutherfordScatteringSimView.extend({
 
-    var _ = require('underscore');
+    events: _.extend(RutherfordScatteringSimView.prototype.events, {
 
-    var RutherfordScatteringSimView    = require('rutherford-scattering/views/sim');
-    var RutherfordAtomSceneView    = require('rutherford-scattering/views/scene/rutherford');
+    }),
 
-    var RutherfordAtomSimulation = require('rutherford-scattering/models/simulation/rutherford-atom');
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Rutherford Atom',
+            name:  'rutherford-atom'
+        }, options);
+
+        this.showAtomProperties = true;
+
+        RutherfordScatteringSimView.prototype.initialize.apply(this, [ options ]);
+    },
 
     /**
-     * Extends the functionality of the RutherfordScattering to create
-     *   the Rutherford Atom tab.
+     * Initializes the SceneView.
      */
-    var RutherfordAtomView = RutherfordScatteringSimView.extend({
+    initSceneView: function() {
+        this.sceneView = new RutherfordAtomSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        events: _.extend(RutherfordScatteringSimView.prototype.events, {
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new RutherfordAtomSimulation();
+    },
 
-        }),
+    slideProtons: function(event) {
+        RutherfordScatteringSimView.prototype.slideProtons.call(this, event);
 
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Rutherford Atom',
-                name:  'rutherford-atom'
-            }, options);
+        this.simulation.pauseAtomDraw();
+    },
 
-            this.showAtomProperties = true;
+    slideNeutrons: function(event) {
+        RutherfordScatteringSimView.prototype.slideNeutrons.call(this, event);
 
-            RutherfordScatteringSimView.prototype.initialize.apply(this, [ options ]);
-        },
+        this.simulation.pauseAtomDraw();
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new RutherfordAtomSceneView({
-                simulation: this.simulation
-            });
-        },
+    changeProtons: function(event) {
+        RutherfordScatteringSimView.prototype.changeProtons.call(this, event);
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new RutherfordAtomSimulation();
-        },
+        this.simulation.restartAtomDraw();
+    },
 
-        slideProtons: function(event) {
-            RutherfordScatteringSimView.prototype.slideProtons.call(this, event);
+    changeNeutrons: function(event) {
+        RutherfordScatteringSimView.prototype.changeNeutrons.call(this, event);
 
-            this.simulation.pauseAtomDraw();
-        },
+        this.simulation.restartAtomDraw();
+    }
 
-        slideNeutrons: function(event) {
-            RutherfordScatteringSimView.prototype.slideNeutrons.call(this, event);
-
-            this.simulation.pauseAtomDraw();
-        },
-
-        changeProtons: function(event) {
-            RutherfordScatteringSimView.prototype.changeProtons.call(this, event);
-
-            this.simulation.restartAtomDraw();
-        },
-
-        changeNeutrons: function(event) {
-            RutherfordScatteringSimView.prototype.changeNeutrons.call(this, event);
-
-            this.simulation.restartAtomDraw();
-        }
-
-    });
-
-    return RutherfordAtomView;
 });
+
+export default RutherfordAtomView;

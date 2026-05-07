@@ -1,72 +1,66 @@
-define(function (require) {
+import FaradayObject from 'models/faraday-object';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * FieldMeter is the model of a B-field meter.
+ */
+var Lightbulb = FaradayObject.extend({
 
-    var FaradayObject = require('models/faraday-object');
+    initialize: function(attributes, options) {
+        FaradayObject.prototype.initialize.apply(this, arguments);
 
-    var Constants = require('constants');
+        this.pickupCoilModel = options.pickupCoilModel;
+        this.previousCurrentAmplitude = 0;
+
+        /* Determines whether the lightbulb turns off when the current in the coil
+         * changes direction.  In some cases (eg, the Generator or AC Electromagnet)
+         * this is the desired behavoir.  In other cases (eg, polarity file of the
+         * Bar Magnet) this is not the desired behavior.
+         */
+        this.offWhenCurrentChangesDirection = false;
+    },
 
     /**
-     * FieldMeter is the model of a B-field meter.
+     * Gets the intensity of the light.
+     * Fully off is 0.0, fully on is 1.0.
      */
-    var Lightbulb = FaradayObject.extend({
+    getIntensity: function() {
+        var intensity = 0.0;
 
-        initialize: function(attributes, options) {
-            FaradayObject.prototype.initialize.apply(this, arguments);
+        var currentAmplitude = this.pickupCoilModel.get('currentAmplitude');
 
-            this.pickupCoilModel = options.pickupCoilModel;
-            this.previousCurrentAmplitude = 0;
+        if (this.offWhenCurrentChangesDirection && (
+                (currentAmplitude >  0 && this.previousCurrentAmplitude <= 0) ||
+                (currentAmplitude <= 0 && this.previousCurrentAmplitude >  0)
+            )) {
+             // Current changed direction, so turn the light off.
+            intensity = 0;
+        }
+        else {
+            // Light intensity is proportional to amplitude of current in the coil.
+            intensity = Math.abs(currentAmplitude);
 
-            /* Determines whether the lightbulb turns off when the current in the coil
-             * changes direction.  In some cases (eg, the Generator or AC Electromagnet)
-             * this is the desired behavoir.  In other cases (eg, polarity file of the
-             * Bar Magnet) this is not the desired behavior.
-             */
-            this.offWhenCurrentChangesDirection = false;
-        },
-
-        /**
-         * Gets the intensity of the light.
-         * Fully off is 0.0, fully on is 1.0.
-         */
-        getIntensity: function() {
-            var intensity = 0.0;
-
-            var currentAmplitude = this.pickupCoilModel.get('currentAmplitude');
-
-            if (this.offWhenCurrentChangesDirection && (
-                    (currentAmplitude >  0 && this.previousCurrentAmplitude <= 0) ||
-                    (currentAmplitude <= 0 && this.previousCurrentAmplitude >  0)
-                )) {
-                 // Current changed direction, so turn the light off.
+            // Intensity below the threshold is effectively zero.
+            if (intensity < Constants.CURRENT_AMPLITUDE_THRESHOLD)
                 intensity = 0;
-            }
-            else {
-                // Light intensity is proportional to amplitude of current in the coil.
-                intensity = Math.abs(currentAmplitude);
-
-                // Intensity below the threshold is effectively zero.
-                if (intensity < Constants.CURRENT_AMPLITUDE_THRESHOLD)
-                    intensity = 0;
-            }
-
-            this.previousCurrentAmplitude = currentAmplitude;
-
-            return intensity;
-        },
-
-        /**
-         * Returns whether the lightbulb turns off when the current in the coil
-         */
-        isOffWhenCurrentChangesDirection: function() {
-            return this.offWhenCurrentChangesDirection;
-        },
-
-        update: function(time, deltaTime) {
-            // if enabled, notify observers
         }
 
-    });
+        this.previousCurrentAmplitude = currentAmplitude;
 
-    return Lightbulb;
+        return intensity;
+    },
+
+    /**
+     * Returns whether the lightbulb turns off when the current in the coil
+     */
+    isOffWhenCurrentChangesDirection: function() {
+        return this.offWhenCurrentChangesDirection;
+    },
+
+    update: function(time, deltaTime) {
+        // if enabled, notify observers
+    }
+
 });
+
+export default Lightbulb;

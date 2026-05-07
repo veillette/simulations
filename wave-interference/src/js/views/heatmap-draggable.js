@@ -1,93 +1,89 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+Backbone.$ = $;
 
-	'use strict';
+var HeatmapDraggable = Backbone.View.extend({
 
-	var $        = require('jquery');
-	var _        = require('underscore');
-	var Backbone = require('backbone'); Backbone.$ = $;
+    initialize: function(options) {
 
-	var HeatmapDraggable = Backbone.View.extend({
+        if (options.heatmapView)
+            this.heatmapView = options.heatmapView;
+        else
+            throw 'HeatmapDraggable requires a HeatmapView to render.';
 
-		initialize: function(options) {
+        this.waveSimulation = this.heatmapView.waveSimulation;
 
-			if (options.heatmapView)
-				this.heatmapView = options.heatmapView;
-			else
-				throw 'HeatmapDraggable requires a HeatmapView to render.';
+        this.listenTo(this.heatmapView, 'resized', this.resize);
+    },
 
-			this.waveSimulation = this.heatmapView.waveSimulation;
+    bindDragEvents: function() {
+        this.$outerDragFrame = this.heatmapView.$el;
+        this.$dragFrame      = this.heatmapView.$('.potential-views');
 
-			this.listenTo(this.heatmapView, 'resized', this.resize);
-		},
+        this.$outerDragFrame
+            .bind('mousemove touchmove', _.bind(this.drag, this))
+            .bind('mouseup touchend',    _.bind(this.dragEnd, this))
+            .bind('mouseleave',          _.bind(this.dragEnd, this));
 
-		bindDragEvents: function() {
-			this.$outerDragFrame = this.heatmapView.$el;
-			this.$dragFrame      = this.heatmapView.$('.potential-views');
+        this.heatmapView.$('.cross-section-slider')
+            .bind('mousemove touchmove', _.bind(this.drag, this))
+            .bind('mouseup touchend', _.bind(this.dragEnd, this));
+    },
 
-			this.$outerDragFrame
-				.bind('mousemove touchmove', _.bind(this.drag, this))
-				.bind('mouseup touchend',    _.bind(this.dragEnd, this))
-				.bind('mouseleave',          _.bind(this.dragEnd, this));
+    resize: function(){
+        this.updateOnNextFrame = true;
 
-			this.heatmapView.$('.cross-section-slider')
-				.bind('mousemove touchmove', _.bind(this.drag, this))
-				.bind('mouseup touchend', _.bind(this.dragEnd, this));
-		},
+        this.zoom = parseFloat($('.heatmap-column').css('zoom'));
 
-		resize: function(){
-			this.updateOnNextFrame = true;
+        this.outerDragOffset = this.$outerDragFrame.offset();
+        this.outerDragOffset.top  *= this.zoom;
+        this.outerDragOffset.left *= this.zoom;
 
-			this.zoom = parseFloat($('.heatmap-column').css('zoom'));
+        this.outerDragBounds = {
+            width:  this.$outerDragFrame.width()  * this.zoom,
+            height: this.$outerDragFrame.height() * this.zoom
+        };
 
-			this.outerDragOffset = this.$outerDragFrame.offset();
-			this.outerDragOffset.top  *= this.zoom;
-			this.outerDragOffset.left *= this.zoom;
+        this.dragOffset = this.$dragFrame.offset();
+        this.dragOffset.top  *= this.zoom;
+        this.dragOffset.left *= this.zoom;
 
-			this.outerDragBounds = {
-				width:  this.$outerDragFrame.width()  * this.zoom,
-				height: this.$outerDragFrame.height() * this.zoom
-			};
+        this.dragBounds = {
+            width:  this.$dragFrame.width()  * this.zoom,
+            height: this.$dragFrame.height() * this.zoom
+        };
+    },
 
-			this.dragOffset = this.$dragFrame.offset();
-			this.dragOffset.top  *= this.zoom;
-			this.dragOffset.left *= this.zoom;
+    drag: function(event) {},
 
-			this.dragBounds = {
-				width:  this.$dragFrame.width()  * this.zoom,
-				height: this.$dragFrame.height() * this.zoom
-			};
-		},
+    dragEnd: function(event) {},
 
-		drag: function(event) {},
+    fixTouchEvents: function(event) {
+        if (event.pageX === undefined) {
+            event.pageX = event.originalEvent.touches[0].pageX;
+            event.pageY = event.originalEvent.touches[0].pageY;
+        }
+    },
 
-		dragEnd: function(event) {},
+    outOfBounds: function(x, y) {
+        return (x > this.dragOffset.left + this.dragBounds.width  || x < this.dragOffset.left ||
+                y > this.dragOffset.top  + this.dragBounds.height || y < this.dragOffset.top);
+    },
 
-		fixTouchEvents: function(event) {
-			if (event.pageX === undefined) {
-				event.pageX = event.originalEvent.touches[0].pageX;
-				event.pageY = event.originalEvent.touches[0].pageY;
-			}
-		},
+    wayOutOfBounds: function(x, y) {
+        return (x > this.outerDragOffset.left + this.outerDragBounds.width  || x < this.outerDragOffset.left ||
+                y > this.outerDragOffset.top  + this.outerDragBounds.height || y < this.outerDragOffset.top);
+    },
 
-		outOfBounds: function(x, y) {
-			return (x > this.dragOffset.left + this.dragBounds.width  || x < this.dragOffset.left ||
-				    y > this.dragOffset.top  + this.dragBounds.height || y < this.dragOffset.top);
-		},
+    toLatticeXScale: function(x) {
+        return x / this.heatmapView.xSpacing;
+    },
 
-		wayOutOfBounds: function(x, y) {
-			return (x > this.outerDragOffset.left + this.outerDragBounds.width  || x < this.outerDragOffset.left ||
-				    y > this.outerDragOffset.top  + this.outerDragBounds.height || y < this.outerDragOffset.top);
-		},
+    toLatticeYScale: function(y) {
+        return y / this.heatmapView.ySpacing * -1;
+    }
 
-		toLatticeXScale: function(x) {
-			return x / this.heatmapView.xSpacing;
-		},
-
-		toLatticeYScale: function(y) {
-			return y / this.heatmapView.ySpacing * -1;
-		}
-
-	});
-
-	return HeatmapDraggable;
 });
+
+export default HeatmapDraggable;

@@ -1,80 +1,72 @@
-define(function (require) {
+import _ from 'underscore';
+import WavelengthColors from 'common/colors/wavelength';
+import MovingObject from 'hydrogen-atom/models/moving-object';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Photon is the model of a photon.
+ * A photon has a position and direction of motion.
+ * It also has an immutable wavelength.
+ * Photons move with constant speed.
+ */
+var Photon = MovingObject.extend({
 
-    var _ = require('underscore');
-
-    var WavelengthColors = require('common/colors/wavelength');
-
-    var MovingObject = require('hydrogen-atom/models/moving-object');
-
-    var Constants = require('constants');
+    defaults: _.extend({}, MovingObject.prototype.defaults, {
+        // Photon's wavelength, immutable
+        wavelength: undefined,
+        // Was the photon emitted by the atom? immutable, used by collision detection
+        emitted: false,
+        // Did the photon already collide with the atom
+        collided: false
+    }),
 
     /**
-     * Photon is the model of a photon.
-     * A photon has a position and direction of motion.
-     * It also has an immutable wavelength.
-     * Photons move with constant speed.
+     * Gets the photon's wavelength.
      */
-    var Photon = MovingObject.extend({
+    getWavelength: function() {
+        return this.get('wavelength');
+    },
 
-        defaults: _.extend({}, MovingObject.prototype.defaults, {
-            // Photon's wavelength, immutable
-            wavelength: undefined,
-            // Was the photon emitted by the atom? immutable, used by collision detection
-            emitted: false,
-            // Did the photon already collide with the atom
-            collided: false
-        }),
+    /**
+     * Gets the Color associated with the photon's wavelength.
+     */
+    getColor: function() {
+        var wavelength = this.get('wavelength');
+        var color;
 
-        /**
-         * Gets the photon's wavelength.
-         */
-        getWavelength: function() {
-            return this.get('wavelength');
-        },
+        if (wavelength === Constants.WHITE_WAVELENGTH) {
+            // Special case: white light.
+            color = '#fff';
+        }
+        else if (wavelength < WavelengthColors.MIN_WAVELENGTH) {
+            color = Constants.UV_COLOR;
+        }
+        else if (wavelength > WavelengthColors.MAX_WAVELENGTH) {
+            color = Constants.IR_COLOR;
+        }
+        else {
+            color = WavelengthColors.nmToHex(wavelength);
+        }
 
-        /**
-         * Gets the Color associated with the photon's wavelength.
-         */
-        getColor: function() {
-            var wavelength = this.get('wavelength');
-            var color;
+        return color;
+    },
 
-            if (wavelength === Constants.WHITE_WAVELENGTH) {
-                // Special case: white light.
-                color = '#fff';
-            }
-            else if (wavelength < WavelengthColors.MIN_WAVELENGTH) {
-                color = Constants.UV_COLOR;
-            }
-            else if (wavelength > WavelengthColors.MAX_WAVELENGTH) {
-                color = Constants.IR_COLOR;
-            }
-            else {
-                color = WavelengthColors.nmToHex(wavelength);
-            }
+    /**
+     * Was this photon emitted by the atom?
+     */
+    isEmitted: function() {
+        return this.get('emitted');
+    },
 
-            return color;
-        },
+    /**
+     * Did this photon collide with the atom?
+     */
+    isCollided: function() {
+        return this.get('collided');
+    },
 
-        /**
-         * Was this photon emitted by the atom?
-         */
-        isEmitted: function() {
-            return this.get('emitted');
-        },
+    update: function(time, deltaTime) {}
 
-        /**
-         * Did this photon collide with the atom?
-         */
-        isCollided: function() {
-            return this.get('collided');
-        },
-
-        update: function(time, deltaTime) {}
-
-    });
-
-    return Photon;
 });
+
+export default Photon;

@@ -1,44 +1,37 @@
-define(function (require) {
+import _ from 'underscore';
+import CircuitComponent from 'models/components/circuit-component';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * An inductor
+ */
+var Inductor = CircuitComponent.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, CircuitComponent.prototype.defaults, {
+        inductance: Constants.Inductor.DEFAULT_INDUCTANCE,
+        length: 1,
+        height: 1
+    }),
 
-    var CircuitComponent = require('models/components/circuit-component');
+    initialize: function(attributes, options) {
+        CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
+    },
 
-    var Constants = require('constants');
+    resetDynamics: function() {
+        this.set('kirkhoffEnabled', false);
+        this.set({
+            voltageDrop: 0,
+            current: 0,
+            mnaCurrent: 0,
+            mnaVoltageDrop: 0
+        });
+        this.set('kirkhoffEnabled', true);
+    },
 
-    /**
-     * An inductor
-     */
-    var Inductor = CircuitComponent.extend({
+    discharge: function() {
+        this.resetDynamics();
+    }
 
-        defaults: _.extend({}, CircuitComponent.prototype.defaults, {
-            inductance: Constants.Inductor.DEFAULT_INDUCTANCE,
-            length: 1,
-            height: 1
-        }),
+}, Constants.Inductor);
 
-        initialize: function(attributes, options) {
-            CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
-        },
-
-        resetDynamics: function() {
-            this.set('kirkhoffEnabled', false);
-            this.set({
-                voltageDrop: 0,
-                current: 0,
-                mnaCurrent: 0,
-                mnaVoltageDrop: 0
-            });
-            this.set('kirkhoffEnabled', true);
-        },
-
-        discharge: function() {
-            this.resetDynamics();
-        }
-
-    }, Constants.Inductor);
-
-    return Inductor;
-});
+export default Inductor;

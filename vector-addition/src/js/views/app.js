@@ -1,21 +1,16 @@
-define(function(require) {
+import Assets from 'assets';
+import PixiAppView from 'common/v3/pixi/view/app';
+import VectorAdditionSimView from 'views/sim';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var VectorAdditionAppView = PixiAppView.extend({
 
-    var Assets = require('assets');
-    var PixiAppView = require('common/v3/pixi/view/app');
-    var VectorAdditionSimView = require('views/sim');
-    require('less!styles/font-awesome');
+   assets: Assets.getAssetList(),
 
-    var VectorAdditionAppView = PixiAppView.extend({
+    simViewConstructors: [
+      VectorAdditionSimView
+    ]
 
-       assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-          VectorAdditionSimView
-        ]
-
-    });
-
-    return VectorAdditionAppView;
 });
+
+export default VectorAdditionAppView;

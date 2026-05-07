@@ -1,108 +1,100 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import DraggableArrowView from 'common/v3/pixi/view/arrow-draggable';
+import Constants from 'constants';
 
-    'use strict';
+var MomentumView = PixiView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            label: '',
+            color: MomentumView.ARROW_COLOR
+        }, options);
 
-    var PIXI = require('pixi');
+        this.mvt = options.mvt;
+        this.label = options.label;
+        this.color = options.color;
 
-    var PixiView           = require('common/v3/pixi/view');
-    var DraggableArrowView = require('common/v3/pixi/view/arrow-draggable');
+        this.arrowViewModel = new DraggableArrowView.ArrowViewModel({
+            originX: 0,
+            originY: 0
+        });
 
-    var Constants = require('constants');
+        this.initGraphics();
 
-    var MomentumView = PixiView.extend({
+        this.listenTo(this.model, 'change:momentumX change:momentumY', this.updateMomentum);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                label: '',
-                color: MomentumView.ARROW_COLOR
-            }, options);
+    initGraphics: function() {
+        this.initArrow();
+        this.initLabel();
 
-            this.mvt = options.mvt;
-            this.label = options.label;
-            this.color = options.color;
+        this.updateMVT(this.mvt);
+        this.moveTo(0, 0);
+    },
 
-            this.arrowViewModel = new DraggableArrowView.ArrowViewModel({
-                originX: 0,
-                originY: 0
-            });
+    initArrow: function() {
+        this.arrowView = new DraggableArrowView({
+            model: this.arrowViewModel,
 
-            this.initGraphics();
+            headDraggingEnabled: false,
 
-            this.listenTo(this.model, 'change:momentumX change:momentumY', this.updateMomentum);
-        },
+            tailWidth:  MomentumView.ARROW_TAIL_WIDTH,
+            headWidth:  MomentumView.ARROW_HEAD_WIDTH,
+            headLength: MomentumView.ARROW_HEAD_LENGTH,
 
-        initGraphics: function() {
-            this.initArrow();
-            this.initLabel();
+            fillColor: this.color,
+            fillAlpha: MomentumView.ARROW_ALPHA
+        });
+        this.displayObject.addChild(this.arrowView.displayObject);
+    },
 
-            this.updateMVT(this.mvt);
-            this.moveTo(0, 0);
-        },
+    initLabel: function() {
+        this.label = new PIXI.Text(this.label, {
+            font: MomentumView.LABEL_FONT,
+            fill: MomentumView.LABEL_COLOR
+        });
+        this.label.anchor.x = 0.5;
+        this.label.anchor.y = 0;
 
-        initArrow: function() {
-            this.arrowView = new DraggableArrowView({
-                model: this.arrowViewModel,
+        this.arrowView.displayObject.addChild(this.label);
+    },
 
-                headDraggingEnabled: false,
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+        this.updateMomentum();
+    },
 
-                tailWidth:  MomentumView.ARROW_TAIL_WIDTH,
-                headWidth:  MomentumView.ARROW_HEAD_WIDTH,
-                headLength: MomentumView.ARROW_HEAD_LENGTH,
+    updateMomentum: function() {
+        var xLength = this.mvt.modelToViewDeltaX(this.model.get('momentumX'));
+        var yLength = this.mvt.modelToViewDeltaY(this.model.get('momentumY'))
+        this.arrowViewModel.set('targetX', this.arrowViewModel.get('originX') + xLength);
+        this.arrowViewModel.set('targetY', this.arrowViewModel.get('originY') + yLength);
+        var rotation = this.arrowView.getRotation();
+        if (rotation > Math.PI / 2 && rotation < Math.PI * 1.5)
+            rotation += Math.PI;
+        this.label.rotation = rotation;
+        this.label.x = xLength / 2;
+        this.label.y = yLength / 2;
+    },
 
-                fillColor: this.color,
-                fillAlpha: MomentumView.ARROW_ALPHA
-            });
-            this.displayObject.addChild(this.arrowView.displayObject);
-        },
+    enableArrowMovement: function() {
+        this.arrowView.enableBodyDragging();
+    },
 
-        initLabel: function() {
-            this.label = new PIXI.Text(this.label, {
-                font: MomentumView.LABEL_FONT,
-                fill: MomentumView.LABEL_COLOR
-            });
-            this.label.anchor.x = 0.5;
-            this.label.anchor.y = 0;
+    disableArrowMovement: function() {
+        this.arrowView.disableBodyDragging();
+    },
 
-            this.arrowView.displayObject.addChild(this.label);
-        },
+    moveTo: function(x, y) {
+        this.arrowViewModel.moveTo(
+            this.mvt.modelToViewX(x),
+            this.mvt.modelToViewY(y)
+        );
+    }
 
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-            this.updateMomentum();
-        },
-
-        updateMomentum: function() {
-            var xLength = this.mvt.modelToViewDeltaX(this.model.get('momentumX'));
-            var yLength = this.mvt.modelToViewDeltaY(this.model.get('momentumY'))
-            this.arrowViewModel.set('targetX', this.arrowViewModel.get('originX') + xLength);
-            this.arrowViewModel.set('targetY', this.arrowViewModel.get('originY') + yLength);
-            var rotation = this.arrowView.getRotation();
-            if (rotation > Math.PI / 2 && rotation < Math.PI * 1.5)
-                rotation += Math.PI;
-            this.label.rotation = rotation;
-            this.label.x = xLength / 2;
-            this.label.y = yLength / 2;
-        },
-
-        enableArrowMovement: function() {
-            this.arrowView.enableBodyDragging();
-        },
-
-        disableArrowMovement: function() {
-            this.arrowView.disableBodyDragging();
-        },
-
-        moveTo: function(x, y) {
-            this.arrowViewModel.moveTo(
-                this.mvt.modelToViewX(x),
-                this.mvt.modelToViewY(y)
-            );
-        }
-
-    }, Constants.MomentumView);
+}, Constants.MomentumView);
 
 
-    return MomentumView;
-});
+export default MomentumView;

@@ -1,36 +1,28 @@
-define(function(require) {
+import RectangularComponentView from 'views/components/rectangular';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a capacitor
+ */
+var CapacitorView = RectangularComponentView.extend({
 
+    imagePath:     Assets.Images.CAPACITOR,
+    maskImagePath: Assets.Images.CAPACITOR_MASK,
 
-
-    var RectangularComponentView = require('views/components/rectangular');
-
-    var Assets    = require('assets');
+    schematicImagePath:     Assets.Images.SCHEMATIC_CAPACITOR,
+    schematicMaskImagePath: Assets.Images.SCHEMATIC_CAPACITOR_MASK,
 
     /**
-     * A view that represents a capacitor
+     * Initializes the new CapacitorView.
      */
-    var CapacitorView = RectangularComponentView.extend({
+    initialize: function(options) {
+        RectangularComponentView.prototype.initialize.apply(this, [options]);
+    },
 
-        imagePath:     Assets.Images.CAPACITOR,
-        maskImagePath: Assets.Images.CAPACITOR_MASK,
+    getLabelText: function() {
+        return this.model.get('capacitance').toFixed(2) + ' Farads';
+    }
 
-        schematicImagePath:     Assets.Images.SCHEMATIC_CAPACITOR,
-        schematicMaskImagePath: Assets.Images.SCHEMATIC_CAPACITOR_MASK,
-
-        /**
-         * Initializes the new CapacitorView.
-         */
-        initialize: function(options) {
-            RectangularComponentView.prototype.initialize.apply(this, [options]);
-        },
-
-        getLabelText: function() {
-            return this.model.get('capacitance').toFixed(2) + ' Farads';
-        }
-
-    });
-
-    return CapacitorView;
 });
+
+export default CapacitorView;

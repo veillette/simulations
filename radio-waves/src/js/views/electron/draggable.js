@@ -1,73 +1,66 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import Vector2 from 'common/math/vector2';
+import ElectronView from 'views/electron';
 
-    'use strict';
+/**
+ * An electron view that the user can interact with
+ */
+var DraggableElectronView = ElectronView.extend({
 
-    var PIXI = require('pixi');
-
-    var Vector2 = require('common/math/vector2');
-
-    var ElectronView = require('views/electron');
+    events: {
+        'touchstart      .displayObject': 'dragStart',
+        'mousedown       .displayObject': 'dragStart',
+        'touchmove       .displayObject': 'drag',
+        'mousemove       .displayObject': 'drag',
+        'touchend        .displayObject': 'dragEnd',
+        'mouseup         .displayObject': 'dragEnd',
+        'touchendoutside .displayObject': 'dragEnd',
+        'mouseupoutside  .displayObject': 'dragEnd'
+    },
 
     /**
-     * An electron view that the user can interact with
+     * Initializes the new DraggableElectronView.
      */
-    var DraggableElectronView = ElectronView.extend({
+    initialize: function(options) {
+        // Cached objects
+        this._dragOffset = new PIXI.Point();
+        this._viewPosition = new Vector2();
 
-        events: {
-            'touchstart      .displayObject': 'dragStart',
-            'mousedown       .displayObject': 'dragStart',
-            'touchmove       .displayObject': 'drag',
-            'mousemove       .displayObject': 'drag',
-            'touchend        .displayObject': 'dragEnd',
-            'mouseup         .displayObject': 'dragEnd',
-            'touchendoutside .displayObject': 'dragEnd',
-            'mouseupoutside  .displayObject': 'dragEnd'
-        },
+        ElectronView.prototype.initialize.apply(this, [options]);
+    },
 
-        /**
-         * Initializes the new DraggableElectronView.
-         */
-        initialize: function(options) {
-            // Cached objects
-            this._dragOffset = new PIXI.Point();
-            this._viewPosition = new Vector2();
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        ElectronView.prototype.initGraphics.apply(this, arguments);
 
-            ElectronView.prototype.initialize.apply(this, [options]);
-        },
+        this.displayObject.buttonMode = true;
+    },
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            ElectronView.prototype.initGraphics.apply(this, arguments);
+    dragStart: function(event) {
+        var data = event.data;
+        this.dragOffset = data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
+    },
 
-            this.displayObject.buttonMode = true;
-        },
-
-        dragStart: function(event) {
+    drag: function(event) {
+        if (this.dragging) {
             var data = event.data;
-            this.dragOffset = data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
+            this._viewPosition.x = data.global.x - this.dragOffset.x;
+            this._viewPosition.y = data.global.y - this.dragOffset.y;
 
-        drag: function(event) {
-            if (this.dragging) {
-                var data = event.data;
-                this._viewPosition.x = data.global.x - this.dragOffset.x;
-                this._viewPosition.y = data.global.y - this.dragOffset.y;
+            var modelPoint = this.mvt.viewToModel(this._viewPosition);
 
-                var modelPoint = this.mvt.viewToModel(this._viewPosition);
+            this.model.moveToNewPosition(modelPoint);
+        }
+    },
 
-                this.model.moveToNewPosition(modelPoint);
-            }
-        },
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-    });
-
-
-    return DraggableElectronView;
 });
+
+
+export default DraggableElectronView;

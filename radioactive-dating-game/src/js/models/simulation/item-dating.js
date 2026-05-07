@@ -1,21 +1,15 @@
-define(function (require, exports, module) {
+import NuclearPhysicsSimulation from 'models/simulation';
+import DatableItem from 'radioactive-dating-game/models/datable-item';
 
-    'use strict';
+/**
+ * Base simulation model for simulations where items are radiometrically dated
+ */
+var ItemDatingSimulation = NuclearPhysicsSimulation.extend({
 
-    var NuclearPhysicsSimulation = require('models/simulation');
+    getDatableAir: function() {
+        return DatableItem.DATABLE_AIR;
+    }
 
-    var DatableItem = require('radioactive-dating-game/models/datable-item');
-
-    /**
-     * Base simulation model for simulations where items are radiometrically dated
-     */
-    var ItemDatingSimulation = NuclearPhysicsSimulation.extend({
-
-    	getDatableAir: function() {
-    	    return DatableItem.DATABLE_AIR;
-    	}
-
-    });
-
-    return ItemDatingSimulation;
 });
+
+export default ItemDatingSimulation;

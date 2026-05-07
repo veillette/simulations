@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import MassesAndSpringsSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var MassesAndSpringsAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var MassesAndSpringsSimView = require('views/sim');
+    simViewConstructors: [
+        MassesAndSpringsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var MassesAndSpringsAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            MassesAndSpringsSimView
-        ]
-
-    });
-
-    return MassesAndSpringsAppView;
 });
+
+export default MassesAndSpringsAppView;

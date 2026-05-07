@@ -1,26 +1,20 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ * Keeps a particle within four bounding walls.
+ */
+var ResetAccelerationPropagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(ResetAccelerationPropagator.prototype, Propagator.prototype, {
 
-    var Propagator = require('models/propagator');
+    propagate: function(deltaTime, particle) {
+        particle.setAcceleration(0, 0);
+    }
 
-    /**
-     * Keeps a particle within four bounding walls.
-     */
-    var ResetAccelerationPropagator = function() {};
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(ResetAccelerationPropagator.prototype, Propagator.prototype, {
-
-        propagate: function(deltaTime, particle) {
-            particle.setAcceleration(0, 0);
-        }
-
-    });
-
-    return ResetAccelerationPropagator;
 });
+
+export default ResetAccelerationPropagator;

@@ -1,14 +1,9 @@
-define(function (require) {
+import _ from 'underscore';
+import Assets from 'nuclear-physics/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var _      = require('underscore');
-    var Assets = require('nuclear-physics/assets');
+// Add our local project images
+_.extend(Assets.Images, require('./assets-images'));
 
-    Assets.Path = 'img/';
-
-    // Add our local project images
-    _.extend(Assets.Images, require('./assets-images'));
-
-    return Assets;
-});
+export default Assets;

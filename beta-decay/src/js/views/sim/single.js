@@ -1,52 +1,45 @@
-define(function (require) {
+import _ from 'underscore';
+import SingleNucleusBetaDecaySimulation from 'beta-decay/models/simulation/single-nucleus';
+import BetaDecaySimView from 'beta-decay/views/sim';
+import SingleNucleusBetaDecaySceneView from 'beta-decay/views/scene/single';
 
-    'use strict';
 
-    var _ = require('underscore');
-
-    var SingleNucleusBetaDecaySimulation = require('beta-decay/models/simulation/single-nucleus');
-
-    var BetaDecaySimView                = require('beta-decay/views/sim');
-    var SingleNucleusBetaDecaySceneView = require('beta-decay/views/scene/single');
-
+/**
+ * Single Atom tab
+ */
+var SingleNucleusBetaDecaySimView = BetaDecaySimView.extend({
 
     /**
-     * Single Atom tab
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var SingleNucleusBetaDecaySimView = BetaDecaySimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Single Atom',
+            name: 'single-atom',
+            link: 'beta-decay'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Single Atom',
-                name: 'single-atom',
-                link: 'beta-decay'
-            }, options);
+        BetaDecaySimView.prototype.initialize.apply(this, [options]);
+    },
 
-            BetaDecaySimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new SingleNucleusBetaDecaySimulation();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new SingleNucleusBetaDecaySimulation();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new SingleNucleusBetaDecaySceneView({
+            simulation: this.simulation
+        });
+    }
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new SingleNucleusBetaDecaySceneView({
-                simulation: this.simulation
-            });
-        }
-
-    });
-
-    return SingleNucleusBetaDecaySimView;
 });
+
+export default SingleNucleusBetaDecaySimView;

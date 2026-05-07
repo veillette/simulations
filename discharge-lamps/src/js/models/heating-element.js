@@ -1,23 +1,17 @@
-define(function (require) {
+import _ from 'underscore';
+import Particle from 'common/mechanics/models/particle';
 
-    'use strict';
+/**
+ * A heating element
+ */
+var HeatingElement = Particle.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, Particle.prototype.defaults, {
+        enabled: true,
+        temperature: 0
+    })
 
-    var Particle = require('common/mechanics/models/particle');
-
-    /**
-     * A heating element
-     */
-    var HeatingElement = Particle.extend({
-
-        defaults: _.extend({}, Particle.prototype.defaults, {
-            enabled: true,
-            temperature: 0
-        })
-
-    });
-
-
-    return HeatingElement;
 });
+
+
+export default HeatingElement;

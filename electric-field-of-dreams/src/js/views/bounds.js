@@ -1,60 +1,53 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Colors from 'common/colors/colors';
+import Constants from 'constants';
 
-    'use strict';
+var BoundsView = PixiView.extend({
 
-    var PIXI = require('pixi');
+    /**
+     * Overrides PixiView's initializeDisplayObject function
+     */
+    initializeDisplayObject: function() {
+        this.displayObject = new PIXI.Graphics();
+    },
 
-    var PixiView = require('common/v3/pixi/view');
-    var Colors   = require('common/colors/colors');
+    initialize: function(options) {
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
 
-    var Constants = require('constants');
+        this.lineWidth = BoundsView.LINE_WIDTH;
+        this.lineColor = Colors.parseHex(BoundsView.LINE_COLOR);
+        this.lineAlpha = BoundsView.LINE_ALPHA;
 
-    var BoundsView = PixiView.extend({
+        this.updateMVT(this.mvt);
+    },
 
-        /**
-         * Overrides PixiView's initializeDisplayObject function
-         */
-        initializeDisplayObject: function() {
-            this.displayObject = new PIXI.Graphics();
-        },
+    draw: function() {
+        var r = Constants.ParticleView.MODEL_RADIUS;
+        var x = Math.round(this.mvt.modelToViewX(this.simulation.minX - r));
+        var y = Math.round(this.mvt.modelToViewY(this.simulation.minY - r));
+        var w = Math.round(this.mvt.modelToViewDeltaX(this.simulation.width + r * 2));
+        var h = Math.round(this.mvt.modelToViewDeltaY(this.simulation.height + r * 2));
+        var m = this.lineWidth;
 
-        initialize: function(options) {
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
+        var graphics = this.displayObject;
 
-            this.lineWidth = BoundsView.LINE_WIDTH;
-            this.lineColor = Colors.parseHex(BoundsView.LINE_COLOR);
-            this.lineAlpha = BoundsView.LINE_ALPHA;
+        graphics.clear();
+        graphics.beginFill(this.lineColor, this.lineAlpha);
+        graphics.drawRect(x - m, y - m, w + m * 2, m); // Top
+        graphics.drawRect(x - m, y + h, w + m * 2, m); // Bottom
+        graphics.drawRect(x - m, y,     m,         h); // Left
+        graphics.drawRect(x + w, y,     m,         h); // Right
+        graphics.endFill();
+    },
 
-            this.updateMVT(this.mvt);
-        },
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        draw: function() {
-            var r = Constants.ParticleView.MODEL_RADIUS;
-            var x = Math.round(this.mvt.modelToViewX(this.simulation.minX - r));
-            var y = Math.round(this.mvt.modelToViewY(this.simulation.minY - r));
-            var w = Math.round(this.mvt.modelToViewDeltaX(this.simulation.width + r * 2));
-            var h = Math.round(this.mvt.modelToViewDeltaY(this.simulation.height + r * 2));
-            var m = this.lineWidth;
+        this.draw();
+    }
 
-            var graphics = this.displayObject;
+}, Constants.BoundsView);
 
-            graphics.clear();
-            graphics.beginFill(this.lineColor, this.lineAlpha);
-            graphics.drawRect(x - m, y - m, w + m * 2, m); // Top
-            graphics.drawRect(x - m, y + h, w + m * 2, m); // Bottom
-            graphics.drawRect(x - m, y,     m,         h); // Left
-            graphics.drawRect(x + w, y,     m,         h); // Right
-            graphics.endFill();
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-        }
-
-    }, Constants.BoundsView);
-
-    return BoundsView;
-});
+export default BoundsView;

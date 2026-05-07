@@ -1,50 +1,44 @@
-define(function (require) {
+import _ from 'underscore';
+import SoundSimView from 'views/sim';
+import SingleSourceSceneView from 'views/scene/single-source';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var SoundSimView          = require('views/sim');
-    var SingleSourceSceneView = require('views/scene/single-source');
+/**
+ *
+ */
+var SingleSourceSimView = SoundSimView.extend({
 
     /**
+     * Inits simulation, views, and variables.
      *
+     * @params options
      */
-    var SingleSourceSimView = SoundSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Single Source',
+            name: 'single-source',
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Single Source',
-                name: 'single-source',
-            }, options);
+        SoundSimView.prototype.initialize.apply(this, [options]);
+    },
 
-            SoundSimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new SingleSourceSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new SingleSourceSceneView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders page content
+     */
+    renderScaffolding: function() {
+        SoundSimView.prototype.renderScaffolding.apply(this, arguments);
 
-        /**
-         * Renders page content
-         */
-        renderScaffolding: function() {
-            SoundSimView.prototype.renderScaffolding.apply(this, arguments);
+        this.renderAudioControls();
+    },
 
-            this.renderAudioControls();
-        },
-
-    });
-
-    return SingleSourceSimView;
 });
+
+export default SingleSourceSimView;

@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import ChargesAndFieldsSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var ChargesAndFieldsAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var ChargesAndFieldsSimView = require('views/sim');
+    simViewConstructors: [
+        ChargesAndFieldsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var ChargesAndFieldsAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            ChargesAndFieldsSimView
-        ]
-
-    });
-
-    return ChargesAndFieldsAppView;
 });
+
+export default ChargesAndFieldsAppView;

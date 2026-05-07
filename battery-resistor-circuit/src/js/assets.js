@@ -1,23 +1,18 @@
-define(function (require) {
+import Assets from 'common/v3/pixi/assets';
 
-    'use strict';
+Assets.Path = 'img/';
 
-    var Assets = require('common/v3/pixi/assets');
+Assets.Images = {
+    PINWHEEL:       'pinwheel.png',
+    BATTERY:        'battery.png',
+    BATTERY_INSIDE: 'battery-inside.png',
+    ELECTRON:       'electron.png',
+    ELECTRON_GLOW:  'electron-glow.png',
+    SPECTRUM:       'spectrum.png',
+    CORE:           'core.png',
+    AMMETER_BOX:    'ammeter-box.png'
+};
 
-    Assets.Path = 'img/';
+Assets.SpriteSheets = {};
 
-    Assets.Images = {
-        PINWHEEL:       'pinwheel.png',
-        BATTERY:        'battery.png',
-        BATTERY_INSIDE: 'battery-inside.png',
-        ELECTRON:       'electron.png',
-        ELECTRON_GLOW:  'electron-glow.png',
-        SPECTRUM:       'spectrum.png',
-        CORE:           'core.png',
-        AMMETER_BOX:    'ammeter-box.png'
-    };
-
-    Assets.SpriteSheets = {};
-
-    return Assets;
-});
+export default Assets;

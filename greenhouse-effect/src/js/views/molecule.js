@@ -1,92 +1,85 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import 'common/v3/pixi/extensions';
+import PixiView from 'common/v3/pixi/view';
+import AtomView from 'views/atom';
+import AtomicBondView from 'views/atomic-bond';
 
-    'use strict';
 
-    var PIXI = require('pixi');
-    require('common/v3/pixi/extensions');
-
-    var PixiView = require('common/v3/pixi/view');
-
-    var AtomView       = require('views/atom');
-    var AtomicBondView = require('views/atomic-bond');
-
+/**
+ * A view that represents a molecule
+ */
+var MoleculeView = PixiView.extend({
 
     /**
-     * A view that represents a molecule
+     * Initializes the new MoleculeView.
      */
-    var MoleculeView = PixiView.extend({
+    initialize: function(options) {
+        this.mvt = options.mvt;
 
-        /**
-         * Initializes the new MoleculeView.
-         */
-        initialize: function(options) {
-            this.mvt = options.mvt;
+        this.initGraphics();
+        this.updateMVT(options.mvt);
+    },
 
-            this.initGraphics();
-            this.updateMVT(options.mvt);
-        },
+    initGraphics: function() {
+        this.initBonds();
+        this.initAtoms();
+    },
 
-        initGraphics: function() {
-            this.initBonds();
-            this.initAtoms();
-        },
+    initBonds: function() {
+        this.bondLayer = new PIXI.Container();
+        this.atomicBondViews = [];
 
-        initBonds: function() {
-            this.bondLayer = new PIXI.Container();
-            this.atomicBondViews = [];
-
-            var atomicBonds = this.model.getAtomicBonds();
-            for (var i = 0; i < atomicBonds.length; i++) {
-                var atomicBondView = new AtomicBondView({
-                    model: atomicBonds[i],
-                    mvt: this.mvt
-                });
-                this.atomicBondViews.push(atomicBondView);
-                this.bondLayer.addChild(atomicBondView.displayObject);
-            }
-
-            this.displayObject.addChild(this.bondLayer);
-        },
-
-        initAtoms: function() {
-            this.atomLayer = new PIXI.Container();
-            this.atomViews = [];
-
-            var atoms = this.model.getAtoms();
-            for (var i = 0; i < atoms.length; i++) {
-                var atomView = new AtomView({
-                    model: atoms[i],
-                    mvt: this.mvt
-                });
-                this.atomViews.push(atomView);
-                this.atomLayer.addChild(atomView.displayObject);
-            }
-
-            this.displayObject.addChild(this.atomLayer);
-        },
-
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.updateBonds();
-            this.updateAtoms();
-        },
-
-        updateBonds: function() {
-            for (var i = 0; i < this.atomicBondViews.length; i++)
-                this.atomicBondViews[i].updateMVT(this.mvt);
-        },
-
-        updateAtoms: function() {
-            for (var i = 0; i < this.atomViews.length; i++)
-                this.atomViews[i].updateMVT(this.mvt);
+        var atomicBonds = this.model.getAtomicBonds();
+        for (var i = 0; i < atomicBonds.length; i++) {
+            var atomicBondView = new AtomicBondView({
+                model: atomicBonds[i],
+                mvt: this.mvt
+            });
+            this.atomicBondViews.push(atomicBondView);
+            this.bondLayer.addChild(atomicBondView.displayObject);
         }
 
-    });
+        this.displayObject.addChild(this.bondLayer);
+    },
 
-    return MoleculeView;
+    initAtoms: function() {
+        this.atomLayer = new PIXI.Container();
+        this.atomViews = [];
+
+        var atoms = this.model.getAtoms();
+        for (var i = 0; i < atoms.length; i++) {
+            var atomView = new AtomView({
+                model: atoms[i],
+                mvt: this.mvt
+            });
+            this.atomViews.push(atomView);
+            this.atomLayer.addChild(atomView.displayObject);
+        }
+
+        this.displayObject.addChild(this.atomLayer);
+    },
+
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+
+        this.updateBonds();
+        this.updateAtoms();
+    },
+
+    updateBonds: function() {
+        for (var i = 0; i < this.atomicBondViews.length; i++)
+            this.atomicBondViews[i].updateMVT(this.mvt);
+    },
+
+    updateAtoms: function() {
+        for (var i = 0; i < this.atomViews.length; i++)
+            this.atomViews[i].updateMVT(this.mvt);
+    }
+
 });
+
+export default MoleculeView;

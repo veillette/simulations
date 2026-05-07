@@ -1,24 +1,16 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import DischargeLampsSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var DischargeLampsAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var DischargeLampsSimView = require('views/sim');
+    simViewConstructors: [
+        DischargeLampsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var DischargeLampsAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            DischargeLampsSimView
-        ]
-
-    });
-
-    return DischargeLampsAppView;
 });
+
+export default DischargeLampsAppView;

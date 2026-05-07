@@ -1,156 +1,148 @@
-define(function(require) {
+import _ from 'underscore';
+import Vector3 from 'common/math/vector3';
+import ChargeView from 'views/charge';
+import calculateGridSize from 'views/calculate-grid-size';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Shows the excess dielectric charge (Q_excess_dielectric). Charges appear on
+ *   the surface of the dielectric where it contacts the plates, so charges
+ *   appear on the right face only when the dielectric is fully inserted.
+ *
+ * All model coordinates are relative to the dielectric's local coordinate
+ *   frame, where the origin is at the 3D geometric center of the dielectric.
+ */
+var DielectricExcessChargeView = ChargeView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        this.maxExcessDielectricPlateCharge = options.maxExcessDielectricPlateCharge;
 
-    var Vector3 = require('common/math/vector3');
+        // Cached objects
+        this._vec3 = new Vector3();
 
-    var ChargeView        = require('views/charge');
-    var calculateGridSize = require('views/calculate-grid-size');
+        // Bind these functions because we want to use them by themselves
+        this.drawNegativeSymbol = _.bind(this.drawNegativeSymbol, this);
+        this.drawPositiveSymbol = _.bind(this.drawPositiveSymbol, this);
 
-    var Constants = require('constants');
+        // Call parent initialize
+        ChargeView.prototype.initialize.apply(this, [options]);
+
+        // Listen for model events
+        this.listenTo(this.model, 'change:position change:dielectricOffset', this.updatePosition);
+        this.listenTo(this.model, 'change', this.draw);
+    },
 
     /**
-     * Shows the excess dielectric charge (Q_excess_dielectric). Charges appear on
-     *   the surface of the dielectric where it contacts the plates, so charges
-     *   appear on the right face only when the dielectric is fully inserted.
-     *
-     * All model coordinates are relative to the dielectric's local coordinate
-     *   frame, where the origin is at the 3D geometric center of the dielectric.
+     * Updates the quantity and location of plate charges.
      */
-    var DielectricExcessChargeView = ChargeView.extend({
+    draw: function() {
+        ChargeView.prototype.draw.apply(this, arguments);
 
-        initialize: function(options) {
-            this.maxExcessDielectricPlateCharge = options.maxExcessDielectricPlateCharge;
+        var capacitor = this.model;
 
-            // Cached objects
-            this._vec3 = new Vector3();
+        var excessCharge    = capacitor.getExcessDielectricPlateCharge();
+        var dielectricWidth = capacitor.getDielectricWidth();
+        var dielectricDepth = capacitor.getDielectricDepth();
+        var dielectricOffset = capacitor.get('dielectricOffset');
+        var contactWidth = Math.max(0, dielectricWidth - capacitor.get('dielectricOffset')); // Contact between plate and dielectric
 
-            // Bind these functions because we want to use them by themselves
-            this.drawNegativeSymbol = _.bind(this.drawNegativeSymbol, this);
-            this.drawPositiveSymbol = _.bind(this.drawPositiveSymbol, this);
+        if (excessCharge !== 0 && contactWidth > 0) {
+            // Compute the number excess charges
+            var numberOfExcessCharges = this.getNumberOfCharges(excessCharge);
 
-            // Call parent initialize
-            ChargeView.prototype.initialize.apply(this, [options]);
+            // Margins
+            var zMargin = this.mvt.viewToModelDeltaX(ChargeView.SYMBOL_WIDTH);
 
-            // Listen for model events
-            this.listenTo(this.model, 'change:position change:dielectricOffset', this.updatePosition);
-            this.listenTo(this.model, 'change', this.draw);
-        },
+            // Compute the grid size
+            var gridWidth = contactWidth;
+            var gridDepth = dielectricDepth - (2 * zMargin);
+            var gridDimensions = calculateGridSize(numberOfExcessCharges, gridWidth, gridDepth);
+            var rows = gridDimensions.rows;
+            var cols = gridDimensions.columns;
 
-        /**
-         * Updates the quantity and location of plate charges.
-         */
-        draw: function() {
-            ChargeView.prototype.draw.apply(this, arguments);
+            // Distance between charges
+            var dx = gridWidth / cols;
+            var dz = gridDepth / rows;
 
-            var capacitor = this.model;
+            // Offset to move us to the center of columns
+            var xOffset = dx / 2;
+            var yOffset = this.mvt.viewToModelDeltaY(ChargeView.SYMBOL_WIDTH);
+            var zOffset = dz / 2;
 
-            var excessCharge    = capacitor.getExcessDielectricPlateCharge();
-            var dielectricWidth = capacitor.getDielectricWidth();
-            var dielectricDepth = capacitor.getDielectricDepth();
-            var dielectricOffset = capacitor.get('dielectricOffset');
-            var contactWidth = Math.max(0, dielectricWidth - capacitor.get('dielectricOffset')); // Contact between plate and dielectric
+            //
+            var topOffset    = -capacitor.get('plateSeparation') / 2;
+            var bottomOffset =  capacitor.get('plateSeparation') / 2;
 
-            if (excessCharge !== 0 && contactWidth > 0) {
-                // Compute the number excess charges
-                var numberOfExcessCharges = this.getNumberOfCharges(excessCharge);
+            var x;
+            var y;
+            var z;
 
-                // Margins
-                var zMargin = this.mvt.viewToModelDeltaX(ChargeView.SYMBOL_WIDTH);
+            var drawTopCharge    = (excessCharge > 0) ? this.drawNegativeSymbol : this.drawPositiveSymbol;
+            var drawBottomCharge = (excessCharge > 0) ? this.drawPositiveSymbol : this.drawNegativeSymbol;
 
-                // Compute the grid size
-                var gridWidth = contactWidth;
-                var gridDepth = dielectricDepth - (2 * zMargin);
-                var gridDimensions = calculateGridSize(numberOfExcessCharges, gridWidth, gridDepth);
-                var rows = gridDimensions.rows;
-                var cols = gridDimensions.columns;
+            // Draw a complete grid for the bottom face
+            for (var row = 0; row < rows; row++) {
+                for (var col = 0; col < cols; col++) {
+                    // Position the charge in a grid cell
+                    x = -(dielectricWidth / 2) + xOffset + (col * dx) + dielectricOffset;
+                    y = bottomOffset - yOffset;
+                    z = -(dielectricDepth / 2) + zOffset + (row * dz);
 
-                // Distance between charges
-                var dx = gridWidth / cols;
-                var dz = gridDepth / rows;
-
-                // Offset to move us to the center of columns
-                var xOffset = dx / 2;
-                var yOffset = this.mvt.viewToModelDeltaY(ChargeView.SYMBOL_WIDTH);
-                var zOffset = dz / 2;
-
-                //
-                var topOffset    = -capacitor.get('plateSeparation') / 2;
-                var bottomOffset =  capacitor.get('plateSeparation') / 2;
-
-                var x;
-                var y;
-                var z;
-
-                var drawTopCharge    = (excessCharge > 0) ? this.drawNegativeSymbol : this.drawPositiveSymbol;
-                var drawBottomCharge = (excessCharge > 0) ? this.drawPositiveSymbol : this.drawNegativeSymbol;
-
-                // Draw a complete grid for the bottom face
-                for (var row = 0; row < rows; row++) {
-                    for (var col = 0; col < cols; col++) {
-                        // Position the charge in a grid cell
-                        x = -(dielectricWidth / 2) + xOffset + (col * dx) + dielectricOffset;
-                        y = bottomOffset - yOffset;
-                        z = -(dielectricDepth / 2) + zOffset + (row * dz);
-
-                        drawBottomCharge(x, y, z);
-                    }
-                }
-
-                // Draw front edge for top face
-                x = 0;
-                y = yOffset;
-                for (var c = 0; c < cols; c++) {
-                    // Position the charge
-                    x = -(dielectricWidth / 2) + xOffset + (c * dx) + dielectricOffset;
-                    z = -(dielectricDepth / 2);
-
-                    drawTopCharge(x, y + topOffset, z);
-                }
-
-                // Draw right-side edge for top face
-                x += xOffset; // Start from where we left off with the front edge
-                for (var r = 0; r < rows; r++) {
-                    // Position the charge
-                    z = -(dielectricDepth / 2) + zOffset + (r * dz);
-
-                    drawTopCharge(x, y + topOffset, z);
+                    drawBottomCharge(x, y, z);
                 }
             }
-        },
 
-        /**
-         * Gets the number of charges on the part of each dielectric face (top and
-         *   bottom) that contacts a capacitor plate. We use NUMBER_OF_PLATE_CHARGES
-         *   as the range so that this view is related to the plate charges view.
-         */
-        getNumberOfCharges: function(excessCharge) {
-            // Don't take sqrt of absCharge; it's something like 1E-14 and will result in a *larger* number
-            var absCharge = Math.abs(excessCharge);
-            var numberOfCharges = Math.floor(Constants.NUMBER_OF_PLATE_CHARGES.max * absCharge / this.maxExcessDielectricPlateCharge);
+            // Draw front edge for top face
+            x = 0;
+            y = yOffset;
+            for (var c = 0; c < cols; c++) {
+                // Position the charge
+                x = -(dielectricWidth / 2) + xOffset + (c * dx) + dielectricOffset;
+                z = -(dielectricDepth / 2);
 
-            if (absCharge > 0 && numberOfCharges < Constants.NUMBER_OF_PLATE_CHARGES.min)
-                numberOfCharges = Constants.NUMBER_OF_PLATE_CHARGES.min;
+                drawTopCharge(x, y + topOffset, z);
+            }
 
-            return numberOfCharges;
-        },
+            // Draw right-side edge for top face
+            x += xOffset; // Start from where we left off with the front edge
+            for (var r = 0; r < rows; r++) {
+                // Position the charge
+                z = -(dielectricDepth / 2) + zOffset + (r * dz);
 
-        updatePosition: function() {
-            var viewPos = this.mvt.modelToView(this.model.get('position'));
-            this.displayObject.x = viewPos.x;
-            this.displayObject.y = viewPos.y;
-        },
-
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
-
-            this.draw();
-            this.updatePosition();
+                drawTopCharge(x, y + topOffset, z);
+            }
         }
+    },
 
-    });
+    /**
+     * Gets the number of charges on the part of each dielectric face (top and
+     *   bottom) that contacts a capacitor plate. We use NUMBER_OF_PLATE_CHARGES
+     *   as the range so that this view is related to the plate charges view.
+     */
+    getNumberOfCharges: function(excessCharge) {
+        // Don't take sqrt of absCharge; it's something like 1E-14 and will result in a *larger* number
+        var absCharge = Math.abs(excessCharge);
+        var numberOfCharges = Math.floor(Constants.NUMBER_OF_PLATE_CHARGES.max * absCharge / this.maxExcessDielectricPlateCharge);
 
-    return DielectricExcessChargeView;
+        if (absCharge > 0 && numberOfCharges < Constants.NUMBER_OF_PLATE_CHARGES.min)
+            numberOfCharges = Constants.NUMBER_OF_PLATE_CHARGES.min;
+
+        return numberOfCharges;
+    },
+
+    updatePosition: function() {
+        var viewPos = this.mvt.modelToView(this.model.get('position'));
+        this.displayObject.x = viewPos.x;
+        this.displayObject.y = viewPos.y;
+    },
+
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
+
+        this.draw();
+        this.updatePosition();
+    }
+
 });
+
+export default DielectricExcessChargeView;

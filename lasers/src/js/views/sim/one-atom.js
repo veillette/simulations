@@ -1,143 +1,134 @@
-define(function (require) {
+import _ from 'underscore';
+import OneAtomLaserSimulation from 'models/simulation/one-atom';
+import LasersSimView from 'views/sim';
+import OneAtomSceneView from 'views/scene/one-atom';
+import LaserControlsView from 'views/laser-controls';
+import LegendView from 'views/legend';
+import simHtml from 'templates/one-atom-sim.html?raw';
 
-    'use strict';
+/**
+ *
+ */
+var OneAtomSimView = LasersSimView.extend({
 
-    var _ = require('underscore');
-
-    var OneAtomLaserSimulation = require('models/simulation/one-atom');
-
-    var LasersSimView     = require('views/sim');
-    var OneAtomSceneView  = require('views/scene/one-atom');
-    var LaserControlsView = require('views/laser-controls');
-    var LegendView        = require('views/legend');
-
-    // HTML
-    var simHtml = require('text!templates/one-atom-sim.html');
+    template: _.template(simHtml),
 
     /**
-     *
+     * Dom event listeners
      */
-    var OneAtomSimView = LasersSimView.extend({
+    events: _.extend({}, LasersSimView.prototype.events, {
 
-        template: _.template(simHtml),
+    }),
 
-        /**
-         * Dom event listeners
-         */
-        events: _.extend({}, LasersSimView.prototype.events, {
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'One Atom (Absorption and Emission)',
+            name: 'one-atom'
+        }, options);
 
-        }),
+        LasersSimView.prototype.initialize.apply(this, [options]);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'One Atom (Absorption and Emission)',
-                name: 'one-atom'
-            }, options);
+        this.initLaserControlsView();
+        this.initLegendView();
+    },
 
-            LasersSimView.prototype.initialize.apply(this, [options]);
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new OneAtomLaserSimulation();
+    },
 
-            this.initLaserControlsView();
-            this.initLegendView();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new OneAtomSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new OneAtomLaserSimulation();
-        },
+    initLaserControlsView: function() {
+        this.laser1ControlsView = new LaserControlsView({
+            model: this.simulation.seedBeam,
+            number: 1
+        });
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new OneAtomSceneView({
-                simulation: this.simulation
-            });
-        },
+        this.laser2ControlsView = new LaserControlsView({
+            model: this.simulation.pumpingBeam,
+            number: 2
+        });
+    },
 
-        initLaserControlsView: function() {
-            this.laser1ControlsView = new LaserControlsView({
-                model: this.simulation.seedBeam,
-                number: 1
-            });
+    initLegendView: function() {
+        this.legendView = new LegendView({
+            renderer: this.sceneView.renderer,
+            simulation: this.simulation
+        });
+    },
 
-            this.laser2ControlsView = new LaserControlsView({
-                model: this.simulation.pumpingBeam,
-                number: 2
-            });
-        },
+    /**
+     * Renders everything
+     */
+    render: function() {
+        LasersSimView.prototype.render.apply(this, arguments);
 
-        initLegendView: function() {
-            this.legendView = new LegendView({
-                renderer: this.sceneView.renderer,
-                simulation: this.simulation
-            });
-        },
+        this.renderLaserControls();
 
-        /**
-         * Renders everything
-         */
-        render: function() {
-            LasersSimView.prototype.render.apply(this, arguments);
+        return this;
+    },
 
-            this.renderLaserControls();
+    /**
+     * Renders the laser controls view
+     */
+    renderLaserControls: function() {
+        this.laser1ControlsView.render();
+        this.laser2ControlsView.render();
+        this.$el.append(this.laser1ControlsView.el);
+        this.$el.append(this.laser2ControlsView.el);
+    },
 
-            return this;
-        },
+    renderLegend: function() {
+        this.legendView.render();
+        this.$('.legend-panel').append(this.legendView.el);
+    },
 
-        /**
-         * Renders the laser controls view
-         */
-        renderLaserControls: function() {
-            this.laser1ControlsView.render();
-            this.laser2ControlsView.render();
-            this.$el.append(this.laser1ControlsView.el);
-            this.$el.append(this.laser2ControlsView.el);
-        },
+    /**
+     * Called after every component on the page has rendered to make sure
+     *   things like widths and heights and offsets are correct.
+     */
+    postRender: function() {
+        LasersSimView.prototype.postRender.apply(this);
 
-        renderLegend: function() {
-            this.legendView.render();
-            this.$('.legend-panel').append(this.legendView.el);
-        },
+        this.laser1ControlsView.postRender();
+        this.laser2ControlsView.postRender();
+        this.renderLegend();
+    },
 
-        /**
-         * Called after every component on the page has rendered to make sure
-         *   things like widths and heights and offsets are correct.
-         */
-        postRender: function() {
-            LasersSimView.prototype.postRender.apply(this);
+    /**
+     * Resets all the components of the view.
+     */
+    resetComponents: function() {
+        LasersSimView.prototype.resetComponents.apply(this);
 
-            this.laser1ControlsView.postRender();
-            this.laser2ControlsView.postRender();
-            this.renderLegend();
-        },
+        this.laser1ControlsView.reset();
+        this.laser2ControlsView.reset();
+    },
 
-        /**
-         * Resets all the components of the view.
-         */
-        resetComponents: function() {
-            LasersSimView.prototype.resetComponents.apply(this);
+    elementPropertiesChanged: function(simulation, elementProperties) {
+        LasersSimView.prototype.elementPropertiesChanged.apply(this, arguments);
 
-            this.laser1ControlsView.reset();
-            this.laser2ControlsView.reset();
-        },
+        if (elementProperties === simulation.twoLevelProperties)
+            this.laser2ControlsView.hide();
+        else
+            this.laser2ControlsView.show();
+    }
 
-        elementPropertiesChanged: function(simulation, elementProperties) {
-            LasersSimView.prototype.elementPropertiesChanged.apply(this, arguments);
-
-            if (elementProperties === simulation.twoLevelProperties)
-                this.laser2ControlsView.hide();
-            else
-                this.laser2ControlsView.show();
-        }
-
-    });
-
-    return OneAtomSimView;
 });
+
+export default OneAtomSimView;

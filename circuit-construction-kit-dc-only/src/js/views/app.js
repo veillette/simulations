@@ -1,22 +1,15 @@
-define(function(require) {
+import CCKAppView from 'views/app';
+import DCOnlySimView from './sim';
+import Assets from 'assets';
 
-    'use strict';
+var DCOnlyAppView = CCKAppView.extend({
 
-    var CCKAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var DCOnlySimView = require('./sim');
+    simViewConstructors: [
+        DCOnlySimView
+    ]
 
-    var Assets = require('assets');
-
-    var DCOnlyAppView = CCKAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            DCOnlySimView
-        ]
-
-    });
-
-    return DCOnlyAppView;
 });
+
+export default DCOnlyAppView;

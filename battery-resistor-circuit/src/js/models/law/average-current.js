@@ -1,48 +1,41 @@
-define(function (require) {
+import _ from 'underscore';
+import NumberSeries from 'common/math/number-series';
+import Law from 'models/law';
 
-    'use strict';
+/**
+ *
+ */
+var AverageCurrent = function(numSamples) {
+    this.series = new NumberSeries(numSamples);
+    this.resistance = 0;
+    this.voltage = 0;
+    this.current = 0;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(AverageCurrent.prototype, Law.prototype, {
 
-    var NumberSeries = require('common/math/number-series');
+    update: function(deltaTime, system) {
+        var hollyscale = 3.5 * 3.3;
+        var hollywood = this.resistance / this.voltage * hollyscale;
+        this.series.add(hollywood);
+        this.current = this.series.average();
+    },
 
-    var Law = require('models/law');
+    voltageChanged: function(voltage) {
+        this.resistance = voltage;
+    },
 
-    /**
-     *
-     */
-    var AverageCurrent = function(numSamples) {
-        this.series = new NumberSeries(numSamples);
-        this.resistance = 0;
-        this.voltage = 0;
-        this.current = 0;
-    };
+    coreCountChanged: function(x) {
+        this.voltage = x;
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(AverageCurrent.prototype, Law.prototype, {
+    getCurrent: function() {
+        return this.current;
+    }
 
-        update: function(deltaTime, system) {
-            var hollyscale = 3.5 * 3.3;
-            var hollywood = this.resistance / this.voltage * hollyscale;
-            this.series.add(hollywood);
-            this.current = this.series.average();
-        },
-
-        voltageChanged: function(voltage) {
-            this.resistance = voltage;
-        },
-
-        coreCountChanged: function(x) {
-            this.voltage = x;
-        },
-
-        getCurrent: function() {
-            return this.current;
-        }
-
-    });
-
-    return AverageCurrent;
 });
+
+export default AverageCurrent;

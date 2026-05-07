@@ -1,134 +1,129 @@
-define(function (require) {
+import WavelengthColors from 'common/colors/wavelength';
+import range from 'common/math/range';
 
-    'use strict';
+var Constants = {};
 
-    var WavelengthColors = require('common/colors/wavelength');
-    var range            = require('common/math/range');
-
-    var Constants = {};
-
-    /*************************************************************************
-     **                                                                     **
-     **                         UNIVERSAL CONSTANTS                         **
-     **                                                                     **
-     *************************************************************************/
+/*************************************************************************
+ **                                                                     **
+ **                         UNIVERSAL CONSTANTS                         **
+ **                                                                     **
+ *************************************************************************/
 
 
-    Constants.SPEED_OF_LIGHT = 2.99792458E8;
-    Constants.WAVELENGTH_RED = 650E-9;
-    Constants.WHITE_LIGHT = 1;
+Constants.SPEED_OF_LIGHT = 2.99792458E8;
+Constants.WAVELENGTH_RED = 650E-9;
+Constants.WHITE_LIGHT = 1;
 
-    // To come up with a good time scale dt, use lambda = v/f.
-    // For lambda = RED_WAVELENGTH and C=SPEED_OF_LIGHT, we have f=4.612E14
-    Constants.RED_LIGHT_FREQUENCY = Constants.SPEED_OF_LIGHT / Constants.WAVELENGTH_RED;
+// To come up with a good time scale dt, use lambda = v/f.
+// For lambda = RED_WAVELENGTH and C=SPEED_OF_LIGHT, we have f=4.612E14
+Constants.RED_LIGHT_FREQUENCY = Constants.SPEED_OF_LIGHT / Constants.WAVELENGTH_RED;
 
-    // Speed up by a factor of 2.5 because default wave view was moving too slow
-    Constants.TIME_SPEEDUP_SCALE = 2.5;
+// Speed up by a factor of 2.5 because default wave view was moving too slow
+Constants.TIME_SPEEDUP_SCALE = 2.5;
 
-    // Thirty frames per cycle times the speedup scale
-    Constants.MAX_DT = 1.0 / Constants.RED_LIGHT_FREQUENCY / 30 * Constants.TIME_SPEEDUP_SCALE;
-    Constants.MIN_DT = Constants.MAX_DT / 10;
-    Constants.DEFAULT_DT = Constants.MAX_DT / 4; // Seconds
-    Constants.FRAME_DURATION = 20 / 1000; // Seconds
-    Constants.INTERFACE_DT_SCALE = 1e17;
+// Thirty frames per cycle times the speedup scale
+Constants.MAX_DT = 1.0 / Constants.RED_LIGHT_FREQUENCY / 30 * Constants.TIME_SPEEDUP_SCALE;
+Constants.MIN_DT = Constants.MAX_DT / 10;
+Constants.DEFAULT_DT = Constants.MAX_DT / 4; // Seconds
+Constants.FRAME_DURATION = 20 / 1000; // Seconds
+Constants.INTERFACE_DT_SCALE = 1e17;
 
-    Constants.DT_RANGE = range({ min: Constants.MIN_DT, max: Constants.MAX_DT });
+Constants.DT_RANGE = range({ min: Constants.MIN_DT, max: Constants.MAX_DT });
 
-    // A good size for the units being used in the sim; used to determine the
-    //   dimensions of various model objects
-    Constants.CHARACTERISTIC_LENGTH = Constants.WAVELENGTH_RED;
+// A good size for the units being used in the sim; used to determine the
+//   dimensions of various model objects
+Constants.CHARACTERISTIC_LENGTH = Constants.WAVELENGTH_RED;
 
-    Constants.MODEL_WIDTH = Constants.CHARACTERISTIC_LENGTH * 62;
-    Constants.MODEL_HEIGHT = Constants.MODEL_WIDTH * 0.7;
+Constants.MODEL_WIDTH = Constants.CHARACTERISTIC_LENGTH * 62;
+Constants.MODEL_HEIGHT = Constants.MODEL_WIDTH * 0.7;
 
-    Constants.METERS_TO_NANOMETERS = 1e9;
+Constants.METERS_TO_NANOMETERS = 1e9;
 
-    // Materials
-    Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT = 8.125E-6;
-    Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT = 2.419;
+// Materials
+Constants.DEFAULT_LASER_DISTANCE_FROM_PIVOT = 8.125E-6;
+Constants.DIAMOND_INDEX_OF_REFRACTION_FOR_RED_LIGHT = 2.419;
 
-    Constants.MIN_INDEX_OF_REFRACTION = 1;
-    Constants.MAX_INDEX_OF_REFRACTION = 1.6;
+Constants.MIN_INDEX_OF_REFRACTION = 1;
+Constants.MAX_INDEX_OF_REFRACTION = 1.6;
 
-    // Wavelengths to colors
-    Constants.wavelengthToHex = function(wavelength, returnHexInteger) {
-        var nm = wavelength * Constants.METERS_TO_NANOMETERS; // Convert to nanometers
-        return WavelengthColors.nmToHex(nm, returnHexInteger);
-    };
+// Wavelengths to colors
+Constants.wavelengthToHex = function(wavelength, returnHexInteger) {
+    var nm = wavelength * Constants.METERS_TO_NANOMETERS; // Convert to nanometers
+    return WavelengthColors.nmToHex(nm, returnHexInteger);
+};
 
-    Constants.wavelengthToRgba = function(wavelength, alpha) {
-        var nm = wavelength * Constants.METERS_TO_NANOMETERS; // Convert to nanometers
-        return WavelengthColors.nmToRgba(nm, alpha);
-    };
+Constants.wavelengthToRgba = function(wavelength, alpha) {
+    var nm = wavelength * Constants.METERS_TO_NANOMETERS; // Convert to nanometers
+    return WavelengthColors.nmToRgba(nm, alpha);
+};
 
-    Constants.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
-    Constants.MAX_WAVELENGTH = 700;
-
-
-    /*************************************************************************
-     **                                                                     **
-     **                                TOOLS                                **
-     **                                                                     **
-     *************************************************************************/
-
-    var IntensityMeter = {};
-
-    IntensityMeter.DEFAULT_SENSOR_X = Constants.MODEL_WIDTH  * -0.15;
-    IntensityMeter.DEFAULT_SENSOR_Y = Constants.MODEL_HEIGHT * -0.1;
-    IntensityMeter.DEFAULT_BODY_X   = Constants.MODEL_WIDTH  * -0.04;
-    IntensityMeter.DEFAULT_BODY_Y   = Constants.MODEL_HEIGHT * -0.2;
-
-    Constants.IntensityMeter = IntensityMeter;
+Constants.MIN_WAVELENGTH = WavelengthColors.MIN_WAVELENGTH;
+Constants.MAX_WAVELENGTH = 700;
 
 
-    var WaveSensor = {};
+/*************************************************************************
+ **                                                                     **
+ **                                TOOLS                                **
+ **                                                                     **
+ *************************************************************************/
 
-    WaveSensor.DEFAULT_BODY_X   = Constants.MODEL_WIDTH  * -0.105;
-    WaveSensor.DEFAULT_BODY_Y   = Constants.MODEL_HEIGHT * -0.15;
-    WaveSensor.DEFAULT_PROBE1_X = Constants.MODEL_WIDTH  * -0.027;
-    WaveSensor.DEFAULT_PROBE1_Y = Constants.MODEL_HEIGHT *  0.039;
-    WaveSensor.DEFAULT_PROBE2_X = Constants.MODEL_WIDTH  *  0.027;
-    WaveSensor.DEFAULT_PROBE2_Y = Constants.MODEL_HEIGHT *  0.039;
+var IntensityMeter = {};
 
-    Constants.WaveSensor = WaveSensor;
+IntensityMeter.DEFAULT_SENSOR_X = Constants.MODEL_WIDTH  * -0.15;
+IntensityMeter.DEFAULT_SENSOR_Y = Constants.MODEL_HEIGHT * -0.1;
+IntensityMeter.DEFAULT_BODY_X   = Constants.MODEL_WIDTH  * -0.04;
+IntensityMeter.DEFAULT_BODY_Y   = Constants.MODEL_HEIGHT * -0.2;
 
-
-    var VelocitySensor = {};
-
-    VelocitySensor.DEFAULT_X = Constants.MODEL_WIDTH  * -0.105;
-    VelocitySensor.DEFAULT_Y = Constants.MODEL_HEIGHT * -0.15;
-
-    Constants.VelocitySensor = VelocitySensor;
-
-    /*************************************************************************
-     **                                                                     **
-     **                                LASER                                **
-     **                                                                     **
-     *************************************************************************/
-
-    var Laser = {};
-
-    // So the refracted wave mode doesn't get too big because at angle = PI
-    //   it would become infinite.  This value was determined by printing out
-    //   actual angle values at runtime and sampling a good value.
-	Laser.MAX_ANGLE_IN_WAVE_MODE = 3.0194;
-
-	Constants.Laser = Laser;
+Constants.IntensityMeter = IntensityMeter;
 
 
-    /*************************************************************************
-     **                                                                     **
-     **                            LASER BEAM VIEW                          **
-     **                                                                     **
-     *************************************************************************/
+var WaveSensor = {};
 
-    var LaserBeamsView = {};
+WaveSensor.DEFAULT_BODY_X   = Constants.MODEL_WIDTH  * -0.105;
+WaveSensor.DEFAULT_BODY_Y   = Constants.MODEL_HEIGHT * -0.15;
+WaveSensor.DEFAULT_PROBE1_X = Constants.MODEL_WIDTH  * -0.027;
+WaveSensor.DEFAULT_PROBE1_Y = Constants.MODEL_HEIGHT *  0.039;
+WaveSensor.DEFAULT_PROBE2_X = Constants.MODEL_WIDTH  *  0.027;
+WaveSensor.DEFAULT_PROBE2_Y = Constants.MODEL_HEIGHT *  0.039;
 
-    LaserBeamsView.LASER_BEAM_WIDTH = 3;
-    LaserBeamsView.CLIPPER_COORDINATE_SCALE = 10;
-
-    Constants.LaserBeamsView = LaserBeamsView;
+Constants.WaveSensor = WaveSensor;
 
 
-    return Constants;
-});
+var VelocitySensor = {};
+
+VelocitySensor.DEFAULT_X = Constants.MODEL_WIDTH  * -0.105;
+VelocitySensor.DEFAULT_Y = Constants.MODEL_HEIGHT * -0.15;
+
+Constants.VelocitySensor = VelocitySensor;
+
+/*************************************************************************
+ **                                                                     **
+ **                                LASER                                **
+ **                                                                     **
+ *************************************************************************/
+
+var Laser = {};
+
+// So the refracted wave mode doesn't get too big because at angle = PI
+//   it would become infinite.  This value was determined by printing out
+//   actual angle values at runtime and sampling a good value.
+Laser.MAX_ANGLE_IN_WAVE_MODE = 3.0194;
+
+Constants.Laser = Laser;
+
+
+/*************************************************************************
+ **                                                                     **
+ **                            LASER BEAM VIEW                          **
+ **                                                                     **
+ *************************************************************************/
+
+var LaserBeamsView = {};
+
+LaserBeamsView.LASER_BEAM_WIDTH = 3;
+LaserBeamsView.CLIPPER_COORDINATE_SCALE = 10;
+
+Constants.LaserBeamsView = LaserBeamsView;
+
+
+export default Constants;

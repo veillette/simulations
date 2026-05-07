@@ -1,183 +1,175 @@
-define(function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
-
-    var PIXI = require('pixi');
-
-    var PixiView = require('common/v3/pixi/view');
-    var Vector2  = require('common/math/vector2');
-
-    var CoilView      = require('views/coil');
-    var LightbulbView = require('views/lightbulb');
-    var VoltmeterView = require('views/voltmeter');
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiView from 'common/v3/pixi/view';
+import Vector2 from 'common/math/vector2';
+import CoilView from 'views/coil';
+import LightbulbView from 'views/lightbulb';
+import VoltmeterView from 'views/voltmeter';
 
 
+
+/**
+ * PickupCoilView is the graphical representation of a pickup coil, with
+ *   indicators (lightbulb and voltmeter) for displaying the effect of
+ *   electromagnetic induction.
+ */
+var PickupCoilView = PixiView.extend({
+
+    events: {
+        'touchstart      .foregroundLayer': 'dragStart',
+        'mousedown       .foregroundLayer': 'dragStart',
+        'touchmove       .foregroundLayer': 'drag',
+        'mousemove       .foregroundLayer': 'drag',
+        'touchend        .foregroundLayer': 'dragEnd',
+        'mouseup         .foregroundLayer': 'dragEnd',
+        'touchendoutside .foregroundLayer': 'dragEnd',
+        'mouseupoutside  .foregroundLayer': 'dragEnd'
+    },
 
     /**
-     * PickupCoilView is the graphical representation of a pickup coil, with
-     *   indicators (lightbulb and voltmeter) for displaying the effect of
-     *   electromagnetic induction.
+     * Initializes the new PickupCoilView.
      */
-    var PickupCoilView = PixiView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            draggingEnabled: true
+        }, options);
 
-        events: {
-            'touchstart      .foregroundLayer': 'dragStart',
-            'mousedown       .foregroundLayer': 'dragStart',
-            'touchmove       .foregroundLayer': 'drag',
-            'mousemove       .foregroundLayer': 'drag',
-            'touchend        .foregroundLayer': 'dragEnd',
-            'mouseup         .foregroundLayer': 'dragEnd',
-            'touchendoutside .foregroundLayer': 'dragEnd',
-            'mouseupoutside  .foregroundLayer': 'dragEnd'
-        },
+        this.mvt = options.mvt;
+        this.simulation = options.simulation;
+        this.draggingEnabled = options.draggingEnabled;
 
-        /**
-         * Initializes the new PickupCoilView.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                draggingEnabled: true
-            }, options);
+        this._dragOffset   = new PIXI.Point();
+        this._dragLocation = new PIXI.Point();
+        this._vec = new Vector2();
 
-            this.mvt = options.mvt;
-            this.simulation = options.simulation;
-            this.draggingEnabled = options.draggingEnabled;
+        this.initGraphics();
 
-            this._dragOffset   = new PIXI.Point();
-            this._dragLocation = new PIXI.Point();
-            this._vec = new Vector2();
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+        this.listenTo(this.model, 'change:radius',   this.updateComponentPositions);
+    },
 
-            this.initGraphics();
+    /**
+     * Initializes everything for rendering graphics
+     */
+    initGraphics: function() {
+        this.foregroundLayer = new PIXI.Container();
+        this.backgroundLayer = new PIXI.Container();
 
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-            this.listenTo(this.model, 'change:radius',   this.updateComponentPositions);
-        },
+        if (this.draggingEnabled)
+            this.foregroundLayer.buttonMode = true;
 
-        /**
-         * Initializes everything for rendering graphics
-         */
-        initGraphics: function() {
-            this.foregroundLayer = new PIXI.Container();
-            this.backgroundLayer = new PIXI.Container();
+        this.initCoilView();
+        this.initLightbulb();
+        this.initVoltmeter();
 
-            if (this.draggingEnabled)
-                this.foregroundLayer.buttonMode = true;
+        this.updateMVT(this.mvt);
+    },
 
-            this.initCoilView();
-            this.initLightbulb();
-            this.initVoltmeter();
+    initCoilView: function() {
+        this.coilView = new CoilView({
+            mvt: this.mvt,
+            model: this.model,
+            simulation: this.simulation,
+            endsConnected: true
+        });
 
-            this.updateMVT(this.mvt);
-        },
+        this.backgroundLayer.addChild(this.coilView.backgroundLayer);
+        this.foregroundLayer.addChild(this.coilView.foregroundLayer);
+    },
 
-        initCoilView: function() {
-            this.coilView = new CoilView({
-                mvt: this.mvt,
-                model: this.model,
-                simulation: this.simulation,
-                endsConnected: true
-            });
+    initLightbulb: function() {
+        this.lightbulbView = new LightbulbView({
+            mvt: this.mvt,
+            model: this.simulation.lightbulb,
+            simulation: this.simulation
+        });
 
-            this.backgroundLayer.addChild(this.coilView.backgroundLayer);
-            this.foregroundLayer.addChild(this.coilView.foregroundLayer);
-        },
+        this.foregroundLayer.addChild(this.lightbulbView.displayObject);
+    },
 
-        initLightbulb: function() {
-            this.lightbulbView = new LightbulbView({
-                mvt: this.mvt,
-                model: this.simulation.lightbulb,
-                simulation: this.simulation
-            });
+    initVoltmeter: function() {
+        this.voltmeterView = new VoltmeterView({
+            mvt: this.mvt,
+            model: this.simulation.voltmeter,
+            simulation: this.simulation
+        });
 
-            this.foregroundLayer.addChild(this.lightbulbView.displayObject);
-        },
+        this.foregroundLayer.addChild(this.voltmeterView.displayObject);
+    },
 
-        initVoltmeter: function() {
-            this.voltmeterView = new VoltmeterView({
-                mvt: this.mvt,
-                model: this.simulation.voltmeter,
-                simulation: this.simulation
-            });
+    reset: function() {
+        this.updateMVT(this.mvt);
+        this.coilView.reset();
+    },
 
-            this.foregroundLayer.addChild(this.voltmeterView.displayObject);
-        },
+    update: function(time, deltaTime, paused) {
+        this.coilView.update(time, deltaTime, paused);
+        this.lightbulbView.update(time, deltaTime, paused);
+        this.voltmeterView.update(time, deltaTime, paused);
+    },
 
-        reset: function() {
-            this.updateMVT(this.mvt);
-            this.coilView.reset();
-        },
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        update: function(time, deltaTime, paused) {
-            this.coilView.update(time, deltaTime, paused);
-            this.lightbulbView.update(time, deltaTime, paused);
-            this.voltmeterView.update(time, deltaTime, paused);
-        },
+        this.updateComponentPositions();
+        this.updatePosition(this.model, this.model.get('position'));
+    },
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+    updatePosition: function(model, position) {
+        var viewPosition = this.mvt.modelToView(position);
+        this.backgroundLayer.x = viewPosition.x;
+        this.backgroundLayer.y = viewPosition.y;
+        this.foregroundLayer.x = viewPosition.x;
+        this.foregroundLayer.y = viewPosition.y;
+    },
 
-            this.updateComponentPositions();
-            this.updatePosition(this.model, this.model.get('position'));
-        },
+    updateComponentPositions: function() {
+        var x = -10;
+        var y = -this.coilView.getTopOffset();
+        this.lightbulbView.displayObject.x = x;
+        this.lightbulbView.displayObject.y = y + 25;
+        this.voltmeterView.displayObject.x = x + 5;
+        this.voltmeterView.displayObject.y = y + 15;
+    },
 
-        updatePosition: function(model, position) {
-            var viewPosition = this.mvt.modelToView(position);
-            this.backgroundLayer.x = viewPosition.x;
-            this.backgroundLayer.y = viewPosition.y;
-            this.foregroundLayer.x = viewPosition.x;
-            this.foregroundLayer.y = viewPosition.y;
-        },
+    dragStart: function(event) {
+        if (this.simulation.get('paused') || !this.draggingEnabled)
+            return;
 
-        updateComponentPositions: function() {
-            var x = -10;
-            var y = -this.coilView.getTopOffset();
-            this.lightbulbView.displayObject.x = x;
-            this.lightbulbView.displayObject.y = y + 25;
-            this.voltmeterView.displayObject.x = x + 5;
-            this.voltmeterView.displayObject.y = y + 15;
-        },
+        this.dragOffset = event.data.getLocalPosition(this.foregroundLayer, this._dragOffset);
+        this.dragging = true;
+    },
 
-        dragStart: function(event) {
-            if (this.simulation.get('paused') || !this.draggingEnabled)
-                return;
+    drag: function(event) {
+        if (this.dragging) {
+            var local = event.data.getLocalPosition(this.foregroundLayer.parent, this._dragLocation);
+            var x = local.x - this.dragOffset.x;
+            var y = local.y - this.dragOffset.y;
 
-            this.dragOffset = event.data.getLocalPosition(this.foregroundLayer, this._dragOffset);
-            this.dragging = true;
-        },
+            var mx = this.mvt.viewToModelX(x);
+            var my = this.mvt.viewToModelY(y);
 
-        drag: function(event) {
-            if (this.dragging) {
-                var local = event.data.getLocalPosition(this.foregroundLayer.parent, this._dragLocation);
-                var x = local.x - this.dragOffset.x;
-                var y = local.y - this.dragOffset.y;
-
-                var mx = this.mvt.viewToModelX(x);
-                var my = this.mvt.viewToModelY(y);
-
-                this.model.setPosition(mx, my);
-            }
-        },
-
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-        showElectrons: function() {
-            this.coilView.enableElectronAnimation();
-        },
-
-        hideElectrons: function() {
-            this.coilView.disableElectronAnimation();
+            this.model.setPosition(mx, my);
         }
+    },
 
-    });
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
+    showElectrons: function() {
+        this.coilView.enableElectronAnimation();
+    },
 
-    return PickupCoilView;
+    hideElectrons: function() {
+        this.coilView.disableElectronAnimation();
+    }
+
 });
+
+
+export default PickupCoilView;

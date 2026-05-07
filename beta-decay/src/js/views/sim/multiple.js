@@ -1,52 +1,45 @@
-define(function (require) {
+import _ from 'underscore';
+import MultiNucleusBetaDecaySimulation from 'beta-decay/models/simulation/multi-nucleus';
+import BetaDecaySimView from 'beta-decay/views/sim';
+import MultiNucleusBetaDecaySceneView from 'beta-decay/views/scene/multiple';
 
-    'use strict';
 
-    var _ = require('underscore');
-
-    var MultiNucleusBetaDecaySimulation = require('beta-decay/models/simulation/multi-nucleus');
-
-    var BetaDecaySimView               = require('beta-decay/views/sim');
-    var MultiNucleusBetaDecaySceneView = require('beta-decay/views/scene/multiple');
-
+/**
+ * Multiple Atoms tab
+ */
+var MultiNucleusBetaDecaySimView = BetaDecaySimView.extend({
 
     /**
-     * Multiple Atoms tab
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var MultiNucleusBetaDecaySimView = BetaDecaySimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Multiple Atoms',
+            name: 'multiple-atoms',
+            link: 'beta-decay'
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Multiple Atoms',
-                name: 'multiple-atoms',
-                link: 'beta-decay'
-            }, options);
+        BetaDecaySimView.prototype.initialize.apply(this, [options]);
+    },
 
-            BetaDecaySimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new MultiNucleusBetaDecaySimulation();
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new MultiNucleusBetaDecaySimulation();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new MultiNucleusBetaDecaySceneView({
+            simulation: this.simulation
+        });
+    }
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new MultiNucleusBetaDecaySceneView({
-                simulation: this.simulation
-            });
-        }
-
-    });
-
-    return MultiNucleusBetaDecaySimView;
 });
+
+export default MultiNucleusBetaDecaySimView;

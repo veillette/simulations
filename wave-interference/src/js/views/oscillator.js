@@ -1,142 +1,135 @@
-define(function(require) {
-
-	'use strict';
-
-	var $        = require('jquery');
-	var _        = require('underscore');
-	var Backbone = require('backbone'); Backbone.$ = $;
-
-	var html  = require('text!../../templates/oscillator.html');
-
-	// CSS
-	require('less!styles/oscillator');
+import $ from 'jquery';
+import _ from 'underscore';
+import Backbone from 'backbone';
+import html from '../../templates/oscillator.html?raw';
+import 'styles/oscillator.less';
+Backbone.$ = $;
 
 
-	var OscillatorView = Backbone.View.extend({
+var OscillatorView = Backbone.View.extend({
 
-		template: _.template(html),
+    template: _.template(html),
 
-		tagName: 'div',
-		className: 'oscillator-view',
+    tagName: 'div',
+    className: 'oscillator-view',
 
-		events: {
-			'click .btn-oscillator-pulse' : 'pulseClicked',
-			'change .oscillator-on-off'   : 'changeState',
-		},
+    events: {
+        'click .btn-oscillator-pulse' : 'pulseClicked',
+        'change .oscillator-on-off'   : 'changeState',
+    },
 
-		initialize: function(options) {
-			if (options.heatmapView)
-				this.heatmapView = options.heatmapView;
-			else
-				throw 'OscillatorView requires a HeatmapView instance.';
+    initialize: function(options) {
+        if (options.heatmapView)
+            this.heatmapView = options.heatmapView;
+        else
+            throw 'OscillatorView requires a HeatmapView instance.';
 
-			if (options.oscillator)
-				this.oscillator = options.oscillator;
-			else
-				throw 'OscillatorView requires an Oscillator instance.';
+        if (options.oscillator)
+            this.oscillator = options.oscillator;
+        else
+            throw 'OscillatorView requires an Oscillator instance.';
 
-			this.waveSimulation = this.heatmapView.waveSimulation;
+        this.waveSimulation = this.heatmapView.waveSimulation;
 
-			this.listenTo(this.heatmapView, 'resized', this.resize);
-			this.listenTo(this.waveSimulation, 'oscillators-changed', this.resize);
-			this.listenTo(this.waveSimulation, 'change:oscillatorCount', this.determinePosition);
-		},
+        this.listenTo(this.heatmapView, 'resized', this.resize);
+        this.listenTo(this.waveSimulation, 'oscillators-changed', this.resize);
+        this.listenTo(this.waveSimulation, 'change:oscillatorCount', this.determinePosition);
+    },
 
-		resize: function(){
-			this.updateOnNextFrame = true;
-		},
+    resize: function(){
+        this.updateOnNextFrame = true;
+    },
 
-		render: function() {
-			this.$el.html(this.template({ unique: this.cid }));
-			this.$graphic = this.$('.oscillator-graphic');
+    render: function() {
+        this.$el.html(this.template({ unique: this.cid }));
+        this.$graphic = this.$('.oscillator-graphic');
 
-			this.resize();
-			this.update(0, 0);
-		},
+        this.resize();
+        this.update(0, 0);
+    },
 
-		update: function(time, delta) {
-			if (!this.updateOnNextFrame)
-				return;
+    update: function(time, delta) {
+        if (!this.updateOnNextFrame)
+            return;
 
-			this.updateOnNextFrame = false;
+        this.updateOnNextFrame = false;
 
-			if (!this.hidden) {
-				this.$graphic.css('top', this.heatmapView.height - this.oscillator.get('y') * this.heatmapView.ySpacing);
-			}
-		},
+        if (!this.hidden) {
+            this.$graphic.css('top', this.heatmapView.height - this.oscillator.get('y') * this.heatmapView.ySpacing);
+        }
+    },
 
-		toLatticeXScale: function(x) {
-			return x / this.heatmapView.xSpacing;
-		},
+    toLatticeXScale: function(x) {
+        return x / this.heatmapView.xSpacing;
+    },
 
-		toLatticeYScale: function(y) {
-			return y / this.heatmapView.ySpacing * -1;
-		},
+    toLatticeYScale: function(y) {
+        return y / this.heatmapView.ySpacing * -1;
+    },
 
-		pulseClicked: function(event) {
-			event.preventDefault();
+    pulseClicked: function(event) {
+        event.preventDefault();
 
-			var estimatedTime = this.oscillator.firePulse();
+        var estimatedTime = this.oscillator.firePulse();
 
-			$(event.target)
-				.css({
-					'animation-duration': estimatedTime + 'ms',
-					'-webkit-animation-duration': estimatedTime + 'ms'
-				})
-				.addClass('clicked')
-				.prop('disabled', true);
+        $(event.target)
+            .css({
+                'animation-duration': estimatedTime + 'ms',
+                '-webkit-animation-duration': estimatedTime + 'ms'
+            })
+            .addClass('clicked')
+            .prop('disabled', true);
 
-			var $on = this.$('#oscillator-on-' + this.cid);
-			setTimeout(function(){
-				if ($on.is(':checked')) {
-					$(event.target)
-						.removeClass('clicked');
-				}
-				else {
-					$(event.target)
-						.removeClass('clicked')
-						.prop('disabled', false);
-				}
-			}, estimatedTime);
-		},
+        var $on = this.$('#oscillator-on-' + this.cid);
+        setTimeout(function(){
+            if ($on.is(':checked')) {
+                $(event.target)
+                    .removeClass('clicked');
+            }
+            else {
+                $(event.target)
+                    .removeClass('clicked')
+                    .prop('disabled', false);
+            }
+        }, estimatedTime);
+    },
 
-		changeState: function(event) {
-			var enabled = parseInt($(event.target).val());
+    changeState: function(event) {
+        var enabled = parseInt($(event.target).val());
 
-			this.$('.btn-oscillator-pulse')
-				.prop('disabled', enabled)
-				.removeClass('clicked');
+        this.$('.btn-oscillator-pulse')
+            .prop('disabled', enabled)
+            .removeClass('clicked');
 
-			this.oscillator.set('enabled', enabled);
-		},
+        this.oscillator.set('enabled', enabled);
+    },
 
-		hide: function() {
-			this.hidden = true;
-			this.$el.hide();
-		},
+    hide: function() {
+        this.hidden = true;
+        this.$el.hide();
+    },
 
-		show: function() {
-			this.hidden = false;
-			this.$el.show();
-		},
+    show: function() {
+        this.hidden = false;
+        this.$el.show();
+    },
 
-		determinePosition: function() {
-			if (this.waveSimulation.get('oscillatorCount') > 1) {
-				var pos = _.indexOf(this.waveSimulation.oscillators, this.oscillator);
+    determinePosition: function() {
+        if (this.waveSimulation.get('oscillatorCount') > 1) {
+            var pos = _.indexOf(this.waveSimulation.oscillators, this.oscillator);
 
-				if (pos === 0)
-					this.$el.addClass('bottom-oscillator');
-				else
-					this.$el.addClass('top-oscillator');
-			}
-			else {
-				this.$el
-					.removeClass('top-oscillator')
-					.removeClass('bottom-oscillator');
-			}
-		}
+            if (pos === 0)
+                this.$el.addClass('bottom-oscillator');
+            else
+                this.$el.addClass('top-oscillator');
+        }
+        else {
+            this.$el
+                .removeClass('top-oscillator')
+                .removeClass('bottom-oscillator');
+        }
+    }
 
-	});
-
-	return OscillatorView;
 });
+
+export default OscillatorView;

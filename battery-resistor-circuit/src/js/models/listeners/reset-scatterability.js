@@ -1,39 +1,34 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+/**
+ * Resets particle collisions when voltage changes signs.
+ */
+var ResetScatterability = function(wireSystem) {
+    this.wireSystem = wireSystem;
+    this.pos = false;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(ResetScatterability.prototype, {
 
-    /**
-     * Resets particle collisions when voltage changes signs.
-     */
-    var ResetScatterability = function(wireSystem) {
-        this.wireSystem = wireSystem;
-        this.pos = false;
-    };
+    doChange: function() {
+        for (var i = 0; i < this.wireSystem.particles.length; i++)
+            this.wireSystem.particles[i].forgetCollision();
+    },
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(ResetScatterability.prototype, {
-
-        doChange: function() {
-            for (var i = 0; i < this.wireSystem.particles.length; i++)
-                this.wireSystem.particles[i].forgetCollision();
-        },
-
-        voltageChanged: function(voltage) {
-            if (voltage < 0 && this.pos) {
-                this.pos = false;
-                this.doChange();
-            }
-            else if (voltage > 0 && !this.pos) {
-                this.pos = true;
-                this.doChange();
-            }
+    voltageChanged: function(voltage) {
+        if (voltage < 0 && this.pos) {
+            this.pos = false;
+            this.doChange();
         }
+        else if (voltage > 0 && !this.pos) {
+            this.pos = true;
+            this.doChange();
+        }
+    }
 
-    });
-
-    return ResetScatterability;
 });
+
+export default ResetScatterability;

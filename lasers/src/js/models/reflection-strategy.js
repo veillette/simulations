@@ -1,10 +1,5 @@
-define(function (require) {
+var ReflectionStrategy = function() {};
 
-    'use strict';
+ReflectionStrategy.prototype.reflects = function() {};
 
-    var ReflectionStrategy = function() {};
-
-    ReflectionStrategy.prototype.reflects = function() {};
-
-    return ReflectionStrategy;
-});
+export default ReflectionStrategy;

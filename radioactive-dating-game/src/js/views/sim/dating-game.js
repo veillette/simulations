@@ -1,93 +1,81 @@
-define(function (require) {
+import _ from 'underscore';
+import DatingGameSimulation from 'radioactive-dating-game/models/simulation/dating-game';
+import RadioactiveDatingGameSimView from 'radioactive-dating-game/views/sim';
+import DatingGameSceneView from 'radioactive-dating-game/views/scene/dating-game';
+import simHtml from 'radioactive-dating-game/templates/dating-game-sim.html?raw';
 
-    'use strict';
+/**
+ * Multiple Atoms tab
+ */
+var DatingGameSimView = RadioactiveDatingGameSimView.extend({
 
-    var _ = require('underscore');
+    events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
 
-
-
-    var DatingGameSimulation = require('radioactive-dating-game/models/simulation/dating-game');
-
-    var RadioactiveDatingGameSimView = require('radioactive-dating-game/views/sim');
-    var DatingGameSceneView          = require('radioactive-dating-game/views/scene/dating-game');
-
-
-    // HTML
-    var simHtml = require('text!radioactive-dating-game/templates/dating-game-sim.html');
+    }),
 
     /**
-     * Multiple Atoms tab
+     * Template for rendering the basic scaffolding
      */
-    var DatingGameSimView = RadioactiveDatingGameSimView.extend({
+    template: _.template(simHtml),
 
-        events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Dating Game',
+            name: 'dating-game'
+        }, options);
 
-        }),
+        RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
+    },
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new DatingGameSimulation();
+    },
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Dating Game',
-                name: 'dating-game'
-            }, options);
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new DatingGameSceneView({
+            simulation: this.simulation
+        });
+    },
 
-            RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
-        },
+    /**
+     * Renders playback controls
+     */
+    renderPlaybackControls: function() {
+        // No controls necessary
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new DatingGameSimulation();
-        },
+    /**
+     * Renders everything
+     */
+    postRender: function() {
+        RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new DatingGameSceneView({
-                simulation: this.simulation
-            });
-        },
+        return this;
+    },
 
-        /**
-         * Renders playback controls
-         */
-        renderPlaybackControls: function() {
-            // No controls necessary
-        },
+    setSoundVolumeMute: function() {
+        this.sceneView.setSoundVolumeMute();
+    },
 
-        /**
-         * Renders everything
-         */
-        postRender: function() {
-            RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
+    setSoundVolumeLow: function() {
+        this.sceneView.setSoundVolumeLow();
+    },
 
-            return this;
-        },
+    setSoundVolumeHigh: function() {
+        this.sceneView.setSoundVolumeHigh();
+    }
 
-        setSoundVolumeMute: function() {
-            this.sceneView.setSoundVolumeMute();
-        },
-
-        setSoundVolumeLow: function() {
-            this.sceneView.setSoundVolumeLow();
-        },
-
-        setSoundVolumeHigh: function() {
-            this.sceneView.setSoundVolumeHigh();
-        }
-
-    });
-
-    return DatingGameSimView;
 });
+
+export default DatingGameSimView;

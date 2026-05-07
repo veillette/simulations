@@ -1,26 +1,18 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import RutherfordAtomSimView from 'rutherford-scattering/views/sim/rutherford';
+import PlumPuddingSimView from 'rutherford-scattering/views/sim/plum-pudding';
+import Assets from 'assets';
+import 'rutherford-scattering/styles/font-awesome.less';
 
-    'use strict';
+var RutherfordScatteringAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var RutherfordAtomSimView  = require('rutherford-scattering/views/sim/rutherford');
-    var PlumPuddingSimView = require('rutherford-scattering/views/sim/plum-pudding');
+    simViewConstructors: [
+        RutherfordAtomSimView,
+        PlumPuddingSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!rutherford-scattering/styles/font-awesome');
-
-    var RutherfordScatteringAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            RutherfordAtomSimView,
-            PlumPuddingSimView
-        ]
-
-    });
-
-    return RutherfordScatteringAppView;
 });
+
+export default RutherfordScatteringAppView;

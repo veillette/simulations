@@ -1,20 +1,15 @@
-define(function (require) {
+import Projectile from 'models/projectile';
 
-    'use strict';
+var TankShell = Projectile.extend({
 
-    var Projectile = require('models/projectile');
+    defaults: {
+        mass:           150,
+        diameter:         0.15,
+        dragCoefficient:  0.05
+    }
 
-    var TankShell = Projectile.extend({
-
-        defaults: {
-            mass:           150,
-            diameter:         0.15,
-            dragCoefficient:  0.05
-        }
-
-    }, {
-        getName: function() { return 'tank shell'; }
-    });
-
-    return TankShell;
+}, {
+    getName: function() { return 'tank shell'; }
 });
+
+export default TankShell;

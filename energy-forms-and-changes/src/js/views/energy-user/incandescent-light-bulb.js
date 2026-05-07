@@ -1,55 +1,46 @@
-define(function(require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
+import LightBulbView from 'views/energy-user/light-bulb';
+import Assets from 'assets';
+import Constants from 'constants';
 
-    'use strict';
+var IncandescentLightBulbView = LightBulbView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        var bulbTexture = Assets.Texture(Assets.Images.INCANDESCENT_ON_3);
 
-    var Vector2 = require('common/math/vector2');
+        options = _.extend({
+            lightRayColor: IncandescentLightBulbView.RAY_COLOR,
+            lightRayCenter: new Vector2(0, -bulbTexture.height * 0.55),
+            lightRayInnerRadius: 66
+        }, options);
 
-    var LightBulbView = require('views/energy-user/light-bulb');
+        LightBulbView.prototype.initialize.apply(this, [options]);
+    },
 
-    var Assets = require('assets');
+    initImages: function() {
+        var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,      new Vector2(-0.036, -0.04));
+        var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,   new Vector2(-0.009, -0.016));
+        var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
+        var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
+        var unlitBulb    = this.createSpriteWithOffset(Assets.Images.INCANDESCENT_2,     new Vector2(0, 0.055));
+        var litBulb      = this.createSpriteWithOffset(Assets.Images.INCANDESCENT_ON_3,  new Vector2(0, 0.055));
+        this.litBulb = litBulb; // We need to remember this one
 
-    var Constants = require('constants');
+        // Fudging
+        straightWire.x += 4;
 
-    var IncandescentLightBulbView = LightBulbView.extend({
+        this.backLayer.addChild(straightWire);
+        this.backLayer.addChild(curvedWire);
+        this.backLayer.addChild(baseBack);
 
-        initialize: function(options) {
-            var bulbTexture = Assets.Texture(Assets.Images.INCANDESCENT_ON_3);
+        // [ then the energy chunks layer ]
 
-            options = _.extend({
-                lightRayColor: IncandescentLightBulbView.RAY_COLOR,
-                lightRayCenter: new Vector2(0, -bulbTexture.height * 0.55),
-                lightRayInnerRadius: 66
-            }, options);
+        this.frontLayer.addChild(baseFront);
+        this.frontLayer.addChild(unlitBulb);
+        this.frontLayer.addChild(litBulb);
+    },
 
-            LightBulbView.prototype.initialize.apply(this, [options]);
-        },
+}, Constants.IncandescentLightBulbView);
 
-        initImages: function() {
-            var straightWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_62,      new Vector2(-0.036, -0.04));
-            var curvedWire   = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_RIGHT,   new Vector2(-0.009, -0.016));
-            var baseBack     = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_BACK);
-            var baseFront    = this.createSpriteWithOffset(Assets.Images.ELEMENT_BASE_FRONT);
-            var unlitBulb    = this.createSpriteWithOffset(Assets.Images.INCANDESCENT_2,     new Vector2(0, 0.055));
-            var litBulb      = this.createSpriteWithOffset(Assets.Images.INCANDESCENT_ON_3,  new Vector2(0, 0.055));
-            this.litBulb = litBulb; // We need to remember this one
-
-            // Fudging
-            straightWire.x += 4;
-
-            this.backLayer.addChild(straightWire);
-            this.backLayer.addChild(curvedWire);
-            this.backLayer.addChild(baseBack);
-
-            // [ then the energy chunks layer ]
-
-            this.frontLayer.addChild(baseFront);
-            this.frontLayer.addChild(unlitBulb);
-            this.frontLayer.addChild(litBulb);
-        },
-
-    }, Constants.IncandescentLightBulbView);
-
-    return IncandescentLightBulbView;
-});
+export default IncandescentLightBulbView;

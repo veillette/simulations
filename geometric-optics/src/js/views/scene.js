@@ -1,311 +1,299 @@
-define(function(require) {
+import _ from 'underscore';
+import * as PIXI from 'pixi.js';
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import RulerView from 'common/v3/pixi/view/ruler';
+import AppView from 'common/v3/app/app';
+import Colors from 'common/colors/colors';
+import Vector2 from 'common/math/vector2';
+import Rectangle from 'common/math/rectangle';
+import ModelViewTransform from 'common/math/model-view-transform';
+import HelpLabelView from 'common/v3/help-label/index';
+import SourceObjectView from 'views/source-object';
+import TargetImageView from 'views/target-image';
+import LensView from 'views/lens';
+import RaysView from 'views/rays';
+import ScreenView from 'views/screen';
+import Constants from 'constants';
+import 'styles/scene.less';
+var AXIS_COLOR = Colors.parseHex(Constants.SceneView.AXIS_COLOR);
 
-    'use strict';
+/**
+ *
+ */
+var GeometricOpticsSceneView = PixiSceneView.extend({
 
-    var _    = require('underscore');
-    var PIXI = require('pixi');
+    events: {
 
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var RulerView          = require('common/v3/pixi/view/ruler');
-    var AppView            = require('common/v3/app/app');
-    var Colors             = require('common/colors/colors');
-    var Vector2            = require('common/math/vector2');
-    var Rectangle          = require('common/math/rectangle');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var HelpLabelView      = require('common/v3/help-label/index');
+    },
 
-    var SourceObjectView = require('views/source-object');
-    var TargetImageView  = require('views/target-image');
-    var LensView         = require('views/lens');
-    var RaysView         = require('views/rays');
-    var ScreenView       = require('views/screen');
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
 
+        this.listenTo(this.simulation.lens, 'change:position', this.drawAxis);
+    },
 
-    // Constants
-    var Constants = require('constants');
-    var AXIS_COLOR = Colors.parseHex(Constants.SceneView.AXIS_COLOR);
+    renderContent: function() {
 
-    // CSS
-    require('less!styles/scene');
+    },
 
-    /**
-     *
-     */
-    var GeometricOpticsSceneView = PixiSceneView.extend({
+    initGraphics: function() {
+        PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
-        events: {
+        this.backLayer   = new PIXI.Container();
+        this.objectsLayer = new PIXI.Container();
+        this.raysLayer   = new PIXI.Container();
+        this.axisLayer   = new PIXI.Container();
+        this.frontLayer  = new PIXI.Container();
 
-        },
+        this.stage.addChild(this.backLayer);
+        this.stage.addChild(this.objectsLayer);
+        this.stage.addChild(this.raysLayer);
+        this.stage.addChild(this.axisLayer);
+        this.stage.addChild(this.frontLayer);
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
+        this.initMVT();
+        this.initObjects();
+        this.initRays();
+        this.initAxis();
+        this.initScreen();
+        this.initRuler();
+        this.initHelpLabels();
+    },
 
-            this.listenTo(this.simulation.lens, 'change:position', this.drawAxis);
-        },
+    initMVT: function() {
+        // Map the simulation bounds...
+        var simWidth  = Constants.MIN_SCENE_WIDTH;
+        var simHeight = Constants.MIN_SCENE_HEIGHT;
 
-        renderContent: function() {
+        // ...to the usable screen space that we have
+        var usableScreenSpace
+        if (AppView.windowIsShort())
+            usableScreenSpace = new Rectangle(0, 0, this.width - 205, this.height);
+        else
+            usableScreenSpace = new Rectangle(0, 116, this.width, this.height - 116);
 
-        },
+        var simRatio = simWidth / simHeight;
+        var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
 
-        initGraphics: function() {
-            PixiSceneView.prototype.initGraphics.apply(this, arguments);
+        var scale = (screenRatio > simRatio) ? usableScreenSpace.h / simHeight : usableScreenSpace.w / simWidth;
 
-            this.backLayer   = new PIXI.Container();
-            this.objectsLayer = new PIXI.Container();
-            this.raysLayer   = new PIXI.Container();
-            this.axisLayer   = new PIXI.Container();
-            this.frontLayer  = new PIXI.Container();
+        this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
+        this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
 
-            this.stage.addChild(this.backLayer);
-            this.stage.addChild(this.objectsLayer);
-            this.stage.addChild(this.raysLayer);
-            this.stage.addChild(this.axisLayer);
-            this.stage.addChild(this.frontLayer);
+        this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            scale
+        );
+    },
 
-            this.initMVT();
-            this.initObjects();
-            this.initRays();
-            this.initAxis();
-            this.initScreen();
-            this.initRuler();
-            this.initHelpLabels();
-        },
+    initObjects: function() {
+        this.sourceObjectView = new SourceObjectView({
+            model: this.simulation.sourceObject,
+            mvt: this.mvt
+        });
+        this.objectsLayer.addChild(this.sourceObjectView.displayObject);
 
-        initMVT: function() {
-            // Map the simulation bounds...
-            var simWidth  = Constants.MIN_SCENE_WIDTH;
-            var simHeight = Constants.MIN_SCENE_HEIGHT;
+        this.targetImageView = new TargetImageView({
+            model: this.simulation.targetImage,
+            mvt: this.mvt
+        });
+        this.objectsLayer.addChild(this.targetImageView.displayObject);
 
-            // ...to the usable screen space that we have
-            var usableScreenSpace
-            if (AppView.windowIsShort())
-                usableScreenSpace = new Rectangle(0, 0, this.width - 205, this.height);
-            else
-                usableScreenSpace = new Rectangle(0, 116, this.width, this.height - 116);
+        this.lensView = new LensView({
+            model: this.simulation.lens,
+            mvt: this.mvt
+        });
+        this.objectsLayer.addChild(this.lensView.displayObject);
+    },
 
-            var simRatio = simWidth / simHeight;
-            var screenRatio = usableScreenSpace.w / usableScreenSpace.h;
+    initAxis: function() {
+        this.axis = new PIXI.Graphics();
+        this.axisLayer.addChild(this.axis);
+        this.drawAxis();
+    },
 
-            var scale = (screenRatio > simRatio) ? usableScreenSpace.h / simHeight : usableScreenSpace.w / simWidth;
+    drawAxis: function() {
+        this.axis.clear();
+        this.axis.lineStyle(GeometricOpticsSceneView.AXIS_WIDTH, AXIS_COLOR, GeometricOpticsSceneView.AXIS_ALPHA);
+        this.axis.moveTo(0,          this.mvt.modelToViewY(this.simulation.lens.get('position').y));
+        this.axis.lineTo(this.width, this.mvt.modelToViewY(this.simulation.lens.get('position').y));
+    },
 
-            this.viewOriginX = Math.round(usableScreenSpace.x + usableScreenSpace.w / 2);
-            this.viewOriginY = Math.round(usableScreenSpace.y + usableScreenSpace.h / 2);
+    initRays: function() {
+        this.raysView = new RaysView({
+            model: this.simulation,
+            mvt: this.mvt
+        });
+        this.raysLayer.addChild(this.raysView.displayObject);
+    },
 
-            this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-        },
+    initScreen: function() {
+        this.screenView = new ScreenView({
+            model: this.simulation.targetImage,
+            mvt: this.mvt
+        });
 
-        initObjects: function() {
-            this.sourceObjectView = new SourceObjectView({
-                model: this.simulation.sourceObject,
-                mvt: this.mvt
-            });
-            this.objectsLayer.addChild(this.sourceObjectView.displayObject);
+        this.backLayer.addChild(this.screenView.backLayer);
+        this.frontLayer.addChild(this.screenView.frontLayer);
 
-            this.targetImageView = new TargetImageView({
-                model: this.simulation.targetImage,
-                mvt: this.mvt
-            });
-            this.objectsLayer.addChild(this.targetImageView.displayObject);
+        this.screenView.setPosition(
+            this.mvt.modelToViewX(Constants.MIN_SCENE_WIDTH * 0.32),
+            this.mvt.modelToViewY(0)
+        );
+    },
 
-            this.lensView = new LensView({
-                model: this.simulation.lens,
-                mvt: this.mvt
-            });
-            this.objectsLayer.addChild(this.lensView.displayObject);
-        },
+    initRuler: function() {
+        this.rulerView = new RulerView({
+            orientation : 'horizontal',
+            pxPerUnit: this.mvt.modelToViewDeltaX(0.01),
+            rulerWidth: 15,
+            rulerMeasureUnits : 200,
 
-        initAxis: function() {
-            this.axis = new PIXI.Graphics();
-            this.axisLayer.addChild(this.axis);
-            this.drawAxis();
-        },
+            ticks : [{
+                size: 8,
+                at: 10,
+                color: '#5A3D01'
+            },{
+                size: 4,
+                at: 2,
+                color: '#5A3D01'
+            }],
 
-        drawAxis: function() {
-            this.axis.clear();
-            this.axis.lineStyle(GeometricOpticsSceneView.AXIS_WIDTH, AXIS_COLOR, GeometricOpticsSceneView.AXIS_ALPHA);
-            this.axis.moveTo(0,          this.mvt.modelToViewY(this.simulation.lens.get('position').y));
-            this.axis.lineTo(this.width, this.mvt.modelToViewY(this.simulation.lens.get('position').y));
-        },
+            labels: [{
+                font: '14px Arial',
+                at: 20
+            }]
+        });
 
-        initRays: function() {
-            this.raysView = new RaysView({
-                model: this.simulation,
-                mvt: this.mvt
-            });
-            this.raysLayer.addChild(this.raysView.displayObject);
-        },
+        this.frontLayer.addChild(this.rulerView.displayObject);
 
-        initScreen: function() {
-            this.screenView = new ScreenView({
-                model: this.simulation.targetImage,
-                mvt: this.mvt
-            });
+        if (AppView.windowIsShort())
+            this.rulerView.setPosition(15, 15);
+        else
+            this.rulerView.setPosition(20, 136);
 
-            this.backLayer.addChild(this.screenView.backLayer);
-            this.frontLayer.addChild(this.screenView.frontLayer);
+        this.rulerView.hide();
+    },
 
-            this.screenView.setPosition(
-                this.mvt.modelToViewX(Constants.MIN_SCENE_WIDTH * 0.32),
-                this.mvt.modelToViewY(0)
-            );
-        },
+    initHelpLabels: function() {
+        this.helpLabels = [];
 
-        initRuler: function() {
-            this.rulerView = new RulerView({
-                orientation : 'horizontal',
-                pxPerUnit: this.mvt.modelToViewDeltaX(0.01),
-                rulerWidth: 15,
-                rulerMeasureUnits : 200,
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.rulerView,
+            title: 'Draggable Ruler',
+            color: '#fff',
+            font: '11pt Helvetica Neue'
+        }));
 
-                ticks : [{
-                    size: 8,
-                    at: 10,
-                    color: '#5A3D01'
-                },{
-                    size: 4,
-                    at: 2,
-                    color: '#5A3D01'
-                }],
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.lensView,
+            title: 'Draggable Lens',
+            color: '#fff',
+            font: '11pt Helvetica Neue',
+            anchor: {
+                x: 0.5,
+                y: 0
+            },
+            position : {
+                x: 0,
+                y: 114
+            },
+        }));
 
-                labels: [{
-                    font: '14px Arial',
-                    at: 20
-                }]
-            });
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.lensView.focusPoint2,
+            title: 'Focal Point',
+            color: '#fff',
+            font: '11pt Helvetica Neue',
+            anchor: {
+                x: 0.5,
+                y: 0
+            }
+        }));
 
-            this.frontLayer.addChild(this.rulerView.displayObject);
+        this.helpLabels.push(new HelpLabelView({
+            attachTo: this.screenView.screenBack,
+            title: 'Draggable Screen',
+            color: '#fff',
+            font: '22pt Helvetica Neue',
+            anchor: {
+                x: 0.5,
+                y: 0
+            }
+        }));
 
-            if (AppView.windowIsShort())
-                this.rulerView.setPosition(15, 15);
-            else
-                this.rulerView.setPosition(20, 136);
+        // this.helpLabels.push(new HelpLabelView({
+        //     attachTo: this.sceneView.toolsLayer,
+        //     position : {
+        //         x : 140,
+        //         y : 300
+        //     },
+        //     width : '300px',
+        //     title : 'Pull mass sideways to detach from spring'
+        // }));
 
-            this.rulerView.hide();
-        },
+        _.each(this.helpLabels, function(helpLabel){
+            helpLabel.render();
+        }, this);
+    },
 
-        initHelpLabels: function() {
-            this.helpLabels = [];
+    _update: function(time, deltaTime, paused, timeScale) {
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.rulerView,
-                title: 'Draggable Ruler',
-                color: '#fff',
-                font: '11pt Helvetica Neue'
-            }));
+    },
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.lensView,
-                title: 'Draggable Lens',
-                color: '#fff',
-                font: '11pt Helvetica Neue',
-                anchor: {
-                    x: 0.5,
-                    y: 0
-                },
-                position : {
-                    x: 0,
-                    y: 114
-                },
-            }));
+    showSecondPoint: function() {
+        this.sourceObjectView.showSecondPoint();
+        this.raysView.showSecondPoint();
+        this.screenView.showSecondPoint();
+    },
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.lensView.focusPoint2,
-                title: 'Focal Point',
-                color: '#fff',
-                font: '11pt Helvetica Neue',
-                anchor: {
-                    x: 0.5,
-                    y: 0
-                }
-            }));
+    hideSecondPoint: function() {
+        this.sourceObjectView.hideSecondPoint();
+        this.raysView.hideSecondPoint();
+        this.screenView.hideSecondPoint();
+    },
 
-            this.helpLabels.push(new HelpLabelView({
-                attachTo: this.screenView.screenBack,
-                title: 'Draggable Screen',
-                color: '#fff',
-                font: '22pt Helvetica Neue',
-                anchor: {
-                    x: 0.5,
-                    y: 0
-                }
-            }));
+    setRaysMode: function(mode) {
+        this.raysView.setMode(mode);
+    },
 
-            // this.helpLabels.push(new HelpLabelView({
-            //     attachTo: this.sceneView.toolsLayer,
-            //     position : {
-            //         x : 140,
-            //         y : 300
-            //     },
-            //     width : '300px',
-            //     title : 'Pull mass sideways to detach from spring'
-            // }));
+    showVirtualImage: function() {
+        this.raysView.showVirtualImage();
+        this.targetImageView.showVirtualImage();
+    },
 
-            _.each(this.helpLabels, function(helpLabel){
-                helpLabel.render();
-            }, this);
-        },
+    hideVirtualImage: function() {
+        this.raysView.hideVirtualImage();
+        this.targetImageView.hideVirtualImage();
+    },
 
-        _update: function(time, deltaTime, paused, timeScale) {
+    showGuides: function() {
+        this.raysView.showGuides();
+    },
 
-        },
+    hideGuides: function() {
+        this.raysView.hideGuides();
+    },
 
-        showSecondPoint: function() {
-            this.sourceObjectView.showSecondPoint();
-            this.raysView.showSecondPoint();
-            this.screenView.showSecondPoint();
-        },
+    showRuler: function() {
+        this.rulerView.show();
+    },
 
-        hideSecondPoint: function() {
-            this.sourceObjectView.hideSecondPoint();
-            this.raysView.hideSecondPoint();
-            this.screenView.hideSecondPoint();
-        },
+    hideRuler: function() {
+        this.rulerView.hide();
+    },
 
-        setRaysMode: function(mode) {
-            this.raysView.setMode(mode);
-        },
+    showHelpLabels: function() {
+        for (var i = 0; i < this.helpLabels.length; i++)
+            this.helpLabels[i].show();
+    },
 
-        showVirtualImage: function() {
-            this.raysView.showVirtualImage();
-            this.targetImageView.showVirtualImage();
-        },
+    hideHelpLabels: function() {
+        for (var i = 0; i < this.helpLabels.length; i++)
+            this.helpLabels[i].hide();
+    }
 
-        hideVirtualImage: function() {
-            this.raysView.hideVirtualImage();
-            this.targetImageView.hideVirtualImage();
-        },
+}, Constants.SceneView);
 
-        showGuides: function() {
-            this.raysView.showGuides();
-        },
-
-        hideGuides: function() {
-            this.raysView.hideGuides();
-        },
-
-        showRuler: function() {
-            this.rulerView.show();
-        },
-
-        hideRuler: function() {
-            this.rulerView.hide();
-        },
-
-        showHelpLabels: function() {
-            for (var i = 0; i < this.helpLabels.length; i++)
-                this.helpLabels[i].show();
-        },
-
-        hideHelpLabels: function() {
-            for (var i = 0; i < this.helpLabels.length; i++)
-                this.helpLabels[i].hide();
-        }
-
-    }, Constants.SceneView);
-
-    return GeometricOpticsSceneView;
-});
+export default GeometricOpticsSceneView;

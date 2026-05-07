@@ -1,148 +1,136 @@
-define(function (require) {
+import _ from 'underscore';
+import Assets from 'common/v3/pixi/assets';
+import TimeFormatter from 'models/time-formatter';
+import MeasurementSimulation from 'radioactive-dating-game/models/simulation/measurement';
+import RadioactiveDatingGameSimView from 'radioactive-dating-game/views/sim';
+import MeasurementSceneView from 'radioactive-dating-game/views/scene/measurement';
+import Constants from 'constants';
+import simHtml from 'radioactive-dating-game/templates/measurement-sim.html?raw';
+import playbackControlsHtml from 'radioactive-dating-game/templates/measurement-playback-controls.html?raw';
 
-    'use strict';
+/**
+ * Multiple Atoms tab
+ */
+var MeasurementSimView = RadioactiveDatingGameSimView.extend({
 
-    var _ = require('underscore');
-
-    var Assets = require('common/v3/pixi/assets');
-
-    var TimeFormatter = require('models/time-formatter');
-
-    var MeasurementSimulation = require('radioactive-dating-game/models/simulation/measurement');
-
-    var RadioactiveDatingGameSimView = require('radioactive-dating-game/views/sim');
-    var MeasurementSceneView         = require('radioactive-dating-game/views/scene/measurement');
-
-    var Constants = require('constants');
-
-    // HTML
-    var simHtml              = require('text!radioactive-dating-game/templates/measurement-sim.html');
-    var playbackControlsHtml = require('text!radioactive-dating-game/templates/measurement-playback-controls.html');
+    events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
+        'click #object-tree' : 'treeSelected',
+        'click #object-rock' : 'rockSelected',
+        'click .reset-btn'   : 'reset'
+    }),
 
     /**
-     * Multiple Atoms tab
+     * Template for rendering the basic scaffolding
      */
-    var MeasurementSimView = RadioactiveDatingGameSimView.extend({
+    template: _.template(simHtml),
+    playbackControlsTemplate: _.template(playbackControlsHtml),
 
-        events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
-            'click #object-tree' : 'treeSelected',
-            'click #object-rock' : 'rockSelected',
-            'click .reset-btn'   : 'reset'
-        }),
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Measurement',
+            name: 'measurement'
+        }, options);
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
-        playbackControlsTemplate: _.template(playbackControlsHtml),
+        RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Measurement',
-                name: 'measurement'
-            }, options);
+        this.listenTo(this.simulation, 'reset', this.updateTime);
+    },
 
-            RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new MeasurementSimulation({
+            paused: true
+        });
+    },
 
-            this.listenTo(this.simulation, 'reset', this.updateTime);
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new MeasurementSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new MeasurementSimulation({
-                paused: true
-            });
-        },
+    render: function() {
+        RadioactiveDatingGameSimView.prototype.render.apply(this, arguments);
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new MeasurementSceneView({
-                simulation: this.simulation
-            });
-        },
+        this.$time = this.$('.time');
+    },
 
-        render: function() {
-            RadioactiveDatingGameSimView.prototype.render.apply(this, arguments);
+    /**
+     * Renders page content. Should be overriden by child classes
+     */
+    renderScaffolding: function() {
+        var data = {
+            Constants: Constants,
+            simulation: this.simulation,
+            Assets: Assets,
+            objects: [{
+                name: 'tree',
+                label: 'Tree',
+                src: Assets.Images.TREE_1,
+                isDefault: true
+            }, {
+                name: 'rock',
+                label: 'Rock',
+                src: Assets.Images.ROCK_A_2
+            }]
+        };
+        this.$el.html(this.template(data));
+        this.$('select');
+    },
 
-            this.$time = this.$('.time');
-        },
+    /**
+     * Renders everything
+     */
+    postRender: function() {
+        RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
 
-        /**
-         * Renders page content. Should be overriden by child classes
-         */
-        renderScaffolding: function() {
-            var data = {
-                Constants: Constants,
-                simulation: this.simulation,
-                Assets: Assets,
-                objects: [{
-                    name: 'tree',
-                    label: 'Tree',
-                    src: Assets.Images.TREE_1,
-                    isDefault: true
-                }, {
-                    name: 'rock',
-                    label: 'Rock',
-                    src: Assets.Images.ROCK_A_2
-                }]
-            };
-            this.$el.html(this.template(data));
-            this.$('select');
-        },
+        return this;
+    },
 
-        /**
-         * Renders everything
-         */
-        postRender: function() {
-            RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
+    reset: function() {
+        this.simulation.reset();
+    },
 
-            return this;
-        },
+    update: function(time, deltaTime) {
+        RadioactiveDatingGameSimView.prototype.update.apply(this, arguments);
 
-        reset: function() {
-            this.simulation.reset();
-        },
+        this.updateTime();
+    },
 
-        update: function(time, deltaTime) {
-            RadioactiveDatingGameSimView.prototype.update.apply(this, arguments);
+    updateTime: function() {
+        this.$time.html(TimeFormatter.formatTime(this.simulation.getAdjustedTime(), true));
+    },
 
-            this.updateTime();
-        },
+    treeSelected: function() {
+        this.simulation.set('mode', MeasurementSimulation.MODE_TREE);
+    },
 
-        updateTime: function() {
-            this.$time.html(TimeFormatter.formatTime(this.simulation.getAdjustedTime(), true));
-        },
+    rockSelected: function() {
+        this.simulation.set('mode', MeasurementSimulation.MODE_ROCK);
+    },
 
-        treeSelected: function() {
-            this.simulation.set('mode', MeasurementSimulation.MODE_TREE);
-        },
+    setSoundVolumeMute: function() {
+        this.sceneView.setSoundVolumeMute();
+    },
 
-        rockSelected: function() {
-            this.simulation.set('mode', MeasurementSimulation.MODE_ROCK);
-        },
+    setSoundVolumeLow: function() {
+        this.sceneView.setSoundVolumeLow();
+    },
 
-        setSoundVolumeMute: function() {
-            this.sceneView.setSoundVolumeMute();
-        },
+    setSoundVolumeHigh: function() {
+        this.sceneView.setSoundVolumeHigh();
+    }
 
-        setSoundVolumeLow: function() {
-            this.sceneView.setSoundVolumeLow();
-        },
-
-        setSoundVolumeHigh: function() {
-            this.sceneView.setSoundVolumeHigh();
-        }
-
-    });
-
-    return MeasurementSimView;
 });
+
+export default MeasurementSimView;

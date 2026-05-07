@@ -1,37 +1,30 @@
-define(function (require) {
+import _ from 'underscore';
+import Propagator from 'models/propagator';
 
-    'use strict';
+/**
+ *
+ */
+var BoundsBouncePropagator = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(BoundsBouncePropagator.prototype, Propagator.prototype, {
 
+    propagate: function(deltaTime, particle) {
+        if (this.isOutOfBounds(particle.get('position'))) {
+            particle.setVelocity(this.getNewVelocity(particle.get('velocity')));
+            particle.setPosition(this.getPointAtBounds(particle.get('position')));
+            particle.setAcceleration(0, 0);
+        }
+    },
 
-    var Propagator = require('models/propagator');
+    isOutOfBounds: function(position) {},
 
-    /**
-     *
-     */
-    var BoundsBouncePropagator = function() {};
+    getPointAtBounds: function(oldPosition) {},
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(BoundsBouncePropagator.prototype, Propagator.prototype, {
+    getNewVelocity: function(oldVelocity) {}
 
-        propagate: function(deltaTime, particle) {
-            if (this.isOutOfBounds(particle.get('position'))) {
-                particle.setVelocity(this.getNewVelocity(particle.get('velocity')));
-                particle.setPosition(this.getPointAtBounds(particle.get('position')));
-                particle.setAcceleration(0, 0);
-            }
-        },
-
-        isOutOfBounds: function(position) {},
-
-        getPointAtBounds: function(oldPosition) {},
-
-        getNewVelocity: function(oldVelocity) {}
-
-    });
-
-    return BoundsBouncePropagator;
 });
+
+export default BoundsBouncePropagator;

@@ -1,22 +1,17 @@
-define(function(require) {
+import EnergySystemsElementView from 'views/energy-systems-element';
 
-    'use strict';
-
-    var EnergySystemsElementView = require('views/energy-systems-element');
+/**
+ * A view that represents an element model
+ */
+var EnergyConverterView = EnergySystemsElementView.extend({
 
     /**
-     * A view that represents an element model
+     *
      */
-    var EnergyConverterView = EnergySystemsElementView.extend({
+    initialize: function(options) {
+        EnergySystemsElementView.prototype.initialize.apply(this, [options]);
+    }
 
-        /**
-         *
-         */
-        initialize: function(options) {
-            EnergySystemsElementView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return EnergyConverterView;
 });
+
+export default EnergyConverterView;

@@ -1,49 +1,43 @@
-define(function(require) {
-
-    'use strict';
+import FaradaySceneView from 'views/scene';
 
 
-    var FaradaySceneView  = require('views/scene');
+/**
+ *
+ */
+var TransformerSceneView = FaradaySceneView.extend({
 
+    initialize: function(options) {
+        FaradaySceneView.prototype.initialize.apply(this, arguments);
 
-    /**
-     *
-     */
-    var TransformerSceneView = FaradaySceneView.extend({
+        this.magnetModel = this.simulation.electromagnet;
+    },
 
-        initialize: function(options) {
-            FaradaySceneView.prototype.initialize.apply(this, arguments);
+    initGraphics: function() {
+        FaradaySceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.magnetModel = this.simulation.electromagnet;
-        },
+        this.initCompass();
+        this.initFieldMeter();
+        this.initElectromagnet();
+        this.initPickupCoil();
 
-        initGraphics: function() {
-            FaradaySceneView.prototype.initGraphics.apply(this, arguments);
+        this.hideCompass();
+    },
 
-            this.initCompass();
-            this.initFieldMeter();
-            this.initElectromagnet();
-            this.initPickupCoil();
+    reset: function() {
+        FaradaySceneView.prototype.reset.apply(this, arguments);
 
-            this.hideCompass();
-        },
+        this.electromagnetView.reset();
+        this.pickupCoilView.reset();
+        this.hideCompass();
+    },
 
-        reset: function() {
-            FaradaySceneView.prototype.reset.apply(this, arguments);
+    _update: function(time, deltaTime, paused, timeScale) {
+        FaradaySceneView.prototype._update.apply(this, arguments);
 
-            this.electromagnetView.reset();
-            this.pickupCoilView.reset();
-            this.hideCompass();
-        },
+        this.electromagnetView.update(time, deltaTime, paused);
+        this.pickupCoilView.update(time, deltaTime, paused);
+    }
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            FaradaySceneView.prototype._update.apply(this, arguments);
-
-            this.electromagnetView.update(time, deltaTime, paused);
-            this.pickupCoilView.update(time, deltaTime, paused);
-        }
-
-    });
-
-    return TransformerSceneView;
 });
+
+export default TransformerSceneView;

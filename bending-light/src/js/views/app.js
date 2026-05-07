@@ -1,28 +1,20 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import IntroSimView from 'views/sim/intro';
+import PrismBreakSimView from 'views/sim/prism-break';
+import MoreToolsSimView from 'views/sim/more-tools';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var BendingLightAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var IntroSimView      = require('views/sim/intro');
-    var PrismBreakSimView = require('views/sim/prism-break');
-    var MoreToolsSimView  = require('views/sim/more-tools');
+    simViewConstructors: [
+        IntroSimView,
+        PrismBreakSimView,
+        MoreToolsSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var BendingLightAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            IntroSimView,
-            PrismBreakSimView,
-            MoreToolsSimView
-        ]
-
-    });
-
-    return BendingLightAppView;
 });
+
+export default BendingLightAppView;

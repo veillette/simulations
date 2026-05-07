@@ -1,55 +1,48 @@
-define(function (require) {
+import _ from 'underscore';
+import CircuitComponent from 'models/components/circuit-component';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * A battery
+ */
+var Battery = CircuitComponent.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, CircuitComponent.prototype.defaults, {
+        voltageDrop: 9,
+        internalResistance: undefined,
+        internalResistanceOn: undefined,
+        kirkhoffEnabled: false,
+        length: 1,
+        height: 1
+    }),
 
-    var CircuitComponent = require('models/components/circuit-component');
+    initialize: function(attributes, options) {
+        CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
 
-    var Constants = require('constants');
+        this.set('resistance', this.get('internalResistance'));
 
-    /**
-     * A battery
-     */
-    var Battery = CircuitComponent.extend({
+        this.on('change:internalResistanceOn', this.internalResistanceOnChanged);
+    },
 
-        defaults: _.extend({}, CircuitComponent.prototype.defaults, {
-            voltageDrop: 9,
-            internalResistance: undefined,
-            internalResistanceOn: undefined,
-            kirkhoffEnabled: false,
-            length: 1,
-            height: 1
-        }),
+    getEffectiveVoltageDrop: function() {
+        return this.getVoltageDrop() - this.get('current') * this.get('resistance');
+    },
 
-        initialize: function(attributes, options) {
-            CircuitComponent.prototype.initialize.apply(this, [attributes, options]);
-
+    internalResistanceOnChanged: function(model, internalResistanceOn) {
+        if (internalResistanceOn)
             this.set('resistance', this.get('internalResistance'));
+        else
+            this.set('resistance', Constants.MIN_RESISTANCE);
+    },
 
-            this.on('change:internalResistanceOn', this.internalResistanceOnChanged);
-        },
+    reverse: function() {
+        this.set({
+            startJunction: this.get('endJunction'),
+            endJunction: this.get('startJunction')
+        });
+        this.trigger('reversed');
+    }
 
-        getEffectiveVoltageDrop: function() {
-            return this.getVoltageDrop() - this.get('current') * this.get('resistance');
-        },
+}, Constants.Battery);
 
-        internalResistanceOnChanged: function(model, internalResistanceOn) {
-            if (internalResistanceOn)
-                this.set('resistance', this.get('internalResistance'));
-            else
-                this.set('resistance', Constants.MIN_RESISTANCE);
-        },
-
-        reverse: function() {
-            this.set({
-                startJunction: this.get('endJunction'),
-                endJunction: this.get('startJunction')
-            });
-            this.trigger('reversed');
-        }
-
-    }, Constants.Battery);
-
-    return Battery;
-});
+export default Battery;

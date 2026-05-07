@@ -1,17 +1,12 @@
-define(function(require) {
+import BodyView from 'views/body';
 
-    'use strict';
+/**
+ * A view that represents a sun.
+ */
+var SunView = BodyView.extend({
 
-    var BodyView = require('views/body');
+    textureBodyWidthRatio: 0.78
 
-    /**
-     * A view that represents a sun.
-     */
-    var SunView = BodyView.extend({
-
-        textureBodyWidthRatio: 0.78
-
-    });
-
-    return SunView;
 });
+
+export default SunView;

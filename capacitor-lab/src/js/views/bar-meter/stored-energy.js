@@ -1,49 +1,43 @@
-define(function (require) {
+import _ from 'underscore';
+import BarMeterView from 'views/bar-meter';
 
-    'use strict';
+var StoredEnergyMeterView = BarMeterView.extend({
 
-    var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            units: 'J',
+            barColor: '#ffc601',
+            title: 'Stored Energy'
+        }, options);
 
-    var BarMeterView = require('views/bar-meter');
+        this.lastStoredEnergy = undefined;
 
-    var StoredEnergyMeterView = BarMeterView.extend({
+        BarMeterView.prototype.initialize.apply(this, [options]);
+    },
 
-        initialize: function(options) {
-            options = _.extend({
-                units: 'J',
-                barColor: '#ffc601',
-                title: 'Stored Energy'
-            }, options);
+    renderBarMeter: function() {
+        BarMeterView.prototype.renderBarMeter.apply(this, arguments);
 
-            this.lastStoredEnergy = undefined;
+    },
 
-            BarMeterView.prototype.initialize.apply(this, [options]);
-        },
+    update: function(time, delta, paused, timeScale) {
+        var storedEnergy;
 
-        renderBarMeter: function() {
-            BarMeterView.prototype.renderBarMeter.apply(this, arguments);
+        if (this.model.circuits)
+            storedEnergy = this.model.get('circuit').getStoredEnergy();
+        else
+            storedEnergy = this.model.circuit.getStoredEnergy();
 
-        },
-
-        update: function(time, delta, paused, timeScale) {
-            var storedEnergy;
-
-            if (this.model.circuits)
-                storedEnergy = this.model.get('circuit').getStoredEnergy();
-            else
-                storedEnergy = this.model.circuit.getStoredEnergy();
-
-            if (storedEnergy !== this.lastStoredEnergy) {
-                this.setValue(storedEnergy);
-                this.updateZoomButtons();
-            }
-
-            BarMeterView.prototype.update.apply(this, arguments);
-
-            this.lastStoredEnergy = storedEnergy;
+        if (storedEnergy !== this.lastStoredEnergy) {
+            this.setValue(storedEnergy);
+            this.updateZoomButtons();
         }
 
-    });
+        BarMeterView.prototype.update.apply(this, arguments);
 
-    return StoredEnergyMeterView;
+        this.lastStoredEnergy = storedEnergy;
+    }
+
 });
+
+export default StoredEnergyMeterView;

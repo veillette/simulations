@@ -1,35 +1,29 @@
-define(function (require) {
+import Vector2 from 'common/math/vector2';
+import MovingObject from 'hydrogen-atom/models/moving-object';
 
-    'use strict';
+/**
+ * AlphaParticle is the model of an alpha particle.
+ * An alpha particle has a position and direction of motion.
+ */
+var AlphaParticle = MovingObject.extend({
 
-    var Vector2 = require('common/math/vector2');
+    initialize: function(attributes, options) {
+        MovingObject.prototype.initialize.apply(this, [attributes, options]);
 
-    var MovingObject = require('hydrogen-atom/models/moving-object');
+        this.initialPosition = new Vector2(this.get('position'));
+        this.initialSpeed = this.get('speed');
+    },
 
-    /**
-     * AlphaParticle is the model of an alpha particle.
-     * An alpha particle has a position and direction of motion.
-     */
-    var AlphaParticle = MovingObject.extend({
+    getInitialPosition: function() {
+        return this.initialPosition;
+    },
 
-        initialize: function(attributes, options) {
-            MovingObject.prototype.initialize.apply(this, [attributes, options]);
+    getInitialSpeed: function() {
+        return this.initialSpeed;
+    },
 
-            this.initialPosition = new Vector2(this.get('position'));
-            this.initialSpeed = this.get('speed');
-        },
+    update: function(time, deltaTime) {}
 
-        getInitialPosition: function() {
-            return this.initialPosition;
-        },
-
-        getInitialSpeed: function() {
-            return this.initialSpeed;
-        },
-
-        update: function(time, deltaTime) {}
-
-    });
-
-    return AlphaParticle;
 });
+
+export default AlphaParticle;

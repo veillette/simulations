@@ -1,99 +1,89 @@
-define(function(require) {
+import PixiSceneView from 'common/v3/pixi/view/scene';
+import ModelViewTransform from 'common/math/model-view-transform';
+import Vector2 from 'common/math/vector2';
+import WaveMediumView from 'views/wave-medium';
+import SpeakerView from 'views/speaker';
+import ListenerView from 'views/listener';
+import Constants from 'constants';
+import 'styles/scene.less';
 
-    'use strict';
+/**
+ *
+ */
+var SoundSceneView = PixiSceneView.extend({
 
-    var PixiSceneView      = require('common/v3/pixi/view/scene');
-    var ModelViewTransform = require('common/math/model-view-transform');
-    var Vector2            = require('common/math/vector2');
+    minSceneHeightInMeters: 12,
 
-    var WaveMediumView = require('views/wave-medium');
-    var SpeakerView    = require('views/speaker');
-    var ListenerView   = require('views/listener');
+    initialize: function(options) {
+        PixiSceneView.prototype.initialize.apply(this, arguments);
+    },
 
-    // Constants
-    var Constants = require('constants');
+    renderContent: function() {
 
-    // CSS
-    require('less!styles/scene');
+    },
 
-    /**
-     *
-     */
-    var SoundSceneView = PixiSceneView.extend({
+    initGraphics: function() {
+        PixiSceneView.prototype.initGraphics.apply(this, arguments);
 
-        minSceneHeightInMeters: 12,
+        this.initMVT();
+        this.initWaveMediumView();
+        this.initSpeakerView();
+    },
 
-        initialize: function(options) {
-            PixiSceneView.prototype.initialize.apply(this, arguments);
-        },
+    initMVT: function() {
+        var minimumHeight = this.minSceneHeightInMeters;
+        var usableHeight = this.height;
+        var scale = usableHeight / minimumHeight;
 
-        renderContent: function() {
+        this.viewOriginX = Math.round(this.width / 2 - (scale * (Constants.DEFAULT_LISTENER_X + 0.95)));
+        this.viewOriginY = Math.round(usableHeight / 2);
 
-        },
+        this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
+            new Vector2(0, 0),
+            new Vector2(this.viewOriginX, this.viewOriginY),
+            scale
+        );
+    },
 
-        initGraphics: function() {
-            PixiSceneView.prototype.initGraphics.apply(this, arguments);
+    initWaveMediumView: function() {
+        this.waveMediumView = new WaveMediumView({
+            model: this.simulation.waveMedium,
+            mvt: this.mvt,
+            width: this.width,
+            height: this.height
+        });
+        this.$ui.append(this.waveMediumView.el);
 
-            this.initMVT();
-            this.initWaveMediumView();
-            this.initSpeakerView();
-        },
+        this.waveMediumView.setPosition(this.mvt.modelToViewX(0), this.mvt.modelToViewY(0));
+    },
 
-        initMVT: function() {
-            var minimumHeight = this.minSceneHeightInMeters;
-            var usableHeight = this.height;
-            var scale = usableHeight / minimumHeight;
+    initSpeakerView: function() {
+        this.speakerView = new SpeakerView({
+            model: this.simulation,
+            mvt: this.mvt
+        });
 
-            this.viewOriginX = Math.round(this.width / 2 - (scale * (Constants.DEFAULT_LISTENER_X + 0.95)));
-            this.viewOriginY = Math.round(usableHeight / 2);
+        this.stage.addChild(this.speakerView.displayObject);
+    },
 
-            this.mvt = ModelViewTransform.createSinglePointScaleInvertedYMapping(
-                new Vector2(0, 0),
-                new Vector2(this.viewOriginX, this.viewOriginY),
-                scale
-            );
-        },
+    initListenerView: function() {
+        this.listenerView = new ListenerView({
+            model: this.simulation.personListener,
+            mvt: this.mvt
+        });
 
-        initWaveMediumView: function() {
-            this.waveMediumView = new WaveMediumView({
-                model: this.simulation.waveMedium,
-                mvt: this.mvt,
-                width: this.width,
-                height: this.height
-            });
-            this.$ui.append(this.waveMediumView.el);
+        this.stage.addChild(this.listenerView.displayObject);
+    },
 
-            this.waveMediumView.setPosition(this.mvt.modelToViewX(0), this.mvt.modelToViewY(0));
-        },
+    _update: function(time, deltaTime, paused, timeScale) {
+        this.waveMediumView.update(time, deltaTime, paused);
+        this.speakerView.update(time, deltaTime, paused);
+    },
 
-        initSpeakerView: function() {
-            this.speakerView = new SpeakerView({
-                model: this.simulation,
-                mvt: this.mvt
-            });
+    showHelpLabels: function() {},
 
-            this.stage.addChild(this.speakerView.displayObject);
-        },
+    hideHelpLabels: function() {}
 
-        initListenerView: function() {
-            this.listenerView = new ListenerView({
-                model: this.simulation.personListener,
-                mvt: this.mvt
-            });
-
-            this.stage.addChild(this.listenerView.displayObject);
-        },
-
-        _update: function(time, deltaTime, paused, timeScale) {
-            this.waveMediumView.update(time, deltaTime, paused);
-            this.speakerView.update(time, deltaTime, paused);
-        },
-
-        showHelpLabels: function() {},
-
-        hideHelpLabels: function() {}
-
-    });
-
-    return SoundSceneView;
 });
+
+export default SoundSceneView;

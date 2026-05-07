@@ -1,21 +1,16 @@
-define(function (require) {
+import Backbone from 'backbone';
 
-    'use strict';
+/**
+ *
+ */
+var PhotonAbsorber = Backbone.Model.extend({
 
-    var Backbone = require('backbone');
+    update: function(deltaTime) {},
 
-    /**
-     *
-     */
-    var PhotonAbsorber = Backbone.Model.extend({
+    absorbPhoton: function(photon) {
+        this.trigger('photon-absorbed', photon);
+    }
 
-        update: function(deltaTime) {},
-
-        absorbPhoton: function(photon) {
-            this.trigger('photon-absorbed', photon);
-        }
-
-    });
-
-    return PhotonAbsorber;
 });
+
+export default PhotonAbsorber;

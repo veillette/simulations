@@ -1,34 +1,27 @@
-define(function(require) {
+import Bowlingball from 'models/projectile/bowlingball';
+import ProjectileView from 'views/projectile';
+import Assets from 'assets';
 
-    'use strict';
+var BowlingballView = ProjectileView.extend({
 
-    var Bowlingball = require('models/projectile/bowlingball');
+    createProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.BOWLINGBALL);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        return sprite;
+    },
 
-    var ProjectileView = require('views/projectile');
+    createRestingProjectileSprite: function() {
+        var sprite = Assets.createSprite(Assets.Images.BOWLINGBALL_IMPACT);
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.4;
+        return sprite;
+    }
 
-    var Assets = require('assets');
-
-    var BowlingballView = ProjectileView.extend({
-
-        createProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.BOWLINGBALL);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.5;
-            return sprite;
-        },
-
-        createRestingProjectileSprite: function() {
-            var sprite = Assets.createSprite(Assets.Images.BOWLINGBALL_IMPACT);
-            sprite.anchor.x = 0.5;
-            sprite.anchor.y = 0.4;
-            return sprite;
-        }
-
-    }, {
-        getModelClass: function() {
-            return Bowlingball;
-        }
-    });
-
-    return BowlingballView;
+}, {
+    getModelClass: function() {
+        return Bowlingball;
+    }
 });
+
+export default BowlingballView;

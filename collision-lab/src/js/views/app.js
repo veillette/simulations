@@ -1,61 +1,51 @@
-define(function(require) {
+import _ from 'underscore';
+import PixiAppView from 'common/v3/pixi/view/app';
+import IntroSimView from 'views/sim/intro';
+import AdvancedSimView from 'views/sim/advanced';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
+import universalControlsHtml from 'templates/universal-controls.html?raw';
 
-    'use strict';
+var CollisionLabAppView = PixiAppView.extend({
 
-    var _ = require('underscore');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        IntroSimView,
+        AdvancedSimView
+    ],
 
-    var IntroSimView    = require('views/sim/intro');
-    var AdvancedSimView = require('views/sim/advanced');
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click .sound-btn-mute'   : 'mute',
+        'click .sound-btn-unmute' : 'unmute'
+    }),
 
-    var Assets = require('assets');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+        this.$el.append(universalControlsHtml);
 
-    var universalControlsHtml = require('text!templates/universal-controls.html');
+        this.$mute   = this.$('.sound-btn-mute');
+        this.$unmute = this.$('.sound-btn-unmute');
+    },
 
-    var CollisionLabAppView = PixiAppView.extend({
+    mute: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.mute();
+        });
+        this.$mute.hide();
+        this.$unmute.show();
+    },
 
-        assets: Assets.getAssetList(),
+    unmute: function(event) {
+        _.each(this.simViews, function(simView) {
+            simView.unmute();
+        });
+        this.$unmute.hide();
+        this.$mute.show();
+    }
 
-        simViewConstructors: [
-            IntroSimView,
-            AdvancedSimView
-        ],
-
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click .sound-btn-mute'   : 'mute',
-            'click .sound-btn-unmute' : 'unmute'
-        }),
-
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
-
-            this.$el.append(universalControlsHtml);
-
-            this.$mute   = this.$('.sound-btn-mute');
-            this.$unmute = this.$('.sound-btn-unmute');
-        },
-
-        mute: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.mute();
-            });
-            this.$mute.hide();
-            this.$unmute.show();
-        },
-
-        unmute: function(event) {
-            _.each(this.simViews, function(simView) {
-                simView.unmute();
-            });
-            this.$unmute.hide();
-            this.$mute.show();
-        }
-
-    });
-
-    return CollisionLabAppView;
 });
+
+export default CollisionLabAppView;

@@ -1,149 +1,139 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Constants from 'constants';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var Body = Backbone.Model.extend({
 
-    var _ = require('underscore');
+    defaults: {
+        mass : 0,
+        x : 0,
+        y : 0,
+        spring : undefined, //a spring can be attached to a body;
+        grabbed : false,    //a body is grabbed if view is being dragged by mouse
+        color : Constants.BodyDefaults.COLOR,
+        acceleration : Constants.SimSettings.GRAVITY_DEFAULT,
+        label : true,
+        units : 'grams'
+    },
 
-    var Backbone = require('backbone');
+    initialize: function(attributes, options) {
 
-    /**
-     * Constants
-     */
-    var Constants = require('constants');
+        this.mass = this.get('mass');   //mass in kg,
+        this.x = this.get('x');         //x-y position on stage of (upper left corner of body)
+        this.y = this.get('y');
+        this.color = this.get('color');
+        this.label = this.get('label');
+        this.acceleration = this.get('acceleration');
+        this.units = this.get('units');
 
-    /**
-     * Wraps the update function in
-     */
-    var Body = Backbone.Model.extend({
+        this.rest(this.y);
 
-        defaults: {
-            mass : 0,
-            x : 0,
-            y : 0,
-            spring : undefined, //a spring can be attached to a body;
-            grabbed : false,    //a body is grabbed if view is being dragged by mouse
-            color : Constants.BodyDefaults.COLOR,
-            acceleration : Constants.SimSettings.GRAVITY_DEFAULT,
-            label : true,
-            units : 'grams'
-        },
+        this.on('change:x', this.updateX);
+        this.on('change:y', this.updateY);
 
-        initialize: function(attributes, options) {
+        this.on('change:acceleration', this.updateAcceleration);
+        this.on('change:resting', this.updateResting);
 
-            this.mass = this.get('mass');   //mass in kg,
-            this.x = this.get('x');         //x-y position on stage of (upper left corner of body)
-            this.y = this.get('y');
-            this.color = this.get('color');
-            this.label = this.get('label');
-            this.acceleration = this.get('acceleration');
-            this.units = this.get('units');
+        this.on('change:top', this.updateTop);
+    },
 
-            this.rest(this.y);
+    hangOn: function(spring){
+        this.updateSpring(spring);
+    },
 
-            this.on('change:x', this.updateX);
-            this.on('change:y', this.updateY);
+    unhang: function(){
+        this.updateSpring(undefined);
+        this.unsnap();
+    },
 
-            this.on('change:acceleration', this.updateAcceleration);
-            this.on('change:resting', this.updateResting);
+    updateSpring: function(spring){
+        this.spring = spring;
+        this.set('spring', spring);
+    },
 
-            this.on('change:top', this.updateTop);
-        },
+    snapBodyTopCenter: function(top, center){
+        this.set('center', center);
+        this.set('top', top);
+    },
 
-        hangOn: function(spring){
-            this.updateSpring(spring);
-        },
+    unsnap: function(){
+        this.unset('center', false);
+    },
 
-        unhang: function(){
-            this.updateSpring(undefined);
-            this.unsnap();
-        },
+    drop: function(dt){
+        this.velocityY += this.acceleration * dt;
+        this.y += this.velocityY * dt;
+        this.set('y', this.y);
+    },
 
-        updateSpring: function(spring){
-            this.spring = spring;
-            this.set('spring', spring);
-        },
+    rest: function(restingY){
+        this.resting = true;
+        this.velocityY = 0;
+        this.bounced = 0;
 
-        snapBodyTopCenter: function(top, center){
-            this.set('center', center);
-            this.set('top', top);
-        },
+        if(restingY){
+            this.restingY = restingY;
+        }
+    },
 
-        unsnap: function(){
-            this.unset('center', false);
-        },
+    rebound: function(dt){
 
-        drop: function(dt){
-            this.velocityY += this.acceleration * dt;
-            this.y += this.velocityY * dt;
-            this.set('y', this.y);
-        },
-
-        rest: function(restingY){
-            this.resting = true;
-            this.velocityY = 0;
-            this.bounced = 0;
-
-            if(restingY){
-                this.restingY = restingY;
-            }
-        },
-
-        rebound: function(dt){
-
-            if(this.bounced){
-                this.trigger('hitGround');
-                this.set('y', this.restingY);
-                return;
-            }
-
-            this.velocityY = 0.5 * this.velocityY;
-            this.y -= this.velocityY * dt;
-            this.set('y', this.y);
-            this.bounced ++;
-        },
-
-        updateAcceleration: function(model, acceleration){
-            this.acceleration = acceleration;
-        },
-
-        updateX: function(model, x){
-            this.x = x;
-        },
-
-        updateY: function(model, y){
-            this.y = y;
-        },
-
-        updateTop: function(model, top){
-            this.top = top;
-        },
-
-        updateResting: function(model, resting){
-            this.resting = resting;
-        },
-
-        isHung: function(){
-            return !_.isUndefined(this.spring);
-        },
-
-        evolve: function(dt){
-
-            if(this.isHung()){
-                return;
-            }
-
-            if(this.y < this.restingY){
-                this.drop(dt);
-            } else if (this.y == this.restingY){
-                this.rest();
-            } else {
-                this.rebound(dt);
-            }
-
+        if(this.bounced){
+            this.trigger('hitGround');
+            this.set('y', this.restingY);
+            return;
         }
 
+        this.velocityY = 0.5 * this.velocityY;
+        this.y -= this.velocityY * dt;
+        this.set('y', this.y);
+        this.bounced ++;
+    },
 
-    });
+    updateAcceleration: function(model, acceleration){
+        this.acceleration = acceleration;
+    },
 
-    return Body;
+    updateX: function(model, x){
+        this.x = x;
+    },
+
+    updateY: function(model, y){
+        this.y = y;
+    },
+
+    updateTop: function(model, top){
+        this.top = top;
+    },
+
+    updateResting: function(model, resting){
+        this.resting = resting;
+    },
+
+    isHung: function(){
+        return !_.isUndefined(this.spring);
+    },
+
+    evolve: function(dt){
+
+        if(this.isHung()){
+            return;
+        }
+
+        if(this.y < this.restingY){
+            this.drop(dt);
+        } else if (this.y == this.restingY){
+            this.rest();
+        } else {
+            this.rebound(dt);
+        }
+
+    }
+
+
 });
+
+export default Body;

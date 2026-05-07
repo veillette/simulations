@@ -1,25 +1,20 @@
-define(function (require) {
+import Earth from 'models/earth';
 
-    'use strict';
+/**
+ * Handles collisions between photons and the earth.
+ */
+var PhotonEarthCollisionModel = {
 
-    var Earth = require('models/earth');
+    handle: function(photon, earth) {
+        var separation = photon.get('position').distance(earth.get('position'));
+        if (separation <= Earth.RADIUS)
+            earth.absorbPhoton(photon);
 
-    /**
-     * Handles collisions between photons and the earth.
-     */
-    var PhotonEarthCollisionModel = {
+        if (earth.getReflectivity(photon) >= Math.random())
+            photon.setVelocity(photon.get('velocity').x, -photon.get('velocity').y);
+    }
 
-		handle: function(photon, earth) {
-			var separation = photon.get('position').distance(earth.get('position'));
-			if (separation <= Earth.RADIUS)
-				earth.absorbPhoton(photon);
-
-			if (earth.getReflectivity(photon) >= Math.random())
-				photon.setVelocity(photon.get('velocity').x, -photon.get('velocity').y);
-	    }
-
-    };
+};
 
 
-    return PhotonEarthCollisionModel;
-});
+export default PhotonEarthCollisionModel;

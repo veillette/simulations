@@ -1,21 +1,16 @@
-define(function (require) {
+import _ from 'underscore';
 
-    'use strict';
+var Law = function() {};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(Law.prototype, {
 
-    var Law = function() {};
+    update: function(deltaTime, system) {
+        throw 'Update function not implemented.';
+    }
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(Law.prototype, {
-
-        update: function(deltaTime, system) {
-            throw 'Update function not implemented.';
-        }
-
-    });
-
-    return Law;
 });
+
+export default Law;

@@ -1,54 +1,44 @@
-define(function(require) {
+import _ from 'underscore';
+import PixiAppView from 'common/v3/pixi/view/app';
+import PEffectSimView from 'views/sim';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
+import 'styles/app.less';
+import settingsDialogHtml from 'templates/settings-dialog.html?raw';
 
-    'use strict';
+var PEffectAppView = PixiAppView.extend({
 
-    var _ = require('underscore');
+    assets: Assets.getAssetList(),
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    simViewConstructors: [
+        PEffectSimView
+    ],
 
-    var PEffectSimView = require('views/sim');
+    events: _.extend({}, PixiAppView.prototype.events, {
+        'click #show-photons-check' : 'togglePhotons',
+        'click #control-photon-count-check' : 'togglePhotonControl'
+    }),
 
-    var Assets = require('assets');
+    render: function() {
+        PixiAppView.prototype.render.apply(this);
 
-    require('less!styles/font-awesome');
-    require('less!styles/app');
+        this.$el.append(settingsDialogHtml);
+    },
 
-    var settingsDialogHtml = require('text!templates/settings-dialog.html');
+    togglePhotons: function() {
+        if ($(event.target).is(':checked'))
+            this.simViews[0].showPhotons();
+        else
+            this.simViews[0].hidePhotons();
+    },
 
-    var PEffectAppView = PixiAppView.extend({
+    togglePhotonControl: function() {
+        if ($(event.target).is(':checked'))
+            this.simViews[0].setPhotonCountControlMode();
+        else
+            this.simViews[0].setIntensityControlMode();
+    }
 
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            PEffectSimView
-        ],
-
-        events: _.extend({}, PixiAppView.prototype.events, {
-            'click #show-photons-check' : 'togglePhotons',
-            'click #control-photon-count-check' : 'togglePhotonControl'
-        }),
-
-        render: function() {
-            PixiAppView.prototype.render.apply(this);
-
-            this.$el.append(settingsDialogHtml);
-        },
-
-        togglePhotons: function() {
-            if ($(event.target).is(':checked'))
-                this.simViews[0].showPhotons();
-            else
-                this.simViews[0].hidePhotons();
-        },
-
-        togglePhotonControl: function() {
-            if ($(event.target).is(':checked'))
-                this.simViews[0].setPhotonCountControlMode();
-            else
-                this.simViews[0].setIntensityControlMode();
-        }
-
-    });
-
-    return PEffectAppView;
 });
+
+export default PEffectAppView;

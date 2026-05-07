@@ -1,72 +1,66 @@
-define(function(require) {
+import _ from 'underscore';
+import WaterSimulation from '../../models/wave-sim/water';
+import SimView from '../sim';
+import WaterHeatmapView from '../heatmap/water';
 
-	'use strict';
+var WaterSimView = SimView.extend({
 
-	var _ = require('underscore');
+    events: _.extend(SimView.prototype.events, {
 
-	var WaterSimulation  = require('../../models/wave-sim/water');
-	var SimView          = require('../sim');
-	var WaterHeatmapView = require('../heatmap/water');
+    }),
 
-	var WaterSimView = SimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            heatmapBrightness: 0.5,
+            title: 'Water',
+            name: 'water',
+            link: 'wave-interference',
+            detectorYLabel: 'Water Level'
+        }, options);
 
-		events: _.extend(SimView.prototype.events, {
+        SimView.prototype.initialize.apply(this, [ options ]);
+    },
 
-		}),
+    /**
+     * Initializes the WaveSimulation.
+     */
+    initWaveSimulation: function() {
+        this.waveSimulation = new WaterSimulation();
+    },
 
-		initialize: function(options) {
-			options = _.extend({
-				heatmapBrightness: 0.5,
-				title: 'Water',
-				name: 'water',
-				link: 'wave-interference',
-				detectorYLabel: 'Water Level'
-			}, options);
+    /**
+     * Initializes the HeatmapView.
+     */
+    initHeatmapView: function() {
+        this.heatmapView = new WaterHeatmapView(this.getHeatmapViewOptions());
+    },
 
-			SimView.prototype.initialize.apply(this, [ options ]);
-		},
-
-		/**
-		 * Initializes the WaveSimulation.
-		 */
-		initWaveSimulation: function() {
-			this.waveSimulation = new WaterSimulation();
-		},
-
-		/**
-		 * Initializes the HeatmapView.
-		 */
-		initHeatmapView: function() {
-			this.heatmapView = new WaterHeatmapView(this.getHeatmapViewOptions());
-		},
-
-		/**
-		 * Uses the sim view's WaveSimulation instance to determine
-		 *   appropriate options for initializing the GraphView and
-		 *   returns them as an object.
-		 */
-		getGraphViewOptions: function() {
-			return {
-				title: 'Cross-Section Side View',
-				x: {
-					start: 0,
-					end: this.waveSimulation.get('dimensions').width,
-					step: this.waveSimulation.get('dimensions').width / 10,
-					label: 'x-Position (' + this.waveSimulation.get('units').distance + ')',
-					showNumbers: true
-				},
-				y: {
-					start: -1,
-					end: 1,
-					step: 0.5,
-					label: 'Water Level',
-					showNumbers: false
-				},
-				waveSimulation: this.waveSimulation,
-				heatmapView: this.heatmapView
-			};
-		},
-	});
-
-	return WaterSimView;
+    /**
+     * Uses the sim view's WaveSimulation instance to determine
+     *   appropriate options for initializing the GraphView and
+     *   returns them as an object.
+     */
+    getGraphViewOptions: function() {
+        return {
+            title: 'Cross-Section Side View',
+            x: {
+                start: 0,
+                end: this.waveSimulation.get('dimensions').width,
+                step: this.waveSimulation.get('dimensions').width / 10,
+                label: 'x-Position (' + this.waveSimulation.get('units').distance + ')',
+                showNumbers: true
+            },
+            y: {
+                start: -1,
+                end: 1,
+                step: 0.5,
+                label: 'Water Level',
+                showNumbers: false
+            },
+            waveSimulation: this.waveSimulation,
+            heatmapView: this.heatmapView
+        };
+    },
 });
+
+export default WaterSimView;

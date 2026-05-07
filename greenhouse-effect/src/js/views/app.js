@@ -1,28 +1,20 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import GreenhouseEffectSimView from 'views/sim/greenhouse-effect';
+import GlassLayersSimView from 'views/sim/glass-layers';
+import PhotonAbsorptionSimView from 'views/sim/photon-absorption';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var GreenhouseEffectAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var GreenhouseEffectSimView = require('views/sim/greenhouse-effect');
-    var GlassLayersSimView      = require('views/sim/glass-layers');
-    var PhotonAbsorptionSimView = require('views/sim/photon-absorption');
+    simViewConstructors: [
+        GreenhouseEffectSimView,
+        GlassLayersSimView,
+        PhotonAbsorptionSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var GreenhouseEffectAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            GreenhouseEffectSimView,
-            GlassLayersSimView,
-            PhotonAbsorptionSimView
-        ]
-
-    });
-
-    return GreenhouseEffectAppView;
 });
+
+export default GreenhouseEffectAppView;

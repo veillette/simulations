@@ -1,36 +1,31 @@
-define(function (require, exports, module) {
+import SoundSimulation from 'models/simulation';
+import TwoSourceSoundListener from 'models/two-source-sound-listener';
 
-    'use strict';
-
-    var SoundSimulation        = require('models/simulation');
-    var TwoSourceSoundListener = require('models/two-source-sound-listener');
+/**
+ * Simulation for the two-source interference tab
+ */
+var TwoSourceInterferenceSimulation = SoundSimulation.extend({
 
     /**
-     * Simulation for the two-source interference tab
+     * Initializes the models used in the simulation
      */
-    var TwoSourceInterferenceSimulation = SoundSimulation.extend({
+    initComponents: function() {
+        SoundSimulation.prototype.initComponents.apply(this, arguments);
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
-            SoundSimulation.prototype.initComponents.apply(this, arguments);
+        this.personListener.setOrigin( 0, -2.7);
+        this.personListener.setOrigin2(0,  2.7);
 
-            this.personListener.setOrigin( 0, -2.7);
-            this.personListener.setOrigin2(0,  2.7);
+        this.setListenerToPerson();
+    },
 
-            this.setListenerToPerson();
-        },
+    /**
+     * Returns a new instance of SoundListener to be used as the person
+     *   listener.
+     */
+    createPersonListener: function() {
+        return new TwoSourceSoundListener({ simulation: this });
+    }
 
-        /**
-         * Returns a new instance of SoundListener to be used as the person
-         *   listener.
-         */
-        createPersonListener: function() {
-            return new TwoSourceSoundListener({ simulation: this });
-        }
-
-    });
-
-    return TwoSourceInterferenceSimulation;
 });
+
+export default TwoSourceInterferenceSimulation;

@@ -1,55 +1,49 @@
-define(function (require) {
+import _ from 'underscore';
+import Vector2 from 'common/math/vector2';
 
-    'use strict';
+/**
+ * An object that holds a ladybug model's state at a
+ *   given point in time.  It is intended for these
+ *   objects to get recycled.
+ */
+var LadybugStateRecord = function() {
+    this.time = 0;
 
-    var _ = require('underscore');
+    this.position     = new Vector2();
+    this.velocity     = new Vector2();
+    this.acceleration = new Vector2();
 
-    var Vector2 = require('common/math/vector2');
+    this.angle = 0;
+};
 
-    /**
-     * An object that holds a ladybug model's state at a
-     *   given point in time.  It is intended for these
-     *   objects to get recycled.
-     */
-    var LadybugStateRecord = function() {
-        this.time = 0;
+/**
+ * Instance functions/properties
+ */
+_.extend(LadybugStateRecord.prototype, {
 
-        this.position     = new Vector2();
-        this.velocity     = new Vector2();
-        this.acceleration = new Vector2();
+    recordState: function(time, ladybug) {
+        this.time = time;
 
-        this.angle = 0;
-    };
+        this.position.set(ladybug.get('position'));
+        this.velocity.set(ladybug.get('velocity'));
+        this.acceleration.set(ladybug.get('acceleration'));
 
-    /**
-     * Instance functions/properties
-     */
-    _.extend(LadybugStateRecord.prototype, {
+        this.angle = ladybug.get('angle');
+    },
 
-        recordState: function(time, ladybug) {
-            this.time = time;
+    applyState: function(ladybug) {
+        ladybug.setPosition(this.position);
+        ladybug.setVelocity(this.velocity);
+        ladybug.setAcceleration(this.acceleration);
 
-            this.position.set(ladybug.get('position'));
-            this.velocity.set(ladybug.get('velocity'));
-            this.acceleration.set(ladybug.get('acceleration'));
+        ladybug.set('angle', this.angle);
+    },
 
-            this.angle = ladybug.get('angle');
-        },
+    getTime: function() {
+        return this.time;
+    }
 
-        applyState: function(ladybug) {
-            ladybug.setPosition(this.position);
-            ladybug.setVelocity(this.velocity);
-            ladybug.setAcceleration(this.acceleration);
-
-            ladybug.set('angle', this.angle);
-        },
-
-        getTime: function() {
-            return this.time;
-        }
-
-    });
-
-
-    return LadybugStateRecord;
 });
+
+
+export default LadybugStateRecord;

@@ -1,65 +1,58 @@
-define(function(require) {
-
-    'use strict';
-
-    var _ = require('underscore');
+import _ from 'underscore';
+import FaradaySceneView from 'views/scene';
+import TurbineView from 'views/turbine';
 
 
-    var FaradaySceneView = require('views/scene');
-    var TurbineView      = require('views/turbine');
+/**
+ *
+ */
+var GeneratorSceneView = FaradaySceneView.extend({
 
+    initialize: function(options) {
+        options = _.extend({
+            pickupCoilDraggable: false
+        }, options);
 
-    /**
-     *
-     */
-    var GeneratorSceneView = FaradaySceneView.extend({
+        FaradaySceneView.prototype.initialize.apply(this, [options]);
 
-        initialize: function(options) {
-            options = _.extend({
-                pickupCoilDraggable: false
-            }, options);
+        this.magnetModel = this.simulation.turbine;
+    },
 
-            FaradaySceneView.prototype.initialize.apply(this, [options]);
+    initGraphics: function() {
+        FaradaySceneView.prototype.initGraphics.apply(this, arguments);
 
-            this.magnetModel = this.simulation.turbine;
-        },
+        this.initFieldMeter();
+        this.initPickupCoil();
+        this.initTurbine();
+        this.initCompass();
 
-        initGraphics: function() {
-            FaradaySceneView.prototype.initGraphics.apply(this, arguments);
+        this.hideOutsideField();
+    },
 
-            this.initFieldMeter();
-            this.initPickupCoil();
-            this.initTurbine();
-            this.initCompass();
+    initTurbine: function() {
+        this.turbineView = new TurbineView({
+            mvt: this.mvt,
+            model: this.simulation.turbine,
+            simulation: this.simulation
+        });
+        this.middleLayer.addChild(this.turbineView.displayObject);
+    },
 
-            this.hideOutsideField();
-        },
+    reset: function() {
+        FaradaySceneView.prototype.reset.apply(this, arguments);
 
-        initTurbine: function() {
-            this.turbineView = new TurbineView({
-                mvt: this.mvt,
-                model: this.simulation.turbine,
-                simulation: this.simulation
-            });
-            this.middleLayer.addChild(this.turbineView.displayObject);
-        },
+        this.pickupCoilView.reset();
+        this.turbineView.reset();
+        this.hideOutsideField();
+    },
 
-        reset: function() {
-            FaradaySceneView.prototype.reset.apply(this, arguments);
+    _update: function(time, deltaTime, paused, timeScale) {
+        FaradaySceneView.prototype._update.apply(this, arguments);
 
-            this.pickupCoilView.reset();
-            this.turbineView.reset();
-            this.hideOutsideField();
-        },
+        this.pickupCoilView.update(time, deltaTime, paused);
+        this.turbineView.update(time, deltaTime, paused);
+    }
 
-        _update: function(time, deltaTime, paused, timeScale) {
-            FaradaySceneView.prototype._update.apply(this, arguments);
-
-            this.pickupCoilView.update(time, deltaTime, paused);
-            this.turbineView.update(time, deltaTime, paused);
-        }
-
-    });
-
-    return GeneratorSceneView;
 });
+
+export default GeneratorSceneView;

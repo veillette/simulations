@@ -1,15 +1,9 @@
 
-define(function (require) {
+import VanillaCollection from 'common/collections/vanilla';
+import EnergyChunk from 'models/energy-chunk';
 
-    'use strict';
-
-    var VanillaCollection = require('common/collections/vanilla');
-
-    var EnergyChunk = require('models/energy-chunk');
-
-    var EnergyChunkCollection = VanillaCollection.extend({
-    	model: EnergyChunk
-    });
-
-    return EnergyChunkCollection;
+var EnergyChunkCollection = VanillaCollection.extend({
+    model: EnergyChunk
 });
+
+export default EnergyChunkCollection;

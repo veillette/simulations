@@ -1,15 +1,10 @@
-define(function(require) {
+import EnergySystemsElementView from 'views/energy-systems-element';
 
-    'use strict';
+/**
+ * A view that represents an element model
+ */
+var EnergySourceView = EnergySystemsElementView.extend({
 
-    var EnergySystemsElementView = require('views/energy-systems-element');
-
-    /**
-     * A view that represents an element model
-     */
-    var EnergySourceView = EnergySystemsElementView.extend({
-
-    });
-
-    return EnergySourceView;
 });
+
+export default EnergySourceView;

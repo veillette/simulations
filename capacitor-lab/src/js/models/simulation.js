@@ -1,45 +1,39 @@
-define(function (require, exports, module) {
+import _ from 'underscore';
+import Simulation from 'common/simulation/simulation';
 
-    'use strict';
+/**
+ * Wraps the update function in
+ */
+var CapacitorLabSimulation = Simulation.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend(Simulation.prototype.defaults, {
+        circuit: null
+    }),
 
-    var Simulation = require('common/simulation/simulation');
+    initialize: function(attributes, options) {
+        Simulation.prototype.initialize.apply(this, [attributes, options]);
+
+    },
 
     /**
-     * Wraps the update function in
+     * Initializes the models used in the simulation
      */
-    var CapacitorLabSimulation = Simulation.extend({
+    initComponents: function() {
 
-        defaults: _.extend(Simulation.prototype.defaults, {
-            circuit: null
-        }),
+    },
 
-        initialize: function(attributes, options) {
-            Simulation.prototype.initialize.apply(this, [attributes, options]);
+    /**
+     * The model attributes are really simple, and there's no time,
+     *   so it's best to simplify the reset function as well.
+     */
+    reset: function() {
+        this.resetComponents();
+    },
 
-        },
+    _update: function(time, deltaTime) {
 
-        /**
-         * Initializes the models used in the simulation
-         */
-        initComponents: function() {
+    }
 
-        },
-
-        /**
-         * The model attributes are really simple, and there's no time,
-         *   so it's best to simplify the reset function as well.
-         */
-        reset: function() {
-            this.resetComponents();
-        },
-
-        _update: function(time, deltaTime) {
-
-        }
-
-    });
-
-    return CapacitorLabSimulation;
 });
+
+export default CapacitorLabSimulation;

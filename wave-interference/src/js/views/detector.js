@@ -1,265 +1,255 @@
-define(function (require) {
+import $ from 'jquery';
+import _ from 'underscore';
+import SimDraggable from './sim-draggable';
+import DetectorGraphView from './graph/detector';
+import Utils from '../utils/utils';
+import html from '../../templates/detector.html?raw';
+import 'styles/detector.less';
+
+var angle,
+    lineLength,
+    dx,
+    dy,
+    translate,
+    rotate,
+    transform;
+
+var DetectorView = SimDraggable.extend({
+
+    template: _.template(html),
+
+    tagName: 'div',
+    className: 'detector-view',
+
+    events: {
+        'mousedown  .detector-sampler' : 'samplerDown',
+        'touchstart .detector-sampler' : 'samplerDown',
+        'mousedown  .detector-visualizer' : 'visualizerDown',
+        'touchstart .detector-visualizer' : 'visualizerDown',
 
-	'use strict';
+        'click .detector-close' : 'close'
+    },
 
-	var $ = require('jquery');
-	var _ = require('underscore');
+    initialize: function(options) {
+        options = _.extend({
+            sampler: {
+                x: 410,
+                y: 370
+            },
+            visualizer: {
+                x: 0,
+                y: 300
+            },
+            yLabel: 'Water Level'
+        }, options);
 
-	var SimDraggable      = require('./sim-draggable');
-	var DetectorGraphView = require('./graph/detector');
+        SimDraggable.prototype.initialize.apply(this, [options]);
 
-	var Utils = require('../utils/utils');
+        if (options.heatmapView)
+            this.heatmapView = options.heatmapView;
+        else
+            throw 'DetectorView requires a HeatmapView to render.';
 
-	var html  = require('text!../../templates/detector.html');
-
-	// CSS
-	require('less!styles/detector');
+        this.sampler    = options.sampler;
+        this.visualizer = options.visualizer;
+        this.yLabel     = options.yLabel;
+    },
 
-	var angle,
-	    lineLength,
-	    dx,
-	    dy,
-	    translate,
-	    rotate,
-	    transform;
+    resize: function(){
+        SimDraggable.prototype.resize.apply(this);
 
-	var DetectorView = SimDraggable.extend({
+        var $connectorAnchor = this.$('.detector-connector-anchor');
+        var position = $connectorAnchor.position();
 
-		template: _.template(html),
+        this.relativeConnectorAnchorPosition = {
+            x: position.left + ($connectorAnchor.width() / 2),
+            y: position.top
+        };
 
-		tagName: 'div',
-		className: 'detector-view',
+        this.samplerRadius = this.$('.detector-sampler').outerWidth() / 2;
 
-		events: {
-			'mousedown  .detector-sampler' : 'samplerDown',
-			'touchstart .detector-sampler' : 'samplerDown',
-			'mousedown  .detector-visualizer' : 'visualizerDown',
-			'touchstart .detector-visualizer' : 'visualizerDown',
+        this.offset = this.$el.offset();
 
-			'click .detector-close' : 'close'
-		},
+        this.calculateLatticePoint();
 
-		initialize: function(options) {
-			options = _.extend({
-				sampler: {
-					x: 410,
-					y: 370
-				},
-				visualizer: {
-					x: 0,
-					y: 300
-				},
-				yLabel: 'Water Level'
-			}, options);
+        this.visualizer.width  = this.$visualizer.width();
+        this.visualizer.height = this.$visualizer.height();
+        this.sampler.width  = this.$sampler.width();
+        this.sampler.height = this.$sampler.height();
+    },
 
-			SimDraggable.prototype.initialize.apply(this, [options]);
+    render: function() {
+        this.renderContent();
+        this.bindDragEvents();
+    },
 
-			if (options.heatmapView)
-				this.heatmapView = options.heatmapView;
-			else
-				throw 'DetectorView requires a HeatmapView to render.';
+    renderContent: function() {
+        this.$el.html(this.template());
 
-			this.sampler    = options.sampler;
-			this.visualizer = options.visualizer;
-			this.yLabel     = options.yLabel;
-		},
+        this.$sampler    = this.$('.detector-sampler');
+        this.$connector  = this.$('.detector-connector');
+        this.$visualizer = this.$('.detector-visualizer');
+
+        this.graphView = new DetectorGraphView({
+            waveSimulation: this.waveSimulation,
+            yLabel: this.yLabel
+        });
+        this.graphView.render();
+        this.$('#detector-graph-placeholder').replaceWith(this.graphView.el);
+    },
+
+    postRender: function() {
+        this.resize();
+        this.graphView.postRender();
+    },
 
-		resize: function(){
-			SimDraggable.prototype.resize.apply(this);
+    samplerDown: function(event) {
+        event.preventDefault();
 
-			var $connectorAnchor = this.$('.detector-connector-anchor');
-			var position = $connectorAnchor.position();
+        this.draggingSampler = true;
 
-			this.relativeConnectorAnchorPosition = {
-				x: position.left + ($connectorAnchor.width() / 2),
-				y: position.top
-			};
+        this.fixTouchEvents(event);
 
-			this.samplerRadius = this.$('.detector-sampler').outerWidth() / 2;
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
 
-			this.offset = this.$el.offset();
+        $(event.target).addClass('dragging');
+    },
 
-			this.calculateLatticePoint();
+    visualizerDown: function(event) {
+        event.preventDefault();
 
-			this.visualizer.width  = this.$visualizer.width();
-			this.visualizer.height = this.$visualizer.height();
-			this.sampler.width  = this.$sampler.width();
-			this.sampler.height = this.$sampler.height();
-		},
+        this.$visualizer.addClass('dragging');
 
-		render: function() {
-			this.renderContent();
-			this.bindDragEvents();
-		},
+        this.draggingVisualizer = true;
 
-		renderContent: function() {
-			this.$el.html(this.template());
+        this.fixTouchEvents(event);
 
-			this.$sampler    = this.$('.detector-sampler');
-			this.$connector  = this.$('.detector-connector');
-			this.$visualizer = this.$('.detector-visualizer');
+        this.dragX = event.pageX;
+        this.dragY = event.pageY;
+    },
 
-			this.graphView = new DetectorGraphView({
-				waveSimulation: this.waveSimulation,
-				yLabel: this.yLabel
-			});
-			this.graphView.render();
-			this.$('#detector-graph-placeholder').replaceWith(this.graphView.el);
-		},
+    drag: function(event) {
+        if (this.draggingSampler) {
 
-		postRender: function() {
-			this.resize();
-			this.graphView.postRender();
-		},
+            this.fixTouchEvents(event);
 
-		samplerDown: function(event) {
-			event.preventDefault();
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-			this.draggingSampler = true;
+            if (this.draggingSampler && !this.outOfBounds(this.sampler.x + dx, this.sampler.y + dy, this.sampler)) {
+                this.sampler.x += dx;
+                this.sampler.y += dy;
 
-			this.fixTouchEvents(event);
+                this.calculateLatticePoint();
+            }
 
-			this.dragX = event.pageX;
-			this.dragY = event.pageY;
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-			$(event.target).addClass('dragging');
-		},
+            this.updateOnNextFrame = true;
+        }
+        else if (this.draggingVisualizer) {
 
-		visualizerDown: function(event) {
-			event.preventDefault();
+            this.fixTouchEvents(event);
 
-			this.$visualizer.addClass('dragging');
+            dx = event.pageX - this.dragX;
+            dy = event.pageY - this.dragY;
 
-			this.draggingVisualizer = true;
+            if (!this.outOfBounds(this.visualizer.x + dx, this.visualizer.y + dy, this.visualizer)) {
+                this.visualizer.x += dx;
+                this.visualizer.y += dy;
+            }
 
-			this.fixTouchEvents(event);
+            this.dragX = event.pageX;
+            this.dragY = event.pageY;
 
-			this.dragX = event.pageX;
-			this.dragY = event.pageY;
-		},
+            this.updateOnNextFrame = true;
+        }
+    },
 
-		drag: function(event) {
-			if (this.draggingSampler) {
+    dragEnd: function(event) {
+        if (this.draggingSampler) {
+            this.draggingSampler = false;
+            this.$sampler.removeClass('dragging');
+        }
+        else if (this.draggingVisualizer) {
+            this.draggingVisualizer = false;
+            this.$visualizer.removeClass('dragging');
+        }
+    },
 
-				this.fixTouchEvents(event);
+    close: function(event) {
+        this.trigger('remove');
+        this.remove();
+    },
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+    calculateLatticePoint: function() {
+        var point = this.heatmapView.offsetToPoint(
+            this.sampler.y + this.offset.top,
+            this.sampler.x + this.offset.left
+        );
 
-				if (this.draggingSampler && !this.outOfBounds(this.sampler.x + dx, this.sampler.y + dy, this.sampler)) {
-					this.sampler.x += dx;
-					this.sampler.y += dy;
+        this.graphView.latticePoint = point;
+    },
 
-					this.calculateLatticePoint();
-				}
+    positionComponents: function() {
+        angle = -Utils.angleFromLine(
+            this.sampler.x,
+            this.sampler.y,
+            this.visualizer.x + this.relativeConnectorAnchorPosition.x,
+            this.visualizer.y + this.relativeConnectorAnchorPosition.y
+        );
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+        lineLength = Utils.lineLength(
+            this.sampler.x,
+            this.sampler.y,
+            this.visualizer.x + this.relativeConnectorAnchorPosition.x,
+            this.visualizer.y + this.relativeConnectorAnchorPosition.y
+        );
 
-				this.updateOnNextFrame = true;
-			}
-			else if (this.draggingVisualizer) {
+        lineLength -= this.samplerRadius;
 
-				this.fixTouchEvents(event);
+        // Move to center of sampler and rotate to point at anchor
+        translate = 'translateX(' + this.sampler.x + 'px) translateY(' + this.sampler.y + 'px)';
+        rotate    = 'rotateZ(' + (-angle) + 'deg)';
+        transform = translate + ' ' + rotate + ' translateX(' + this.samplerRadius + 'px)';
 
-				dx = event.pageX - this.dragX;
-				dy = event.pageY - this.dragY;
+        this.$connector.css({
+            width: lineLength,
 
-				if (!this.outOfBounds(this.visualizer.x + dx, this.visualizer.y + dy, this.visualizer)) {
-					this.visualizer.x += dx;
-					this.visualizer.y += dy;
-				}
+            '-webkit-transform': transform,
+            '-ms-transform':     transform,
+            '-o-transform':      transform,
+            'transform':         transform
+        });
 
-				this.dragX = event.pageX;
-				this.dragY = event.pageY;
+        // Move the sampler so it's centered on the sample point
+        translate = 'translateX(' + this.sampler.x + 'px) translateY(' + this.sampler.y + 'px)';
 
-				this.updateOnNextFrame = true;
-			}
-		},
+        this.$sampler.css({
+            '-webkit-transform': translate,
+            '-ms-transform':     translate,
+            '-o-transform':      translate,
+            'transform':         translate
+        });
 
-		dragEnd: function(event) {
-			if (this.draggingSampler) {
-				this.draggingSampler = false;
-				this.$sampler.removeClass('dragging');
-			}
-			else if (this.draggingVisualizer) {
-				this.draggingVisualizer = false;
-				this.$visualizer.removeClass('dragging');
-			}
-		},
+        this.$visualizer.css({
+            left: this.visualizer.x + 'px',
+            top:  this.visualizer.y + 'px'
+        });
+    },
 
-		close: function(event) {
-			this.trigger('remove');
-			this.remove();
-		},
+    update: function(time, delta) {
 
-		calculateLatticePoint: function() {
-			var point = this.heatmapView.offsetToPoint(
-				this.sampler.y + this.offset.top,
-				this.sampler.x + this.offset.left
-			);
+        if (this.updateOnNextFrame) {
+            this.updateOnNextFrame = false;
 
-			this.graphView.latticePoint = point;
-		},
+            this.positionComponents();
+        }
 
-		positionComponents: function() {
-			angle = -Utils.angleFromLine(
-				this.sampler.x,
-				this.sampler.y,
-				this.visualizer.x + this.relativeConnectorAnchorPosition.x,
-				this.visualizer.y + this.relativeConnectorAnchorPosition.y
-			);
-
-			lineLength = Utils.lineLength(
-				this.sampler.x,
-				this.sampler.y,
-				this.visualizer.x + this.relativeConnectorAnchorPosition.x,
-				this.visualizer.y + this.relativeConnectorAnchorPosition.y
-			);
-
-			lineLength -= this.samplerRadius;
-
-			// Move to center of sampler and rotate to point at anchor
-			translate = 'translateX(' + this.sampler.x + 'px) translateY(' + this.sampler.y + 'px)';
-			rotate    = 'rotateZ(' + (-angle) + 'deg)';
-			transform = translate + ' ' + rotate + ' translateX(' + this.samplerRadius + 'px)';
-
-			this.$connector.css({
-				width: lineLength,
-
-				'-webkit-transform': transform,
-				'-ms-transform':     transform,
-				'-o-transform':      transform,
-				'transform':         transform
-			});
-
-			// Move the sampler so it's centered on the sample point
-			translate = 'translateX(' + this.sampler.x + 'px) translateY(' + this.sampler.y + 'px)';
-
-			this.$sampler.css({
-				'-webkit-transform': translate,
-				'-ms-transform':     translate,
-				'-o-transform':      translate,
-				'transform':         translate
-			});
-
-			this.$visualizer.css({
-				left: this.visualizer.x + 'px',
-				top:  this.visualizer.y + 'px'
-			});
-		},
-
-		update: function(time, delta) {
-
-			if (this.updateOnNextFrame) {
-				this.updateOnNextFrame = false;
-
-				this.positionComponents();
-			}
-
-			this.graphView.update(time, delta);
-		}
-	});
-
-	return DetectorView;
+        this.graphView.update(time, delta);
+    }
 });
+
+export default DetectorView;

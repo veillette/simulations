@@ -1,97 +1,87 @@
-define(function (require) {
+import _ from 'underscore';
+import HalfLifeSimulation from 'radioactive-dating-game/models/simulation/half-life';
+import RadioactiveDatingGameSimView from 'radioactive-dating-game/views/sim';
+import HalfLifeSceneView from 'radioactive-dating-game/views/scene/half-life';
+import HalfLifeNucleusChooserView from 'radioactive-dating-game/views/nucleus-chooser/half-life';
+import simHtml from 'radioactive-dating-game/templates/multi-nucleus-sim.html?raw';
+import playbackControlsHtml from 'radioactive-dating-game/templates/half-life-playback-controls.html?raw';
 
-    'use strict';
+/**
+ * Multiple Atoms tab
+ */
+var HalfLifeSimView = RadioactiveDatingGameSimView.extend({
 
-    var _ = require('underscore');
-
-    var HalfLifeSimulation = require('radioactive-dating-game/models/simulation/half-life');
-
-    var RadioactiveDatingGameSimView = require('radioactive-dating-game/views/sim');
-    var HalfLifeSceneView            = require('radioactive-dating-game/views/scene/half-life');
-    var HalfLifeNucleusChooserView   = require('radioactive-dating-game/views/nucleus-chooser/half-life');
-
-
-    // HTML
-    var simHtml              = require('text!radioactive-dating-game/templates/multi-nucleus-sim.html');
-    var playbackControlsHtml = require('text!radioactive-dating-game/templates/half-life-playback-controls.html');
+    events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
+        'click .show-labels-check' : 'toggleLabels'
+    }),
 
     /**
-     * Multiple Atoms tab
+     * Template for rendering the basic scaffolding
      */
-    var HalfLifeSimView = RadioactiveDatingGameSimView.extend({
+    template: _.template(simHtml),
+    playbackControlsTemplate: _.template(playbackControlsHtml),
 
-        events: _.extend({}, RadioactiveDatingGameSimView.prototype.events, {
-            'click .show-labels-check' : 'toggleLabels'
-        }),
+    /**
+     * Inits simulation, views, and variables.
+     *
+     * @params options
+     */
+    initialize: function(options) {
+        options = _.extend({
+            title: 'Half Life',
+            name: 'half-life'
+        }, options);
 
-        /**
-         * Template for rendering the basic scaffolding
-         */
-        template: _.template(simHtml),
-        playbackControlsTemplate: _.template(playbackControlsHtml),
+        RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                title: 'Half Life',
-                name: 'half-life'
-            }, options);
+        this.initNucleusChooser();
+    },
 
-            RadioactiveDatingGameSimView.prototype.initialize.apply(this, [options]);
+    /**
+     * Initializes the Simulation.
+     */
+    initSimulation: function() {
+        this.simulation = new HalfLifeSimulation();
+    },
 
-            this.initNucleusChooser();
-        },
+    /**
+     * Initializes the SceneView.
+     */
+    initSceneView: function() {
+        this.sceneView = new HalfLifeSceneView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the Simulation.
-         */
-        initSimulation: function() {
-            this.simulation = new HalfLifeSimulation();
-        },
+    initNucleusChooser: function() {
+        this.nucleusChooserView = new HalfLifeNucleusChooserView({
+            simulation: this.simulation
+        });
+    },
 
-        /**
-         * Initializes the SceneView.
-         */
-        initSceneView: function() {
-            this.sceneView = new HalfLifeSceneView({
-                simulation: this.simulation
-            });
-        },
+    renderNucleusChooser: function() {
+        this.nucleusChooserView.render();
+        this.$('.choose-nucleus-panel').append(this.nucleusChooserView.el);
+    },
 
-        initNucleusChooser: function() {
-            this.nucleusChooserView = new HalfLifeNucleusChooserView({
-                simulation: this.simulation
-            });
-        },
+    /**
+     * Renders everything
+     */
+    postRender: function() {
+        RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
 
-        renderNucleusChooser: function() {
-            this.nucleusChooserView.render();
-            this.$('.choose-nucleus-panel').append(this.nucleusChooserView.el);
-        },
+        this.renderNucleusChooser();
 
-        /**
-         * Renders everything
-         */
-        postRender: function() {
-            RadioactiveDatingGameSimView.prototype.postRender.apply(this, arguments);
+        return this;
+    },
 
-            this.renderNucleusChooser();
+    toggleLabels: function(event) {
+        if ($(event.target).is(':checked'))
+            this.sceneView.showLabels();
+        else
+            this.sceneView.hideLabels();
+    }
 
-            return this;
-        },
-
-        toggleLabels: function(event) {
-            if ($(event.target).is(':checked'))
-                this.sceneView.showLabels();
-            else
-                this.sceneView.hideLabels();
-        }
-
-    });
-
-    return HalfLifeSimView;
 });
+
+export default HalfLifeSimView;

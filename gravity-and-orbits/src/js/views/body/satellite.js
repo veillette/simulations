@@ -1,24 +1,19 @@
-define(function(require) {
+import BodyView from 'views/body';
 
-    'use strict';
-
-    var BodyView = require('views/body');
+/**
+ * A view that represents a satellite.
+ */
+var SatelliteView = BodyView.extend({
 
     /**
-     * A view that represents a satellite.
+     * The space station is way to small to see even in friendly
+     *   mode, so we need to blow the sprite way up.
      */
-    var SatelliteView = BodyView.extend({
+    getBodyScale: function(radius) {
+        var targetSpriteWidth = this.mvt.modelToViewDeltaX(radius * 2); // In pixels
+        return ((targetSpriteWidth / this.body.width) / this.textureBodyWidthRatio) * 1000;
+    }
 
-        /**
-         * The space station is way to small to see even in friendly
-         *   mode, so we need to blow the sprite way up.
-         */
-        getBodyScale: function(radius) {
-            var targetSpriteWidth = this.mvt.modelToViewDeltaX(radius * 2); // In pixels
-            return ((targetSpriteWidth / this.body.width) / this.textureBodyWidthRatio) * 1000;
-        }
-
-    });
-
-    return SatelliteView;
 });
+
+export default SatelliteView;

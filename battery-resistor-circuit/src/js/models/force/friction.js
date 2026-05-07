@@ -1,30 +1,24 @@
-define(function (require) {
+import _ from 'underscore';
+import Force from 'models/force';
 
-    'use strict';
+/**
+ *
+ */
+var FrictionForce = function(value) {
+    this.value = value;
+};
 
-    var _ = require('underscore');
+/**
+ * Instance functions/properties
+ */
+_.extend(FrictionForce.prototype, Force.prototype, {
 
-    var Force = require('models/force');
+    getForce: function(wireParticle) {
+        var v = wireParticle.velocity;
+        var f = -v * this.value;
+        return f;
+    }
 
-    /**
-     *
-     */
-    var FrictionForce = function(value) {
-        this.value = value;
-    };
-
-    /**
-     * Instance functions/properties
-     */
-    _.extend(FrictionForce.prototype, Force.prototype, {
-
-        getForce: function(wireParticle) {
-            var v = wireParticle.velocity;
-            var f = -v * this.value;
-            return f;
-        }
-
-    });
-
-    return FrictionForce;
 });
+
+export default FrictionForce;

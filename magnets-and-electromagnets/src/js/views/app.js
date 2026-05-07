@@ -1,24 +1,17 @@
-define(function(require) {
+import FaradayAppView from 'views/app';
+import MEBarMagnetSimView from './sim/bar-magnet';
+import MEElectromagnetSimView from './sim/electromagnet';
+import Assets from 'assets';
 
-    'use strict';
+var MEAppView = FaradayAppView.extend({
 
-    var FaradayAppView = require('views/app');
+    assets: Assets.getAssetList(),
 
-    var MEBarMagnetSimView     = require('./sim/bar-magnet');
-    var MEElectromagnetSimView = require('./sim/electromagnet');
+    simViewConstructors: [
+        MEBarMagnetSimView,
+        MEElectromagnetSimView
+    ]
 
-    var Assets = require('assets');
-
-    var MEAppView = FaradayAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            MEBarMagnetSimView,
-            MEElectromagnetSimView
-        ]
-
-    });
-
-    return MEAppView;
 });
+
+export default MEAppView;

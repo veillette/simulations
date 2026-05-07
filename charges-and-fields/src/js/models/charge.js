@@ -1,41 +1,35 @@
-define(function (require) {
+import _ from 'underscore';
+import PositionableObject from 'common/models/positionable-object';
 
-    'use strict';
+var Charge = PositionableObject.extend({
 
-    var _ = require('underscore');
+    defaults: _.extend({}, PositionableObject.prototype.defaults, {
+        q: 1,         // Value of charge
+        magnitude: 1, // Magnitude of charge
+        sign: 1       // Sign is +1 (positive) or -1 (negative)
+    }),
 
-    var PositionableObject = require('common/models/positionable-object');
+    initialize: function(attributes, options) {
+        PositionableObject.prototype.initialize.apply(this, arguments);
 
-    var Charge = PositionableObject.extend({
+        this.on('change:q', this.chargeChanged);
 
-        defaults: _.extend({}, PositionableObject.prototype.defaults, {
-            q: 1,         // Value of charge
-            magnitude: 1, // Magnitude of charge
-            sign: 1       // Sign is +1 (positive) or -1 (negative)
-        }),
+        this.chargeChanged(this, this.get('q'));
+    },
 
-        initialize: function(attributes, options) {
-            PositionableObject.prototype.initialize.apply(this, arguments);
+    setCharge: function(q) {
+        this.set('q', q);
+    },
 
-            this.on('change:q', this.chargeChanged);
+    changeSign: function() {
+        this.set('q', -1 * this.get('q'));
+    },
 
-            this.chargeChanged(this, this.get('q'));
-        },
+    chargeChanged: function(model, q) {
+        this.set('magnitude', Math.abs(q));
+        this.set('sign', (q === 0) ? 0 : q / this.get('magnitude'));
+    }
 
-        setCharge: function(q) {
-            this.set('q', q);
-        },
-
-        changeSign: function() {
-            this.set('q', -1 * this.get('q'));
-        },
-
-        chargeChanged: function(model, q) {
-            this.set('magnitude', Math.abs(q));
-            this.set('sign', (q === 0) ? 0 : q / this.get('magnitude'));
-        }
-
-    });
-
-    return Charge;
 });
+
+export default Charge;

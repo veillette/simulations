@@ -1,64 +1,56 @@
-define(function(require) {
+import * as PIXI from 'pixi.js';
+import EnergyConverterView from 'views/energy-converter';
+import Assets from 'assets';
+import Constants from 'constants';
+var SolarPanel = Constants.SolarPanel;
 
-    'use strict';
+var SolarPanelView = EnergyConverterView.extend({
 
-    var PIXI = require('pixi');
+    /**
+     *
+     */
+    initialize: function(options) {
+        EnergyConverterView.prototype.initialize.apply(this, [options]);
+    },
 
-    var EnergyConverterView = require('views/energy-converter');
+    initGraphics: function() {
+        EnergyConverterView.prototype.initGraphics.apply(this);
 
-    var Assets = require('assets');
+        this.backLayer = new PIXI.Container();
+        this.frontLayer = new PIXI.Container();
 
-    var Constants = require('constants');
-    var SolarPanel = Constants.SolarPanel;
+        var solarPanel = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL,        SolarPanel.SOLAR_PANEL_OFFSET, 0.5); // need to offset with an anchor in the middle because the width is going to change
+        var post       = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL_POST_2, SolarPanel.POST_OFFSET);
+        var curvedWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_LEFT,    SolarPanel.WIRE_OFFSET);
+        var converter  = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL_GEN,    SolarPanel.CONVERTER_OFFSET);
+        var connector  = this.createSpriteWithOffset(Assets.Images.CONNECTOR,          SolarPanel.CONNECTOR_OFFSET);
 
-    var SolarPanelView = EnergyConverterView.extend({
+        // Scaling
+        var scale = (this.mvt.modelToViewDeltaX(SolarPanel.PANEL_IMAGE_WIDTH) / solarPanel.width) * this.getImageScale();
+        solarPanel.scale.x = scale;
+        solarPanel.scale.y = scale;
 
-        /**
-         *
-         */
-        initialize: function(options) {
-            EnergyConverterView.prototype.initialize.apply(this, [options]);
-        },
+        // Need to fudge the position a little...
+        curvedWire.x += 2;
 
-        initGraphics: function() {
-            EnergyConverterView.prototype.initGraphics.apply(this);
+        this.backLayer.addChild(curvedWire);
+        this.backLayer.addChild(post);
+        this.backLayer.addChild(solarPanel);
 
-            this.backLayer = new PIXI.Container();
-            this.frontLayer = new PIXI.Container();
+        // [energy chunk layer]
 
-            var solarPanel = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL,        SolarPanel.SOLAR_PANEL_OFFSET, 0.5); // need to offset with an anchor in the middle because the width is going to change
-            var post       = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL_POST_2, SolarPanel.POST_OFFSET);
-            var curvedWire = this.createSpriteWithOffset(Assets.Images.WIRE_BLACK_LEFT,    SolarPanel.WIRE_OFFSET);
-            var converter  = this.createSpriteWithOffset(Assets.Images.SOLAR_PANEL_GEN,    SolarPanel.CONVERTER_OFFSET);
-            var connector  = this.createSpriteWithOffset(Assets.Images.CONNECTOR,          SolarPanel.CONNECTOR_OFFSET);
+        this.frontLayer.addChild(converter);
+        this.frontLayer.addChild(connector);
 
-            // Scaling
-            var scale = (this.mvt.modelToViewDeltaX(SolarPanel.PANEL_IMAGE_WIDTH) / solarPanel.width) * this.getImageScale();
-            solarPanel.scale.x = scale;
-            solarPanel.scale.y = scale;
+        //this.drawDebugOrigin(this.frontLayer);
+    },
 
-            // Need to fudge the position a little...
-            curvedWire.x += 2;
+    updatePosition: function(model, position) {
+        var viewPoint = this.mvt.modelToView(position);
+        this.backLayer.x = this.frontLayer.x = viewPoint.x;
+        this.backLayer.y = this.frontLayer.y = viewPoint.y;
+    }
 
-            this.backLayer.addChild(curvedWire);
-            this.backLayer.addChild(post);
-            this.backLayer.addChild(solarPanel);
-
-            // [energy chunk layer]
-
-            this.frontLayer.addChild(converter);
-            this.frontLayer.addChild(connector);
-
-            //this.drawDebugOrigin(this.frontLayer);
-        },
-
-        updatePosition: function(model, position) {
-            var viewPoint = this.mvt.modelToView(position);
-            this.backLayer.x = this.frontLayer.x = viewPoint.x;
-            this.backLayer.y = this.frontLayer.y = viewPoint.y;
-        }
-
-    });
-
-    return SolarPanelView;
 });
+
+export default SolarPanelView;

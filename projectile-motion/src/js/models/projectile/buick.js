@@ -1,20 +1,15 @@
-define(function (require) {
+import Projectile from 'models/projectile';
 
-    'use strict';
+var Buick = Projectile.extend({
 
-    var Projectile = require('models/projectile');
+    defaults: {
+        mass:         1000,
+        diameter:        2.5,
+        dragCoefficient: 1.3
+    }
 
-    var Buick = Projectile.extend({
-
-        defaults: {
-            mass:         1000,
-            diameter:        2.5,
-            dragCoefficient: 1.3
-        }
-
-    }, {
-        getName: function() { return 'Buick'; }
-    });
-
-    return Buick;
+}, {
+    getName: function() { return 'Buick'; }
 });
+
+export default Buick;

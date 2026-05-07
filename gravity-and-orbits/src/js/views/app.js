@@ -1,26 +1,18 @@
-define(function(require) {
+import PixiAppView from 'common/v3/pixi/view/app';
+import FriendlyScaleSimView from 'views/sim/friendly-scale';
+import ToScaleSimView from 'views/sim/to-scale';
+import Assets from 'assets';
+import 'styles/font-awesome.less';
 
-    'use strict';
+var GOAppView = PixiAppView.extend({
 
-    var PixiAppView = require('common/v3/pixi/view/app');
+    assets: Assets.getAssetList(),
 
-    var FriendlyScaleSimView = require('views/sim/friendly-scale');
-    var ToScaleSimView       = require('views/sim/to-scale');
+    simViewConstructors: [
+        FriendlyScaleSimView,
+        ToScaleSimView
+    ]
 
-    var Assets = require('assets');
-
-    require('less!styles/font-awesome');
-
-    var GOAppView = PixiAppView.extend({
-
-        assets: Assets.getAssetList(),
-
-        simViewConstructors: [
-            FriendlyScaleSimView,
-            ToScaleSimView
-        ]
-
-    });
-
-    return GOAppView;
 });
+
+export default GOAppView;

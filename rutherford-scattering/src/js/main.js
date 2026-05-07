@@ -1,21 +1,9 @@
-(function () {
-    'use strict';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import $ from 'jquery';
+import AppView from 'rutherford-scattering/views/app';
 
-    // Load the config
-    require(['config'], function () {
-        require(['jquery', 'rutherford-scattering/views/app'], function($, RutherfordScatteringAppView) {
-
-            $(function(){
-                var appView = new RutherfordScatteringAppView();
-
-                // Append to body
-                $('body').append(appView.el);
-
-                // Render main app view
-                appView.load();
-            });
-
-        });
-    });
-
-})();
+$(function() {
+    var appView = new AppView();
+    $('body').append(appView.el);
+    appView.load();
+});

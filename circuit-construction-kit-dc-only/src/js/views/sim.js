@@ -1,31 +1,25 @@
-define(function (require) {
+import _ from 'underscore';
+import CCKSimView from 'views/sim';
 
-    'use strict';
-
-    var _ = require('underscore');
-
-    var CCKSimView = require('views/sim');
+/**
+ * "DCOnly" version of the original
+ */
+var DCOnlySimView = CCKSimView.extend({
 
     /**
-     * "DCOnly" version of the original
+     * Inits simulation, views, and variables.
+     *
+     * @params options
      */
-    var DCOnlySimView = CCKSimView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            link: 'circuit-construction-kit-dc',
+            dcOnly: true
+        }, options);
 
-        /**
-         * Inits simulation, views, and variables.
-         *
-         * @params options
-         */
-        initialize: function(options) {
-            options = _.extend({
-                link: 'circuit-construction-kit-dc',
-                dcOnly: true
-            }, options);
+        CCKSimView.prototype.initialize.apply(this, [options]);
+    }
 
-            CCKSimView.prototype.initialize.apply(this, [options]);
-        }
-
-    });
-
-    return DCOnlySimView;
 });
+
+export default DCOnlySimView;

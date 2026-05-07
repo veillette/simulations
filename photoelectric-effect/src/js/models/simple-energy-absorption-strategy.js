@@ -1,29 +1,22 @@
-define(function (require) {
+import MetalEnergyAbsorptionStrategy from 'models/metal-energy-absorption-strategy';
+import Constants from 'constants';
 
-    'use strict';
+var NUM_SUB_LEVELS = Constants.MetalEnergyAbsorptionStrategy.NUM_SUB_LEVELS;
 
+/**
+ * Provides a simplified model of how electrons are kicked off a metal by photons. All
+ *   electrons are considered to be in the lowest sub-level of the highest energy band.
+ */
+var SimpleEnergyAbsorptionStrategy = MetalEnergyAbsorptionStrategy.extend({
 
-    var MetalEnergyAbsorptionStrategy = require('models/metal-energy-absorption-strategy');
+    energyAfterPhotonCollision: function(photon) {
+        var energy = (Math.floor(Math.random() * NUM_SUB_LEVELS) !== 0) ?
+            Number.NEGATIVE_INFINITY :
+            photon.getEnergy() - this.workFunction;
+        return energy;
+    }
 
-    var Constants = require('constants');
-
-    var NUM_SUB_LEVELS = Constants.MetalEnergyAbsorptionStrategy.NUM_SUB_LEVELS;
-
-    /**
-     * Provides a simplified model of how electrons are kicked off a metal by photons. All
-     *   electrons are considered to be in the lowest sub-level of the highest energy band.
-     */
-    var SimpleEnergyAbsorptionStrategy = MetalEnergyAbsorptionStrategy.extend({
-
-        energyAfterPhotonCollision: function(photon) {
-            var energy = (Math.floor(Math.random() * NUM_SUB_LEVELS) !== 0) ?
-                Number.NEGATIVE_INFINITY :
-                photon.getEnergy() - this.workFunction;
-            return energy;
-        }
-
-    });
-
-
-    return SimpleEnergyAbsorptionStrategy;
 });
+
+
+export default SimpleEnergyAbsorptionStrategy;

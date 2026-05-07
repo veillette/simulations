@@ -1,156 +1,148 @@
-define(function(require) {
+import _ from 'underscore';
+import PixiView from 'common/v3/pixi/view';
+import defineInputUpdateLocks from 'common/locks/define-locks';
+import Constants from 'constants';
+import Assets from 'assets';
 
-    'use strict';
+/**
+ * A view that represents a person who listens
+ */
+var ListenerView = PixiView.extend({
 
-    var _ = require('underscore');
-
-    var PixiView               = require('common/v3/pixi/view');
-    var defineInputUpdateLocks = require('common/locks/define-locks');
-
-    var Constants = require('constants');
-
-    var Assets = require('assets');
+    events: {
+        'touchstart      .person': 'dragStart',
+        'mousedown       .person': 'dragStart',
+        'touchmove       .person': 'drag',
+        'mousemove       .person': 'drag',
+        'touchend        .person': 'dragEnd',
+        'mouseup         .person': 'dragEnd',
+        'touchendoutside .person': 'dragEnd',
+        'mouseupoutside  .person': 'dragEnd',
+    },
 
     /**
-     * A view that represents a person who listens
+     * Initializes the new ListenerView.
      */
-    var ListenerView = PixiView.extend({
+    initialize: function(options) {
+        options = _.extend({
+            disableMovement: false,
+            disableYMovement: true
+        }, options);
 
-        events: {
-            'touchstart      .person': 'dragStart',
-            'mousedown       .person': 'dragStart',
-            'touchmove       .person': 'drag',
-            'mousemove       .person': 'drag',
-            'touchend        .person': 'dragEnd',
-            'mouseup         .person': 'dragEnd',
-            'touchendoutside .person': 'dragEnd',
-            'mouseupoutside  .person': 'dragEnd',
-        },
+        this.disableMovement = options.disableMovement;
+        this.disableYMovement = options.disableYMovement;
 
-        /**
-         * Initializes the new ListenerView.
-         */
-        initialize: function(options) {
-            options = _.extend({
-                disableMovement: false,
-                disableYMovement: true
-            }, options);
+        this.initGraphics();
 
-            this.disableMovement = options.disableMovement;
-            this.disableYMovement = options.disableYMovement;
+        this.updateMVT(options.mvt);
 
-            this.initGraphics();
+        this.listenTo(this.model, 'change:position', this.updatePosition);
+    },
 
-            this.updateMVT(options.mvt);
+    /**
+     * Initializes all the graphics
+     */
+    initGraphics: function() {
+        if (Math.random() < 0.5) {
+            this.person = Assets.createSprite(Assets.Images.LISTENER_FEMALE);
+            this.person.anchor.x = 0.1;
+            this.person.anchor.y = 0.408;
+        }
+        else {
+            this.person = Assets.createSprite(Assets.Images.LISTENER_MALE);
+            this.person.anchor.x = 0.1;
+            this.person.anchor.y = 0.415;
+        }
 
-            this.listenTo(this.model, 'change:position', this.updatePosition);
-        },
+        this.displayObject.addChild(this.person);
 
-        /**
-         * Initializes all the graphics
-         */
-        initGraphics: function() {
-            if (Math.random() < 0.5) {
-                this.person = Assets.createSprite(Assets.Images.LISTENER_FEMALE);
-                this.person.anchor.x = 0.1;
-                this.person.anchor.y = 0.408;
-            }
-            else {
-                this.person = Assets.createSprite(Assets.Images.LISTENER_MALE);
-                this.person.anchor.x = 0.1;
-                this.person.anchor.y = 0.415;
-            }
+        if (!this.disableMovement) {
+            this.person.buttonMode = true;
+            if (this.disableYMovement)
+                this.person.defaultCursor = 'ew-resize';
+            else
+                this.person.defaultCursor = 'move';
+        }
+    },
 
-            this.displayObject.addChild(this.person);
+    /**
+     *
+     */
+    reset: function() {
 
-            if (!this.disableMovement) {
-                this.person.buttonMode = true;
-                if (this.disableYMovement)
-                    this.person.defaultCursor = 'ew-resize';
-                else
-                    this.person.defaultCursor = 'move';
-            }
-        },
+    },
 
-        /**
-         *
-         */
-        reset: function() {
+    /**
+     * Updates the model-view-transform and anything that
+     *   relies on it.
+     */
+    updateMVT: function(mvt) {
+        this.mvt = mvt;
 
-        },
+        // var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(ListenerView.HEIGHT_IN_METERS)); // In pixels
+        // var scale = targetSpriteHeight / this.person.texture.height;
+        // this.person.scale.x = this.person.scale.y = scale;
+        this.person.scale.x = this.person.scale.y = 0.65;
 
-        /**
-         * Updates the model-view-transform and anything that
-         *   relies on it.
-         */
-        updateMVT: function(mvt) {
-            this.mvt = mvt;
+        this.updatePosition(this.model, this.model.get('position'));
+    },
 
-            // var targetSpriteHeight = Math.abs(this.mvt.modelToViewDeltaY(ListenerView.HEIGHT_IN_METERS)); // In pixels
-            // var scale = targetSpriteHeight / this.person.texture.height;
-            // this.person.scale.x = this.person.scale.y = scale;
-            this.person.scale.x = this.person.scale.y = 0.65;
+    updatePosition: function(speaker, position) {
+        this.updateLock(function() {
+            var viewPosition = this.mvt.modelToView(position);
+            this.displayObject.x = viewPosition.x;
+            this.displayObject.y = viewPosition.y;
+        });
+    },
 
-            this.updatePosition(this.model, this.model.get('position'));
-        },
+    dragStart: function(event) {
+        if (this.disableMovement)
+            return;
 
-        updatePosition: function(speaker, position) {
-            this.updateLock(function() {
-                var viewPosition = this.mvt.modelToView(position);
-                this.displayObject.x = viewPosition.x;
-                this.displayObject.y = viewPosition.y;
-            });
-        },
+        this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
+        this.dragging = true;
+    },
 
-        dragStart: function(event) {
-            if (this.disableMovement)
-                return;
+    /**
+     * Handles drag events to move the listener.  The original PhET source
+     *   claims to be changing the pitch (frequency) of the sound according
+     *   to the Doippler Effect, but the changes are either imperceptible
+     *   or the code is not actually used.
+     */
+    drag: function(event) {
+        if (this.dragging) {
+            var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
+            var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
 
-            this.dragOffset = event.data.getLocalPosition(this.displayObject, this._dragOffset);
-            this.dragging = true;
-        },
+            var x = this.mvt.viewToModelX(this.displayObject.x + dx);
+            var y = this.mvt.viewToModelY(this.displayObject.y + dy);
 
-        /**
-         * Handles drag events to move the listener.  The original PhET source
-         *   claims to be changing the pitch (frequency) of the sound according
-         *   to the Doippler Effect, but the changes are either imperceptible
-         *   or the code is not actually used.
-         */
-        drag: function(event) {
-            if (this.dragging) {
-                var dx = event.data.global.x - this.displayObject.x - this.dragOffset.x;
-                var dy = event.data.global.y - this.displayObject.y - this.dragOffset.y;
+            if (x < ListenerView.MIN_X_IN_METERS)
+                x = ListenerView.MIN_X_IN_METERS;
+            else if (x > ListenerView.MAX_X_IN_METERS)
+                x = ListenerView.MAX_X_IN_METERS;
 
-                var x = this.mvt.viewToModelX(this.displayObject.x + dx);
-                var y = this.mvt.viewToModelY(this.displayObject.y + dy);
+            this.displayObject.x = this.mvt.modelToViewX(x);
+            if (!this.disableYMovement)
+                this.displayObject.y = this.mvt.modelToViewY(y);
 
-                if (x < ListenerView.MIN_X_IN_METERS)
-                    x = ListenerView.MIN_X_IN_METERS;
-                else if (x > ListenerView.MAX_X_IN_METERS)
-                    x = ListenerView.MAX_X_IN_METERS;
-
-                this.displayObject.x = this.mvt.modelToViewX(x);
+            this.inputLock(function() {
+                this.model.setX(x);
                 if (!this.disableYMovement)
-                    this.displayObject.y = this.mvt.modelToViewY(y);
+                    this.model.setY(y);
+            });
+        }
+    },
 
-                this.inputLock(function() {
-                    this.model.setX(x);
-                    if (!this.disableYMovement)
-                        this.model.setY(y);
-                });
-            }
-        },
+    dragEnd: function(event) {
+        this.dragging = false;
+    },
 
-        dragEnd: function(event) {
-            this.dragging = false;
-        },
-
-    }, Constants.ListenerView);
+}, Constants.ListenerView);
 
 
-    // Add input/update locking functionality to the prototype
-    defineInputUpdateLocks(ListenerView);
+// Add input/update locking functionality to the prototype
+defineInputUpdateLocks(ListenerView);
 
 
-    return ListenerView;
-});
+export default ListenerView;

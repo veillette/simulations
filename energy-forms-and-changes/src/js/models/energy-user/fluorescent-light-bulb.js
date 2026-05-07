@@ -1,10 +1,5 @@
-define(function (require) {
+import LightBulb from 'models/energy-user/light-bulb';
 
-    'use strict';
+var FluorescentLightBulb = LightBulb.extend({});
 
-    var LightBulb = require('models/energy-user/light-bulb');
-
-    var FluorescentLightBulb = LightBulb.extend({});
-
-    return FluorescentLightBulb;
-});
+export default FluorescentLightBulb;
