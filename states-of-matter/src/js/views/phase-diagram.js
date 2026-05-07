@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 import * as PIXI from 'pixi.js';
+import { drawPiecewiseCurve } from 'common/v3/pixi/extensions';
 import Backbone from 'backbone';
 import PiecewiseCurve from 'common/math/piecewise-curve';
 import Vector2 from 'common/math/vector2';
@@ -225,11 +226,11 @@ var PhaseDiagramView = Backbone.View.extend({
         var ctx = this.context;
 
         ctx.fillStyle = C.SOLID_COLOR;
-        PIXI.drawPiecewiseCurve(ctx, solidArea, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, solidArea, 0, 0, true, false);
         ctx.fillStyle = C.LIQUID_COLOR;
-        PIXI.drawPiecewiseCurve(ctx, liquidArea, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, liquidArea, 0, 0, true, false);
         ctx.fillStyle = C.GAS_COLOR;
-        PIXI.drawPiecewiseCurve(ctx, gasArea, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, gasArea, 0, 0, true, false);
 
         var gh = this.getGraphHeight();
 
@@ -240,7 +241,7 @@ var PhaseDiagramView = Backbone.View.extend({
         gradient.addColorStop(0, C.LIQUID_COLOR);
         gradient.addColorStop(1, C.GAS_COLOR);
         ctx.fillStyle = gradient;
-        PIXI.drawPiecewiseCurve(ctx, criticalArea, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, criticalArea, 0, 0, true, false);
     },
 
     drawLines: function(solidBorder, liquidBottomBorder) {
@@ -250,8 +251,8 @@ var PhaseDiagramView = Backbone.View.extend({
         ctx.lineWidth = 1;
         ctx.lineJoin = 'round';
 
-        PIXI.drawPiecewiseCurve(ctx, solidBorder,        0, 0, false, true);
-        PIXI.drawPiecewiseCurve(ctx, liquidBottomBorder, 0, 0, false, true);
+        drawPiecewiseCurve(ctx, solidBorder,        0, 0, false, true);
+        drawPiecewiseCurve(ctx, liquidBottomBorder, 0, 0, false, true);
     },
 
     drawDots: function(triplePoint, criticalPoint) {
@@ -276,11 +277,11 @@ var PhaseDiagramView = Backbone.View.extend({
         ctx.fillStyle = C.LINE_COLOR;
         ctx.strokeStyle = C.LINE_COLOR;
 
-        PIXI.drawPiecewiseCurve(ctx, xAxis, 0, 0, false, true);
-        PIXI.drawPiecewiseCurve(ctx, yAxis, 0, 0, false, true);
+        drawPiecewiseCurve(ctx, xAxis, 0, 0, false, true);
+        drawPiecewiseCurve(ctx, yAxis, 0, 0, false, true);
 
-        PIXI.drawPiecewiseCurve(ctx, xAxisArrow, 0, 0, true, false);
-        PIXI.drawPiecewiseCurve(ctx, yAxisArrow, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, xAxisArrow, 0, 0, true, false);
+        drawPiecewiseCurve(ctx, yAxisArrow, 0, 0, true, false);
     },
 
     /**
