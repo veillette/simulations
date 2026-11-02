@@ -1,11 +1,21 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
+# Dependabot version updates for the root tooling and every sim package.
+# See: https://docs.github.com/code-security/dependabot/dependabot-version-updates
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/*"
+      - "/common/*"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 20
+    groups:
+      # Batch transitive/dev tooling bumps so we don't get dozens of tiny PRs per sim
+      production-deps:
+        dependency-type: "production"
+      development-deps:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
