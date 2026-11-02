@@ -50,7 +50,7 @@
   },
   "overrides": {
     "diff": "^9.0.0",
-    "serialize-javascript": "^7.0.5",
+    "serialize-javascript": "^7.1.4",
     "braces": "^3.0.3",
     "findup-sync": "^5.0.0",
     "micromatch": "^4.0.8",
